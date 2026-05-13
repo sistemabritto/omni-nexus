@@ -5,36 +5,64 @@ Token format: ``evo_k_<8char_prefix>.<base64url_secret>``
 The prefix is stored as plain-text for O(1) lookup; only the full token is
 bcrypt-hashed (rounds=12).  The plain token is returned exactly once, at
 creation time.
+
+Backend-portable: uses SQLAlchemy with named placeholders so the same code
+path works on the dashboard's SQLite backend and on the Postgres backend
+selected via ``SQLALCHEMY_DATABASE_URI`` / ``DATABASE_URL``.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import secrets
-import sqlite3
+import threading
 import uuid
 from base64 import urlsafe_b64encode
 from datetime import datetime, timezone
 from typing import Any
 
 import bcrypt
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
 
 # ---------------------------------------------------------------------------
-# DB path helpers — mirrors app.py's resolution so both use the same file.
+# Engine resolution — prefer Flask's shared engine, fall back to env URI.
 # ---------------------------------------------------------------------------
 
-def _db_path() -> str:
-    # Reuse the single source of truth so we never drift from app.py / get_dsn.
-    from knowledge.connection_pool import _resolve_sqlite_db_path
-    return _resolve_sqlite_db_path()
+_fallback_engine: Engine | None = None
+_fallback_uri: str | None = None
+_engine_lock = threading.Lock()
 
 
-def _connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(_db_path())
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    return conn
+def _get_engine() -> Engine:
+    """Return a SQLAlchemy Engine for the host DB.
+
+    Order of resolution:
+    1. Flask app's ``models.db.engine`` when inside an app context.
+    2. A process-wide engine built from ``SQLALCHEMY_DATABASE_URI`` env var
+       (used by CLI/worker/test contexts).
+    """
+    try:
+        from flask import current_app  # noqa: F401 — only used to check ctx
+        from models import db
+        return db.engine
+    except Exception:
+        pass
+
+    uri = os.environ.get("SQLALCHEMY_DATABASE_URI", "").strip()
+    if not uri:
+        raise RuntimeError(
+            "No SQLAlchemy engine available: outside Flask app context and "
+            "SQLALCHEMY_DATABASE_URI is unset."
+        )
+
+    global _fallback_engine, _fallback_uri
+    with _engine_lock:
+        if _fallback_engine is None or _fallback_uri != uri:
+            _fallback_engine = create_engine(uri, future=True)
+            _fallback_uri = uri
+        return _fallback_engine
 
 
 # ---------------------------------------------------------------------------
@@ -60,10 +88,10 @@ def _generate_token() -> tuple[str, str, str]:
 
 
 # ---------------------------------------------------------------------------
-# Ensure table exists
+# Ensure table exists (idempotent, portable across SQLite + Postgres).
 # ---------------------------------------------------------------------------
 
-_CREATE_TABLE = """
+_CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS knowledge_api_keys (
     id TEXT PRIMARY KEY,
     name TEXT,
@@ -77,15 +105,19 @@ CREATE TABLE IF NOT EXISTS knowledge_api_keys (
     created_at TEXT NOT NULL,
     last_used_at TEXT,
     expires_at TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_kak_prefix ON knowledge_api_keys(prefix);
+)
 """
+
+_CREATE_INDEX_SQL = "CREATE INDEX IF NOT EXISTS idx_kak_prefix ON knowledge_api_keys(prefix)"
 
 
 def ensure_table() -> None:
-    """Idempotent — safe to call multiple times."""
-    with _connect() as conn:
-        conn.executescript(_CREATE_TABLE)
+    """Idempotent — safe to call multiple times. Creates table on first use
+    when the Alembic/host-DB migration hasn't been applied yet."""
+    engine = _get_engine()
+    with engine.begin() as conn:
+        conn.execute(text(_CREATE_TABLE_SQL))
+        conn.execute(text(_CREATE_INDEX_SQL))
 
 
 # ---------------------------------------------------------------------------
@@ -93,8 +125,15 @@ def ensure_table() -> None:
 # ---------------------------------------------------------------------------
 
 def _now() -> str:
-    # Use SQLite-compatible format for datetime comparisons (datetime('now') returns this format)
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def _row_to_dict(row) -> dict[str, Any]:
+    """Convert a SQLAlchemy Row to a plain dict and decode JSON fields."""
+    d = dict(row._mapping)
+    d["space_ids"] = json.loads(d["space_ids"]) if d.get("space_ids") else []
+    d["scopes"] = json.loads(d["scopes"]) if d.get("scopes") else []
+    return d
 
 
 def create_api_key(
@@ -111,8 +150,6 @@ def create_api_key(
 
     Returns ``(row_dict, plain_token)``.  ``plain_token`` is shown once only.
     """
-    import json
-
     ensure_table()
     full_token, prefix, token_hash = _generate_token()
     key_id = str(uuid.uuid4())
@@ -120,27 +157,31 @@ def create_api_key(
     space_ids = space_ids or []
     scopes = scopes or ["read"]
 
-    with _connect() as conn:
+    engine = _get_engine()
+    with engine.begin() as conn:
         conn.execute(
-            """
-            INSERT INTO knowledge_api_keys
-                (id, name, prefix, token_hash, connection_id, space_ids, scopes,
-                 rate_limit_per_min, rate_limit_per_day, created_at, expires_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                key_id,
-                name,
-                prefix,
-                token_hash,
-                connection_id,
-                json.dumps(space_ids),
-                json.dumps(scopes),
-                rate_limit_per_min,
-                rate_limit_per_day,
-                now,
-                expires_at,
+            text(
+                """
+                INSERT INTO knowledge_api_keys
+                    (id, name, prefix, token_hash, connection_id, space_ids, scopes,
+                     rate_limit_per_min, rate_limit_per_day, created_at, expires_at)
+                VALUES (:id, :name, :prefix, :token_hash, :connection_id, :space_ids, :scopes,
+                        :rate_limit_per_min, :rate_limit_per_day, :created_at, :expires_at)
+                """
             ),
+            {
+                "id": key_id,
+                "name": name,
+                "prefix": prefix,
+                "token_hash": token_hash,
+                "connection_id": connection_id,
+                "space_ids": json.dumps(space_ids),
+                "scopes": json.dumps(scopes),
+                "rate_limit_per_min": rate_limit_per_min,
+                "rate_limit_per_day": rate_limit_per_day,
+                "created_at": now,
+                "expires_at": expires_at,
+            },
         )
 
     row = get_api_key(key_id)
@@ -148,59 +189,45 @@ def create_api_key(
 
 
 def get_api_key(key_id: str) -> dict[str, Any] | None:
-    import json
-
     ensure_table()
-    with _connect() as conn:
+    engine = _get_engine()
+    with engine.connect() as conn:
         row = conn.execute(
-            "SELECT * FROM knowledge_api_keys WHERE id = ?", (key_id,)
+            text("SELECT * FROM knowledge_api_keys WHERE id = :id"),
+            {"id": key_id},
         ).fetchone()
-    if row is None:
-        return None
-    d = dict(row)
-    d["space_ids"] = json.loads(d["space_ids"])
-    d["scopes"] = json.loads(d["scopes"])
-    return d
+    return _row_to_dict(row) if row else None
 
 
 def list_api_keys(connection_id: str | None = None) -> list[dict[str, Any]]:
-    import json
-
     ensure_table()
-    with _connect() as conn:
+    engine = _get_engine()
+    with engine.connect() as conn:
         if connection_id:
             rows = conn.execute(
-                "SELECT * FROM knowledge_api_keys WHERE connection_id = ? ORDER BY created_at DESC",
-                (connection_id,),
+                text(
+                    "SELECT * FROM knowledge_api_keys "
+                    "WHERE connection_id = :cid ORDER BY created_at DESC"
+                ),
+                {"cid": connection_id},
             ).fetchall()
         else:
             rows = conn.execute(
-                "SELECT * FROM knowledge_api_keys ORDER BY created_at DESC"
+                text("SELECT * FROM knowledge_api_keys ORDER BY created_at DESC")
             ).fetchall()
-    result = []
-    for row in rows:
-        d = dict(row)
-        d["space_ids"] = json.loads(d["space_ids"])
-        d["scopes"] = json.loads(d["scopes"])
-        result.append(d)
-    return result
+    return [_row_to_dict(r) for r in rows]
 
 
 def revoke_api_key(key_id: str) -> bool:
-    """Soft-delete by setting ``expires_at`` to 1 second in the past.  Returns True if the key existed."""
-    from datetime import timedelta as _td
-
+    """Hard-delete the API key row. Returns True if a row was deleted."""
     ensure_table()
-    # Set expires_at 1 second in the past so SQLite's datetime('now') comparison reliably excludes it.
-    past = (datetime.now(timezone.utc).replace(microsecond=0) - _td(seconds=1)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-    with _connect() as conn:
-        cur = conn.execute(
-            "UPDATE knowledge_api_keys SET expires_at = ? WHERE id = ? AND (expires_at IS NULL OR expires_at > ?)",
-            (past, key_id, past),
+    engine = _get_engine()
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("DELETE FROM knowledge_api_keys WHERE id = :id"),
+            {"id": key_id},
         )
-    return cur.rowcount > 0
+        return result.rowcount > 0
 
 
 def verify_token(bearer: str) -> dict[str, Any] | None:
@@ -209,8 +236,6 @@ def verify_token(bearer: str) -> dict[str, Any] | None:
     Returns the api_key row if valid and not expired, else None.
     Uses prefix-first lookup (O(1)) then a single bcrypt.checkpw call.
     """
-    import json
-
     if not bearer.startswith("evo_k_"):
         return None
     rest = bearer[len("evo_k_"):]
@@ -220,31 +245,35 @@ def verify_token(bearer: str) -> dict[str, Any] | None:
     prefix = parts[0]
 
     ensure_table()
-    with _connect() as conn:
+    # Compute "now" in Python so the WHERE clause is portable across SQLite + PG.
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+
+    engine = _get_engine()
+    with engine.connect() as conn:
         rows = conn.execute(
-            """
-            SELECT * FROM knowledge_api_keys
-            WHERE prefix = ?
-              AND (expires_at IS NULL OR expires_at > datetime('now'))
-            """,
-            (prefix,),
+            text(
+                "SELECT * FROM knowledge_api_keys "
+                "WHERE prefix = :prefix "
+                "  AND (expires_at IS NULL OR expires_at > :now)"
+            ),
+            {"prefix": prefix, "now": now_str},
         ).fetchall()
 
     for row in rows:
-        d = dict(row)
+        d = _row_to_dict(row)
         try:
             if bcrypt.checkpw(bearer.encode(), d["token_hash"].encode()):
-                # Update last_used_at (fire and forget, best-effort)
                 try:
-                    with _connect() as conn:
-                        conn.execute(
-                            "UPDATE knowledge_api_keys SET last_used_at = ? WHERE id = ?",
-                            (_now(), d["id"]),
+                    with engine.begin() as wconn:
+                        wconn.execute(
+                            text(
+                                "UPDATE knowledge_api_keys SET last_used_at = :now "
+                                "WHERE id = :id"
+                            ),
+                            {"now": _now(), "id": d["id"]},
                         )
                 except Exception:
                     pass
-                d["space_ids"] = json.loads(d["space_ids"])
-                d["scopes"] = json.loads(d["scopes"])
                 return d
         except Exception:
             continue

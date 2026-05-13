@@ -271,40 +271,19 @@ def upgrade() -> None:
     )
 
     # ------------------------------------------------------------------
-    # knowledge_api_keys
-    # ------------------------------------------------------------------
-    op.create_table(
-        "knowledge_api_keys",
-        sa.Column(
-            "id",
-            postgresql.UUID(as_uuid=True),
-            primary_key=True,
-            server_default=sa.text("gen_random_uuid()"),
-        ),
-        sa.Column("token_hash", sa.Text(), nullable=False),
-        sa.Column("name", sa.Text()),
-        sa.Column("space_ids", postgresql.ARRAY(postgresql.UUID(as_uuid=True))),
-        sa.Column("scopes", postgresql.ARRAY(sa.Text())),
-        sa.Column("rate_limit_per_min", sa.Integer(), server_default="60"),
-        sa.Column("rate_limit_per_day", sa.Integer(), server_default="10000"),
-        sa.Column(
-            "created_at",
-            sa.TIMESTAMP(timezone=True),
-            server_default=sa.text("now()"),
-        ),
-        sa.Column("last_used_at", sa.TIMESTAMP(timezone=True)),
-        sa.Column("expires_at", sa.TIMESTAMP(timezone=True)),
-    )
-
-    # ------------------------------------------------------------------
     # knowledge_api_usage — fixed window rate limiting counter
+    #
+    # NOTE: knowledge_api_keys does NOT live in this database. The keys are
+    # the dashboard's source of truth and are managed in the host DB (SQLite
+    # or Postgres reached via DATABASE_URL) by knowledge.api_keys.
+    # This connection-scoped Postgres only stores the per-window counter;
+    # api_key_id is therefore a free UUID without a foreign key.
     # ------------------------------------------------------------------
     op.create_table(
         "knowledge_api_usage",
         sa.Column(
             "api_key_id",
             postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("knowledge_api_keys.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column("window_start", sa.TIMESTAMP(timezone=True), nullable=False),
@@ -365,7 +344,6 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("knowledge_classify_queue")
     op.drop_table("knowledge_api_usage")
-    op.drop_table("knowledge_api_keys")
     op.get_bind().execute(sa.text("DROP TABLE IF EXISTS knowledge_chunks"))
     op.drop_table("knowledge_documents")
     op.drop_table("knowledge_units")

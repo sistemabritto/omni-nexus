@@ -197,10 +197,13 @@ def list_goals():
     project_id = request.args.get("project_id", type=int)
     status_filter = request.args.get("status")
     due_filter = request.args.get("due_date")
+    parent_goal_id = request.args.get("parent_goal_id", type=int)
 
     q = Goal.query
     if project_id:
         q = q.filter_by(project_id=project_id)
+    if parent_goal_id:
+        q = q.filter_by(parent_goal_id=parent_goal_id)
     if status_filter:
         q = q.filter_by(status=status_filter)
 
@@ -239,6 +242,11 @@ def create_goal():
         return jsonify({"error": "slug, title, and project_id are required"}), 400
     if Goal.query.filter_by(slug=data["slug"]).first():
         return jsonify({"error": f"Goal slug '{data['slug']}' already exists"}), 409
+    # Sub-goal (agent-authored, has a parent) must always carry a due_date —
+    # ADR SPEC 5a. Without this, an agent-proposed decomposition tree has no
+    # deadline to bound it.
+    if data.get("parent_goal_id") and not data.get("due_date"):
+        return jsonify({"error": "sub-goal requires due_date"}), 400
     now = _now()
     g = Goal(
         slug=data["slug"],
@@ -251,12 +259,25 @@ def create_goal():
         current_value=data.get("current_value", 0.0),
         due_date=data.get("due_date"),
         status=data.get("status", "active"),
+        parent_goal_id=data.get("parent_goal_id"),
+        decomposition_state=data.get("decomposition_state"),
         created_at=now,
         updated_at=now,
     )
     db.session.add(g)
     db.session.commit()
     audit(current_user, "create", "goals", f"Created goal #{g.id}: {g.title}")
+
+    # goal-planner emitter (ADR SPEC 5b): only human-authored TOP-LEVEL goals
+    # fire goal_created — sub-goals (parent_goal_id set) never re-trigger the
+    # planner on creation, or decomposition would recurse infinitely.
+    if g.parent_goal_id is None:
+        try:
+            from heartbeat_dispatcher import dispatch
+            dispatch("goal-planner", "goal_created", {"goal_id": g.id})
+        except Exception as exc:  # noqa: BLE001 — best-effort, never block goal creation
+            print(f"[goals] WARNING: could not dispatch goal_created for goal #{g.id}: {exc}", flush=True)
+
     return jsonify(g.to_dict()), 201
 
 
@@ -267,8 +288,12 @@ def patch_goal(goal_id: int):
         return denied
     g = Goal.query.get_or_404(goal_id)
     data = request.get_json() or {}
+    # current_value is intentionally not accepted here — it has a single
+    # source of truth (COUNT of resolved/closed tickets, see
+    # heartbeat_outcome._recompute_goal_from_tickets). Manual drift
+    # correction goes through POST /api/goals/{id}/recalculate instead.
     for field in ("title", "description", "target_metric", "metric_type", "target_value",
-                  "current_value", "due_date", "status", "project_id"):
+                  "due_date", "status", "project_id"):
         if field in data:
             setattr(g, field, data[field])
     g.updated_at = _now()
@@ -291,24 +316,24 @@ def delete_goal(goal_id: int):
 
 @bp.route("/api/goals/<int:goal_id>/recalculate", methods=["POST"])
 def recalculate_goal(goal_id: int):
-    """Drift correction: recompute current_value from goal_progress_v."""
+    """Drift correction: recompute current_value from the single source of
+    truth (tickets), not the legacy goal_progress_v (goal_tasks) view — see
+    heartbeat_outcome._recompute_goal_from_tickets."""
     denied = _require("execute")
     if denied:
         return denied
-    g = Goal.query.get_or_404(goal_id)
+    Goal.query.get_or_404(goal_id)
 
+    from heartbeat_outcome import _recompute_goal_from_tickets
     conn = sqlite3.connect(_db_path())
-    row = conn.execute(
-        "SELECT done_tasks, pct_complete FROM goal_progress_v WHERE goal_id = ?", (goal_id,)
-    ).fetchone()
-    conn.close()
+    try:
+        _recompute_goal_from_tickets(goal_id, conn)
+        conn.commit()
+    finally:
+        conn.close()
 
-    if row:
-        g.current_value = float(row[0])
-        if g.current_value >= g.target_value and g.status == "active":
-            g.status = "achieved"
-    g.updated_at = _now()
-    db.session.commit()
+    db.session.expire_all()
+    g = Goal.query.get_or_404(goal_id)
     audit(current_user, "recalculate", "goals", f"Recalculated goal #{goal_id}")
     return jsonify(g.to_dict())
 
@@ -407,23 +432,17 @@ def delete_goal_task(task_id: int):
 
 
 def _recalculate_goal_value(goal_id: int):
-    """Internal helper: sync goal.current_value with done tasks count."""
+    """Internal helper: sync goal.current_value via the single source of
+    truth (tickets) — see heartbeat_outcome._recompute_goal_from_tickets.
+    goal_progress_v (goal_tasks) is frozen legacy post goal-ticket-unification."""
+    from heartbeat_outcome import _recompute_goal_from_tickets
     conn = sqlite3.connect(_db_path())
-    row = conn.execute(
-        "SELECT done_tasks FROM goal_progress_v WHERE goal_id = ?", (goal_id,)
-    ).fetchone()
-    conn.close()
-
-    if row is None:
-        return
-    g = Goal.query.get(goal_id)
-    if g is None:
-        return
-    g.current_value = float(row[0])
-    if g.current_value >= g.target_value and g.status == "active":
-        g.status = "achieved"
-    g.updated_at = _now()
-    db.session.commit()
+    try:
+        _recompute_goal_from_tickets(goal_id, conn)
+        conn.commit()
+    finally:
+        conn.close()
+    db.session.expire_all()
 
 
 # --------------- Link routine to goal ---------------

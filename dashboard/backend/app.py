@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify, g
 from flask_cors import CORS
 from flask_login import LoginManager, current_user, login_user
 
@@ -198,6 +198,7 @@ with app.app_context():
                 current_value REAL NOT NULL DEFAULT 0,
                 due_date TEXT,
                 status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','achieved','on-hold','cancelled')),
+                completed_at TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
@@ -208,7 +209,8 @@ with app.app_context():
                 title TEXT NOT NULL,
                 description TEXT,
                 workspace_folder_path TEXT,
-                status TEXT NOT NULL DEFAULT 'active',
+                status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','completed','on-hold','cancelled')),
+                completed_at TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
@@ -224,6 +226,7 @@ with app.app_context():
                 current_value REAL NOT NULL DEFAULT 0.0,
                 due_date TEXT,
                 status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','achieved','on-hold','cancelled')),
+                completed_at TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
@@ -238,6 +241,8 @@ with app.app_context():
                 locked_at TEXT,
                 locked_by TEXT,
                 due_date TEXT,
+                started_at TEXT,
+                completed_at TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
@@ -415,12 +420,19 @@ with app.app_context():
     # --- End goal_relations migration ---
 
     # --- goal-ticket-unification: pending_approvals table (shared publish + decomposition gate) ---
+    # gate_type/mission_id/project_id cover ai-hierarchy-suggestions too
+    # (project_suggestion, goal_suggestion) — a fresh install gets the final
+    # shape directly; the rebuild block right below upgrades a DB that already
+    # has this table from before those two gate_types existed (SQLite can't
+    # ALTER a CHECK constraint in place).
     _cur.executescript("""
         CREATE TABLE IF NOT EXISTS pending_approvals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            gate_type TEXT NOT NULL CHECK(gate_type IN ('publish','decomposition')),
+            gate_type TEXT NOT NULL CHECK(gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion')),
             ticket_id TEXT REFERENCES tickets(id) ON DELETE CASCADE,
             goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+            mission_id INTEGER REFERENCES missions(id) ON DELETE CASCADE,
+            project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
             agent TEXT,
             attempt INTEGER NOT NULL DEFAULT 0,
             idempotency_key TEXT NOT NULL UNIQUE,
@@ -441,6 +453,121 @@ with app.app_context():
     """)
     _conn.commit()
     # --- End pending_approvals migration ---
+
+    # --- ai-hierarchy-suggestions: upgrade a pre-existing pending_approvals
+    # (created before project_suggestion/goal_suggestion existed) in place.
+    # SQLite has no ALTER-a-CHECK-constraint — rebuild the table, copy rows,
+    # swap. Detected by sniffing the live CHECK text rather than a version
+    # flag, so this is safe to run unconditionally on every boot.
+    _cur.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='pending_approvals'"
+    )
+    _pa_row = _cur.fetchone()
+    if _pa_row and "project_suggestion" not in (_pa_row[0] or ""):
+        _cur.executescript("""
+            ALTER TABLE pending_approvals RENAME TO pending_approvals_old;
+            CREATE TABLE pending_approvals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                gate_type TEXT NOT NULL CHECK(gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion')),
+                ticket_id TEXT REFERENCES tickets(id) ON DELETE CASCADE,
+                goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+                mission_id INTEGER REFERENCES missions(id) ON DELETE CASCADE,
+                project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+                agent TEXT,
+                attempt INTEGER NOT NULL DEFAULT 0,
+                idempotency_key TEXT NOT NULL UNIQUE,
+                status TEXT NOT NULL DEFAULT 'pending'
+                    CHECK(status IN ('pending','approved','rejected','expired','published')),
+                payload TEXT,
+                telegram_chat_id TEXT,
+                telegram_message_id INTEGER,
+                approver_from_id TEXT,
+                reject_reason TEXT,
+                decided_by TEXT,
+                created_at TEXT NOT NULL,
+                nudged_at TEXT,
+                decided_at TEXT,
+                expires_at TEXT NOT NULL
+            );
+            INSERT INTO pending_approvals (
+                id, gate_type, ticket_id, goal_id, agent, attempt, idempotency_key,
+                status, payload, telegram_chat_id, telegram_message_id,
+                approver_from_id, reject_reason, decided_by, created_at, nudged_at,
+                decided_at, expires_at
+            )
+            SELECT
+                id, gate_type, ticket_id, goal_id, agent, attempt, idempotency_key,
+                status, payload, telegram_chat_id, telegram_message_id,
+                approver_from_id, reject_reason, decided_by, created_at, nudged_at,
+                decided_at, expires_at
+            FROM pending_approvals_old;
+            DROP TABLE pending_approvals_old;
+            CREATE INDEX IF NOT EXISTS idx_pending_approvals_status ON pending_approvals(status, expires_at);
+        """)
+        _conn.commit()
+    # --- End pending_approvals CHECK-constraint upgrade ---
+
+    # --- completed_at/started_at + projects.status CHECK constraint ---
+    # missions/goals/goal_tasks: plain additive ALTER (no CHECK involved).
+    _cur.execute("PRAGMA table_info(missions)")
+    if "completed_at" not in {row[1] for row in _cur.fetchall()}:
+        _cur.execute("ALTER TABLE missions ADD COLUMN completed_at TEXT")
+        _conn.commit()
+
+    _cur.execute("PRAGMA table_info(goals)")
+    if "completed_at" not in {row[1] for row in _cur.fetchall()}:
+        _cur.execute("ALTER TABLE goals ADD COLUMN completed_at TEXT")
+        _conn.commit()
+
+    _cur.execute("PRAGMA table_info(goal_tasks)")
+    _gt_cols = {row[1] for row in _cur.fetchall()}
+    if "started_at" not in _gt_cols:
+        _cur.execute("ALTER TABLE goal_tasks ADD COLUMN started_at TEXT")
+        _conn.commit()
+    if "completed_at" not in _gt_cols:
+        _cur.execute("ALTER TABLE goal_tasks ADD COLUMN completed_at TEXT")
+        _conn.commit()
+
+    # projects.status has no CHECK constraint today (unlike missions/goals) —
+    # SQLite can't ALTER one in, so this rebuilds the table (rename + create +
+    # copy + drop) the same way the pending_approvals upgrade above does.
+    # Sniffed via the missing completed_at column rather than a version flag,
+    # so this stays idempotent and safe to run on every boot.
+    _cur.execute("PRAGMA table_info(projects)")
+    if "completed_at" not in {row[1] for row in _cur.fetchall()}:
+        _cur.executescript("""
+            ALTER TABLE projects RENAME TO projects_old;
+            CREATE TABLE projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                slug TEXT UNIQUE NOT NULL,
+                mission_id INTEGER REFERENCES missions(id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                description TEXT,
+                workspace_folder_path TEXT,
+                status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','completed','on-hold','cancelled')),
+                completed_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            INSERT INTO projects (
+                id, slug, mission_id, title, description, workspace_folder_path,
+                status, created_at, updated_at
+            )
+            SELECT
+                id, slug, mission_id, title, description, workspace_folder_path,
+                CASE
+                    WHEN status IN ('active','completed','on-hold','cancelled') THEN status
+                    WHEN status = 'achieved' THEN 'completed'
+                    ELSE 'active'
+                END,
+                created_at, updated_at
+            FROM projects_old;
+            DROP TABLE projects_old;
+            CREATE INDEX IF NOT EXISTS idx_projects_mission ON projects(mission_id);
+            CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+        """)
+        _conn.commit()
+    # --- End completed_at/started_at + projects.status CHECK constraint ---
 
     # --- goal-ticket-unification: drop legacy goal_tasks-driven rollup trigger ---
     # current_value now has a single source of truth (tickets — see
@@ -763,6 +890,73 @@ with app.app_context():
         _conn.commit()
     # --- End B3 safe_uninstall migration ---
 
+    # --- social-media-production migration: media_jobs table ---
+    _existing_tables_smp = {row[0] for row in _cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+    if "media_jobs" not in _existing_tables_smp:
+        _cur.executescript(
+            """
+            CREATE TABLE media_jobs (
+                id TEXT PRIMARY KEY,
+                project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+                campaign_id TEXT,
+                goal_id INTEGER REFERENCES goals(id) ON DELETE SET NULL,
+                task_id INTEGER REFERENCES goal_tasks(id) ON DELETE SET NULL,
+                created_by TEXT NOT NULL DEFAULT 'system',
+                title TEXT NOT NULL,
+                brief TEXT,
+                platform TEXT NOT NULL CHECK(platform IN ('instagram','youtube','linkedin','tiktok')),
+                postiz_integration_id TEXT,
+                format TEXT NOT NULL DEFAULT 'vertical',
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                fps INTEGER NOT NULL DEFAULT 30,
+                duration_seconds REAL NOT NULL,
+                language TEXT NOT NULL DEFAULT 'pt-BR',
+                caption TEXT,
+                platform_settings TEXT,
+                publication_mode TEXT NOT NULL DEFAULT 'draft' CHECK(publication_mode IN ('draft','schedule')),
+                scheduled_at TEXT,
+                scheduled_at_utc TEXT,
+                timezone TEXT NOT NULL DEFAULT 'America/Bahia',
+                status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN (
+                    'queued','preparing','generating','rendering','validating',
+                    'ready_for_review','rejected','approved','uploading',
+                    'creating_draft','draft_created','scheduling','scheduled',
+                    'published','retryable_failure','failed','cancelled'
+                )),
+                workspace_path TEXT,
+                render_path TEXT,
+                render_sha256 TEXT,
+                render_size_bytes INTEGER,
+                render_duration_seconds REAL,
+                render_width INTEGER,
+                render_height INTEGER,
+                render_fps INTEGER,
+                render_has_audio INTEGER,
+                postiz_media_id TEXT,
+                postiz_media_path TEXT,
+                postiz_media_name TEXT,
+                postiz_post_id TEXT,
+                attempt_count INTEGER NOT NULL DEFAULT 0,
+                last_error TEXT,
+                reject_reason TEXT,
+                locked_at TEXT,
+                locked_by TEXT,
+                lock_timeout_seconds INTEGER,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                approved_at TEXT,
+                published_at TEXT,
+                CHECK ((locked_at IS NULL AND locked_by IS NULL) OR (locked_at IS NOT NULL AND locked_by IS NOT NULL))
+            );
+            CREATE INDEX idx_media_jobs_status ON media_jobs(status);
+            CREATE INDEX idx_media_jobs_project ON media_jobs(project_id);
+            CREATE INDEX idx_media_jobs_locked ON media_jobs(locked_at);
+            """
+        )
+        _conn.commit()
+    # --- End social-media-production migration ---
+
     # Fix corrupted datetime columns (NULL or non-string values crash SQLAlchemy)
     for _tbl, _col in [("roles", "created_at"), ("users", "created_at"), ("users", "last_login")]:
         try:
@@ -933,6 +1127,13 @@ def _try_api_token_auth():
     """Resolve an Authorization: Bearer <token> header against DASHBOARD_API_TOKEN.
     On match, log in the configured service user for the duration of this request.
     Returns True if a valid token was found and applied, False otherwise.
+
+    Sets g.auth_via_api_token = True on success — any route that must be
+    reachable ONLY by a real human sitting at a logged-in browser session
+    (not by an agent that happens to hold DASHBOARD_API_TOKEN, which many
+    do via EvoClient) checks this flag. See
+    routes/approvals.py::decide_approval_via_dashboard for the concrete case
+    this exists for (panorama 2026-07-17, item 1).
     """
     expected = os.environ.get("DASHBOARD_API_TOKEN", "").strip()
     if not expected:
@@ -954,6 +1155,7 @@ def _try_api_token_auth():
         return False
     # Log in for this request only (no remember cookie)
     login_user(user, remember=False, fresh=False)
+    g.auth_via_api_token = True
     return True
 
 
@@ -1033,6 +1235,8 @@ from routes.shares import bp as shares_bp
 from routes.heartbeats import bp as heartbeats_bp
 from routes.goals import bp as goals_bp
 from routes.tickets import bp as tickets_bp
+from routes.media_jobs import bp as media_jobs_bp
+from routes.integrations_core_postiz import bp as integrations_core_postiz_bp
 from routes.approvals import bp as approvals_bp
 from routes.health import bp as health_bp
 from routes.knowledge import bp as knowledge_bp
@@ -1111,6 +1315,8 @@ app.register_blueprint(shares_bp)
 app.register_blueprint(heartbeats_bp)
 app.register_blueprint(goals_bp)
 app.register_blueprint(tickets_bp)
+app.register_blueprint(media_jobs_bp)
+app.register_blueprint(integrations_core_postiz_bp)
 app.register_blueprint(approvals_bp)
 app.register_blueprint(health_bp)
 app.register_blueprint(knowledge_bp)

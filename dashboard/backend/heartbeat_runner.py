@@ -41,7 +41,17 @@ AGENTS_DIR = WORKSPACE / ".claude" / "agents"
 # every other agent skips (without invoking Claude) when it has no assigned work.
 # goal-planner is here for the same reason: it decomposes Goals, not tickets —
 # its own ticket inbox is always empty, so without this it would never run.
-STATE_MONITOR_AGENTS = {"atlas-project", "flux-finance", "goal-planner"}
+STATE_MONITOR_AGENTS = {
+    "atlas-project", "flux-finance", "goal-planner",
+    # ai-hierarchy-suggestions: same zero-inbox, event-only shape as
+    # goal-planner, one rung each higher in the Mission -> Project -> Goal
+    # -> Ticket chain.
+    "project-planner", "goal-suggester",
+    # growth-content-heartbeat: pixel-social-media's growth heartbeat exists
+    # specifically to top up a Goal's content-ticket queue WHEN IT'S LOW —
+    # the exact case an empty inbox would otherwise cost-guard away.
+    "pixel-social-media",
+}
 
 # Review-loop subagent instructions (goal-ticket-unification Step 6, ADR SPEC
 # 2c): appended to the executor's prompt ONLY when the pre-run active_provider

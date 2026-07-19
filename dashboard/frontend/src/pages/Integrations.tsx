@@ -39,7 +39,6 @@ import { api } from '../lib/api'
 import IntegrationDrawer from '../components/IntegrationDrawer'
 import { getIntegrationMeta } from '../lib/integrationMeta'
 import { useTranslation } from 'react-i18next'
-import PostizCoreConfigCard from '../components/PostizCoreConfigCard'
 
 interface EnvVarSpec {
   name: string
@@ -1262,8 +1261,6 @@ export default function Integrations() {
               </div>
             </div>
           </div>
-
-          <PostizCoreConfigCard />
 
           {/* Core Integrations */}
           <div className="mb-10">

@@ -453,6 +453,32 @@ def _render_structured_items(gate_type: str, payload: dict) -> str:
     return "\n".join(lines)
 
 
+def _render_publish_preview(gate_type: str, payload: dict) -> dict | None:
+    """O que EXATAMENTE vai ao ar, para o gate de publicação.
+
+    `payload["body"]` é resumo truncado escrito pelo agente; o que publica é
+    `payload["outcome"]["publish_content"]` + `publish_media` — outro par de
+    campos. Aprovar lendo o resumo é aprovar uma coisa e publicar outra, que é
+    justamente o problema de confiança que o gate existe para evitar (o card do
+    Telegram já mostra o texto real; a página do dashboard não mostrava).
+
+    A mídia entra como lista de URLs para a página renderizar a imagem. Validar
+    imagem por URL escrita é impossível na prática — é preciso ver.
+    """
+    if gate_type != "publish":
+        return None
+    outcome = payload.get("outcome")
+    if not isinstance(outcome, dict):
+        return None
+    media = [u for u in (outcome.get("publish_media") or []) if isinstance(u, str)]
+    return {
+        "target": outcome.get("publish_target"),
+        "publish_at": outcome.get("publish_at"),
+        "content": outcome.get("publish_content"),
+        "media": media,
+    }
+
+
 def _approval_to_dict(row) -> dict:
     try:
         payload = json.loads(row.payload or "{}")
@@ -473,6 +499,7 @@ def _approval_to_dict(row) -> dict:
         "body": payload.get("body"),
         "context": context_line or None,
         "items_preview": items_block.strip() or None,
+        "publish": _render_publish_preview(row.gate_type, payload),
         "created_at": row.created_at,
         "expires_at": row.expires_at,
         "decided_at": row.decided_at,

@@ -401,6 +401,11 @@ def verdict_via_nvidia(work_report, conn) -> dict | None:
         "verificado (build/teste passou, evidência real), sem pendências bloqueantes.\n"
         "- verdict='fail' se falta evidência, se o próprio relatório admite algo "
         "incompleto/quebrado, ou se a alegação de conclusão não é sustentada.\n"
+        "- IMPORTANTE: se o relatório diz que o conteúdo está pronto e aguardando "
+        "APROVAÇÃO HUMANA para publicar, isso é verdict='pass'. Publicar não é "
+        "trabalho do agente — o gate humano é obrigatório por design, e exigir a "
+        "publicação como prova de conclusão cria um impasse: o agente nunca "
+        "chega ao gate porque você o reprova por não ter passado por ele.\n"
         "- critique: 1-3 frases em pt-BR explicando a decisão.\n"
         "- blocking_issues: lista curta dos problemas que bloqueiam pass (vazio se pass)."
     )
@@ -1096,6 +1101,24 @@ def apply_outcome(heartbeat_id: str, agent: str, result: dict, conn) -> dict | N
         # (in-session anthropic path, heartbeat_runner's prompt addendum);
         # if absent (the nvidia default), fetch one via the read-only HTTP
         # fallback — never a 2nd invoke_with_fallback.
+        # Conteúdo público com publish_intent=true vai DIRETO para o gate humano,
+        # sem passar pelo revisor automático.
+        #
+        # Antes, o gate só era alcançável depois de um verdict='pass' (ver abaixo),
+        # e o revisor reprovava justamente porque nada tinha sido publicado ainda —
+        # um impasse fechado: o agente não chegava ao gate porque era reprovado por
+        # não ter passado pelo gate. Em produção isso queimou 6 ciclos do mesmo post
+        # até 'review_exhausted' (Telegram, 24-25/07/2026).
+        #
+        # O gate do Telegram JÁ É a revisão para conteúdo público: um humano lê o
+        # texto exato e a data antes de qualquer coisa sair. Rodar um revisor
+        # automático antes dele é redundante e, como se viu, ativamente nocivo.
+        if (ticket_id and new_status in ("review", "resolved", "closed")
+                and agent in PUBLISHING_AGENTS and outcome.get("publish_intent") is True):
+            gate = _maybe_park_for_publish(ticket_id, agent, outcome, title, conn)
+            if gate is not None:
+                return gate
+
         if ticket_id and new_status == "review":
             _move_ticket(ticket_id, "review", agent, summary or "Trabalho enviado para revisão.", conn)
             verdict = parse_verdict(raw_output) or verdict_via_nvidia(raw_output, conn)

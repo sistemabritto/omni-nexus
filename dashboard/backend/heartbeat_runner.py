@@ -568,10 +568,15 @@ def step9_release_checkout(ticket_id: str | None, agent_slug: str, conn):
                WHERE id = ? AND locked_by = ?""",
             (ticket_id, agent_slug),
         )
+        # Colunas conforme models.TicketActivity: id/action/payload/created_at.
+        # Estava escrito (ticket_id, event, actor, metadata) — colunas que não
+        # existem — e ainda omitia id e created_at, ambos NOT NULL. Todo release
+        # caía no except abaixo e o lock só era liberado pelo janitor.
         conn.execute(
-            """INSERT INTO ticket_activity (ticket_id, event, actor, metadata)
-               VALUES (?, 'release', ?, '{}')""",
-            (ticket_id, f"agent:{agent_slug}"),
+            """INSERT INTO ticket_activity (id, ticket_id, actor, action, payload, created_at)
+               VALUES (?, ?, ?, 'release', '{}', ?)""",
+            (str(uuid.uuid4()), ticket_id, f"agent:{agent_slug}",
+             datetime.now(timezone.utc).isoformat()),
         )
         conn.commit()
     except Exception as exc:
@@ -964,10 +969,16 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                         print(f"[heartbeat_runner] step5 checkout CONFLICT ticket={ticket_id} already locked", flush=True)
                         ticket_id = None
                     else:
+                        # Mesmo erro de colunas do release (ver step9): aqui ele
+                        # era fatal — a exceção subia e matava o run inteiro do
+                        # heartbeat, que é o "table ticket_activity has no column"
+                        # que derrubou o autopilot-pixel-social-media por dias.
                         conn.execute(
-                            """INSERT INTO ticket_activity (ticket_id, event, actor, metadata)
-                               VALUES (?, 'checkout', ?, ?)""",
-                            (ticket_id, f"agent:{agent_slug}", f'{{"run_id":"{run_id}","triggered_by":"{triggered_by}"}}'),
+                            """INSERT INTO ticket_activity (id, ticket_id, actor, action, payload, created_at)
+                               VALUES (?, ?, ?, 'checkout', ?, ?)""",
+                            (str(uuid.uuid4()), ticket_id, f"agent:{agent_slug}",
+                             json.dumps({"run_id": run_id, "triggered_by": triggered_by}),
+                             datetime.now(timezone.utc).isoformat()),
                         )
                         conn.commit()
                         print(f"[heartbeat_runner] step5 checkout OK ticket={ticket_id} agent={agent_slug}", flush=True)

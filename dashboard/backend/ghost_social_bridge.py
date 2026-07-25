@@ -103,6 +103,14 @@ def ghost_jwt(admin_key: str) -> str:
     return f"{assinado}.{_b64(sig)}"
 
 
+# O blog está atrás do Cloudflare, que devolve 403 "error code: 1010" para
+# User-Agent de biblioteca HTTP (python-requests/urllib). O JWT está correto e
+# o erro não diz nada sobre bloqueio de bot — parece credencial inválida e leva
+# a trocar chave que estava certa. Um UA de navegador resolve.
+UA_NAVEGADOR = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+
+
 def buscar_post(post_id: str) -> dict | None:
     url = (os.environ.get("GHOST_URL") or "").strip().rstrip("/")
     key = (os.environ.get("GHOST_ADMIN_API_KEY") or "").strip()
@@ -110,7 +118,8 @@ def buscar_post(post_id: str) -> dict | None:
         return None
     r = requests.get(
         f"{url}/ghost/api/admin/posts/{post_id}/?formats=plaintext&include=tags",
-        headers={"Authorization": f"Ghost {ghost_jwt(key)}"}, timeout=45)
+        headers={"Authorization": f"Ghost {ghost_jwt(key)}", "User-Agent": UA_NAVEGADOR},
+        timeout=45)
     if r.status_code >= 300:
         return None
     posts = r.json().get("posts") or []
@@ -181,6 +190,36 @@ def adaptar(post: dict, rede: str) -> str:
 
 # ── aprovações ───────────────────────────────────────────────────────────
 
+def midia_do_post(post: dict) -> tuple[list[str], str]:
+    """Mídia utilizável do artigo, ou o motivo de não haver.
+
+    A capa do Ghost (`feature_image`) é a imagem real do artigo — é ela que vai
+    para o Instagram, não uma imagem inventada. Duas coisas podem faltar:
+
+    1. o post não tem capa;
+    2. a capa está num host fora de POSTIZ_ALLOWED_MEDIA_HOSTS.
+
+    Nos dois casos devolvemos o motivo em vez de uma lista vazia, porque o
+    chamador precisa dizer ao humano por que o Instagram ficou de fora — "sem
+    imagem" e "imagem num host não permitido" pedem ações diferentes.
+    """
+    capa = (post.get("feature_image") or "").strip()
+    if not capa:
+        return [], "artigo sem feature_image (Instagram exige imagem)"
+    try:
+        from postiz_client import PostizClient
+
+        client = PostizClient.from_env()
+    except Exception:  # noqa: BLE001 — sem cliente, não dá para afirmar que é segura
+        client = None
+    if client is None:
+        return [], "POSTIZ_URL/POSTIZ_API_KEY não configurados"
+    if not client.is_safe_media_url(capa):
+        return [], (f"capa em host não permitido ({capa.split('/')[2] if '/' in capa else capa}); "
+                    "acrescente-o a POSTIZ_ALLOWED_MEDIA_HOSTS")
+    return [capa], ""
+
+
 def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) -> dict:
     """Gera as versões e abre uma aprovação por rede. Nada é publicado aqui."""
     post = buscar_post(post_id)
@@ -191,16 +230,18 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
 
     quando = datetime.now(timezone.utc) + timedelta(hours=em_horas)
     resultado: dict = {"ok": True, "post": post.get("title"), "redes": {}, "pulados": {}}
+    midia, sem_midia = midia_do_post(post)
 
     for rede in REDES:
         texto = adaptar(post, rede)
         if not texto:
             resultado["pulados"][rede] = "texto vazio"
             continue
-        if rede == "instagram":
-            # O gate recusa Instagram sem mídia — é regra da plataforma. Abrir uma
-            # aprovação que vai falhar é pior que não abrir.
-            resultado["pulados"][rede] = "exige mídia (publish_media)"
+        if rede == "instagram" and not midia:
+            # O Postiz recusa Instagram sem mídia — é regra da plataforma, não
+            # nossa. Abrir uma aprovação que vai falhar na publicação é pior que
+            # não abrir, então o motivo vai para o relatório e a rede fica fora.
+            resultado["pulados"][rede] = sem_midia
             continue
 
         agendado = quando + timedelta(minutes=OFFSET_MIN[rede])
@@ -210,12 +251,14 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             "publish_intent": True,
             "publish_target": rede,
             "publish_content": texto,
-            "publish_media": [],
+            # Só o Instagram exige imagem; nas outras redes a capa competiria
+            # com o preview do link, que é o que dá clique.
+            "publish_media": midia if rede == "instagram" else [],
             "publish_at": agendado.isoformat().replace("+00:00", "Z"),
         }
         if dry_run:
             resultado["redes"][rede] = {"dry_run": True, "publish_at": outcome["publish_at"],
-                                        "preview": texto}
+                                        "preview": texto, "midia": outcome["publish_media"]}
             continue
         try:
             from sdk_client import evo

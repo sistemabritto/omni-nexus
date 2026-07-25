@@ -8,7 +8,7 @@ The workspace has skills in two layers:
 
 | Prefix | Category | Count |
 |---------|-----------|-----|
-| `social-` | Social media (posts, threads, carousels, analytics, strategy) | 17 |
+| `social-` | Social media (posts, threads, carousels, analytics, strategy, agendamento via Postiz) | 22 |
 | `dev-` | Engineering Layer (autopilot, plan, ralplan, deep-interview, deep-dive, external-context, trace, verify, ultraqa, visual-verdict, ai-slop-cleaner, sciomc, team, ccg, ralph, mcp-setup, deepinit, project-session-manager, configure-notifications, release, cancel, remember, ask, learner, skillify) | 25 |
 | `int-` | Integrations (Fathom, Todoist, Stripe, Omie, Bling, Asaas, Discord, Telegram, Linear, GitHub, YouTube, Instagram, LinkedIn, WhatsApp, Licensing) | 15 |
 | `fin-` | Finance (statements, journal, reconciliation, SOX, pulse, close) | 11 |

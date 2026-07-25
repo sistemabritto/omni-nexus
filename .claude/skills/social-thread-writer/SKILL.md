@@ -239,15 +239,23 @@ The algorithm rewards engagement rate, not volume.
 
 ---
 
-## Publishing with ferramenta externa
+## Publishing with Postiz
 
-When ferramenta de agendamento tools are available, offer to publish or schedule the thread directly:
+When Postiz is configured, offer to schedule the thread:
 
-> "Want me to schedule this thread? I can queue it for your next available slot or set a specific time."
+> "Quer que eu agende essa thread? Posso colocar no próximo slot ou numa data específica."
 
-Use `create_post` to publish the thread. Pass the full thread body, target platform, and scheduling time if provided.
+Scheduling goes through **social-schedule-postiz** — Postiz self-hosted is the
+workspace's official intermediary, and no skill calls a platform API directly.
+Pass the full thread body as `publish_content`, the target platform as
+`publish_target`, and the slot as `publish_at` (ISO-8601 **UTC**).
 
-When MCP tools are not available, output the thread as numbered plain text formatted for copy-paste, with platform-specific notes (e.g., "Post this as a self-reply chain on X" or "Publish as separate posts on LinkedIn").
+Threads are one Postiz post per platform: on X, the body posts as a self-reply
+chain; on LinkedIn, deliver the parts as separate posts. Anything public is
+gated behind human approval on Telegram before Postiz receives it.
+
+When Postiz is not configured, output the thread as numbered plain text ready
+for copy-paste, with the same platform-specific notes.
 
 ---
 
@@ -272,7 +280,7 @@ Before delivering the final thread, verify:
 - Does not write carousels or slide decks — see **social-carousel-writer** for slide-by-slide content
 - Does not analyze post performance or metrics — see **social-performance-analyzer** for analytics
 - Does not define content strategy or decide what to post — see **social-content-strategy** for planning
-- Does not execute code or access external APIs without automated publishing integration — save as draft
+- Does not publish or schedule by itself, and never calls a platform API directly — hand the finished draft to **social-schedule-postiz** (Postiz self-hosted is the official scheduling intermediary)
 - Does not produce visual design or images — output is text copy for each thread post only
 
 ## Related Skills

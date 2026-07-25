@@ -135,6 +135,25 @@ def build_tiktok_payload(privacy_level: str = "SELF_ONLY") -> dict:
     }
 
 
+# Um canal lógico ("instagram") pode ser servido por mais de um provider do
+# Postiz. A conta do Felipe é `instagram-standalone` (login pelo Instagram, sem
+# passar pela página do Facebook); casar só por `identifier == "instagram"`
+# fazia o gate responder "nenhuma integração ativa e inequívoca" e o Instagram
+# nunca entrava no fluxo — era esta linha, não a credencial.
+#
+# A ordem importa: o primeiro identifier presente vence, então o provider
+# canônico vem antes da variante.
+PLATFORM_PROVIDER_ALIASES = {
+    "instagram": ("instagram", "instagram-standalone"),
+    "linkedin": ("linkedin", "linkedin-page"),
+}
+
+
+def providers_for(platform: str) -> tuple[str, ...]:
+    """Identifiers do Postiz que atendem um canal lógico."""
+    return PLATFORM_PROVIDER_ALIASES.get(platform, (platform,))
+
+
 PLATFORM_SETTINGS_BUILDERS = {
     "instagram": build_instagram_payload,
     "youtube": build_youtube_payload,
@@ -260,13 +279,23 @@ class PostizClient:
         if integrations is None:
             integrations = self.list_integrations()
         configured_id = (self.integration_ids or {}).get(platform, "")
+        aceitos = providers_for(platform)
         candidates = [
             item for item in integrations
-            if isinstance(item, dict) and item.get("identifier") == platform and not item.get("disabled")
+            if isinstance(item, dict) and item.get("identifier") in aceitos and not item.get("disabled")
         ]
         if configured_id:
             return next((item for item in candidates if item.get("id") == configured_id), None)
-        return candidates[0] if len(candidates) == 1 else None
+        # Com alias, "inequívoco" passa a ser por provider: duas contas do MESMO
+        # provider continuam ambíguas (exigem POSTIZ_INTEGRATION_*_ID), mas uma
+        # conta `instagram-standalone` sozinha é uma escolha óbvia, não um empate.
+        for provider in aceitos:
+            do_provider = [item for item in candidates if item.get("identifier") == provider]
+            if len(do_provider) == 1:
+                return do_provider[0]
+            if do_provider:
+                return None
+        return None
 
     def test_connection(self) -> dict:
         """Best-effort health probe used by the admin config screen."""

@@ -804,8 +804,14 @@ def _parse_publish_at(raw) -> tuple[datetime | None, str | None]:
     return parsed, None
 
 
-def _publish_settings_for(target: str, content: str) -> dict:
+def _publish_settings_for(target: str, content: str, provider: str | None = None) -> dict:
     """Per-platform Postiz settings for the ticket-publish gate.
+
+    `provider` é o `identifier` da integração que o Postiz devolveu, que pode
+    ser uma variante do canal lógico (`instagram-standalone` para `instagram`,
+    `linkedin-page` para `linkedin`). O `__type` do settings precisa casar com
+    o provider REAL da integração, senão o Postiz recusa o payload. Sem o
+    parâmetro, cai no próprio target — o comportamento histórico.
 
     Platforms with a confirmed provider schema go through their real builder
     in postiz_client (X in particular REQUIRES who_can_reply_post — the old
@@ -818,10 +824,18 @@ def _publish_settings_for(target: str, content: str) -> dict:
     defaults to SELF_ONLY (private), so blindly calling every registered
     builder here would either raise or publish invisibly.
     """
-    from postiz_client import build_instagram_payload, build_threads_payload, build_x_payload, build_youtube_payload
+    from postiz_client import (
+        build_instagram_payload, build_linkedin_payload, build_threads_payload,
+        build_x_payload, build_youtube_payload,
+    )
 
+    provider = provider or target
     if target == "instagram":
-        return build_instagram_payload(post_type="post")
+        return build_instagram_payload(
+            post_type="post", standalone=provider == "instagram-standalone",
+        )
+    if target == "linkedin":
+        return build_linkedin_payload(page=provider == "linkedin-page")
     if target == "x":
         return build_x_payload(who_can_reply_post="everyone")
     if target == "threads":
@@ -834,7 +848,7 @@ def _publish_settings_for(target: str, content: str) -> dict:
         if len(title) < 2:
             title = "Sistema Britto"
         return build_youtube_payload(title=title)
-    return {"__type": target}
+    return {"__type": provider}
 
 
 def _run_publish_action(approval_row, conn) -> dict:
@@ -906,7 +920,7 @@ def _run_publish_action(approval_row, conn) -> dict:
             "detail": "Instagram requer publish_media com ao menos uma URL HTTPS.",
         }
 
-    settings = _publish_settings_for(target, content)
+    settings = _publish_settings_for(target, content, provider=integration.get("identifier"))
 
     # Scheduling path — Postiz is the official scheduling intermediary. When the
     # approved outcome carries publish_at, we hand Postiz the date and let it

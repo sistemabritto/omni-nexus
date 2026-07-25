@@ -318,3 +318,89 @@ def test_refacao_roda_fora_da_requisicao():
         encoding="utf-8")
     trecho = fonte.split("def _agendar_refacao")[1]
     assert "threading.Thread" in trecho and "daemon=True" in trecho
+
+
+# ── credencial da ponte (achado no teste real, 25/07) ────────────────────
+
+def test_env_example_documenta_o_token_da_ponte():
+    """APPROVAL_BRIDGE_TOKEN não estava em lugar nenhum: o dashboard recusava
+    toda requisição da ponte (fail-closed, correto) e o bot respondia "Bridge
+    de aprovação não configurado". Os três botões não faziam nada, e nada disso
+    aparecia até alguém apertar. Num deploy de cliente é a mesma armadilha."""
+    texto = (REPO_ROOT / ".env.example").read_text(encoding="utf-8")
+    assert "APPROVAL_BRIDGE_TOKEN" in texto
+    bloco = texto.split("APPROVAL_BRIDGE_TOKEN")[0][-900:]
+    assert "DASHBOARD_API_TOKEN" in bloco, "tem que dizer por que NÃO reutilizar o token de admin"
+
+
+def test_ponte_recusa_quando_o_token_nao_esta_configurado(monkeypatch):
+    """Fail-closed é o comportamento certo — o que faltava era o token, não a
+    checagem. Sem token, nenhuma requisição da ponte pode passar."""
+    import os as _os
+
+    from routes._helpers import valid_approval_bridge_token
+
+    monkeypatch.delenv("APPROVAL_BRIDGE_TOKEN", raising=False)
+    assert valid_approval_bridge_token("Bearer qualquer-coisa") is False
+
+    _os.environ["APPROVAL_BRIDGE_TOKEN"] = "segredo-real"
+    try:
+        assert valid_approval_bridge_token("Bearer segredo-real") is True
+        assert valid_approval_bridge_token("Bearer outro") is False
+        assert valid_approval_bridge_token("segredo-real") is False, "exige o prefixo Bearer"
+        assert valid_approval_bridge_token(None) is False
+    finally:
+        _os.environ.pop("APPROVAL_BRIDGE_TOKEN", None)
+
+
+# ── truncamento do card ──────────────────────────────────────────────────
+
+def test_corte_do_card_nao_parte_palavra_no_meio():
+    """Vi "Open sour" no print do Felipe. Cortar cru deixa o humano sem saber
+    se o texto acabou assim ou foi truncado — reações opostas ao aprovar."""
+    from routes.approvals import _cortar_para_telegram
+
+    texto = ("Primeiro parágrafo com conteúdo real.\n\n"
+             + "Segundo parágrafo bem mais longo. " * 60)
+    cortado = _cortar_para_telegram(texto, limite=200)
+    assert not cortado.replace("[…] texto completo no painel.", "").rstrip().endswith(("sour", "par"))
+    assert "[…]" in cortado, "o humano precisa saber que foi cortado"
+
+
+def test_texto_curto_passa_intacto():
+    from routes.approvals import _cortar_para_telegram
+
+    assert _cortar_para_telegram("curto e completo.") == "curto e completo."
+    assert "[…]" not in _cortar_para_telegram("curto e completo.")
+
+
+def test_corte_prefere_fronteira_de_paragrafo():
+    from routes.approvals import _cortar_para_telegram
+
+    texto = "Parágrafo um.\n\nParágrafo dois que é muito mais longo " + "x" * 400
+    assert _cortar_para_telegram(texto, limite=60).startswith("Parágrafo um.")
+
+
+def test_env_example_documenta_a_allowlist_de_aprovadores():
+    """Segunda metade da ponte, tão obrigatória quanto o token e igualmente
+    invisível: sem ela toda decisão volta 403 "not an approver", e isso só
+    aparece quando alguém aperta o botão."""
+    texto = (REPO_ROOT / ".env.example").read_text(encoding="utf-8")
+    assert "APPROVAL_APPROVER_IDS" in texto
+    bloco = texto.split("APPROVAL_APPROVER_IDS")[0][-700:]
+    assert "chat" in bloco.lower(), "tem que dizer que é id de usuário, não de chat/grupo"
+
+
+def test_allowlist_vazia_recusa_qualquer_um(monkeypatch):
+    import os as _os
+
+    from routes.approvals import _approver_allowlist
+
+    monkeypatch.delenv("APPROVAL_APPROVER_IDS", raising=False)
+    assert _approver_allowlist() == set()
+
+    _os.environ["APPROVAL_APPROVER_IDS"] = "111, 222;333"
+    try:
+        assert _approver_allowlist() == {"111", "222", "333"}, "aceita vírgula e ponto-e-vírgula"
+    finally:
+        _os.environ.pop("APPROVAL_APPROVER_IDS", None)

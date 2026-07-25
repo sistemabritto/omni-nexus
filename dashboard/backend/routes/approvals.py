@@ -582,6 +582,25 @@ def _render_structured_items(gate_type: str, payload: dict) -> str:
     return "\n".join(lines)
 
 
+def _cortar_para_telegram(texto: str, limite: int = 1200) -> str:
+    """Corta o corpo em fronteira de parágrafo e diz que cortou.
+
+    Cortar cru no limite parte a palavra no meio ("Open sour") e o humano fica
+    sem saber se o texto acabou assim ou se foi truncado — os dois casos pedem
+    reações opostas na hora de aprovar. O limite fica abaixo dos 1024 da legenda
+    de foto mais folga para os links, que entram depois.
+    """
+    texto = (texto or "").strip()
+    if len(texto) <= limite:
+        return texto
+    corte = texto[:limite]
+    fim = max(corte.rfind("\n\n"), corte.rfind("\n"), corte.rfind(". "))
+    if fim < limite * 0.4:  # sem fronteira decente, cai para o último espaço
+        fim = corte.rfind(" ")
+    return (corte[: fim if fim > 0 else limite].rstrip()
+            + "\n\n[…] texto completo no painel.")
+
+
 def _base_publica() -> str:
     """Endereço público do Nexus, para o link da aprovação no Telegram.
 
@@ -793,7 +812,7 @@ def create_approval():
         payload.get("body") or "",
         _render_structured_items(gate_type, payload),
     ]
-    telegram_body = "\n".join(p for p in body_parts if p).strip()[:1500]
+    telegram_body = _cortar_para_telegram("\n".join(p for p in body_parts if p).strip())
 
     # Com imagem, o Telegram recebe a foto em vez do endereço dela: aprovar uma
     # publicação com imagem lendo a URL não é aprovar nada.
@@ -805,8 +824,10 @@ def create_approval():
     if base:
         links.append(f"🔗 Aprovar no painel: {base}/approvals")
     if links:
+        # Os links entram DEPOIS do corte: se entrassem antes, o truncamento os
+        # comeria justamente quando o texto é longo — que é quando abrir o
+        # artigo inteiro mais importa.
         telegram_body = f"{telegram_body}\n\n" + "\n".join(links)
-    telegram_body = telegram_body.strip()[:1500]
 
     from notifications import send_approval_request
     message_id = send_approval_request(

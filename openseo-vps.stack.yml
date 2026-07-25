@@ -88,9 +88,9 @@ services:
         - traefik.http.services.openseo.loadbalancer.server.port=3001
 
         # basicauth — ver comentário do cabeçalho. Trocar a senha:
-        #   htpasswd -nbB felipe '<nova>'  (escapar cada $ como $$ aqui)
+        #   openssl passwd -apr1 '<nova>'   (escapar cada $ como $$ aqui)
         - traefik.http.routers.openseo.middlewares=openseo-auth,openseo-headers
-        - traefik.http.middlewares.openseo-auth.basicauth.users=felipe:$$apr1$$dVVsfrRi$$EocgUOw6ojy3HdnRjwBLC.
+        - traefik.http.middlewares.openseo-auth.basicauth.users=admin:$$apr1$$JTYEV.fK$$8NuJzvwaDXOMQMh9KoeCH.
         - traefik.http.middlewares.openseo-headers.headers.customRequestHeaders.X-Forwarded-Proto=https
 
 volumes:

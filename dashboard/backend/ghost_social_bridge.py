@@ -202,8 +202,18 @@ def adaptar(post: dict, rede: str) -> str:
     link = post.get("url", "")
     key = (os.environ.get("XAI_API_KEY") or "").strip()
 
+    # Correções que o Felipe já pediu entram como regra, não como sugestão. É o
+    # que faz o padrão convergir sem ninguém reescrever briefing: pedir três
+    # vezes "corta hashtag no LinkedIn" faz a quarta geração já nascer sem.
+    try:
+        from approval_feedback import diretrizes
+
+        aprendido = diretrizes(rede)
+    except Exception:  # noqa: BLE001 — ledger indisponível não pode travar a geração
+        aprendido = ""
+
     if key:
-        prompt = (f"{BRIEFING}\n\nRede: {rede}. {FORMATO[rede]}\n\n"
+        prompt = (f"{BRIEFING}\n\n{aprendido}\n\nRede: {rede}. {FORMATO[rede]}\n\n"
                   f"Artigo publicado:\nTítulo: {titulo}\nResumo: {resumo}\nLink: {link}\n\n"
                   f"Conteúdo:\n{(post.get('plaintext') or '')[:6000]}\n\n"
                   f"Escreva APENAS o texto final do post para {rede}, em português do Brasil. "

@@ -407,7 +407,8 @@ def approval_approvers() -> set[str]:
     return approvers
 
 
-def decide_approval_via_api(approval_id: int, decision: str, from_id: str) -> dict:
+def decide_approval_via_api(approval_id: int, decision: str, from_id: str,
+                            feedback: str = "") -> dict:
     """Call POST /api/approvals/{id}/decision with the dedicated bridge token.
 
     Molde de unblock_ticket (mesmo motivo: o serviço telegram não monta o
@@ -422,7 +423,10 @@ def decide_approval_via_api(approval_id: int, decision: str, from_id: str) -> di
     if not base_url or not token:
         return {"ok": False, "toast": "Bridge de aprovação não configurado neste serviço."}
 
-    payload = json.dumps({"decision": decision, "from_id": from_id}).encode()
+    corpo = {"decision": decision, "from_id": from_id}
+    if feedback:
+        corpo["feedback"] = feedback
+    payload = json.dumps(corpo).encode()
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     req = urllib.request.Request(
         f"{base_url}/api/approvals/{approval_id}/decision", data=payload, headers=headers, method="POST",
@@ -435,7 +439,8 @@ def decide_approval_via_api(approval_id: int, decision: str, from_id: str) -> di
         timeout = float(os.environ.get("APPROVAL_DECISION_TIMEOUT_SECONDS", "105"))
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = json.loads(resp.read().decode("utf-8"))
-        label = "aprovada ✅" if decision == "approve" else "rejeitada ❌"
+        label = {"approve": "aprovada ✅", "reject": "rejeitada ❌",
+                 "revise": "ajuste pedido ✏️"}.get(decision, decision)
         return {"ok": True, "toast": f"Decisão registrada: {label}", "body": body}
     except urllib.error.HTTPError as exc:
         if exc.code == 409:
@@ -1001,8 +1006,19 @@ def main() -> int:
                     from_id = str((cq.get("from") or {}).get("id", ""))
                     cq_message = cq.get("message") or {}
                     cq_chat_id = str((cq_message.get("chat") or {}).get("id", ""))
-                    m = re.match(r"^apr:(\d+):([ar])$", data)
+                    m = re.match(r"^apr:(\d+):([are])$", data)
                     decision_registered = False
+                    if m and m.group(2) == "e" and from_id in approval_approvers():
+                        # Teclado inline não coleta texto. O botão só instrui;
+                        # o ajuste chega quando ele RESPONDE a mensagem — mesmo
+                        # padrão já usado na ponte de tickets (#tkt:<id>).
+                        api(token, "answerCallbackQuery", {
+                            "callback_query_id": cq["id"],
+                            "text": "Responda esta mensagem com o que mudar.",
+                            "show_alert": True,
+                        })
+                        log(f"approval-revise-prompt chat={cq_chat_id} approval={m.group(1)}")
+                        continue  # teclado fica de pé: ele ainda pode aprovar ou rejeitar
                     if m and from_id in approval_approvers():
                         decision = "approve" if m.group(2) == "a" else "reject"
                         resp = decide_approval_via_api(int(m.group(1)), decision, from_id)
@@ -1040,7 +1056,26 @@ def main() -> int:
                     continue
                 # Ponte de tickets: reply a uma notificação de bloqueio (#tkt:<id>)
                 # anexa a resposta e reabre o ticket para o orquestrador retomar.
-                reply_src = (message.get("reply_to_message") or {}).get("text") or ""
+                reply_src = ((message.get("reply_to_message") or {}).get("text")
+                             or (message.get("reply_to_message") or {}).get("caption") or "")
+                # Ponte de ajuste: responder ao card de aprovação (#apr:<id>)
+                # devolve o trabalho ao agente com a crítica, e o feedback entra
+                # no ledger que alimenta as próximas gerações. `caption` conta
+                # porque o card com imagem é uma foto legendada, não um texto.
+                m_apr = re.search(r"#apr:(\d+)", reply_src)
+                if m_apr and text:
+                    if from_id in approval_approvers():
+                        resp = decide_approval_via_api(int(m_apr.group(1)), "revise", from_id,
+                                                       feedback=text)
+                        aviso = ("✏️ Ajuste registrado — o agente vai refazer com essa crítica, "
+                                 "e ela passa a valer para as próximas gerações."
+                                 if resp.get("ok") else f"Não consegui registrar: {resp['toast']}")
+                    else:
+                        aviso = "não autorizado"
+                    api(token, "sendMessage", {"chat_id": chat_id, "text": aviso,
+                                               "reply_to_message_id": message.get("message_id")})
+                    log(f"approval-revise chat={chat_id} approval={m_apr.group(1)}")
+                    continue
                 m_tkt = re.search(r"#tkt:([0-9a-fA-F-]+)", reply_src)
                 if m_tkt and text:
                     result = unblock_ticket(m_tkt.group(1), text, sender_name or "humano")

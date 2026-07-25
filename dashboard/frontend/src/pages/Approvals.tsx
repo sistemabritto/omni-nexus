@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
-import { CheckCircle2, XCircle, Clock, RefreshCw, ExternalLink } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, RefreshCw, ExternalLink, PencilLine } from 'lucide-react'
 import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
 
@@ -27,6 +27,7 @@ interface ApprovalItem {
   context: string | null
   items_preview: string | null
   publish: PublishPreview | null
+  reject_reason: string | null
   created_at: string
   expires_at: string
   decided_at: string | null
@@ -58,6 +59,18 @@ const STATUS_COLORS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pendente', approved: 'Aprovada', rejected: 'Rejeitada',
   expired: 'Expirada', published: 'Publicada',
+}
+
+// Pedir ajuste é gravado como rejeição — o CHECK de status não tem estado de
+// revisão. Sem esta distinção a página diria "Rejeitada" para algo que voltou
+// ao agente para ser refeito, que lê como final e não é.
+const MARCA_AJUSTE = '[ajuste]'
+
+function rotuloStatus(a: ApprovalItem): { texto: string; cor: string } {
+  if (a.status === 'rejected' && a.reject_reason?.startsWith(MARCA_AJUSTE)) {
+    return { texto: 'Ajuste pedido', cor: 'bg-amber-500/10 text-amber-400' }
+  }
+  return { texto: STATUS_LABELS[a.status] || a.status, cor: STATUS_COLORS[a.status] || '' }
 }
 
 function timeAgo(iso: string): string {
@@ -187,6 +200,8 @@ export default function Approvals() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('pending')
   const [actingId, setActingId] = useState<number | null>(null)
+  const [ajustando, setAjustando] = useState<number | null>(null)
+  const [feedback, setFeedback] = useState('')
 
   const fetchApprovals = () => {
     setLoading(true)
@@ -223,6 +238,23 @@ export default function Approvals() {
       fetchApprovals()
     } catch (e) {
       toast.error(`Erro ao ${decision === 'approve' ? 'aprovar' : 'rejeitar'}`, String(e))
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  const pedirAjuste = async (a: ApprovalItem) => {
+    const texto = feedback.trim()
+    if (!texto) return
+    setActingId(a.id)
+    try {
+      await api.post(`/approvals/${a.id}/revise`, { feedback: texto })
+      toast.success('Ajuste pedido', 'O agente vai refazer com essa crítica.')
+      setAjustando(null)
+      setFeedback('')
+      fetchApprovals()
+    } catch (e) {
+      toast.error('Erro ao pedir ajuste', String(e))
     } finally {
       setActingId(null)
     }
@@ -283,8 +315,8 @@ export default function Approvals() {
                   <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${GATE_COLORS[a.gate_type] || ''}`}>
                     {GATE_LABELS[a.gate_type] || a.gate_type}
                   </span>
-                  <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${STATUS_COLORS[a.status] || ''}`}>
-                    {STATUS_LABELS[a.status] || a.status}
+                  <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${rotuloStatus(a).cor}`}>
+                    {rotuloStatus(a).texto}
                   </span>
                 </div>
                 <span className="flex items-center gap-1 text-xs text-white/40">
@@ -324,6 +356,13 @@ export default function Approvals() {
                   <div className="flex gap-2">
                     <button
                       disabled={actingId === a.id}
+                      onClick={() => setAjustando(ajustando === a.id ? null : a.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-400 border border-amber-500/20 hover:bg-amber-500/10 transition disabled:opacity-50"
+                    >
+                      <PencilLine size={14} /> Ajustar
+                    </button>
+                    <button
+                      disabled={actingId === a.id}
                       onClick={() => decide(a, 'reject')}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 border border-red-500/20 hover:bg-red-500/10 transition disabled:opacity-50"
                     >
@@ -339,6 +378,40 @@ export default function Approvals() {
                   </div>
                 )}
               </div>
+
+              {/* Aprovar um texto de que não se gostou e reescrever tudo à mão
+                  eram as duas saídas ruins. A crítica volta ao agente e passa a
+                  valer para as próximas gerações. */}
+              {ajustando === a.id && a.status === 'pending' && (
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <label htmlFor={`ajuste-${a.id}`} className="block text-xs text-white/60 mb-1.5">
+                    O que mudar? O agente refaz com isso, e a crítica vale para as próximas.
+                  </label>
+                  <textarea
+                    id={`ajuste-${a.id}`}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    rows={3}
+                    placeholder="ex.: corta as hashtags, o gancho tá fraco, usa o CTA do /socialjobs"
+                    className="w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
+                  />
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button
+                      onClick={() => { setAjustando(null); setFeedback('') }}
+                      className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/80 transition"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      disabled={!feedback.trim() || actingId === a.id}
+                      onClick={() => pedirAjuste(a)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-400 border border-amber-500/30 hover:bg-amber-500/10 transition disabled:opacity-40"
+                    >
+                      <PencilLine size={14} /> Mandar refazer
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )
         })}

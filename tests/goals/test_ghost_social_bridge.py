@@ -113,13 +113,19 @@ def test_post_nao_publicado_nao_distribui(monkeypatch):
     assert "ignorado" in out
 
 
-def test_instagram_pulado_por_exigir_midia(monkeypatch):
+def test_ponte_do_blog_cobre_so_as_tres_redes_de_texto(monkeypatch):
+    """Instagram, TikTok e YouTube não pertencem a este gatilho: são a trilha
+    de vídeo, com produção própria (decisão do Felipe, 25/07/2026). Aqui não
+    aparecem nem como "pulado" — não fazem parte do fluxo."""
     monkeypatch.setattr(bridge, "buscar_post", lambda _id: {
         "status": "published", "title": "T", "custom_excerpt": "R", "url": "https://e.com/p"})
     monkeypatch.setattr(bridge, "adaptar", lambda post, rede: "texto")
     out = bridge.distribuir("qualquer", dry_run=True)
-    assert "instagram" in out["pulados"]
     assert set(out["redes"]) == {"x", "linkedin", "threads"}
+    assert out["pulados"] == {}
+    for rede_de_video in ("instagram", "tiktok", "youtube"):
+        assert rede_de_video not in out["redes"]
+        assert rede_de_video not in out["pulados"]
 
 
 # ── rótulos vistos em validação real (2026-07-25) ────────────────────────

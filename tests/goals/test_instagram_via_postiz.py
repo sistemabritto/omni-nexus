@@ -168,25 +168,20 @@ def post_publicado(monkeypatch, postiz_permissivo):
     return post
 
 
-def test_instagram_entra_no_fluxo_quando_ha_capa(post_publicado):
-    r = bridge.distribuir("p1", dry_run=True)
-    assert "instagram" in r["redes"], f"Instagram ficou de fora: {r['pulados']}"
-    assert r["redes"]["instagram"]["midia"] == [post_publicado["feature_image"]]
-
-
-def test_as_outras_redes_nao_levam_a_capa(post_publicado):
+def test_as_redes_do_blog_nao_levam_a_capa(post_publicado):
     """No X/LinkedIn/Threads a imagem competiria com o preview do link."""
     r = bridge.distribuir("p1", dry_run=True)
-    for rede in ("x", "linkedin", "threads"):
+    for rede in bridge.REDES:
         assert r["redes"][rede]["midia"] == []
 
 
-def test_sem_capa_o_instagram_sai_com_motivo_legivel(monkeypatch, post_publicado):
+def test_artigo_sem_capa_nao_atrapalha_a_distribuicao(monkeypatch, post_publicado):
+    """A capa só importava para o Instagram, que saiu da ponte — sem ela as
+    três redes do blog seguem normalmente."""
     monkeypatch.setattr(bridge, "buscar_post", lambda _: {**post_publicado, "feature_image": ""})
     r = bridge.distribuir("p1", dry_run=True)
-    assert "instagram" not in r["redes"]
-    assert "feature_image" in r["pulados"]["instagram"]
-    assert set(r["redes"]) == {"x", "linkedin", "threads"}, "as outras redes seguem normalmente"
+    assert set(r["redes"]) == set(bridge.REDES)
+    assert r["pulados"] == {}
 
 
 # ── Cloudflare 1010 ──────────────────────────────────────────────────────
@@ -251,16 +246,19 @@ def test_cada_rede_abre_aprovacao_ancorada_num_ticket(post_publicado, api_falsa)
     o trabalho todo morre no último passo, em silêncio."""
     r = bridge.distribuir("p1")
     assert r["ok"] is True, f"alguma rede falhou: {r['redes']}"
-    assert len(api_falsa["approvals"]) == 4
+    assert len(api_falsa["approvals"]) == len(bridge.REDES)
     for chamada in api_falsa["approvals"]:
         assert chamada["ticket_id"], "aprovação sem ticket é recusada pela API"
         assert chamada["gate_type"] == "publish"
 
 
-def test_um_ticket_por_rede_e_nao_um_agregado():
+def test_um_ticket_por_rede_e_nao_um_agregado(post_publicado, api_falsa):
     """Aprovação agregada faria o humano aprovar um resumo — o problema de
     confiança que o gate existe para evitar."""
-    assert len(bridge.REDES) == 4
+    bridge.distribuir("p1")
+    assert len(api_falsa["tickets"]) == len(bridge.REDES)
+    titulos = {t["title"] for t in api_falsa["tickets"]}
+    assert len(titulos) == len(bridge.REDES), "cada rede precisa do seu próprio ticket"
 
 
 def test_ticket_carrega_o_link_do_artigo(post_publicado, api_falsa):
@@ -274,3 +272,83 @@ def test_outcome_da_aprovacao_leva_o_link_para_o_card(post_publicado, api_falsa)
     bridge.distribuir("p1")
     for a in api_falsa["approvals"]:
         assert a["payload"]["outcome"]["source_url"].startswith("http")
+
+
+# ── roteamento e horário (correções do Felipe, 25/07) ────────────────────
+
+def test_artigo_do_blog_nao_vai_para_instagram():
+    """No Instagram o link não é clicável no feed: republicar artigo lá vira
+    post que não converte e ocupa o espaço do conteúdo visual nativo."""
+    assert "instagram" not in bridge.REDES
+    assert set(bridge.REDES) == {"x", "linkedin", "threads"}
+
+
+def test_suporte_a_instagram_continua_existindo_no_gate():
+    """Tirar do blog não é remover a capacidade — conteúdo que nasce visual
+    ainda publica lá."""
+    assert "instagram" in bridge.LIMITES
+    assert ho._publish_settings_for("instagram", "t", provider="instagram-standalone")
+
+
+def test_threads_nao_leva_link_no_texto(post_publicado, api_falsa):
+    """Post recompensa: o link sai do texto e vira comentário com palavra-chave.
+    A rede pune link no corpo, e cada comentário é um lead identificado."""
+    r = bridge.distribuir("p1", dry_run=True)
+    texto = r["redes"]["threads"]["preview"]
+    assert "http" not in texto, f"link vazou no Threads: {texto!r}"
+    assert "coment" in texto.lower(), "faltou o CTA de comentário"
+
+
+def test_x_continua_levando_o_link(post_publicado, api_falsa):
+    assert "http" in bridge.distribuir("p1", dry_run=True)["redes"]["x"]["preview"]
+
+
+# ── janelas de horário ───────────────────────────────────────────────────
+
+def _brt(dt):
+    return dt.astimezone(bridge._zona())
+
+
+def test_madrugada_e_empurrada_para_a_manha():
+    """Artigo publicado às 23h caía às 1h — post morre sem ser visto."""
+    from datetime import datetime, timezone as _tz
+
+    madrugada = datetime(2026, 7, 26, 4, 0, tzinfo=_tz.utc)  # 01:00 BRT
+    assert _brt(bridge.proximo_horario("x", madrugada)).hour == 8
+
+
+def test_horario_dentro_da_janela_pega_a_proxima_do_dia():
+    from datetime import datetime, timezone as _tz
+
+    # 13:00 BRT — passou das 12h, próxima janela do X é 18h
+    assert _brt(bridge.proximo_horario("x", datetime(2026, 7, 26, 16, 0, tzinfo=_tz.utc))).hour == 18
+
+
+def test_depois_da_ultima_janela_vai_para_o_dia_seguinte():
+    from datetime import datetime, timezone as _tz
+
+    tarde = datetime(2026, 7, 26, 23, 30, tzinfo=_tz.utc)  # 20:30 BRT
+    resultado = _brt(bridge.proximo_horario("linkedin", tarde))
+    assert resultado.hour == 8 and resultado.day == 27
+
+
+def test_nunca_agenda_para_tras():
+    """Postiz recusa data no passado e o gate é fail-closed — uma aprovação que
+    morre na hora de publicar é pior que nenhuma."""
+    from datetime import datetime, timezone as _tz
+
+    for hora in range(24):
+        agora = datetime(2026, 7, 26, hora, 17, tzinfo=_tz.utc)
+        for rede in bridge.REDES:
+            assert bridge.proximo_horario(rede, agora) >= agora
+
+
+def test_threads_tem_janela_mais_noturna_que_linkedin():
+    assert min(bridge.JANELAS["threads"]) > min(bridge.JANELAS["linkedin"])
+
+
+def test_rede_sem_janela_nao_quebra():
+    from datetime import datetime, timezone as _tz
+
+    agora = datetime(2026, 7, 26, 5, 0, tzinfo=_tz.utc)
+    assert bridge.proximo_horario("discord", agora) == agora

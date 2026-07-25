@@ -120,3 +120,27 @@ def test_instagram_pulado_por_exigir_midia(monkeypatch):
     out = bridge.distribuir("qualquer", dry_run=True)
     assert "instagram" in out["pulados"]
     assert set(out["redes"]) == {"x", "linkedin", "threads"}
+
+
+# ── rótulos vistos em validação real (2026-07-25) ────────────────────────
+
+@pytest.mark.parametrize("entrada,esperado", [
+    # O modelo repetiu o vocabulário da própria instrução de formato do LinkedIn
+    # ("a primeira linha é o gancho") como se fosse estrutura do post.
+    ("**Gancho:** IA open source não é sobre economizar servidor.",
+     "IA open source não é sobre economizar servidor."),
+    ("**Abertura:**\nQuem constrói sabe.", "Quem constrói sabe."),
+    ("**Corpo:** O resto do texto.", "O resto do texto."),
+])
+def test_remove_rotulo_de_estrutura(entrada, esperado):
+    assert bridge.limpar(entrada, 3000) == esperado
+
+
+@pytest.mark.parametrize("texto", [
+    "Gancho certeiro é o que segura o leitor: sem ele ninguém para.",
+    "Corpo mole não sustenta jornada longa: treine.",
+    "Abertura de capital não é para todo mundo: entenda o custo.",
+])
+def test_prosa_com_a_mesma_palavra_sobrevive(texto):
+    """A palavra sozinha não é rótulo — sem negrito e sem 'aqui está', é frase."""
+    assert bridge.limpar(texto, 3000) == texto

@@ -73,7 +73,11 @@ FORMATO = {
 #   B) fecha com ":**" (negrito de markdown) -> "**Legenda:**", "**Texto final:**"
 #   C) diz "final" ou nomeia a rede antes do ":" -> "Texto final para X:"
 _REDE = r"(?:final|x|twitter|linkedin|threads|instagram|facebook|tiktok|youtube|blog)"
-_ROTULO = r"(?:texto|post|versão|versao|legenda|caption)"
+# "gancho" entrou depois de ver o modelo devolver "**Gancho:** IA open source
+# não é sobre..." numa validação real — a instrução de formato do LinkedIn fala
+# em gancho, e ele repetiu o rótulo como se fosse estrutura do post. Sem isto o
+# texto sairia publicado com "**Gancho:**" na primeira linha.
+_ROTULO = r"(?:texto|post|versão|versao|legenda|caption|gancho|abertura|corpo)"
 _PREAMBULO = re.compile(
     rf"^\s*\*{{0,2}}\s*(?:aqui est[áa]|aqui vai|segue)[^\n:]{{0,50}}:\*{{0,2}}[ \t]*\n?"
     rf"|^\s*\*{{1,2}}\s*{_ROTULO}[^\n:]{{0,40}}:\*{{1,2}}[ \t]*\n?"

@@ -387,6 +387,70 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
     return resultado
 
 
+def aprovar_artigo(post_id: str, *, publicar_em: str | None = None,
+                   dry_run: bool = False) -> dict:
+    """Abre o gate do artigo — estágio 1, antes de qualquer rede.
+
+    O humano lê o resumo, confere os CTAs e vê a capa; aprovar publica (ou
+    agenda) no Ghost, o que dispara o webhook e só então deriva as redes, cada
+    uma com seu próprio gate. Reprovar encerra ali: nenhum post de rede nasce
+    de artigo que ninguém liberou.
+
+    `publicar_em` em ISO-8601 UTC agenda; ausente publica ao aprovar.
+    """
+    from ghost_publisher import buscar, resumo_para_aprovacao
+
+    post = buscar(post_id)
+    if not post:
+        return {"ok": False, "erro": f"post {post_id} não encontrado no Ghost"}
+    if post.get("status") == "published":
+        return {"ok": True, "ignorado": "artigo já está publicado"}
+
+    resumo = resumo_para_aprovacao(post)
+    capa = (post.get("feature_image") or "").strip()
+    outcome = {
+        "action": "work",
+        "result": f"Publicar artigo '{post.get('title')}'",
+        "publish_intent": True,
+        "publish_target": "blog",
+        # O id do artigo é o que será publicado. O texto abaixo é só o que o
+        # humano lê para decidir — nunca vira conteúdo publicado.
+        "publish_ref": post.get("id"),
+        "publish_content": resumo,
+        "publish_media": [capa] if capa else [],
+        "publish_at": publicar_em,
+        "source_url": post.get("url"),
+    }
+    if dry_run:
+        return {"ok": True, "dry_run": True, "outcome": outcome}
+
+    try:
+        from sdk_client import evo
+
+        ticket = evo.post("/api/tickets", {
+            "title": f"Publicar no blog: {post.get('title')}",
+            "description": f"Revisão do artigo antes de publicar. Preview: {post.get('url') or ''}".strip(),
+            "assignee_agent": "pixel-social-media",
+            "priority": "high",
+            "status": "review",
+        })
+        ticket_id = (ticket or {}).get("id")
+        if not ticket_id:
+            raise RuntimeError(f"POST /api/tickets não devolveu id: {ticket!r}")
+
+        evo.post("/api/approvals", {
+            "gate_type": "publish",
+            "ticket_id": ticket_id,
+            "agent": "pixel-social-media",
+            "payload": {"title": f"Publicar no blog: {post.get('title')}",
+                        "body": resumo[:800], "outcome": outcome},
+        })
+        return {"ok": True, "aprovacao": "aberta", "ticket": ticket_id,
+                "publish_at": publicar_em, "preview": post.get("url")}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "erro": str(exc)}
+
+
 def distribuir_do_webhook(payload: dict, **kwargs) -> dict:
     """Entrada do trigger: extrai o id do evento post.published do Ghost."""
     post = (payload or {}).get("post") or {}

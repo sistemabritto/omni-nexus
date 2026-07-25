@@ -396,47 +396,17 @@ def reindex_heartbeats():
 
 
 # ── Approval Queue ──────────────────────────────────────────────────────────
-
-@bp.route("/api/approvals")
-def list_approvals():
-    """List pending approval items."""
-    from routes._helpers import WORKSPACE
-    import sys
-    sys.path.insert(0, str(WORKSPACE / "ADWs" / "routines"))
-    from approval_queue import get_pending, get_stats
-
-    return jsonify({
-        "pending": get_pending(),
-        "stats": get_stats(),
-    })
-
-
-@bp.route("/api/approvals/<int:item_id>/approve", methods=["POST"])
-def approve_item(item_id):
-    """Approve a queued item."""
-    from routes._helpers import WORKSPACE
-    import sys
-    sys.path.insert(0, str(WORKSPACE / "ADWs" / "routines"))
-    from approval_queue import approve
-
-    ok = approve(item_id)
-    if not ok:
-        return jsonify({"error": "Item not found or already decided"}), 404
-    return jsonify({"status": "approved", "id": item_id})
-
-
-@bp.route("/api/approvals/<int:item_id>/reject", methods=["POST"])
-def reject_item(item_id):
-    """Reject a queued item."""
-    data = request.get_json() or {}
-    reason = data.get("reason", "")
-
-    from routes._helpers import WORKSPACE
-    import sys
-    sys.path.insert(0, str(WORKSPACE / "ADWs" / "routines"))
-    from approval_queue import reject
-
-    ok = reject(item_id, reason)
-    if not ok:
-        return jsonify({"error": "Item not found or already decided"}), 404
-    return jsonify({"status": "rejected", "id": item_id})
+#
+# REMOVIDO em 2026-07-25. Este blueprint registrava GET /api/approvals lendo a
+# tabela legada `approval_queue` (ADWs/routines/approval_queue.py), que não tem
+# nenhum produtor — nada escreve nela desde que os gates passaram a viver em
+# `pending_approvals`. Como heartbeats_bp é registrado ANTES de approvals_bp
+# (app.py), era esta rota que atendia, e a página /approvals mostrava a fila
+# morta: sempre vazia, mesmo com aprovação pendente de verdade no banco. Um
+# gate que ninguém vê é um gate que não existe.
+#
+# A implementação real — com RBAC, ponte do Telegram e o payload do que vai ao
+# ar — está em routes/approvals.py. As decisões vão por
+# POST /api/approvals/<id>/dashboard-decision (sessão de admin) ou
+# POST /api/approvals/<id>/decision (ponte do Telegram); os antigos
+# /approve e /reject nunca foram chamados pelo frontend.

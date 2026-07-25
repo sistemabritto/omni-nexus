@@ -33,14 +33,47 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
-# X primeiro (ciclo mais curto), Instagram por último (exige mídia).
-REDES = ("x", "linkedin", "threads", "instagram")
+# Artigo do blog vai para X, LinkedIn e Threads — as três redes onde texto com
+# link tem para onde levar.
+#
+# Instagram, TikTok e YouTube NÃO pertencem a esta ponte (decisão do Felipe,
+# 25/07/2026): são a trilha de vídeo vertical, com produção própria, e serão
+# desenhados à parte. Lá o link nem é clicável no feed, então republicar artigo
+# viraria post que não converte ocupando o espaço do que funciona. O suporte a
+# essas plataformas segue existindo e testado no gate de publicação — só não é
+# alimentado a partir do blog.
+REDES = ("x", "linkedin", "threads")
 
 LIMITES = {"x": 280, "linkedin": 3000, "threads": 500, "instagram": 2200}
 
-# Espaçamento entre redes: o mesmo texto saindo simultaneamente em 4 lugares
+# Espaçamento entre redes: o mesmo texto saindo simultaneamente em três lugares
 # parece bot e performa pior.
 OFFSET_MIN = {"x": 0, "linkedin": 20, "threads": 40, "instagram": 60}
+
+# Funis reais da Sistema Britto — o CTA aponta para um destes, nunca para
+# "Evolution/Evo AI", que é produto open source e não funil comercial.
+FUNIS = {
+    "whatsapp": "https://sistemabritto.com.br/whatsapp",
+    "socialjobs": "https://sistemabritto.com.br/socialjobs",
+    "sistema": "https://sistemabritto.com.br/sistema",
+}
+
+# Horários (BRT) em que o público — dono de empresa, não adolescente — está de
+# fato olhando a rede. "Publicar duas horas depois do artigo" era conta de
+# relógio, não de audiência: um artigo publicado às 23h caía às 1h da manhã,
+# quando o post morre sem ser visto e queima a pauta.
+#
+# LinkedIn concentra no começo do expediente e no fim; X aguenta o meio do dia;
+# Threads é mais noturno, quando a leitura é mais solta. Números de janela, não
+# de minuto: o objetivo é não cair na madrugada, não fingir precisão que a
+# plataforma não entrega.
+JANELAS = {
+    "x": (8, 12, 18),
+    "linkedin": (8, 12, 17),
+    "threads": (12, 19, 21),
+    "instagram": (11, 18, 20),
+}
+TZ_PUBLICACAO = os.environ.get("WORKSPACE_TIMEZONE") or "America/Sao_Paulo"
 
 BRIEFING = """Regras de marca do Sistema Britto (obrigatórias):
 - Tom direto, sem firula. Escreva como quem construiu, não como quem vende.
@@ -55,8 +88,15 @@ FORMATO = {
     "linkedin": "Prefira 800-1200 caracteres. A primeira linha é o gancho (aparece antes "
                 "do 'ver mais'). Linha em branco a cada 1-2 frases. 3-5 hashtags no fim. "
                 "NÃO coloque link no corpo — diga que está no primeiro comentário.",
+    # Threads é "post recompensa": o link não vai no post. O texto entrega
+    # valor sozinho e fecha pedindo um comentário com uma palavra-chave para
+    # receber o artigo. Duas razões — a rede pune link no corpo com alcance, e
+    # cada comentário é um lead que se identificou sozinho, que é o que o
+    # formato existe para produzir.
     "threads": "Máx 500 caracteres. Conversacional, mais solto que o LinkedIn. "
-               "No máximo 1 hashtag. Link no fim.",
+               "No máximo 1 hashtag. NÃO coloque link nenhum no texto. "
+               "Feche pedindo que comentem uma palavra-chave curta e óbvia "
+               "(uma só palavra, ligada ao tema) para receber o artigo no direct.",
     "instagram": "Máx 2200 caracteres. Primeira linha é o gancho. Quebras curtas. "
                  "CTA no fim + 'link na bio'. 5-8 hashtags no fim.",
 }
@@ -188,11 +228,49 @@ def adaptar(post: dict, rede: str) -> str:
             pass
 
     base = f"{titulo}\n\n{resumo}"
-    base += "\n\nLink no primeiro comentário." if rede == "linkedin" else (f"\n\n{link}" if link else "")
+    if rede == "linkedin":
+        base += "\n\nLink no primeiro comentário."
+    elif rede == "threads":
+        # Sem link, como no caminho do modelo — a regra do formato não pode
+        # depender de a chave do x.ai estar configurada.
+        base += "\n\nComenta ARTIGO que eu te mando no direct."
+    elif link:
+        base += f"\n\n{link}"
     return limpar(base, LIMITES[rede])
 
 
 # ── aprovações ───────────────────────────────────────────────────────────
+
+def _zona():
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo(TZ_PUBLICACAO)
+    except Exception:  # noqa: BLE001 — tzdata ausente não pode quebrar o agendamento
+        return timezone.utc
+
+
+def proximo_horario(rede: str, a_partir_de: datetime) -> datetime:
+    """Primeiro horário útil da rede a partir de `a_partir_de`, em UTC.
+
+    Avança até cair numa das janelas da rede no fuso do público. Nunca anda
+    para trás: se já passou da última janela do dia, vai para a primeira do dia
+    seguinte. Um post agendado para o passado o Postiz recusa, e o gate
+    fail-closed transformaria isso numa aprovação que morre na hora de publicar.
+    """
+    janelas = JANELAS.get(rede)
+    if not janelas:
+        return a_partir_de
+    zona = _zona()
+    local = a_partir_de.astimezone(zona)
+    for _ in range(8):  # hoje + 7 dias é folga de sobra; o laço nunca é infinito
+        for hora in sorted(janelas):
+            candidato = local.replace(hour=hora, minute=0, second=0, microsecond=0)
+            if candidato >= local:
+                return candidato.astimezone(timezone.utc)
+        local = (local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return a_partir_de
+
 
 def midia_do_post(post: dict) -> tuple[list[str], str]:
     """Mídia utilizável do artigo, ou o motivo de não haver.
@@ -248,7 +326,10 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             resultado["pulados"][rede] = sem_midia
             continue
 
-        agendado = quando + timedelta(minutes=OFFSET_MIN[rede])
+        # A janela decide o horário; o offset só desempata quando duas redes
+        # caem na mesma janela, para o mesmo texto não sair simultâneo em três
+        # lugares — o que parece bot e performa pior.
+        agendado = proximo_horario(rede, quando) + timedelta(minutes=OFFSET_MIN[rede])
         outcome = {
             "action": "work",
             "result": f"Versão de {rede} do artigo '{post.get('title')}'",

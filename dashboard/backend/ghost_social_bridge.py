@@ -255,6 +255,10 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             # com o preview do link, que é o que dá clique.
             "publish_media": midia if rede == "instagram" else [],
             "publish_at": agendado.isoformat().replace("+00:00", "Z"),
+            # Link do artigo, para conferir o texto completo na hora de aprovar.
+            # Em draft o Ghost devolve a URL de preview (/p/<uuid>/), que abre
+            # sem login — vale tanto para revisar antes quanto depois de publicar.
+            "source_url": post.get("url"),
         }
         if dry_run:
             resultado["redes"][rede] = {"dry_run": True, "publish_at": outcome["publish_at"],

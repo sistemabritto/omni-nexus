@@ -103,6 +103,10 @@ COPY backup.py        ./
 COPY .claude/         .claude/
 COPY memory/          memory/
 COPY ADWs/            ADWs/
+# scripts/ embarca os utilitários que triggers e rotinas invocam (ponte Ghost,
+# pipeline editorial, verificador do Postiz). Sem isso um trigger apontando
+# para scripts/*.py falha em produção com "No such file or directory".
+COPY scripts/         scripts/
 COPY config/          config/
 COPY docs/            docs/
 COPY Makefile         ./

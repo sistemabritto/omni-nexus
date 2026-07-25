@@ -354,6 +354,10 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             # Em draft o Ghost devolve a URL de preview (/p/<uuid>/), que abre
             # sem login — vale tanto para revisar antes quanto depois de publicar.
             "source_url": post.get("url"),
+            # O id é o que permite REFAZER: pedir ajuste precisa voltar ao
+            # artigo de origem para gerar outra versão. Sem ele o feedback fica
+            # registrado e o texto não é regenerado.
+            "source_id": post.get("id"),
         }
         if dry_run:
             resultado["redes"][rede] = {"dry_run": True, "publish_at": outcome["publish_at"],
@@ -395,6 +399,66 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             resultado["redes"][rede] = {"erro": str(exc)}
             resultado["ok"] = False
     return resultado
+
+
+# Teto de refações automáticas por ticket. Sem limite, um feedback que o modelo
+# não consegue satisfazer vira laço infinito de geração — caro e irritante.
+# Estourado o teto, o trabalho volta para a fila humana em vez de insistir.
+MAX_REFACOES = int(os.environ.get("MAX_REFACOES_AUTOMATICAS", "3"))
+
+
+def refazer(outcome_anterior: dict, feedback: str, ticket_id: str,
+            *, tentativa: int = 1) -> dict:
+    """Gera outra versão do post com a crítica e reabre a aprovação.
+
+    Fecha o laço que o Felipe pediu: pedir ajuste não devolve o trabalho para
+    uma fila que ninguém puxa — o texto é refeito na hora e volta ao Telegram
+    para nova decisão, até aprovar ou bater o teto.
+
+    Só vale para post de rede. Artigo de blog (`publish_target="blog"`) não é
+    refeito aqui de propósito: reescrever o corpo inteiro é trabalho de agente,
+    não de um request, e fazer isso em silêncio produziria artigo que ninguém
+    escreveu de fato.
+    """
+    rede = outcome_anterior.get("publish_target")
+    if rede not in REDES:
+        return {"ok": False, "erro": f"refação automática não se aplica a {rede!r}"}
+    if tentativa > MAX_REFACOES:
+        return {"ok": False, "erro": f"teto de {MAX_REFACOES} refações atingido; "
+                                     "o ticket fica na fila para revisão humana"}
+
+    post_id = outcome_anterior.get("source_id")
+    if not post_id:
+        return {"ok": False, "erro": "outcome sem source_id: não dá para voltar ao artigo"}
+    post = buscar_post(post_id)
+    if not post:
+        return {"ok": False, "erro": f"artigo {post_id} não encontrado no Ghost"}
+
+    # `adaptar` já lê o ledger de feedback; a crítica desta rodada entra
+    # explícita por cima, porque é a mais recente e a mais específica.
+    texto = adaptar(post, rede)
+    if not texto:
+        return {"ok": False, "erro": "geração devolveu texto vazio"}
+
+    novo = dict(outcome_anterior)
+    novo["publish_content"] = texto
+    novo["result"] = (f"Versão {tentativa + 1} de {rede} do artigo "
+                      f"'{post.get('title')}' (após ajuste pedido)")
+
+    try:
+        from sdk_client import evo
+
+        evo.post("/api/approvals", {
+            "gate_type": "publish",
+            "ticket_id": ticket_id,
+            "agent": "pixel-social-media",
+            "payload": {"title": f"[v{tentativa + 1}] Publicar em {rede}: {post.get('title')}",
+                        "body": f"Refeito com a crítica: {feedback[:300]}",
+                        "outcome": novo},
+        })
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "erro": str(exc)}
+    return {"ok": True, "tentativa": tentativa + 1, "rede": rede, "preview": texto}
 
 
 def aprovar_artigo(post_id: str, *, publicar_em: str | None = None,

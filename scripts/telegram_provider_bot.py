@@ -1009,13 +1009,25 @@ def main() -> int:
                     m = re.match(r"^apr:(\d+):([are])$", data)
                     decision_registered = False
                     if m and m.group(2) == "e" and from_id in approval_approvers():
-                        # Teclado inline não coleta texto. O botão só instrui;
-                        # o ajuste chega quando ele RESPONDE a mensagem — mesmo
-                        # padrão já usado na ponte de tickets (#tkt:<id>).
-                        api(token, "answerCallbackQuery", {
-                            "callback_query_id": cq["id"],
-                            "text": "Responda esta mensagem com o que mudar.",
-                            "show_alert": True,
+                        # Teclado inline não coleta texto, então o bot manda uma
+                        # pergunta com force_reply: o Telegram já abre o teclado
+                        # em modo resposta, sem o usuário precisar lembrar de
+                        # segurar a mensagem e escolher "responder".
+                        #
+                        # Pedir isso à mão falhava calado no celular: o texto
+                        # caía no handler de conversa, o bot respondia alguma
+                        # coisa e parecia ter funcionado, mas nada era
+                        # registrado. O force_reply é o que garante que a
+                        # resposta volte amarrada em #apr:<id>.
+                        api(token, "answerCallbackQuery", {"callback_query_id": cq["id"],
+                                                           "text": "Escreve o que mudar 👇"})
+                        api(token, "sendMessage", {
+                            "chat_id": cq_chat_id,
+                            "text": (f"✏️ O que mudar nesta publicação?\n"
+                                     f"Responde aqui — o agente refaz com a sua crítica, "
+                                     f"e ela vale para as próximas.\n\n#apr:{m.group(1)}"),
+                            "reply_markup": {"force_reply": True,
+                                             "input_field_placeholder": "ex.: falta o CTA do /whatsapp"},
                         })
                         log(f"approval-revise-prompt chat={cq_chat_id} approval={m.group(1)}")
                         continue  # teclado fica de pé: ele ainda pode aprovar ou rejeitar

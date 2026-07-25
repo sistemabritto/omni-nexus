@@ -158,7 +158,7 @@ function PublishPreview({ p }: { p: PublishPreview }) {
               target="_blank"
               rel="noreferrer"
               title={url}
-              className="block w-28 h-28 rounded-lg overflow-hidden border border-white/10 bg-white/[0.03] shrink-0"
+              className="block w-20 h-20 sm:w-28 sm:h-28 rounded-lg overflow-hidden border border-white/10 bg-white/[0.03] shrink-0"
             >
               {quebradas[url] ? (
                 <span className="flex h-full items-center justify-center px-2 text-[10px] text-red-400 text-center break-all">
@@ -178,7 +178,7 @@ function PublishPreview({ p }: { p: PublishPreview }) {
         </div>
       )}
 
-      <pre className="px-3 py-2 text-sm text-white/80 whitespace-pre-wrap break-words font-sans max-h-64 overflow-y-auto">
+      <pre className="px-3 py-2 text-sm text-white/80 whitespace-pre-wrap [overflow-wrap:anywhere] font-sans max-h-64 overflow-y-auto">
         {texto || <span className="text-red-400">conteúdo vazio — nada seria publicado</span>}
       </pre>
     </div>
@@ -261,8 +261,8 @@ export default function Approvals() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Aprovações</h1>
           <p className="text-sm text-white/50 mt-1">
@@ -279,7 +279,7 @@ export default function Approvals() {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {['pending', 'approved', 'rejected', 'expired', 'published', 'all'].map((s) => (
           <button
             key={s}
@@ -309,7 +309,7 @@ export default function Approvals() {
         {approvals.map((a) => {
           const link = relatedLink(a)
           return (
-            <div key={a.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div key={a.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3 sm:p-4 min-w-0 overflow-hidden">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${GATE_COLORS[a.gate_type] || ''}`}>
@@ -332,17 +332,17 @@ export default function Approvals() {
               {/* Com o conteúdo real logo abaixo, o resumo do agente vira ruído
                   e disputa a atenção com o texto que de fato vai ao ar. */}
               {a.body && !a.publish && (
-                <div className="text-sm text-white/60 whitespace-pre-wrap mb-2">{a.body}</div>
+                <div className="text-sm text-white/60 whitespace-pre-wrap [overflow-wrap:anywhere] mb-2">{a.body}</div>
               )}
               {a.publish && <PublishPreview p={a.publish} />}
               {a.items_preview && (
-                <pre className="text-xs text-white/50 whitespace-pre-wrap bg-white/[0.02] rounded-lg p-2 mb-2">
+                <pre className="text-xs text-white/50 whitespace-pre-wrap [overflow-wrap:anywhere] bg-white/[0.02] rounded-lg p-2 mb-2">
                   {a.items_preview}
                 </pre>
               )}
 
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-3 text-xs text-white/40">
+              <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40 min-w-0">
                   {a.agent && <span>via @{a.agent}</span>}
                   {a.decided_by && <span>decidido por {a.decided_by}</span>}
                   {link && (

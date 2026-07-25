@@ -10,6 +10,7 @@ sub-goal tickets) is wired in Step 7 — see the TODO markers below.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import sqlite3
@@ -189,8 +190,44 @@ def _pedir_ajuste(approval_id: int, feedback: str, decided_by: str,
         finally:
             conn.close()
 
+    refazendo = _agendar_refacao(row.ticket_id, outcome, feedback)
     return jsonify({"status": "revision_requested", "id": approval_id,
-                    "ticket_id": row.ticket_id, "feedback": feedback[:480]}), 200
+                    "ticket_id": row.ticket_id, "feedback": feedback[:480],
+                    "refazendo": refazendo}), 200
+
+
+def _agendar_refacao(ticket_id: str | None, outcome: dict, feedback: str) -> bool:
+    """Dispara a nova versão em thread separada, se for post de rede.
+
+    Em thread porque gerar texto passa de um minuto e o bot do Telegram desiste
+    da requisição bem antes disso — deixar o humano olhando para um spinner que
+    expira é pior que devolver na hora e mandar o card novo em seguida.
+
+    Devolve se a refação foi disparada, para a resposta poder dizer a verdade
+    sobre o que vai acontecer em vez de prometer um card que não vem.
+    """
+    if not ticket_id or not isinstance(outcome, dict):
+        return False
+    if outcome.get("publish_target") not in ("x", "linkedin", "threads"):
+        return False  # artigo de blog volta para a fila; não se reescreve sozinho
+
+    tentativa = db.session.execute(
+        db.text("SELECT COUNT(*) FROM pending_approvals WHERE ticket_id=:t AND gate_type='publish'"),
+        {"t": ticket_id},
+    ).scalar() or 1
+
+    import threading
+
+    def _trabalhar():
+        try:
+            from ghost_social_bridge import refazer
+
+            refazer(outcome, feedback, ticket_id, tentativa=tentativa)
+        except Exception:  # noqa: BLE001 — thread solta nunca derruba o processo
+            logging.getLogger(__name__).exception("refação automática falhou")
+
+    threading.Thread(target=_trabalhar, daemon=True, name=f"refaz-{ticket_id[:8]}").start()
+    return True
 
 
 @bp.route("/api/approvals/<int:approval_id>/revise", methods=["POST"])

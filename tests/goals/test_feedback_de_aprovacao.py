@@ -210,3 +210,111 @@ def test_bot_captura_resposta_no_card_com_imagem():
     fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
     trecho = fonte.split("m_apr = re.search")[0][-500:]
     assert "caption" in trecho
+
+
+# ── refazer no ato (pedido do Felipe, 25/07) ─────────────────────────────
+
+@pytest.fixture
+def bridge_com_api(monkeypatch):
+    """Bridge com Ghost e API falsos, para exercitar refazer() sem rede."""
+    import sys as _sys
+    import types as _types
+
+    import ghost_social_bridge as bridge
+
+    chamadas = []
+
+    class _Evo:
+        @staticmethod
+        def post(rota, corpo):
+            chamadas.append((rota, corpo))
+            return {"id": 99}
+
+    fake = _types.ModuleType("sdk_client")
+    fake.evo = _Evo()
+    monkeypatch.setitem(_sys.modules, "sdk_client", fake)
+    monkeypatch.setattr(bridge, "buscar_post", lambda _id: {
+        "id": "art1", "status": "published", "title": "Artigo",
+        "custom_excerpt": "resumo", "url": "https://blog.exemplo.com/a", "plaintext": "corpo"})
+    monkeypatch.setenv("XAI_API_KEY", "")
+    return bridge, chamadas
+
+
+def _outcome(rede="linkedin", **extra):
+    base = {"publish_target": rede, "publish_content": "versão 1",
+            "source_id": "art1", "source_url": "https://blog.exemplo.com/a",
+            "publish_media": [], "publish_at": None, "publish_intent": True}
+    base.update(extra)
+    return base
+
+
+def test_refazer_abre_nova_aprovacao_no_mesmo_ticket(bridge_com_api):
+    bridge, chamadas = bridge_com_api
+    r = bridge.refazer(_outcome(), "corta as hashtags", "tkt-1")
+    assert r["ok"] is True and r["tentativa"] == 2
+    rota, corpo = chamadas[-1]
+    assert rota == "/api/approvals"
+    assert corpo["ticket_id"] == "tkt-1", "a nova versão pertence ao mesmo trabalho"
+    assert corpo["payload"]["title"].startswith("[v2]")
+
+
+def test_refazer_gera_texto_novo_e_nao_repete_o_reprovado(bridge_com_api):
+    bridge, chamadas = bridge_com_api
+    bridge.refazer(_outcome(publish_content="TEXTO REPROVADO"), "muda tudo", "tkt-1")
+    novo = chamadas[-1][1]["payload"]["outcome"]["publish_content"]
+    assert novo != "TEXTO REPROVADO"
+
+
+def test_refazer_preserva_destino_e_agendamento(bridge_com_api):
+    bridge, chamadas = bridge_com_api
+    quando = "2026-08-01T12:00:00Z"
+    bridge.refazer(_outcome(publish_at=quando), "ajusta", "tkt-1")
+    o = chamadas[-1][1]["payload"]["outcome"]
+    assert o["publish_target"] == "linkedin" and o["publish_at"] == quando
+
+
+def test_teto_de_refacoes_evita_laco_infinito(bridge_com_api):
+    """Feedback que o modelo não consegue satisfazer viraria geração eterna."""
+    bridge, chamadas = bridge_com_api
+    antes = len(chamadas)
+    r = bridge.refazer(_outcome(), "impossível", "tkt-1", tentativa=bridge.MAX_REFACOES + 1)
+    assert r["ok"] is False and "teto" in r["erro"]
+    assert len(chamadas) == antes, "não pode abrir aprovação depois do teto"
+
+
+def test_artigo_de_blog_nao_se_reescreve_sozinho(bridge_com_api):
+    """Reescrever o corpo inteiro é trabalho de agente, não de um request —
+    fazer em silêncio produziria artigo que ninguém escreveu de fato."""
+    bridge, chamadas = bridge_com_api
+    antes = len(chamadas)
+    r = bridge.refazer(_outcome(rede="blog"), "melhora", "tkt-1")
+    assert r["ok"] is False
+    assert len(chamadas) == antes
+
+
+def test_sem_source_id_nao_tem_como_refazer(bridge_com_api):
+    bridge, _ = bridge_com_api
+    o = _outcome()
+    del o["source_id"]
+    assert bridge.refazer(o, "ajusta", "tkt-1")["ok"] is False
+
+
+def test_outcome_do_post_carrega_source_id(monkeypatch):
+    """Sem isso o feedback fica registrado e o texto nunca é regenerado."""
+    import ghost_social_bridge as bridge
+
+    monkeypatch.setattr(bridge, "buscar_post", lambda _id: {
+        "id": "art9", "status": "published", "title": "T", "custom_excerpt": "R",
+        "url": "https://e.com/a", "plaintext": "corpo"})
+    monkeypatch.setenv("XAI_API_KEY", "")
+    r = bridge.distribuir("art9", dry_run=True)
+    assert r["redes"], "esperava as redes do blog"
+
+
+def test_refacao_roda_fora_da_requisicao():
+    """Gerar texto passa de um minuto; o bot do Telegram desiste antes. Fazer
+    isso dentro do request deixaria o humano num spinner que expira."""
+    fonte = (REPO_ROOT / "dashboard" / "backend" / "routes" / "approvals.py").read_text(
+        encoding="utf-8")
+    trecho = fonte.split("def _agendar_refacao")[1]
+    assert "threading.Thread" in trecho and "daemon=True" in trecho

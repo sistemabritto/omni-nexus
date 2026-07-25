@@ -271,13 +271,35 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
         try:
             from sdk_client import evo
 
+            # O gate de publicação é ancorado num ticket: é dele que sai a
+            # chave de idempotência (publish:<ticket>:<tentativa>) e é ele que
+            # muda de estado quando o humano aprova. Sem ticket_id a API
+            # devolve 400 e a aprovação nunca chega ao Telegram — o trabalho
+            # todo morre no último passo, em silêncio.
+            #
+            # Ancorar num ticket também é o que faz o post aparecer no Kanban:
+            # o trabalho fica visível antes, durante e depois da aprovação, em
+            # vez de existir só como uma notificação que passou.
+            ticket = evo.post("/api/tickets", {
+                "title": f"Publicar em {rede}: {post.get('title')}",
+                "description": f"Distribuição automática do artigo {post.get('url') or ''}".strip(),
+                "assignee_agent": "pixel-social-media",
+                "priority": "medium",
+                "status": "review",
+            })
+            ticket_id = (ticket or {}).get("id") or (ticket or {}).get("ticket", {}).get("id")
+            if not ticket_id:
+                raise RuntimeError(f"POST /api/tickets não devolveu id: {ticket!r}")
+
             evo.post("/api/approvals", {
                 "gate_type": "publish",
+                "ticket_id": ticket_id,
                 "agent": "pixel-social-media",
                 "payload": {"title": f"Publicar em {rede}: {post.get('title')}",
                             "body": texto[:800], "outcome": outcome},
             })
-            resultado["redes"][rede] = {"aprovacao": "aberta", "publish_at": outcome["publish_at"]}
+            resultado["redes"][rede] = {"aprovacao": "aberta", "ticket": ticket_id,
+                                        "publish_at": outcome["publish_at"]}
         except Exception as exc:  # noqa: BLE001
             resultado["redes"][rede] = {"erro": str(exc)}
             resultado["ok"] = False

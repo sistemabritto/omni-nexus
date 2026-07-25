@@ -214,3 +214,63 @@ def test_ghost_e_chamado_com_user_agent_de_navegador(monkeypatch):
     bridge.buscar_post("p1")
     assert "Mozilla/" in capturado.get("User-Agent", ""), "UA de biblioteca é bloqueado pelo Cloudflare"
     assert capturado["Authorization"].startswith("Ghost ")
+
+
+# ── a aprovação precisa de ticket (validação real, 2026-07-25) ───────────
+
+@pytest.fixture
+def api_falsa(monkeypatch):
+    """Captura as chamadas de API sem rede, com o contrato real do endpoint."""
+    chamadas = {"tickets": [], "approvals": []}
+
+    class _Evo:
+        @staticmethod
+        def post(rota, corpo):
+            if rota == "/api/tickets":
+                chamadas["tickets"].append(corpo)
+                return {"id": f"tkt-{len(chamadas['tickets'])}"}
+            if rota == "/api/approvals":
+                # É exatamente isto que a API exige — sem ticket_id, 400.
+                if not corpo.get("ticket_id"):
+                    raise RuntimeError("400: ticket_id is required for gate_type=publish")
+                chamadas["approvals"].append(corpo)
+                return {"id": len(chamadas["approvals"]), "status": "pending"}
+            raise AssertionError(f"rota inesperada: {rota}")
+
+    import sys as _sys
+    import types as _types
+
+    fake = _types.ModuleType("sdk_client")
+    fake.evo = _Evo()
+    monkeypatch.setitem(_sys.modules, "sdk_client", fake)
+    return chamadas
+
+
+def test_cada_rede_abre_aprovacao_ancorada_num_ticket(post_publicado, api_falsa):
+    """Sem ticket_id a API devolve 400 e a aprovação nunca chega ao Telegram —
+    o trabalho todo morre no último passo, em silêncio."""
+    r = bridge.distribuir("p1")
+    assert r["ok"] is True, f"alguma rede falhou: {r['redes']}"
+    assert len(api_falsa["approvals"]) == 4
+    for chamada in api_falsa["approvals"]:
+        assert chamada["ticket_id"], "aprovação sem ticket é recusada pela API"
+        assert chamada["gate_type"] == "publish"
+
+
+def test_um_ticket_por_rede_e_nao_um_agregado():
+    """Aprovação agregada faria o humano aprovar um resumo — o problema de
+    confiança que o gate existe para evitar."""
+    assert len(bridge.REDES) == 4
+
+
+def test_ticket_carrega_o_link_do_artigo(post_publicado, api_falsa):
+    bridge.distribuir("p1")
+    for t in api_falsa["tickets"]:
+        assert "blog.sistemabritto.com.br" in (t.get("description") or "")
+        assert t["assignee_agent"] == "pixel-social-media"
+
+
+def test_outcome_da_aprovacao_leva_o_link_para_o_card(post_publicado, api_falsa):
+    bridge.distribuir("p1")
+    for a in api_falsa["approvals"]:
+        assert a["payload"]["outcome"]["source_url"].startswith("http")

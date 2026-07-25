@@ -68,8 +68,8 @@ def decide_approval(approval_id: int):
 
     data = request.get_json(silent=True) or {}
     decision = data.get("decision")
-    if decision not in ("approve", "reject"):
-        return jsonify({"error": "decision must be 'approve' or 'reject'"}), 400
+    if decision not in ("approve", "reject", "revise"):
+        return jsonify({"error": "decision must be 'approve', 'reject' or 'revise'"}), 400
 
     from_id = str(data.get("from_id") or "")
     # V4: decided_by is DERIVED server-side from from_id after revalidating
@@ -79,6 +79,12 @@ def decide_approval(approval_id: int):
         return jsonify({"error": "not an approver"}), 403
     decided_by = f"telegram:{from_id}"
     reason = str(data.get("reason") or "")[:500]
+
+    # Pedir ajuste passa pela MESMA validação de aprovador: é uma decisão sobre
+    # conteúdo público, não um comentário solto.
+    if decision == "revise":
+        return _pedir_ajuste(approval_id, str(data.get("feedback") or reason),
+                             decided_by, from_id)
 
     return _apply_decision(approval_id, decision, decided_by, reason, from_id)
 
@@ -114,6 +120,92 @@ def decide_approval_via_dashboard(approval_id: int):
     reason = str(data.get("reason") or "")[:500]
 
     return _apply_decision(approval_id, decision, decided_by, reason, approver_from_id=None)
+
+
+def _pedir_ajuste(approval_id: int, feedback: str, decided_by: str,
+                  approver_from_id: str | None) -> tuple:
+    """Terceiro caminho do gate: "está quase, muda isto".
+
+    Sem ele o humano só tem duas saídas ruins — aprovar um texto de que não
+    gostou, ou rejeitar e escrever ele mesmo. Pedir ajuste devolve o trabalho ao
+    agente com a crítica concreta e mantém a autoria onde ela deve ficar.
+
+    Mecanicamente é uma rejeição desta versão: o CHECK de `status` não tem
+    estado de revisão, e reconstruir a tabela em produção custa mais do que
+    vale. A tentativa seguinte entra como attempt+1, que a chave de
+    idempotência já suporta, e o histórico fica honesto — v0 recusada com
+    motivo, v1 aprovada.
+
+    O feedback vai também para o ledger, e daí para o prompt das próximas
+    gerações: é o que faz o padrão convergir sem ninguém reescrever briefing.
+    """
+    feedback = (feedback or "").strip()
+    if not feedback:
+        return jsonify({"error": "feedback é obrigatório para pedir ajuste"}), 400
+
+    row = db.session.execute(
+        db.text("SELECT gate_type, ticket_id, agent, payload, status "
+                "FROM pending_approvals WHERE id=:id"),
+        {"id": approval_id},
+    ).fetchone()
+    if not row:
+        return jsonify({"error": "not found"}), 404
+    if row.status != "pending":
+        return jsonify({"error": "already decided"}), 409
+
+    from approval_feedback import MARCA_AJUSTE, registrar
+
+    try:
+        payload = json.loads(row.payload or "{}")
+    except (ValueError, TypeError):
+        payload = {}
+    outcome = payload.get("outcome") or {}
+
+    registrar(
+        agente=row.agent or "pixel-social-media",
+        alvo=outcome.get("publish_target") or "geral",
+        feedback=feedback,
+        titulo=payload.get("title") or "",
+        aprovacao_id=approval_id,
+        autor=decided_by,
+    )
+
+    resposta = _apply_decision(approval_id, "reject", decided_by,
+                               MARCA_AJUSTE + feedback[:480], approver_from_id)
+    corpo, codigo = resposta if isinstance(resposta, tuple) else (resposta, 200)
+    if codigo >= 400:
+        return corpo, codigo
+
+    # A rejeição levou o ticket a um estado terminal; pedir ajuste é o
+    # contrário disso — o trabalho continua, agora com instrução.
+    if row.ticket_id:
+        from heartbeat_outcome import _move_ticket
+
+        conn = sqlite3.connect(_db_path())
+        try:
+            _move_ticket(row.ticket_id, "in_progress", row.agent or "system",
+                         f"Ajuste pedido por {decided_by}: {feedback[:400]}", conn)
+            conn.commit()
+        finally:
+            conn.close()
+
+    return jsonify({"status": "revision_requested", "id": approval_id,
+                    "ticket_id": row.ticket_id, "feedback": feedback[:480]}), 200
+
+
+@bp.route("/api/approvals/<int:approval_id>/revise", methods=["POST"])
+def pedir_ajuste_via_dashboard(approval_id: int):
+    """Mesma porta estreita de /dashboard-decision: sessão de navegador com
+    papel admin, nunca token de API — um agente pedindo ajuste no próprio gate
+    reabriria o buraco que aquela checagem fechou."""
+    if getattr(g, "auth_via_api_token", False):
+        return jsonify({"error": "forbidden — use the Telegram approval flow for API/agent callers"}), 403
+    if not current_user.is_authenticated or current_user.role != "admin":
+        return jsonify({"error": "forbidden"}), 403
+
+    data = request.get_json(silent=True) or {}
+    return _pedir_ajuste(approval_id, str(data.get("feedback") or ""),
+                         f"dashboard:{current_user.username}", approver_from_id=None)
 
 
 def _apply_decision(approval_id: int, decision: str, decided_by: str, reason: str,
@@ -525,6 +617,10 @@ def _approval_to_dict(row) -> dict:
         "context": context_line or None,
         "items_preview": items_block.strip() or None,
         "publish": _render_publish_preview(row.gate_type, payload),
+        # Pedir ajuste é gravado como rejeição (o CHECK de status não tem
+        # estado de revisão); a marca é o que permite a página dizer "ajuste
+        # pedido" em vez de "rejeitada", que lê como final e não é.
+        "reject_reason": getattr(row, "reject_reason", None),
         "created_at": row.created_at,
         "expires_at": row.expires_at,
         "decided_at": row.decided_at,

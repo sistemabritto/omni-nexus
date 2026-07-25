@@ -166,10 +166,14 @@ def send_approval_request(approval_id: int, title: str, body: str,
     reply_markup = {
         "inline_keyboard": [[
             {"text": "✅ Aprovar", "callback_data": f"apr:{approval_id}:a"},
+            {"text": "✏️ Ajustar", "callback_data": f"apr:{approval_id}:e"},
             {"text": "❌ Rejeitar", "callback_data": f"apr:{approval_id}:r"},
         ]]
     }
-    text = f"🔔 <b>{safe_title}</b>\n\n{safe_body}"
+    # A marca #apr:<id> é o que permite pedir ajuste RESPONDENDO a esta
+    # mensagem: teclado inline não coleta texto, e o mesmo padrão de resposta
+    # já é usado na ponte de tickets (#tkt:<id>).
+    text = f"🔔 <b>{safe_title}</b>\n\n{safe_body}\n\n<code>#apr:{approval_id}</code>"
 
     def _enviar(metodo: str, corpo: dict) -> dict | None:
         try:

@@ -210,15 +210,27 @@ If the context file has example posts, open with: "I'll match the style from you
 
 ---
 
-## Publishing with ferramenta externa
+## Publishing with Postiz
 
-Created content should be saved in workspace/social/ with [C] prefix. The user publishes manually or schedules via external tool:
+Save the finished post in `workspace/social/` with the `[C]` prefix. Then offer
+to schedule it:
 
-> "Want me to schedule this? I can queue it for your next available slot or pick a specific time."
+> "Quer que eu agende? Posso colocar no próximo slot do calendário ou numa data específica."
 
-Use `create_post` to publish. Pass the post body, platform, and scheduling time if provided.
+Scheduling and publishing go through **Postiz self-hosted**, the workspace's
+official intermediary — never through a platform API directly, even when a
+`SOCIAL_*_ACCESS_TOKEN` exists in the environment (those are read-only, for
+analytics). Hand the draft to **social-schedule-postiz**, which owns the whole
+contract: `publish_content` (the exact text), `publish_media` (public HTTPS URL
+via `int-minio`), and `publish_at` (ISO-8601 **UTC**; omit to publish right
+after approval).
 
-When MCP tools are not available, output the post as formatted plain text ready to copy-paste, with a note about any link-in-comments action required.
+Anything public is gated: the human approves on Telegram — seeing the exact
+text, media and scheduled time — and only then does the dashboard hand it to
+Postiz. Never publish on your own.
+
+If Postiz is not configured (`POSTIZ_URL`/`POSTIZ_API_KEY` missing), output the
+post as plain text ready to copy-paste, noting any link-in-comments action.
 
 ---
 
@@ -242,7 +254,7 @@ Before delivering the final post, verify:
 - Does not write carousels or slide decks — see **social-carousel-writer** for slide-by-slide content
 - Does not analyze post performance or metrics — see **social-performance-analyzer** for analytics
 - Does not define content strategy or decide what to post — see **social-content-strategy** for planning
-- Does not execute code or access external APIs without automated publishing integration — save as draft
+- Does not publish or schedule by itself, and never calls a platform API directly — hand the finished draft to **social-schedule-postiz** (Postiz self-hosted is the official scheduling intermediary)
 - Does not produce visual design or images — output is text copy only, ready to paste
 
 ## Related Skills

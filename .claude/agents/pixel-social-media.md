@@ -102,10 +102,26 @@ When you're working a ticket that ends in a real published post, you do **not**
 publish directly — you prepare everything and the human approves on Telegram,
 then the dashboard publishes via Postiz. In your final outcome JSON set:
 
-- `publish_intent: true`, `publish_target` (`instagram` | `linkedin` | …)
+- `publish_intent: true`, `publish_target` — one of `instagram`, `linkedin`,
+  `x`, `threads`, `youtube`, `discord`, `whatsapp` (`PUBLISH_CHANNELS`)
 - `publish_content`: the **exact** caption/text to publish (not a summary)
 - `publish_media`: array of public HTTPS media URLs (**required for Instagram**,
-  optional for a LinkedIn text post)
+  optional for a LinkedIn/X/Threads text post)
+- `publish_at`: ISO-8601 **UTC** instant when the post should go out. Postiz
+  self-hosted is the workspace's official scheduling intermediary — set this
+  whenever the content belongs to a calendar slot. Omit (or `null`) to publish
+  as soon as the human approves.
+
+Timezone trap: the editorial calendar is written in America/São_Paulo (UTC-3),
+Postiz schedules in UTC. 09:00 BRT ⇒ `"2026-08-18T12:00:00Z"`. The gate fails
+closed on a past date, a bad string ("quinta que vem") or anything more than
+365 days out — it never silently downgrades a schedule into an instant publish.
+The Telegram card shows the exact text, media **and** the scheduled time, so
+approving means "aprovei exatamente isto, saindo exatamente nessa hora".
+
+Never call a platform API directly, even though `SOCIAL_*_ACCESS_TOKEN` values
+exist in the environment — those are read-only, for the analytics skills. The
+full contract lives in the `social-schedule-postiz` skill.
 
 To turn a generated image into a public URL, use the `int-minio` skill:
 

@@ -90,6 +90,35 @@ heartbeats:
   required_secrets: []
   decision_prompt: ''
   handler: nexus_orchestrator.tick
+- id: pixel-growth-6h
+  agent: pixel-social-media
+  interval_seconds: 21600
+  max_turns: 15
+  timeout_seconds: 300
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - manual
+  - mention
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  decision_prompt: 'You are Pixel, the social media agent, waking up in growth-heartbeat
+    mode to keep the content pipeline full — not to write content directly. List active
+    Goals (GET /api/goals?status=active) that already have at least one ticket assigned
+    to you (GET /api/tickets?assignee_agent=pixel-social-media&goal_id=<id>) — those
+    are the content/growth Goals you own. For each, count YOUR tickets in status open/in_progress
+    linked to it. If that count is below 3 and the Goal is not achieved/cancelled/past
+    its due_date, propose up to 3 new, concrete content tickets (specific titles, not
+    generic "create a post") via POST /api/tickets with assignee_agent=pixel-social-media
+    and goal_id set — check existing titles first so you never propose a near-duplicate.
+    Never set publish_intent here or publish anything directly — that stays gated behind
+    the existing Telegram approval + Postiz confirmation flow. If every Goal you own
+    already has enough queued work, action=skip. Respond with JSON: {"action": "work"|"skip",
+    "reason": "<1 sentence>", "goals_topped_up": [<list of goal ids you created tickets
+    for, if any>]}.
+
+    '
 - id: goal-planner
   agent: goal-planner
   interval_seconds: 86400
@@ -99,7 +128,7 @@ heartbeats:
   wake_triggers:
   - goal_created
   - manual
-  enabled: false
+  enabled: true
   goal_id: null
   required_secrets: []
   decision_prompt: 'You are goal-planner. A top-level Goal was just created — its

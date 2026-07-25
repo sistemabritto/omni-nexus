@@ -142,7 +142,7 @@ For each platform they use, capture:
 - **Primary goal** — grow audience / build authority / drive leads / engage community / stay visible
 - **Current posting frequency** — how often they actually post
 - **Target posting frequency** — how often they want to post
-- **Connected via ferramenta externa?** — yes / no (used by other skills for tool integration)
+- **Connected via Postiz?** — yes / no (used by other skills for tool integration)
 
 Example questions to ask:
 - "Which platforms are you currently active on?"
@@ -255,7 +255,7 @@ last_updated: YYYY-MM-DD
 
 ## Platform Configuration
 
-| Platform | Goal | Current Frequency | Target Frequency | ferramenta externa |
+| Platform | Goal | Current Frequency | Target Frequency | Postiz |
 |---|---|---|---|---|
 | [Platform] | [Goal] | [e.g. 3x/week] | [e.g. 5x/week] | [Yes / No] |
 
@@ -325,7 +325,7 @@ Common update triggers:
 - Does not build a content strategy or define topic clusters — see **social-content-strategy** for strategic planning
 - Does not analyze performance or metrics — see **social-performance-analyzer** for analytics
 - Does not schedule or plan a content calendar — see **social-content-calendar** for scheduling
-- Does not execute code or access external APIs without automated publishing integration — save as draft
+- Does not publish or schedule by itself, and never calls a platform API directly — hand the finished draft to **social-schedule-postiz** (Postiz self-hosted is the official scheduling intermediary)
 - Does not make strategic recommendations — this skill captures identity and preferences only
 
 ## See also

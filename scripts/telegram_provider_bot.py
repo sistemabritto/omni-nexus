@@ -1075,24 +1075,76 @@ def main() -> int:
                 # no ledger que alimenta as próximas gerações. `caption` conta
                 # porque o card com imagem é uma foto legendada, não um texto.
                 m_apr = re.search(r"#apr:(\d+)", reply_src)
-                if m_apr and text:
+                if m_apr:
+                    # Crítica falada é o caso NORMAL no celular, não a exceção:
+                    # é mais rápido ditar do que digitar com o post na tela. Sem
+                    # transcrever aqui, o áudio caía no agente de conversa e
+                    # virava uma resposta sem relação nenhuma com a aprovação —
+                    # que foi exatamente o que aconteceu no primeiro teste real.
+                    critica = text
+                    audio_id = message_audio_file_id(message)
+                    if not critica and audio_id:
+                        api(token, "sendChatAction", {"chat_id": chat_id, "action": "typing"},
+                            timeout=10)
+                        try:
+                            critica = handle_audio_message(token, chat_id, audio_id)
+                        except Exception as exc:  # noqa: BLE001
+                            api(token, "sendMessage", {
+                                "chat_id": chat_id,
+                                "text": f"Não consegui transcrever o áudio: {exc}\n"
+                                        "Manda por texto que eu registro.",
+                                "reply_to_message_id": message.get("message_id")})
+                            log(f"approval-revise-audio-fail chat={chat_id}: {exc}")
+                            continue
+
+                    if not critica:
+                        api(token, "sendMessage", {
+                            "chat_id": chat_id,
+                            "text": "Não veio crítica nenhuma. Escreve ou fala o que mudar.",
+                            "reply_to_message_id": message.get("message_id")})
+                        continue
+
                     if from_id in approval_approvers():
                         resp = decide_approval_via_api(int(m_apr.group(1)), "revise", from_id,
-                                                       feedback=text)
+                                                       feedback=critica)
+                        # Repete a transcrição de volta: numa crítica ditada, o
+                        # humano precisa ver o que o sistema entendeu antes de
+                        # o agente refazer em cima disso.
+                        eco = f"\n\nEntendi: “{critica[:300]}”" if audio_id else ""
                         aviso = ("✏️ Ajuste registrado — o agente vai refazer com essa crítica, "
-                                 "e ela passa a valer para as próximas gerações."
+                                 "e ela passa a valer para as próximas gerações." + eco
                                  if resp.get("ok") else f"Não consegui registrar: {resp['toast']}")
                     else:
                         aviso = "não autorizado"
                     api(token, "sendMessage", {"chat_id": chat_id, "text": aviso,
                                                "reply_to_message_id": message.get("message_id")})
-                    log(f"approval-revise chat={chat_id} approval={m_apr.group(1)}")
+                    log(f"approval-revise chat={chat_id} approval={m_apr.group(1)} "
+                        f"audio={bool(audio_id)} ok={resp.get('ok') if from_id in approval_approvers() else False}")
                     continue
                 m_tkt = re.search(r"#tkt:([0-9a-fA-F-]+)", reply_src)
-                if m_tkt and text:
-                    result = unblock_ticket(m_tkt.group(1), text, sender_name or "humano")
+                if m_tkt:
+                    # Mesmo motivo da ponte de ajuste acima: desbloquear ticket
+                    # falando é o normal no celular, e sem transcrever o áudio
+                    # cairia no agente de conversa.
+                    resposta = text
+                    audio_id = message_audio_file_id(message)
+                    if not resposta and audio_id:
+                        api(token, "sendChatAction", {"chat_id": chat_id, "action": "typing"},
+                            timeout=10)
+                        try:
+                            resposta = handle_audio_message(token, chat_id, audio_id)
+                        except Exception as exc:  # noqa: BLE001
+                            api(token, "sendMessage", {
+                                "chat_id": chat_id,
+                                "text": f"Não consegui transcrever o áudio: {exc}"})
+                            log(f"ticket-unblock-audio-fail chat={chat_id}: {exc}")
+                            continue
+                    if not resposta:
+                        continue
+                    result = unblock_ticket(m_tkt.group(1), resposta, sender_name or "humano")
                     api(token, "sendMessage", {"chat_id": chat_id, "text": result})
-                    log(f"ticket-unblock chat={chat_id} ticket={m_tkt.group(1)[:8]}")
+                    log(f"ticket-unblock chat={chat_id} ticket={m_tkt.group(1)[:8]} "
+                        f"audio={bool(audio_id)}")
                     continue
                 audio_file_id = message_audio_file_id(message)
                 if audio_file_id:

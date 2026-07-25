@@ -404,3 +404,39 @@ def test_allowlist_vazia_recusa_qualquer_um(monkeypatch):
         assert _approver_allowlist() == {"111", "222", "333"}, "aceita vírgula e ponto-e-vírgula"
     finally:
         _os.environ.pop("APPROVAL_APPROVER_IDS", None)
+
+
+# ── crítica por áudio (falha do primeiro teste real, 25/07) ──────────────
+
+def test_ponte_de_ajuste_aceita_audio():
+    """No celular, ditar a crítica é o caso NORMAL — mais rápido que digitar
+    com o post na tela. O handler só olhava `text`, então o áudio caía no
+    agente de conversa e virava uma resposta sem relação com a aprovação.
+    Foi exatamente o que aconteceu no primeiro teste real do Felipe."""
+    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
+    trecho = fonte.split("m_apr = re.search")[1].split("m_tkt = re.search")[0]
+    assert "if m_apr:" in trecho, "não pode exigir texto para entrar no handler"
+    assert "message_audio_file_id" in trecho
+    assert "handle_audio_message" in trecho
+
+
+def test_ajuste_por_audio_ecoa_a_transcricao():
+    """Numa crítica ditada o humano precisa ver o que o sistema entendeu antes
+    de o agente refazer em cima disso."""
+    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
+    trecho = fonte.split("m_apr = re.search")[1].split("m_tkt = re.search")[0]
+    assert "Entendi" in trecho
+
+
+def test_falha_de_transcricao_nao_vira_silencio():
+    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
+    trecho = fonte.split("m_apr = re.search")[1].split("m_tkt = re.search")[0]
+    assert "Manda por texto" in trecho, "erro tem que dizer o que fazer em seguida"
+
+
+def test_ponte_de_ticket_tambem_aceita_audio():
+    """Mesmo defeito, uma linha abaixo — deixar o idêntico ao lado é pior."""
+    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
+    trecho = fonte.split("m_tkt = re.search")[1].split("audio_file_id = message_audio_file_id")[0]
+    assert "if m_tkt:" in trecho
+    assert "handle_audio_message" in trecho

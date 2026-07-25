@@ -10,6 +10,7 @@ interface PublishPreview {
   publish_at: string | null
   content: string | null
   media: string[]
+  source_url: string | null
 }
 
 interface ApprovalItem {
@@ -120,6 +121,20 @@ function PublishPreview({ p }: { p: PublishPreview }) {
           </span>
         )}
       </div>
+
+      {/* O post da rede e o artigo são artefatos diferentes: aqui se valida o
+          texto que vai ao ar, o link abre o artigo inteiro. Em draft o Ghost
+          devolve a URL de preview, que abre sem login. */}
+      {p.source_url && (
+        <a
+          href={p.source_url}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10 text-xs text-[#00FFA7] hover:underline"
+        >
+          <ExternalLink size={12} /> Abrir o artigo completo
+        </a>
+      )}
 
       {p.media.length > 0 && (
         <div className="flex flex-wrap gap-2 p-3 border-b border-white/10">

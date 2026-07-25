@@ -110,3 +110,49 @@ def test_dict_de_aprovacao_inclui_o_bloco_publish():
     row.gate_type = "decomposition"
     assert "publish" in _approval_to_dict(row)
     assert _approval_to_dict(row)["publish"] is None
+
+
+# ── links de validação (pedido do Felipe, 25/07) ─────────────────────────
+
+def test_link_do_artigo_acompanha_a_aprovacao():
+    """Post da rede e artigo são artefatos diferentes; validar um não valida o
+    outro. Em draft o Ghost devolve a URL de preview, que abre sem login."""
+    p = _render_publish_preview("publish", _payload(
+        source_url="https://blog.sistemabritto.com.br/p/8f2c-uuid/"))
+    assert p["source_url"] == "https://blog.sistemabritto.com.br/p/8f2c-uuid/"
+
+
+def test_sem_link_o_campo_vem_nulo_e_a_ui_omite():
+    assert _render_publish_preview("publish", _payload())["source_url"] is None
+
+
+def test_link_que_nao_e_http_e_recusado():
+    """Impede javascript: e afins virarem href renderizado na página."""
+    for lixo in ("javascript:alert(1)", "/relativo", 42, None):
+        assert _render_publish_preview("publish", _payload(source_url=lixo))["source_url"] is None
+
+
+def test_base_publica_prefere_env_ao_host_interno():
+    """request.host_url devolve o host interno atrás do Traefik; um link para
+    http://evonexus-dashboard:8080 não abre no celular de ninguém."""
+    import os
+
+    from routes.approvals import _base_publica
+
+    anterior = {k: os.environ.get(k) for k in ("NEXUS_PUBLIC_URL", "NGROK_URL")}
+    try:
+        os.environ.pop("NEXUS_PUBLIC_URL", None)
+        os.environ["NGROK_URL"] = "https://nexus.workflowapi.com.br/"
+        assert _base_publica() == "https://nexus.workflowapi.com.br"
+
+        os.environ["NEXUS_PUBLIC_URL"] = "https://outro.exemplo.com"
+        assert _base_publica() == "https://outro.exemplo.com", "o nome novo vence"
+
+        os.environ["NEXUS_PUBLIC_URL"] = "evonexus-dashboard:8080"
+        assert _base_publica() == "https://nexus.workflowapi.com.br", "valor sem http é ignorado"
+    finally:
+        for k, v in anterior.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v

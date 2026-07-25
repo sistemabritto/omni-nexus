@@ -5,6 +5,14 @@ import { CheckCircle2, XCircle, Clock, RefreshCw, ExternalLink } from 'lucide-re
 import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
 
+interface PublishPreview {
+  target: string | null
+  publish_at: string | null
+  content: string | null
+  media: string[]
+  source_url: string | null
+}
+
 interface ApprovalItem {
   id: number
   gate_type: 'publish' | 'decomposition' | 'project_suggestion' | 'goal_suggestion'
@@ -18,6 +26,7 @@ interface ApprovalItem {
   body: string | null
   context: string | null
   items_preview: string | null
+  publish: PublishPreview | null
   created_at: string
   expires_at: string
   decided_at: string | null
@@ -61,6 +70,108 @@ function timeAgo(iso: string): string {
   return `há ${Math.floor(hours / 24)}d`
 }
 
+const PLATFORM_LABEL: Record<string, string> = {
+  x: 'X', linkedin: 'LinkedIn', threads: 'Threads', instagram: 'Instagram',
+  youtube: 'YouTube', discord: 'Discord', whatsapp: 'WhatsApp',
+}
+
+// Limite de caracteres da plataforma — o contador vira alerta quando estoura,
+// porque o Postiz recusa no agendamento e a recusa chega depois do "aprovar".
+const PLATFORM_LIMIT: Record<string, number> = {
+  x: 280, linkedin: 3000, threads: 500, instagram: 2200,
+}
+
+function quandoPublica(iso: string | null): string {
+  if (!iso) return 'ao aprovar'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
+/**
+ * O que exatamente vai ao ar. `body` é resumo do agente; isto é o conteúdo
+ * real (publish_content/publish_media) — aprovar lendo o resumo seria aprovar
+ * uma coisa e publicar outra.
+ *
+ * A imagem é renderizada, não listada por URL: validar imagem lendo endereço
+ * é impossível na prática. Se a URL quebrar, o erro aparece aqui — que é o
+ * momento certo de descobrir, não depois de publicado.
+ */
+function PublishPreview({ p }: { p: PublishPreview }) {
+  const [quebradas, setQuebradas] = useState<Record<string, boolean>>({})
+  const texto = p.content ?? ''
+  const limite = p.target ? PLATFORM_LIMIT[p.target] : undefined
+  const estourou = limite !== undefined && texto.length > limite
+
+  return (
+    <div className="mt-3 rounded-lg border border-white/10 bg-black/20 overflow-hidden">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-white/10">
+        <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-white/10 text-white/80">
+          {p.target ? PLATFORM_LABEL[p.target] ?? p.target : 'destino ausente'}
+        </span>
+        <span className="text-xs text-white/50">{quandoPublica(p.publish_at)}</span>
+        {limite !== undefined && (
+          <span
+            className={`ml-auto text-xs tabular-nums ${estourou ? 'text-red-400' : 'text-white/40'}`}
+          >
+            {texto.length}/{limite}
+          </span>
+        )}
+      </div>
+
+      {/* O post da rede e o artigo são artefatos diferentes: aqui se valida o
+          texto que vai ao ar, o link abre o artigo inteiro. Em draft o Ghost
+          devolve a URL de preview, que abre sem login. */}
+      {p.source_url && (
+        <a
+          href={p.source_url}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10 text-xs text-[#00FFA7] hover:underline"
+        >
+          <ExternalLink size={12} /> Abrir o artigo completo
+        </a>
+      )}
+
+      {p.media.length > 0 && (
+        <div className="flex flex-wrap gap-2 p-3 border-b border-white/10">
+          {p.media.map((url) => (
+            <a
+              key={url}
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              title={url}
+              className="block w-28 h-28 rounded-lg overflow-hidden border border-white/10 bg-white/[0.03] shrink-0"
+            >
+              {quebradas[url] ? (
+                <span className="flex h-full items-center justify-center px-2 text-[10px] text-red-400 text-center break-all">
+                  imagem não carregou
+                </span>
+              ) : (
+                <img
+                  src={url}
+                  alt=""
+                  loading="lazy"
+                  onError={() => setQuebradas((q) => ({ ...q, [url]: true }))}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+
+      <pre className="px-3 py-2 text-sm text-white/80 whitespace-pre-wrap break-words font-sans max-h-64 overflow-y-auto">
+        {texto || <span className="text-red-400">conteúdo vazio — nada seria publicado</span>}
+      </pre>
+    </div>
+  )
+}
+
 function relatedLink(a: ApprovalItem): { to: string; label: string } | null {
   if (a.ticket_id) return { to: `/tickets/${a.ticket_id}`, label: 'Ver ticket' }
   if (a.goal_id) return { to: '/goals', label: 'Ver metas' }
@@ -91,11 +202,15 @@ export default function Approvals() {
 
   const decide = async (a: ApprovalItem, decision: 'approve' | 'reject') => {
     const verb = decision === 'approve' ? 'Aprovar' : 'Rejeitar'
+    // Na publicação a confirmação repete destino e horário: é a última tela
+    // antes de algo sair em público, e "aprovar" sem dizer onde e quando é o
+    // tipo de clique de que a pessoa se arrepende.
+    const alvo = a.publish
+      ? `${PLATFORM_LABEL[a.publish.target ?? ''] ?? a.publish.target ?? '?'} · ${quandoPublica(a.publish.publish_at)}`
+      : ''
     const ok = await confirm({
       title: `${verb} ${GATE_LABELS[a.gate_type] || a.gate_type}`,
-      description: a.context
-        ? `${a.context}\n\n${a.title || ''}`
-        : (a.title || 'Confirmar decisão?'),
+      description: [alvo, a.context, a.title].filter(Boolean).join('\n\n') || 'Confirmar decisão?',
       confirmText: verb,
       variant: decision === 'reject' ? 'danger' : 'default',
     })
@@ -182,7 +297,12 @@ export default function Approvals() {
                 <div className="text-xs text-white/50 mb-1">{a.context}</div>
               )}
               <div className="text-sm text-white/90 font-medium mb-1">{a.title || `Aprovação #${a.id}`}</div>
-              {a.body && <div className="text-sm text-white/60 whitespace-pre-wrap mb-2">{a.body}</div>}
+              {/* Com o conteúdo real logo abaixo, o resumo do agente vira ruído
+                  e disputa a atenção com o texto que de fato vai ao ar. */}
+              {a.body && !a.publish && (
+                <div className="text-sm text-white/60 whitespace-pre-wrap mb-2">{a.body}</div>
+              )}
+              {a.publish && <PublishPreview p={a.publish} />}
               {a.items_preview && (
                 <pre className="text-xs text-white/50 whitespace-pre-wrap bg-white/[0.02] rounded-lg p-2 mb-2">
                   {a.items_preview}

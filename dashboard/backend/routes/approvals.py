@@ -453,6 +453,57 @@ def _render_structured_items(gate_type: str, payload: dict) -> str:
     return "\n".join(lines)
 
 
+def _base_publica() -> str:
+    """Endereço público do Nexus, para o link da aprovação no Telegram.
+
+    `request.host_url` sozinho devolve o host interno do container atrás do
+    Traefik, e um link para `http://evonexus-dashboard:8080` não abre no
+    celular de ninguém. NEXUS_PUBLIC_URL é o nome novo; NGROK_URL é o que a
+    VPS já tem preenchido com o domínio certo — honrar os dois evita exigir
+    edição de .env em produção só para o link funcionar.
+    """
+    for chave in ("NEXUS_PUBLIC_URL", "NGROK_URL"):
+        valor = (os.environ.get(chave) or "").strip().rstrip("/")
+        if valor.startswith("http"):
+            return valor
+    try:
+        return request.host_url.rstrip("/")
+    except RuntimeError:  # fora de contexto de request
+        return ""
+
+
+def _render_publish_preview(gate_type: str, payload: dict) -> dict | None:
+    """O que EXATAMENTE vai ao ar, para o gate de publicação.
+
+    `payload["body"]` é resumo truncado escrito pelo agente; o que publica é
+    `payload["outcome"]["publish_content"]` + `publish_media` — outro par de
+    campos. Aprovar lendo o resumo é aprovar uma coisa e publicar outra, que é
+    justamente o problema de confiança que o gate existe para evitar (o card do
+    Telegram já mostra o texto real; a página do dashboard não mostrava).
+
+    A mídia entra como lista de URLs para a página renderizar a imagem. Validar
+    imagem por URL escrita é impossível na prática — é preciso ver.
+    """
+    if gate_type != "publish":
+        return None
+    outcome = payload.get("outcome")
+    if not isinstance(outcome, dict):
+        return None
+    media = [u for u in (outcome.get("publish_media") or []) if isinstance(u, str)]
+    fonte = outcome.get("source_url")
+    return {
+        "target": outcome.get("publish_target"),
+        "publish_at": outcome.get("publish_at"),
+        "content": outcome.get("publish_content"),
+        "media": media,
+        # Link do artigo que originou o post. Em draft o Ghost devolve a URL de
+        # preview (/p/<uuid>/), que abre sem login — dá para conferir o artigo
+        # inteiro sem sair da aprovação. São artefatos diferentes: aqui se
+        # valida o post da rede, lá o artigo.
+        "source_url": fonte if isinstance(fonte, str) and fonte.startswith("http") else None,
+    }
+
+
 def _approval_to_dict(row) -> dict:
     try:
         payload = json.loads(row.payload or "{}")
@@ -473,6 +524,7 @@ def _approval_to_dict(row) -> dict:
         "body": payload.get("body"),
         "context": context_line or None,
         "items_preview": items_block.strip() or None,
+        "publish": _render_publish_preview(row.gate_type, payload),
         "created_at": row.created_at,
         "expires_at": row.expires_at,
         "decided_at": row.decided_at,
@@ -610,8 +662,24 @@ def create_approval():
     ]
     telegram_body = "\n".join(p for p in body_parts if p).strip()[:1500]
 
+    # Com imagem, o Telegram recebe a foto em vez do endereço dela: aprovar uma
+    # publicação com imagem lendo a URL não é aprovar nada.
+    preview = _render_publish_preview(gate_type, payload) or {}
+    links = []
+    if preview.get("source_url"):
+        links.append(f"📄 Artigo: {preview['source_url']}")
+    base = _base_publica()
+    if base:
+        links.append(f"🔗 Aprovar no painel: {base}/approvals")
+    if links:
+        telegram_body = f"{telegram_body}\n\n" + "\n".join(links)
+    telegram_body = telegram_body.strip()[:1500]
+
     from notifications import send_approval_request
-    message_id = send_approval_request(row.id, payload.get("title") or "Aprovação pendente", telegram_body)
+    message_id = send_approval_request(
+        row.id, payload.get("title") or "Aprovação pendente", telegram_body,
+        photo_url=(preview.get("media") or [None])[0],
+    )
     if message_id is not None:
         db.session.execute(
             db.text("UPDATE pending_approvals SET telegram_message_id=:m WHERE id=:id"),

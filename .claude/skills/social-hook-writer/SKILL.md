@@ -255,7 +255,7 @@ Winner: Hook B — confession pattern drove 3x more comments on this topic
 - Does not analyze post performance or metrics — see **social-performance-analyzer** for analytics
 - Does not define content strategy or pillars — see **social-content-strategy** for strategic planning
 - Does not provide platform algorithm tactics — see **social-platform-strategy** for platform-specific guidance
-- Does not execute code or access external APIs without automated publishing integration — save as draft
+- Does not publish or schedule by itself, and never calls a platform API directly — hand the finished draft to **social-schedule-postiz** (Postiz self-hosted is the official scheduling intermediary)
 - Does not generate visual content or images — output is text-based hook copy only
 
 ## Related Skills

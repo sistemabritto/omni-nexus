@@ -103,10 +103,19 @@ COPY backup.py        ./
 COPY .claude/         .claude/
 COPY memory/          memory/
 COPY ADWs/            ADWs/
+# scripts/ embarca os utilitários que triggers e rotinas invocam (ponte Ghost,
+# pipeline editorial, verificador do Postiz). Sem isso um trigger apontando
+# para scripts/*.py falha em produção com "No such file or directory".
+COPY scripts/         scripts/
 COPY config/          config/
 COPY docs/            docs/
 COPY Makefile         ./
 COPY .env.example     ./
+# MCP de escopo de projeto. Sem isto o container não tem NENHUM MCP: o
+# ~/.claude.json é recriado a cada redeploy e volta com mcpServers vazio, então
+# a página /mcp-servers aparecia sem nada e os agentes rodavam sem as
+# ferramentas que o fork declara. Versionado no repo = igual em toda máquina.
+COPY .mcp.json        ./
 # Config do provider "opencode_omnirouter" (baseURL/apiKey do OmniRoute) —
 # heartbeats rodam neste container (Flask+terminal-server+heartbeats).
 COPY opencode.json    ./

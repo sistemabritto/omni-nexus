@@ -31,6 +31,17 @@ import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+# Timezone used only to render a scheduled publish time in the Telegram
+# approval card. Everything is stored and sent to Postiz in UTC; this is
+# presentation only, so Felipe reads "18/08 09:00" and not a UTC offset.
+PUBLISH_DISPLAY_TZ = os.environ.get("WORKSPACE_TIMEZONE") or "America/Sao_Paulo"
+try:
+    _PUBLISH_DISPLAY_ZONE = ZoneInfo(PUBLISH_DISPLAY_TZ)
+except Exception:  # bad/absent tzdata must never break the approval card
+    PUBLISH_DISPLAY_TZ = "UTC"
+    _PUBLISH_DISPLAY_ZONE = timezone.utc
 
 # Valid ticket states (see .claude/rules/tickets.md)
 _VALID_STATUS = {"open", "in_progress", "blocked", "review", "resolved", "closed"}
@@ -161,6 +172,10 @@ _OUTCOME_SCHEMA = {
             "type": ["array", "null"],
             "items": {"type": "string"},
         },
+        # ISO-8601 UTC instant. Present => Postiz schedules the post for that
+        # moment instead of publishing immediately (Postiz is the official
+        # scheduling intermediary). Absent/null => publish now, as before.
+        "publish_at": {"type": ["string", "null"]},
     },
     # publish_intent is required (not just present-with-default) so the
     # strict json_schema call is forced to emit it explicitly — the publish
@@ -179,7 +194,7 @@ PUBLISHING_AGENTS = set(
 )
 # Closed set (Vault V9) — never build a URL/call from an arbitrary agent-supplied string.
 PUBLISH_CHANNELS = set(
-    (os.environ.get("PUBLISH_CHANNELS") or "instagram,linkedin,x,youtube,discord,whatsapp").split(",")
+    (os.environ.get("PUBLISH_CHANNELS") or "instagram,linkedin,x,threads,youtube,discord,whatsapp").split(",")
 )
 
 # Self-healing review loop (goal-ticket-unification Step 6, ADR SPEC 2b-2d).
@@ -319,7 +334,10 @@ def structure_via_nvidia(agent_output, agent: str, conn) -> dict | None:
         "explicitamente NÃO publicar agora (rascunho, aguardando revisão); null se a "
         "tarefa não envolve publicação alguma.\n"
         "- publish_target: plataforma de destino. publish_content: texto EXATO que deve "
-        "ser publicado (não um resumo). publish_media: URLs HTTPS das mídias, ou null."
+        "ser publicado (não um resumo). publish_media: URLs HTTPS das mídias, ou null.\n"
+        "- publish_at: instante ISO-8601 UTC em que o post deve sair, se o agente "
+        "definiu data/hora de agendamento (o Postiz agenda); null para publicar "
+        "imediatamente após a aprovação humana."
     )
     body = {
         "messages": [{"role": "user", "content": prompt}],
@@ -383,6 +401,11 @@ def verdict_via_nvidia(work_report, conn) -> dict | None:
         "verificado (build/teste passou, evidência real), sem pendências bloqueantes.\n"
         "- verdict='fail' se falta evidência, se o próprio relatório admite algo "
         "incompleto/quebrado, ou se a alegação de conclusão não é sustentada.\n"
+        "- IMPORTANTE: se o relatório diz que o conteúdo está pronto e aguardando "
+        "APROVAÇÃO HUMANA para publicar, isso é verdict='pass'. Publicar não é "
+        "trabalho do agente — o gate humano é obrigatório por design, e exigir a "
+        "publicação como prova de conclusão cria um impasse: o agente nunca "
+        "chega ao gate porque você o reprova por não ter passado por ele.\n"
         "- critique: 1-3 frases em pt-BR explicando a decisão.\n"
         "- blocking_issues: lista curta dos problemas que bloqueiam pass (vazio se pass)."
     )
@@ -463,8 +486,10 @@ def structure_via_claude(agent_output, agent: str, conn) -> dict | None:
         '"result":"<o que o agente concluiu, 1 frase pt-BR>",'
         '"new_status":"in_progress"|"review"|"resolved"|null,'
         '"blocked_reason":"<se blocked>","needs":"<se blocked, o que precisa do humano>",'
-        '"publish_intent":true|false|null,"publish_target":"instagram"|"linkedin"|null,'
-        '"publish_content":"<texto exato ou null>","publish_media":["<URL HTTPS>"]|null}\n'
+        '"publish_intent":true|false|null,'
+        '"publish_target":"instagram"|"linkedin"|"x"|"threads"|"youtube"|null,'
+        '"publish_content":"<texto exato ou null>","publish_media":["<URL HTTPS>"]|null,'
+        '"publish_at":"<ISO-8601 UTC do agendamento ou null>"}\n'
         "Regras: action=work se o agente entregou/avançou algo; blocked se ele "
         "depende de dado/credencial/decisão humana; skip se nada foi feito. "
         "Se houver publicação, publish_content deve ser o texto final completo, "
@@ -649,6 +674,18 @@ def _build_publish_approval_body(target: str, outcome: dict, context_line: str =
 
     lines = [context_line] if context_line else []
     lines.append(f"Plataforma: {target}")
+
+    # When it goes out is as trust-critical as what goes out — approving must
+    # never mean "and it may fire at some time I never saw".
+    scheduled_at, schedule_error = _parse_publish_at(outcome.get("publish_at"))
+    if schedule_error:
+        lines.append(f"⚠️ Agendamento inválido: {schedule_error}")
+    elif scheduled_at is not None:
+        local = scheduled_at.astimezone(_PUBLISH_DISPLAY_ZONE)
+        lines.append(f"Agendamento: {local.strftime('%d/%m/%Y %H:%M')} ({PUBLISH_DISPLAY_TZ}) — via Postiz")
+    else:
+        lines.append("Agendamento: publicação imediata ao aprovar")
+
     if content:
         lines.append("")
         lines.append("Texto que será publicado:")
@@ -737,6 +774,83 @@ def _maybe_park_for_publish(ticket_id: str, agent: str, outcome: dict, title: st
     }
 
 
+def _parse_publish_at(raw) -> tuple[datetime | None, str | None]:
+    """Parse an agent-supplied publish_at into an aware UTC datetime.
+
+    Returns (dt, None) on success, (None, None) when there is simply no
+    scheduling requested, and (None, reason) when the value is present but
+    unusable — the caller fails closed on a reason rather than silently
+    downgrading a scheduled post into an immediate publish (which would push
+    content out at the wrong time, the exact failure this gate exists to
+    prevent).
+    """
+    if raw is None or (isinstance(raw, str) and not raw.strip()):
+        return None, None
+    if not isinstance(raw, str):
+        return None, f"publish_at deve ser uma string ISO-8601, recebido {type(raw).__name__}."
+    text = raw.strip().replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None, f"publish_at não é uma data ISO-8601 válida: {raw!r}."
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    parsed = parsed.astimezone(timezone.utc)
+    now = datetime.now(timezone.utc)
+    if parsed <= now:
+        return None, f"publish_at está no passado ({parsed.isoformat()}); recuse em vez de publicar imediatamente."
+    if parsed > now + timedelta(days=365):
+        return None, f"publish_at está a mais de 365 dias ({parsed.isoformat()})."
+    return parsed, None
+
+
+def _publish_settings_for(target: str, content: str, provider: str | None = None) -> dict:
+    """Per-platform Postiz settings for the ticket-publish gate.
+
+    `provider` é o `identifier` da integração que o Postiz devolveu, que pode
+    ser uma variante do canal lógico (`instagram-standalone` para `instagram`,
+    `linkedin-page` para `linkedin`). O `__type` do settings precisa casar com
+    o provider REAL da integração, senão o Postiz recusa o payload. Sem o
+    parâmetro, cai no próprio target — o comportamento histórico.
+
+    Platforms with a confirmed provider schema go through their real builder
+    in postiz_client (X in particular REQUIRES who_can_reply_post — the old
+    generic shape was silently rejected by Postiz). Everything else keeps the
+    historical generic {"__type": target} shape, which is what the legacy flow
+    has always sent for discord/whatsapp.
+
+    Deliberately explicit rather than "any platform present in
+    PLATFORM_SETTINGS_BUILDERS": youtube's builder needs a title and tiktok's
+    defaults to SELF_ONLY (private), so blindly calling every registered
+    builder here would either raise or publish invisibly.
+    """
+    from postiz_client import (
+        build_instagram_payload, build_linkedin_payload, build_threads_payload,
+        build_x_payload, build_youtube_payload,
+    )
+
+    provider = provider or target
+    if target == "instagram":
+        return build_instagram_payload(
+            post_type="post", standalone=provider == "instagram-standalone",
+        )
+    if target == "linkedin":
+        return build_linkedin_payload(page=provider == "linkedin-page")
+    if target == "x":
+        return build_x_payload(who_can_reply_post="everyone")
+    if target == "threads":
+        return build_threads_payload()
+    if target == "youtube":
+        # The builder requires a 2-100 char title; the ticket flow only carries
+        # free text, so derive it from the first line and clamp to the schema.
+        first_line = (content.strip().splitlines() or [""])[0].strip()
+        title = (first_line or "Sistema Britto")[:100]
+        if len(title) < 2:
+            title = "Sistema Britto"
+        return build_youtube_payload(title=title)
+    return {"__type": provider}
+
+
 def _run_publish_action(approval_row, conn) -> dict:
     """Execute the actual publish effect for an approved publish-gate approval.
 
@@ -754,7 +868,7 @@ def _run_publish_action(approval_row, conn) -> dict:
     feature) — this function is the only caller for the legacy ticket-publish
     flow, kept separate from the MediaJob pipeline's use of the same client.
     """
-    from postiz_client import PostizClient, PostizError, build_instagram_payload
+    from postiz_client import PostizClient, PostizError
 
     try:
         payload = json.loads(approval_row.payload or "{}")
@@ -806,12 +920,42 @@ def _run_publish_action(approval_row, conn) -> dict:
             "detail": "Instagram requer publish_media com ao menos uma URL HTTPS.",
         }
 
-    # instagram gets the real per-platform builder (post_type="post" matches
-    # the pre-refactor behavior exactly); every other legacy PUBLISH_CHANNELS
-    # target (linkedin/x/youtube/discord/whatsapp) keeps the old generic
-    # {"__type": target} shape — MediaJob's dedicated builders in
-    # postiz_client.py are for the new pipeline, not this legacy ticket flow.
-    settings = build_instagram_payload(post_type="post") if target == "instagram" else {"__type": target}
+    settings = _publish_settings_for(target, content, provider=integration.get("identifier"))
+
+    # Scheduling path — Postiz is the official scheduling intermediary. When the
+    # approved outcome carries publish_at, we hand Postiz the date and let it
+    # own the timer instead of publishing on the spot.
+    scheduled_at, schedule_error = _parse_publish_at(outcome.get("publish_at"))
+    if schedule_error:
+        return {"published": False, "detail": schedule_error}
+
+    if scheduled_at is not None:
+        try:
+            created = client.schedule_post(
+                integration_id=integration["id"], content=content, media=media, settings=settings,
+                scheduled_at_utc=scheduled_at.isoformat(),
+            )
+        except PostizError as exc:
+            return {"published": False, "detail": f"Postiz recusou o agendamento: {exc}"}
+
+        post_ids = [item.get("postId") for item in created if isinstance(item, dict) and item.get("postId")]
+        if not post_ids:
+            return {"published": False, "detail": f"Postiz não retornou postId no agendamento: {created!r}"}
+
+        window = (
+            (scheduled_at - timedelta(days=1)).isoformat(),
+            (scheduled_at + timedelta(days=1)).isoformat(),
+        )
+        confirmation = client.confirm_scheduled(post_ids, window=window)
+        # The ticket only resolves on a confirmed effect. A scheduled post is a
+        # real, confirmed effect (it is queued on Postiz) even though it is not
+        # PUBLISHED yet — so map scheduled=True onto published=True for the
+        # approval bookkeeping, and say plainly in the detail that it is queued.
+        return {
+            "published": bool(confirmation.get("scheduled")),
+            "scheduled_at": scheduled_at.isoformat(),
+            "detail": confirmation.get("detail", ""),
+        }
 
     try:
         created = client.create_post_now(
@@ -971,6 +1115,24 @@ def apply_outcome(heartbeat_id: str, agent: str, result: dict, conn) -> dict | N
         # (in-session anthropic path, heartbeat_runner's prompt addendum);
         # if absent (the nvidia default), fetch one via the read-only HTTP
         # fallback — never a 2nd invoke_with_fallback.
+        # Conteúdo público com publish_intent=true vai DIRETO para o gate humano,
+        # sem passar pelo revisor automático.
+        #
+        # Antes, o gate só era alcançável depois de um verdict='pass' (ver abaixo),
+        # e o revisor reprovava justamente porque nada tinha sido publicado ainda —
+        # um impasse fechado: o agente não chegava ao gate porque era reprovado por
+        # não ter passado pelo gate. Em produção isso queimou 6 ciclos do mesmo post
+        # até 'review_exhausted' (Telegram, 24-25/07/2026).
+        #
+        # O gate do Telegram JÁ É a revisão para conteúdo público: um humano lê o
+        # texto exato e a data antes de qualquer coisa sair. Rodar um revisor
+        # automático antes dele é redundante e, como se viu, ativamente nocivo.
+        if (ticket_id and new_status in ("review", "resolved", "closed")
+                and agent in PUBLISHING_AGENTS and outcome.get("publish_intent") is True):
+            gate = _maybe_park_for_publish(ticket_id, agent, outcome, title, conn)
+            if gate is not None:
+                return gate
+
         if ticket_id and new_status == "review":
             _move_ticket(ticket_id, "review", agent, summary or "Trabalho enviado para revisão.", conn)
             verdict = parse_verdict(raw_output) or verdict_via_nvidia(raw_output, conn)

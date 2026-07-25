@@ -550,9 +550,16 @@ def _execute_trigger(trigger_id: int, execution_id: int, event_data: dict):
             if not script_path.exists():
                 raise FileNotFoundError(f"Script not found: {trigger.action_payload}")
 
+            # O payload do evento vai por stdin, não por argumento: um webhook
+            # do Ghost passa fácil dos limites de linha de comando e qualquer
+            # aspa no título viraria problema de quoting. Sem isto o script
+            # rodava sem saber QUAL evento disparou — um trigger de
+            # "post publicado" que não recebe o post.
             proc = subprocess.run(
                 [PYTHON_CMD.split()[0]] + PYTHON_CMD.split()[1:] + [str(script_path)],
-                capture_output=True, text=True, timeout=660, cwd=str(WORKSPACE)
+                input=json.dumps(event_data or {}, ensure_ascii=False),
+                capture_output=True, text=True, timeout=660, cwd=str(WORKSPACE),
+                env={**os.environ, "TRIGGER_SLUG": trigger.slug or ""},
             )
             result = {
                 "success": proc.returncode == 0,

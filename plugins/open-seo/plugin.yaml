@@ -1,0 +1,38 @@
+id: open-seo
+name: OpenSEO
+version: 1.0.0
+description: >
+  SEO data layer for OmniNexus. Self-hosts OpenSEO (open source alternative to
+  Semrush/Ahrefs) and exposes its MCP server + agent skills to every OmniNexus
+  agent — keyword research, rank tracking, competitor insights, backlinks, site
+  audits and AI visibility (GEO). Data comes from DataForSEO, billed
+  pay-as-you-go directly by the user.
+author: Ben Senescu (every-app) — integração OmniNexus por Sistema Britto
+license: MIT
+homepage: https://github.com/every-app/open-seo
+
+min_evonexus_version: 0.30.0
+tier: essential
+
+capabilities:
+  - skills
+
+# DataForSEO is what actually returns SEO data — OpenSEO is the UI/MCP layer on
+# top of it. Without this key the service starts but every query returns empty.
+env_vars_needed:
+  - DATAFORSEO_API_KEY
+
+conflicts: {}
+dependencies: {}
+
+source_url: https://github.com/every-app/open-seo.git
+
+# ── MCP ──────────────────────────────────────────────────────────────────
+# OpenSEO serves its MCP over HTTP at ${OPEN_SEO_URL}/mcp, not over stdio, so
+# it is registered as an http entry in the workspace `.mcp.json` under the key
+# `plugin-open-seo-openseo` (the same namespaced name the plugin installer
+# would inject). Declaring it here as a stdio `mcp_servers` command would mean
+# spawning an `npx mcp-remote` bridge per agent for no benefit.
+#
+# Endpoint confirmed against the upstream source at commit f569726
+# (src/server/mcp/context.ts: `export const MCP_ROUTE = "/mcp"`), not guessed.

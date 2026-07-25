@@ -148,14 +148,16 @@ export default function Kanban() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        {/* Busca + 2 botões passam de 450px; no celular isso estourava os ~343px
+            de largura útil e rolava de lado antes mesmo do board. */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[180px] sm:flex-none">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar tickets..."
-              className="w-56 bg-[#161b22] border border-[#21262d] rounded-lg pl-9 pr-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+              className="w-full sm:w-56 bg-[#161b22] border border-[#21262d] rounded-lg pl-9 pr-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
             />
           </div>
           <button
@@ -181,19 +183,24 @@ export default function Kanban() {
         </div>
       )}
 
-      {/* Mobile/tablet (<xl): horizontal snap-scroll, one column at a time — avoids
-          stacking 6 full-height sections vertically (~3000px of scroll). At xl+
-          (1280px), enough width exists for all 6 columns side by side without
-          scrolling, so we drop the scroll/snap behavior and let the grid share
-          the viewport naturally instead of forcing a hardcoded min-width that
-          exceeded common 1280-1439px desktop/laptop viewports and cropped them. */}
-      <div className="flex xl:grid xl:grid-cols-6 gap-3 pb-4 overflow-x-auto xl:overflow-visible snap-x snap-mandatory xl:snap-none -mx-4 px-4 xl:mx-0 xl:px-0">
+      {/* Contagem de colunas dirigida pela largura REAL disponível, não pelo
+          viewport. Breakpoint de viewport errava por 304px — a sidebar (240) e o
+          padding do main (64) — então num notebook de 1280 o board caía no modo
+          carrossel (6 x 320px = 1980px) e rolava de lado, e quando o grid de 6
+          entrava as colunas ficavam com ~167px e o conteúdo aparecia truncado.
+          `auto-fill` com mínimo de 220px resolve os dois: cabem 4 colunas em
+          976px de área útil e 6 num monitor grande, sempre legíveis, quebrando
+          para uma segunda linha em vez de estourar a largura.
+
+          Abaixo de sm continua carrossel com snap, de propósito: empilhar seis
+          seções na vertical dá uma página de ~3000px no celular. */}
+      <div className="flex sm:grid sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 pb-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {STATUSES.map((column) => {
           const items = grouped[column.id] || []
           return (
             <section
               key={column.id}
-              className="bg-[#161b22] border border-[#21262d] rounded-xl min-h-[420px] xl:min-h-[520px] w-[85vw] sm:w-[320px] xl:w-auto shrink-0 xl:shrink flex flex-col snap-start xl:snap-align-none"
+              className="bg-[#161b22] border border-[#21262d] rounded-xl min-h-[320px] sm:min-h-[420px] w-[85vw] sm:w-auto min-w-0 shrink-0 sm:shrink flex flex-col snap-start sm:snap-align-none"
             >
               <header className="flex items-center justify-between px-3 py-3 border-b border-[#21262d]">
                 <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium ${column.tone}`}>
@@ -203,7 +210,11 @@ export default function Kanban() {
                 <span className="text-xs text-[#667085]">{items.length}</span>
               </header>
 
-              <div className="flex-1 p-2 space-y-2">
+              {/* Com o board quebrando em duas linhas, uma coluna com 40 tickets
+                  esticaria a linha inteira e deixaria as vizinhas com um vazio
+                  gigante. A rolagem fica dentro da coluna; overscroll-contain
+                  impede que ela sequestre a rolagem da página ao chegar no fim. */}
+              <div className="flex-1 p-2 space-y-2 sm:max-h-[calc(100vh-16rem)] sm:overflow-y-auto overscroll-contain">
                 {loading ? (
                   <div className="text-xs text-[#667085] px-2 py-6 text-center">Carregando...</div>
                 ) : items.length === 0 ? (
@@ -253,15 +264,18 @@ export default function Kanban() {
                         <span className="font-ticket-mono text-[10px] text-[#667085]">{formatAge(ticket.updated_at)}</span>
                       </div>
 
-                      <div className="mt-2.5 pt-2.5 border-t border-[#21262d]/60 flex items-center justify-between gap-2">
-                        <span className="font-ticket-mono text-[10px] text-[#667085] truncate">
+                      <div className="mt-2.5 pt-2.5 border-t border-[#21262d]/60 flex items-center justify-between gap-2 min-w-0">
+                        <span className="font-ticket-mono text-[10px] text-[#667085] truncate min-w-0">
                           {ticket.assignee_agent ? `@${ticket.assignee_agent}` : 'sem agente'}
                         </span>
+                        {/* min-w-0 é o que permite encolher: o tamanho mínimo
+                            automático de um select é a opção mais larga ("In
+                            Progress"), que sozinha estouraria a coluna estreita. */}
                         <select
                           value={ticket.status}
                           disabled={updating === ticket.id}
                           onChange={(e) => moveTicket(ticket, e.target.value as TicketStatus)}
-                          className="max-w-[112px] bg-[#161b22] border border-[#21262d] rounded-md px-2 py-1 text-[11px] text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50 disabled:opacity-60"
+                          className="shrink-0 min-w-0 w-[104px] bg-[#161b22] border border-[#21262d] rounded-md px-2 py-1 text-[11px] text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50 disabled:opacity-60"
                           aria-label="Mover ticket"
                         >
                           {STATUSES.map((s) => (

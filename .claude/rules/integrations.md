@@ -27,6 +27,9 @@
 | **DocuSign** | MCP | E-signatures and contract management |
 | **Amplitude** | MCP | Product analytics |
 | **Intercom** | MCP | Customer support platform |
+| **OpenSEO** | MCP (self-hosted) + Docker | SEO: keyword research, rank tracking, backlinks, site audit, AI visibility (GEO). Plugin `open-seo` — ver `plugins/open-seo/README.md`. Exige `DATAFORSEO_API_KEY` |
+| **Postiz** | API (self-hosted) | **Intermediário oficial de agendamento/publicação** de todas as redes sociais. Nenhuma skill chama API de plataforma direto — ver skill `social-schedule-postiz` |
+| **Ghost** | Admin API | Blog (blog.sistemabritto.com.br) — drafts, publicação, tags, imagens |
 
 ## GitHub Repositories
 

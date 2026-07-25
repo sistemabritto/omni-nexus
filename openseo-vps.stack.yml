@@ -1,0 +1,101 @@
+## OpenSEO — stack Swarm (VPS swissnode)
+##
+## Camada de dados de SEO do OmniNexus. Imagem oficial every-app/open-seo (MIT).
+##
+## Pressupostos deste ambiente (confirmados no swarm, não assumidos):
+##   * Traefik na overlay externa `network_public`, resolver `letsencryptresolver`
+##   * `*.workflowapi.com.br` é wildcard proxied na Cloudflare apontando pro VPS
+##
+## Dois caminhos de acesso, de propósito:
+##   1. INTERNO (agentes/dashboard -> MCP): http://openseo:3001/mcp pela overlay.
+##      Sem Traefik, sem auth — é tráfego que nunca sai da rede do swarm.
+##   2. EXTERNO (browser do Felipe, edição): https://seo.workflowapi.com.br,
+##      atrás de basicauth. O upstream só oferece AUTH_MODE=local_noauth fora do
+##      modo hosted/cloudflare_access, ou seja: SEM login próprio. Exposto cru na
+##      internet, qualquer um que achasse a URL usaria a chave do DataForSEO —
+##      que é cobrada por request. O basicauth do Traefik fecha esse buraco.
+##
+## Deploy:
+##   docker stack deploy -c openseo-vps.stack.yml openseo
+##
+## A chave do DataForSEO é o único segredo real aqui e NÃO fica versionada —
+## exporte antes do deploy ou preencha pelo Portainer:
+##   export DATAFORSEO_API_KEY=...
+
+services:
+  openseo:
+    image: ghcr.io/every-app/open-seo:latest
+
+    environment:
+      # Exigido no self-host Docker: expõe as env vars do compose para os
+      # bindings cloudflare:workers contra os quais a app foi buildada.
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: "true"
+      TZ: America/Sao_Paulo
+      PORT: "3001"
+      AUTH_MODE: local_noauth
+      ALLOWED_HOST: ${OPENSEO_DOMAIN:-seo.workflowapi.com.br}
+      OPENSEO_TELEMETRY_DISABLED: "1"
+      DO_NOT_TRACK: "1"
+      VITE_SHOW_DEVTOOLS: "false"
+      # Sem esta chave o serviço sobe, a UI abre e as 24 ferramentas MCP
+      # aparecem — mas toda query volta vazia.
+      DATAFORSEO_API_KEY: ${DATAFORSEO_API_KEY:-}
+      # Opcional: Google Search Console (dados de 1ª parte)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+
+    volumes:
+      # Estado local do wrangler/D1 — sem isso, todo redeploy perde os projetos
+      # de SEO, keywords salvas e histórico de rank tracking.
+      - openseo_data:/app/.wrangler
+
+    networks:
+      network_public:
+        aliases:
+          # Como o dashboard e os agentes alcançam o MCP internamente.
+          - openseo
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "2.0"
+          # 4G, não 2G: a imagem roda o build do vite (client + SSR) no boot, e
+          # 2G travou o container em 2GiB/2GiB no primeiro deploy — o build
+          # nunca terminava. Em regime permanente o serviço usa bem menos;
+          # o teto existe para o pico de build, não para a operação.
+          memory: 4096M
+        reservations:
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=network_public
+
+        - traefik.http.routers.openseo.rule=Host(`${OPENSEO_DOMAIN:-seo.workflowapi.com.br}`)
+        - traefik.http.routers.openseo.entrypoints=websecure
+        - traefik.http.routers.openseo.tls=true
+        - traefik.http.routers.openseo.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.openseo.service=openseo
+        - traefik.http.services.openseo.loadbalancer.server.port=3001
+
+        # basicauth — ver comentário do cabeçalho. Trocar a senha:
+        #   openssl passwd -apr1 '<nova>'   (escapar cada $ como $$ aqui)
+        - traefik.http.routers.openseo.middlewares=openseo-auth,openseo-headers
+        - traefik.http.middlewares.openseo-auth.basicauth.users=admin:$$apr1$$JTYEV.fK$$8NuJzvwaDXOMQMh9KoeCH.
+        - traefik.http.middlewares.openseo-headers.headers.customRequestHeaders.X-Forwarded-Proto=https
+
+volumes:
+  openseo_data:
+
+networks:
+  network_public:
+    external: true

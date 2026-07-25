@@ -35,13 +35,36 @@ import uuid
 from pathlib import Path
 
 
+# The same MinIO instance is already reachable through the S3 vars the backup
+# job uses (AWS_ENDPOINT_URL / AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY).
+# Falling back to them means an already-working deployment doesn't have to
+# duplicate the same credentials under a second set of names just to publish
+# media. MINIO_* still wins when set, so an intentionally separate bucket/user
+# for public media keeps working.
+_FALLBACKS = {
+    "MINIO_ENDPOINT": ("AWS_ENDPOINT_URL",),
+    "MINIO_ACCESS_KEY": ("AWS_ACCESS_KEY_ID",),
+    "MINIO_SECRET_KEY": ("AWS_SECRET_ACCESS_KEY",),
+}
+
+
 def _env(name: str, *, required: bool = True, default: str | None = None) -> str:
     val = (os.environ.get(name) or "").strip()
+    if not val:
+        for alias in _FALLBACKS.get(name, ()):
+            val = (os.environ.get(alias) or "").strip()
+            if val:
+                break
     if not val:
         if default is not None:
             return default
         if required:
-            print(f"error: env var {name} is not set (configure the MinIO integration)", file=sys.stderr)
+            aliases = _FALLBACKS.get(name, ())
+            hint = f" (or {', '.join(aliases)})" if aliases else ""
+            print(
+                f"error: env var {name}{hint} is not set (configure the MinIO integration)",
+                file=sys.stderr,
+            )
             sys.exit(2)
         return ""
     return val
@@ -63,7 +86,9 @@ def main() -> None:
     endpoint = _env("MINIO_ENDPOINT").rstrip("/")
     access_key = _env("MINIO_ACCESS_KEY")
     secret_key = _env("MINIO_SECRET_KEY")
-    bucket = (args.bucket or "").strip() or _env("MINIO_BUCKET")
+    # "post" is the documented public-media bucket for this workspace. Never
+    # fall back to BACKUP_S3_BUCKET — that one holds backups and is not public.
+    bucket = (args.bucket or "").strip() or _env("MINIO_BUCKET", required=False, default="post")
     public_base = _env("MINIO_PUBLIC_BASE", required=False, default=endpoint).rstrip("/")
 
     try:

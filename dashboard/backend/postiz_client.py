@@ -84,6 +84,39 @@ def build_linkedin_payload(page: bool = False) -> dict:
     return {"__type": "linkedin-page" if page else "linkedin"}
 
 
+def build_x_payload(
+    who_can_reply_post: str = "everyone",
+    community: str = "",
+    made_with_ai: bool = False,
+    paid_partnership: bool = False,
+) -> dict:
+    """X/Twitter settings.
+
+    `who_can_reply_post` is REQUIRED by the provider schema (confirmed against
+    docs.postiz.com/public-api/providers/x, 2026-07-25) — the generic
+    `{"__type": "x"}` shape the legacy publish gate used to send is rejected by
+    Postiz validation, which is why X posts never actually left the gate.
+    """
+    allowed = {"everyone", "following", "mentionedUsers", "subscribers", "verified"}
+    if who_can_reply_post not in allowed:
+        raise ValueError(f"X who_can_reply_post inválido: {who_can_reply_post!r} (aceita {sorted(allowed)})")
+    if community and not community.startswith("https://x.com/i/communities/"):
+        raise ValueError("X community deve ser uma URL https://x.com/i/communities/<ID>")
+    return {
+        "__type": "x",
+        "who_can_reply_post": who_can_reply_post,
+        "community": community,
+        "made_with_ai": bool(made_with_ai),
+        "paid_partnership": bool(paid_partnership),
+    }
+
+
+def build_threads_payload() -> dict:
+    """Threads has no provider-specific settings beyond __type (confirmed
+    against docs.postiz.com/public-api/providers/threads, 2026-07-25)."""
+    return {"__type": "threads"}
+
+
 def build_tiktok_payload(privacy_level: str = "SELF_ONLY") -> dict:
     allowed = {"PUBLIC_TO_EVERYONE", "MUTUAL_FOLLOW_FRIENDS", "FOLLOWER_OF_CREATOR", "SELF_ONLY"}
     if privacy_level not in allowed:
@@ -102,11 +135,32 @@ def build_tiktok_payload(privacy_level: str = "SELF_ONLY") -> dict:
     }
 
 
+# Um canal lógico ("instagram") pode ser servido por mais de um provider do
+# Postiz. A conta do Felipe é `instagram-standalone` (login pelo Instagram, sem
+# passar pela página do Facebook); casar só por `identifier == "instagram"`
+# fazia o gate responder "nenhuma integração ativa e inequívoca" e o Instagram
+# nunca entrava no fluxo — era esta linha, não a credencial.
+#
+# A ordem importa: o primeiro identifier presente vence, então o provider
+# canônico vem antes da variante.
+PLATFORM_PROVIDER_ALIASES = {
+    "instagram": ("instagram", "instagram-standalone"),
+    "linkedin": ("linkedin", "linkedin-page"),
+}
+
+
+def providers_for(platform: str) -> tuple[str, ...]:
+    """Identifiers do Postiz que atendem um canal lógico."""
+    return PLATFORM_PROVIDER_ALIASES.get(platform, (platform,))
+
+
 PLATFORM_SETTINGS_BUILDERS = {
     "instagram": build_instagram_payload,
     "youtube": build_youtube_payload,
     "linkedin": build_linkedin_payload,
     "tiktok": build_tiktok_payload,
+    "x": build_x_payload,
+    "threads": build_threads_payload,
 }
 
 
@@ -225,13 +279,23 @@ class PostizClient:
         if integrations is None:
             integrations = self.list_integrations()
         configured_id = (self.integration_ids or {}).get(platform, "")
+        aceitos = providers_for(platform)
         candidates = [
             item for item in integrations
-            if isinstance(item, dict) and item.get("identifier") == platform and not item.get("disabled")
+            if isinstance(item, dict) and item.get("identifier") in aceitos and not item.get("disabled")
         ]
         if configured_id:
             return next((item for item in candidates if item.get("id") == configured_id), None)
-        return candidates[0] if len(candidates) == 1 else None
+        # Com alias, "inequívoco" passa a ser por provider: duas contas do MESMO
+        # provider continuam ambíguas (exigem POSTIZ_INTEGRATION_*_ID), mas uma
+        # conta `instagram-standalone` sozinha é uma escolha óbvia, não um empate.
+        for provider in aceitos:
+            do_provider = [item for item in candidates if item.get("identifier") == provider]
+            if len(do_provider) == 1:
+                return do_provider[0]
+            if do_provider:
+                return None
+        return None
 
     def test_connection(self) -> dict:
         """Best-effort health probe used by the admin config screen."""
@@ -374,6 +438,58 @@ class PostizClient:
             return {"id": post_id, "state": status}
 
     # ── publication confirmation (fail-closed polling) ──────────────────
+
+    def list_posts(self, window: tuple[str, str]) -> list[dict]:
+        """GET /api/public/v1/posts for a [startDate, endDate] window."""
+        start_iso, end_iso = window
+        response = self._request(
+            "GET", "/api/public/v1/posts", headers=self._headers(),
+            params={"startDate": start_iso, "endDate": end_iso}, timeout=self.request_timeout,
+        )
+        try:
+            body = response.json()
+        except ValueError:
+            raise PostizAPIError("Postiz retornou um corpo não-JSON em GET /posts.") from None
+        posts = body.get("posts", body) if isinstance(body, dict) else body
+        return [item for item in (posts or []) if isinstance(item, dict)]
+
+    def confirm_scheduled(self, post_ids: list[str], *, window: tuple[str, str]) -> dict:
+        """Confirm a type=schedule post really landed on the Postiz queue.
+
+        The counterpart to wait_for_publication for the SCHEDULING path: a
+        scheduled post is not supposed to be PUBLISHED yet, so polling for
+        state=PUBLISHED (as the publish-now path does) would always fail-closed
+        on a correctly scheduled post. Instead we read the post back and
+        require it to exist in a non-ERROR state — that is the strongest
+        confirmation Postiz offers before the scheduled time arrives.
+
+        Still fail-closed: a post id Postiz does not return, or one in ERROR,
+        never resolves as scheduled=True (ADR SPEC 3f — never claim success
+        without genuine confirmation from the platform).
+        """
+        try:
+            posts = self.list_posts(window)
+        except PostizError as exc:
+            return {"scheduled": False, "detail": f"Falha ao reler posts no Postiz: {exc}"}
+        states = {
+            item.get("id"): (item.get("state") or "").upper()
+            for item in posts
+            if item.get("id") in post_ids
+        }
+        missing = [pid for pid in post_ids if pid not in states]
+        if missing:
+            return {
+                "scheduled": False,
+                "detail": f"Postiz não retornou os posts agendados {', '.join(missing)} na janela consultada.",
+            }
+        errored = [pid for pid, state in states.items() if state == "ERROR"]
+        if errored:
+            return {"scheduled": False, "detail": f"Postiz marcou como ERROR: {', '.join(errored)}."}
+        return {
+            "scheduled": True,
+            "detail": f"Postiz confirmou agendamento de {', '.join(post_ids)} (estado: {states}).",
+            "states": states,
+        }
 
     def wait_for_publication(self, post_ids: list[str], *, wait_seconds: float, poll_seconds: float,
                               window: tuple[str, str]) -> dict:

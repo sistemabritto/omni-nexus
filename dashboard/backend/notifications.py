@@ -27,6 +27,10 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
 
+# Legenda de foto no Telegram vai até 1024 caracteres (texto puro vai a 4096).
+# Estourar faz a API recusar a mensagem inteira — a aprovação sumiria calada.
+_TELEGRAM_CAPTION_LIMIT = 1024
+
 # ── Load .env so TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID are available ──
 _env_file = WORKSPACE / ".env"
 if _env_file.exists():
@@ -128,8 +132,20 @@ def send_telegram_alert(text: str) -> bool:
     return _send_telegram(text)
 
 
-def send_approval_request(approval_id: int, title: str, body: str) -> int | None:
+def send_approval_request(approval_id: int, title: str, body: str,
+                          photo_url: str | None = None) -> int | None:
     """Send a Telegram approval prompt with an inline approve/reject keyboard.
+
+    With `photo_url`, sends the image itself instead of a text message with the
+    URL in it. Aprovar uma publicação com imagem lendo o endereço da imagem não
+    é aprovar coisa nenhuma — é preciso ver o que vai ao ar. O teclado de
+    aprovar/rejeitar é idêntico nos dois caminhos.
+
+    Legenda do Telegram tem limite de 1024 caracteres (contra 4096 do texto), e
+    o corpo é truncado ANTES de enviar: estourar faria o Telegram recusar a
+    mensagem inteira e a aprovação sumiria em silêncio. Se o envio da foto
+    falhar por qualquer motivo (URL inacessível, formato recusado), cai no
+    texto — uma aprovação sem imagem ainda é melhor que nenhuma aprovação.
 
     Shared by both goal-ticket-unification gates (publish + decomposition,
     ADR §3c) — the two gates differ only in what they park, not in how they
@@ -154,21 +170,35 @@ def send_approval_request(approval_id: int, title: str, body: str) -> int | None
         ]]
     }
     text = f"🔔 <b>{safe_title}</b>\n\n{safe_body}"
-    try:
-        payload = json.dumps({
-            "chat_id": cid,
-            "text": text,
-            "parse_mode": "HTML",
-            "disable_web_page_preview": True,
-            "reply_markup": reply_markup,
-        }).encode()
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-    except Exception:
-        return None
-    if not result.get("ok"):
+
+    def _enviar(metodo: str, corpo: dict) -> dict | None:
+        try:
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{token}/{metodo}",
+                data=json.dumps(corpo).encode(),
+                headers={"Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception:
+            return None
+
+    result = None
+    if photo_url:
+        legenda = text if len(text) <= _TELEGRAM_CAPTION_LIMIT else (
+            text[: _TELEGRAM_CAPTION_LIMIT - 20].rstrip() + "\n… (texto completo no painel)")
+        result = _enviar("sendPhoto", {
+            "chat_id": cid, "photo": photo_url, "caption": legenda,
+            "parse_mode": "HTML", "reply_markup": reply_markup,
+        })
+        if result is not None and not result.get("ok"):
+            result = None  # cai no texto abaixo
+
+    if result is None:
+        result = _enviar("sendMessage", {
+            "chat_id": cid, "text": text, "parse_mode": "HTML",
+            "disable_web_page_preview": True, "reply_markup": reply_markup,
+        })
+    if result is None or not result.get("ok"):
         return None
     _append_bot_memory(cid, text)
     message_id = (result.get("result") or {}).get("message_id")

@@ -245,7 +245,7 @@ Apply revisions, then confirm: "Strategy saved. Use **social-content-calendar** 
 - Does not build a posting schedule or calendar — see **social-content-calendar** for scheduling
 - Does not analyze past post performance — see **social-performance-analyzer** or **social-content-pattern-analyzer** for analytics
 - Does not provide platform-specific algorithm tactics — see **social-platform-strategy** for platform guidance
-- Does not execute code or access external APIs without automated publishing integration — save as draft
+- Does not publish or schedule by itself, and never calls a platform API directly — hand the finished draft to **social-schedule-postiz** (Postiz self-hosted is the official scheduling intermediary)
 - Does not set up the user's voice profile or identity — see **social-context** for foundational setup
 
 ## See also

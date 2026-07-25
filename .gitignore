@@ -126,6 +126,16 @@ entities.json
 plugins/*/
 !plugins/.gitkeep
 
+# Exceção: open-seo é um plugin de integração autoral (não um plugin baixado da
+# marketplace). O manifesto, o README e a licença são adaptações do projeto e
+# ficam versionados; as skills copiadas do upstream continuam ignoradas e são
+# reproduzidas por scripts/install_open_seo_plugin.py, pinado num commit.
+!plugins/open-seo/
+plugins/open-seo/*
+!plugins/open-seo/plugin.yaml
+!plugins/open-seo/README.md
+!plugins/open-seo/LICENSE
+
 # Plugin-installed files in .claude/ — plugins copy agents/skills/rules/commands
 # with `plugin-{slug}-` prefix. These are per-machine artifacts and must not land
 # in platform PRs. The `_plugins-index.md` marker file in rules/ is regenerated

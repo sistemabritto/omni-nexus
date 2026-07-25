@@ -323,7 +323,7 @@ Same voice, different register. Use your authentic perspective everywhere — ad
 - Does not define overall content strategy or pillars — see **social-content-strategy** for strategic planning
 - Does not analyze post performance or metrics — see **social-performance-analyzer** for analytics
 - Does not schedule or plan a content calendar — see **social-content-calendar** for posting schedules
-- Does not execute code or access external APIs without automated publishing integration — save as draft
+- Does not publish or schedule by itself, and never calls a platform API directly — hand the finished draft to **social-schedule-postiz** (Postiz self-hosted is the official scheduling intermediary)
 - Does not cover Instagram, TikTok, or YouTube — focuses on LinkedIn, Twitter/X, Threads, and Bluesky only
 
 ## See also

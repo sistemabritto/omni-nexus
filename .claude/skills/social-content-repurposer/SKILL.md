@@ -143,19 +143,21 @@ Present the ranking as a prioritized list with a one-line rationale for each.
 
 ## Scheduling
 
-### When ferramenta externa Is Available
+### When Postiz Is Available
 
 Offer to schedule derivatives directly:
 
 > "Want me to spread these across the week? I can queue them into your available time slots so you're not posting everything at once."
 
-- Use `list_time_slots` to find open slots
 - Spread derivatives across 5-7 days to avoid overlap
 - Schedule the highest-leverage derivative first (anchor post)
 - Space remaining posts at least 24 hours apart
-- Use `create_post` to queue each derivative to its target platform
+- Queue each derivative through **social-schedule-postiz** (`publish_at` in
+  ISO-8601 **UTC** — the calendar is written in America/São_Paulo, UTC-3)
+- Never call a platform API directly; every derivative goes out via Postiz,
+  behind the human approval gate on Telegram
 
-### When ferramenta externa Is Not Available
+### When Postiz Is Not Available
 
 Output a **markdown schedule** the user can execute manually:
 
@@ -216,7 +218,7 @@ Deliver repurposed content in this structure:
 
 **Leverage ranking** — prioritized list of derivatives with rationale.
 
-**Suggested schedule** — when to post each derivative (use ferramenta externa or markdown schedule).
+**Suggested schedule** — when to post each derivative (use Postiz or markdown schedule).
 
 ---
 
@@ -226,7 +228,7 @@ Deliver repurposed content in this structure:
 - Does not analyze post performance or metrics — see **social-performance-analyzer** for analytics
 - Does not define content strategy or pillars — see **social-content-strategy** for strategic planning
 - Does not produce visual design or images — output is text-based derivatives only
-- Does not execute code or access external APIs without automated publishing integration — save as draft
+- Does not publish or schedule by itself, and never calls a platform API directly — hand the finished draft to **social-schedule-postiz** (Postiz self-hosted is the official scheduling intermediary)
 - Does not plan a full content calendar — see **social-content-calendar** for scheduling across weeks
 
 ## Related Skills

@@ -58,6 +58,42 @@ services:
     stdin_open: true
     tty: true
 
+  # OpenSEO — self-hosted SEO data layer (plugin open-seo).
+  # Official image and env contract from every-app/open-seo @ compose.yaml.
+  # AUTH_MODE=local_noauth is the upstream setting for a private, non
+  # internet-facing deployment — the port is bound to 127.0.0.1 only, so it is
+  # reachable by the dashboard/agents and by nobody else.
+  open-seo:
+    image: ${OPEN_SEO_IMAGE:-ghcr.io/every-app/open-seo:latest}
+    container_name: evonexus-open-seo
+    environment:
+      # Required for Docker self-hosting: exposes Compose env vars to the
+      # cloudflare:workers bindings the app is built against.
+      - CLOUDFLARE_INCLUDE_PROCESS_ENV=true
+      - TZ=America/Sao_Paulo
+      - PORT=${OPEN_SEO_PORT:-3001}
+      - ALLOWED_HOST=${OPEN_SEO_ALLOWED_HOST:-}
+      - AUTH_MODE=local_noauth
+      - OPENSEO_TELEMETRY_DISABLED=${OPENSEO_TELEMETRY_DISABLED:-1}
+      # The only credential that actually costs money — pay-as-you-go at
+      # DataForSEO. Without it the UI loads but every query comes back empty.
+      - DATAFORSEO_API_KEY=${DATAFORSEO_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-}
+      - VITE_SHOW_DEVTOOLS=false
+    ports:
+      - "127.0.0.1:${OPEN_SEO_PORT:-3001}:${OPEN_SEO_PORT:-3001}"
+    volumes:
+      - open-seo-data:/app/.wrangler
+    networks:
+      default:
+        aliases:
+          # Mesmo alias do stack Swarm (openseo-vps.stack.yml), para que o
+          # .mcp.json (http://openseo:3001/mcp) resolva igual nos dois lugares.
+          - openseo
+    restart: unless-stopped
+
   # Runner on-demand — to execute routines manually
   # Usage: docker compose run --rm runner ADWs/routines/good_morning.py
   runner:
@@ -84,6 +120,7 @@ services:
 volumes:
   claude-auth:
   openclaude-auth:
+  open-seo-data:
   daily-logs:
   projects:
   community:

@@ -61,13 +61,18 @@ troque o `AUTH_MODE` antes — `local_noauth` não tem login.
 ### 3. Conferir o MCP
 
 O `.mcp.json` já registra `plugin-open-seo-openseo` apontando para
-`http://127.0.0.1:3001/mcp`. Reinicie a sessão do Claude Code e confirme que as
-ferramentas `research_keywords`, `get_keyword_metrics`, `get_ranked_keywords`
-etc. aparecem.
+`http://openseo:3001/mcp`. Esse é o alias de rede do serviço — vale tanto no
+Swarm da VPS (`openseo-vps.stack.yml`) quanto no compose local, que declara o
+mesmo alias. Reinicie a sessão e confirme que `research_keywords`,
+`get_keyword_metrics`, `get_ranked_keywords` etc. aparecem.
 
-Em Swarm/VPS, troque a URL para o nome do serviço na rede interna
-(`http://open-seo:3001/mcp`) — o container do dashboard resolve por DNS de
-serviço, não por `127.0.0.1`.
+Rodando o Claude Code direto no host (fora de container), `openseo` não
+resolve — use `http://127.0.0.1:3001/mcp`, já que o compose publica a porta em
+loopback.
+
+**Nunca** aponte o MCP para a URL pública (`https://seo.workflowapi.com.br/mcp`):
+ela está atrás de basicauth no Traefik e o handshake do MCP não manda
+credencial. O caminho dos agentes é sempre a rede interna.
 
 ## Variáveis de ambiente
 

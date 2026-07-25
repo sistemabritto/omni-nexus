@@ -2,7 +2,7 @@
   "mcpServers": {
     "plugin-open-seo-openseo": {
       "type": "http",
-      "url": "http://127.0.0.1:3001/mcp"
+      "url": "http://openseo:3001/mcp"
     },
     "linear-server": {
       "type": "http",

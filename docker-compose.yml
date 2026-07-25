@@ -86,6 +86,12 @@ services:
       - "127.0.0.1:${OPEN_SEO_PORT:-3001}:${OPEN_SEO_PORT:-3001}"
     volumes:
       - open-seo-data:/app/.wrangler
+    networks:
+      default:
+        aliases:
+          # Mesmo alias do stack Swarm (openseo-vps.stack.yml), para que o
+          # .mcp.json (http://openseo:3001/mcp) resolva igual nos dois lugares.
+          - openseo
     restart: unless-stopped
 
   # Runner on-demand — to execute routines manually

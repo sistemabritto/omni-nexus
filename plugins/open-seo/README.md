@@ -49,10 +49,21 @@ Como gerar: `docs/DATAFORSEO_API_KEY.md` no upstream, ou
 
 ### 2. Subir o serviço
 
+Local:
+
 ```bash
 docker compose up -d open-seo
 curl -s http://127.0.0.1:3001/ -o /dev/null -w '%{http_code}\n'   # espera 200
 ```
+
+VPS (Swarm): a stack é **gerenciada pelo Portainer** (`openseo`, id 24) — editar
+por lá, não por `docker stack deploy`, senão o Portainer perde o controle dela.
+O arquivo `openseo-vps.stack.yml` na raiz do repo é a fonte de verdade do
+conteúdo; ao alterá-lo, cole o novo conteúdo no editor da stack no Portainer.
+
+O primeiro boot demora ~2-4 min: a imagem roda o build do vite (client + SSR)
+antes de servir. Até terminar, o Traefik responde 502 — é esperado, não é erro
+de configuração.
 
 A porta é publicada **só em 127.0.0.1** e o modo de auth é `local_noauth`
 (padrão upstream para deploy privado). Se um dia isso for exposto na internet,

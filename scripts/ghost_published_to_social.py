@@ -41,12 +41,22 @@ def main() -> int:
     ap.add_argument("--em-horas", type=float, default=2.0,
                     help="daqui a quantas horas agendar a 1ª rede (default 2)")
     ap.add_argument("--dry-run", action="store_true", help="mostra os textos, não abre aprovação")
+    ap.add_argument("--aprovar-artigo", action="store_true",
+                    help="estágio 1: abre o gate do ARTIGO (revisar texto, CTAs e capa) "
+                         "em vez de derivar as redes. Aprovar publica no Ghost, o que "
+                         "dispara o webhook e só então deriva.")
+    ap.add_argument("--publicar-em", help="ISO-8601 UTC para agendar o artigo (com --aprovar-artigo)")
     args = ap.parse_args()
 
     load_env()
     import ghost_social_bridge as bridge
 
-    if args.payload:
+    if args.aprovar_artigo:
+        if not args.post_id:
+            ap.error("--aprovar-artigo exige --post-id")
+        r = bridge.aprovar_artigo(args.post_id, publicar_em=args.publicar_em,
+                                  dry_run=args.dry_run)
+    elif args.payload:
         payload = json.loads(Path(args.payload).read_text(encoding="utf-8"))
         r = bridge.distribuir_do_webhook(payload, em_horas=args.em_horas, dry_run=args.dry_run)
     elif args.post_id:

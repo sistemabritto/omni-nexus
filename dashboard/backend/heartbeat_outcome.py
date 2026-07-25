@@ -193,8 +193,13 @@ PUBLISHING_AGENTS = set(
     (os.environ.get("PUBLISHING_AGENTS") or "pixel-social-media,mako-marketing,pulse-community").split(",")
 )
 # Closed set (Vault V9) — never build a URL/call from an arbitrary agent-supplied string.
+# "blog" é o primeiro estágio do fluxo de conteúdo: aprovar o artigo no Ghost
+# antes de qualquer coisa derivar dele. Não vai pelo Postiz — vai pelo Ghost
+# Admin API (ghost_publisher) — mas usa o MESMO gate, porque a pergunta feita ao
+# humano é idêntica: "isto pode ir ao ar?".
 PUBLISH_CHANNELS = set(
-    (os.environ.get("PUBLISH_CHANNELS") or "instagram,linkedin,x,threads,youtube,discord,whatsapp").split(",")
+    (os.environ.get("PUBLISH_CHANNELS")
+     or "blog,instagram,linkedin,x,threads,youtube,discord,whatsapp").split(",")
 )
 
 # Self-healing review loop (goal-ticket-unification Step 6, ADR SPEC 2b-2d).
@@ -851,6 +856,28 @@ def _publish_settings_for(target: str, content: str, provider: str | None = None
     return {"__type": provider}
 
 
+def _run_blog_publish(outcome: dict) -> dict:
+    """Efetiva a aprovação do artigo: publica ou agenda no Ghost.
+
+    Primeiro estágio do fluxo de conteúdo. Ao publicar, o Ghost dispara o
+    webhook post.published, que aciona a ponte para as redes — cada uma com seu
+    próprio gate. É por isso que o artigo é aprovado ANTES: post de rede nunca
+    nasce de artigo que o humano não liberou.
+    """
+    ref = (outcome.get("publish_ref") or "").strip()
+    if not ref:
+        return {"published": False,
+                "detail": "publish_ref ausente: sem o id do post no Ghost não há o que publicar."}
+
+    quando, erro = _parse_publish_at(outcome.get("publish_at"))
+    if erro:
+        return {"published": False, "detail": erro}
+
+    from ghost_publisher import publicar
+
+    return publicar(ref, quando.isoformat() if quando else None)
+
+
 def _run_publish_action(approval_row, conn) -> dict:
     """Execute the actual publish effect for an approved publish-gate approval.
 
@@ -885,6 +912,12 @@ def _run_publish_action(approval_row, conn) -> dict:
             "published": False,
             "detail": "publish_content vazio; o resumo result nunca é publicado como conteúdo.",
         }
+
+    # Blog sai pelo Ghost, não pelo Postiz. O que se publica aqui é o artigo
+    # identificado por publish_ref — nunca o texto do card, que é resumo para o
+    # humano ler. Confundir os dois publicaria o resumo como se fosse o artigo.
+    if target == "blog":
+        return _run_blog_publish(outcome)
 
     client = PostizClient.from_env()
     if client is None:

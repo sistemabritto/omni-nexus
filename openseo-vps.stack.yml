@@ -64,8 +64,14 @@ services:
           - node.role == manager
       resources:
         limits:
-          cpus: "1.5"
-          memory: 2048M
+          cpus: "2.0"
+          # 4G, não 2G: a imagem roda o build do vite (client + SSR) no boot, e
+          # 2G travou o container em 2GiB/2GiB no primeiro deploy — o build
+          # nunca terminava. Em regime permanente o serviço usa bem menos;
+          # o teto existe para o pico de build, não para a operação.
+          memory: 4096M
+        reservations:
+          memory: 512M
       restart_policy:
         condition: on-failure
         delay: 10s

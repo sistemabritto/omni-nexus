@@ -154,6 +154,10 @@ def setup_schedule():
         run_adw, "Research Semanal de Pauta", "weekly_content_research.py")
     schedule.every().day.at("06:00").do(
         run_adw, "Esteira de Conteúdo", "daily_content_pipeline.py")
+    # 05:30, antes da esteira: o número do dia reflete o que o conteúdo de
+    # ontem produziu, sem contar a publicação de hoje que ainda nem saiu.
+    schedule.every().day.at("05:30").do(
+        run_adw, "Métricas de Crescimento", "daily_growth_metrics.py")
 
     # Hourly activity report during business hours (08h-20h BRT)
     schedule.every().hour.do(_hourly_report_safe)

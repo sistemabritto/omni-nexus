@@ -461,6 +461,89 @@ def refazer(outcome_anterior: dict, feedback: str, ticket_id: str,
     return {"ok": True, "tentativa": tentativa + 1, "rede": rede, "preview": texto}
 
 
+def refazer_artigo(outcome_anterior: dict, feedback: str, ticket_id: str,
+                   *, tentativa: int = 1) -> dict:
+    """Aplica a crítica no artigo e reabre o gate — texto, capa, ou os dois.
+
+    Antes, pedir ajuste num artigo só registrava o feedback e devolvia o ticket
+    para uma fila que ninguém puxava. Na prática o humano criticava e não
+    acontecia nada, que é pior que não ter o botão.
+
+    O que refazer depende do que foi criticado. Crítica só sobre a capa não
+    reescreve o texto: trocar um texto que o humano já aprovou por outro que ele
+    não pediu é regressão disfarçada de melhoria.
+    """
+    import tempfile
+
+    from ghost_publisher import (_e_sobre_imagem, _e_sobre_texto, atualizar,
+                                 briefing_de_capa, buscar, revisar_texto, subir_imagem)
+
+    if tentativa > MAX_REFACOES:
+        return {"ok": False, "erro": f"teto de {MAX_REFACOES} refações atingido; "
+                                     "o ticket fica na fila para revisão humana"}
+
+    post_id = outcome_anterior.get("publish_ref")
+    if not post_id:
+        return {"ok": False, "erro": "outcome sem publish_ref"}
+    post = buscar(post_id)
+    if not post:
+        return {"ok": False, "erro": f"artigo {post_id} não encontrado"}
+
+    feito: list[str] = []
+
+    if _e_sobre_texto(feedback):
+        novo_html = revisar_texto(post, feedback)
+        if novo_html:
+            erro = atualizar(post_id, html=novo_html)
+            feito.append("texto" if not erro else f"texto falhou ({erro})")
+
+    if _e_sobre_imagem(feedback) or not (post.get("feature_image") or "").strip():
+        from thumbnail_maker import gerar, montar_prompt
+
+        brief = briefing_de_capa(post, feedback)
+        with tempfile.TemporaryDirectory() as tmp:
+            destino = Path(tmp) / "capa.png"
+            erro = gerar(montar_prompt(brief["headline"], brief["hook"],
+                                       brief["expressao"], brief["badge"]), destino)
+            if erro:
+                feito.append(f"capa falhou ({erro})")
+            else:
+                url, erro_upload = subir_imagem(destino)
+                if erro_upload:
+                    feito.append(f"upload da capa falhou ({erro_upload})")
+                else:
+                    atualizar(post_id, feature_image=url)
+                    feito.append("capa")
+
+    if not any(p in ("texto", "capa") for p in feito):
+        return {"ok": False, "erro": f"nada foi refeito: {feito or 'sem ação aplicável'}"}
+
+    atualizado = buscar(post_id) or post
+    from ghost_publisher import resumo_para_aprovacao
+
+    resumo = resumo_para_aprovacao(atualizado)
+    capa = (atualizado.get("feature_image") or "").strip()
+    novo = dict(outcome_anterior)
+    novo["publish_content"] = resumo
+    novo["publish_media"] = [capa] if capa else []
+    novo["result"] = f"Versão {tentativa + 1} do artigo '{atualizado.get('title')}'"
+
+    try:
+        from sdk_client import evo
+
+        evo.post("/api/approvals", {
+            "gate_type": "publish",
+            "ticket_id": ticket_id,
+            "agent": "pixel-social-media",
+            "payload": {"title": f"[v{tentativa + 1}] Publicar no blog: {atualizado.get('title')}",
+                        "body": f"Refeito ({', '.join(feito)}) com a crítica: {feedback[:250]}\n\n{resumo[:500]}",
+                        "outcome": novo},
+        })
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "erro": str(exc)}
+    return {"ok": True, "tentativa": tentativa + 1, "refeito": feito}
+
+
 def aprovar_artigo(post_id: str, *, publicar_em: str | None = None,
                    dry_run: bool = False) -> dict:
     """Abre o gate do artigo — estágio 1, antes de qualquer rede.

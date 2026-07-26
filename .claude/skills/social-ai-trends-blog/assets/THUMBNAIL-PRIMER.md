@@ -7,9 +7,23 @@ na skill `ai-image-creator`.
 
 ## Padrão extraído das referências
 
-### Bloco A — estilo BR (as do próprio Felipe — `ref-01-br-felipe.jpg`)
-- Rosto do Felipe à direita/centro, expressão forte (sorriso confiante, dedo
-  apontando, ou surpresa). Recorte limpo com leve rim light.
+### Bloco A — estilo BR (`ref-01-br-felipe.jpg`)
+> ⚠️ **ATENÇÃO — este arquivo NÃO é foto do Felipe.** É captura do canal de
+> OUTRO criador BR, guardada só como referência de ESTILO. Usar esse rosto numa
+> thumbnail publica a cara de outra pessoa como se fosse a do Felipe. Aconteceu
+> em 25/07/2026 exatamente por causa da redação anterior desta linha.
+>
+> **As fotos reais do Felipe estão em**
+> `workspace/social/brands/evolution-foundation/library/images/faces/`
+> (`front/`, `expressions/`, `gestures/`). A melhor referência para thumbnail é
+> `front/fsbritto-corporate-arms-crossed-sistema-britto-2026-06-14.jpg`:
+> bem iluminada, camiseta da marca, rosto nítido.
+>
+> Sinais do rosto certo: barba cheia escura com bigode, cabelo curto escuro,
+> **sem óculos**. O da referência de estilo usa óculos de aro redondo.
+
+- Rosto do apresentador à direita/centro, expressão forte (sorriso confiante,
+  dedo apontando, ou surpresa). Recorte limpo com leve rim light.
 - Ícones de app 3D glossy flutuando (Claude, Obsidian, ChatGPT, PIX).
 - 1 seta branca desenhada à mão (curva), apontando pro elemento-chave.
 - Fundo escuro com dados/dashboard, tons de **verde-limão** (marca).
@@ -60,12 +74,21 @@ Para consistência de rosto, usar `ai-image-creator -r <foto do face-bank>`
 
 ## Face-bank
 
-Pasta: `assets/face-bank/`. Felipe vai enviar fotos de rosto dele em várias
-expressões (neutro, sorrindo, surpreso, apontando, sério/confiante). Quanto
-mais variado, melhor o casamento com cada tipo de pauta.
+**Pasta real:** `workspace/social/brands/evolution-foundation/library/images/faces/`,
+dividida em `front/`, `expressions/` e `gestures/`. A pasta `assets/face-bank/`
+citada na versão anterior deste documento nunca existiu — procurar por ela e
+não achar foi o que levou um agente a usar a referência de estilo como se fosse
+o rosto do Felipe.
+
+Geração com rosto de referência: a skill `ai-image-creator` recusa `-r` no
+provider `openai` porque chama `/v1/images/generations`, que não aceita imagem
+de entrada. Para manter gpt-image-2 **e** o rosto, chame
+`/v1/images/edits` (multipart com o campo `image`) — é o que
+`dashboard/backend/thumbnail_maker.py` faz.
 
 ## Anti-padrões de thumbnail
 - ❌ Texto longo (>5 palavras) ou fonte fina — ilegível no feed.
 - ❌ Mais de 1 foco visual — polui.
 - ❌ Paleta roxo/amarelo gringo pura — fugir da marca; usar verde-limão.
 - ❌ Promessa que o post não cumpre (clickbait vazio) — público BR é calejado.
+- ❌ **Rosto de outra pessoa.** Conferir contra `faces/front/` antes de gerar.

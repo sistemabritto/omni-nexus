@@ -545,6 +545,9 @@ class Heartbeat(db.Model):
             "goal_id": self.goal_id,
             "required_secrets": self.required_secrets_list,
             "decision_prompt": self.decision_prompt,
+            # Sem isto a API respondia 201 num heartbeat in-process sem sinal
+            # nenhum de que o handler tinha sido perdido no caminho.
+            "handler": self.handler,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "last_run": last_run.to_dict() if last_run else None,

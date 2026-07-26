@@ -206,10 +206,14 @@ SEEDS_POR_FUNIL = {
     ],
 }
 
-# O MCP aceita poucas seeds por chamada; girar a janela a cada semana faz o
-# ciclo varrer o repertório inteiro ao longo do mês em vez de bater sempre nas
-# mesmas cinco — que é como o blog acabava repetindo assunto.
-SEEDS_POR_RODADA = 3
+# Todas as seeds de cada funil, toda rodada.
+#
+# Com 3 por funil o afunilamento matava a semana: 1089 keywords brutas viravam
+# 97 comerciais, o dedupe derrubava 77 (quase tudo era variação de "api
+# whatsapp") e o julgamento de ICP deixava 11 para 21 slots. Amplitude na
+# entrada é o que sustenta o volume na saída, e o cache absorve o custo — a
+# segunda rodada da mesma janela não paga nada.
+SEEDS_POR_RODADA = 8
 
 
 def seeds_da_semana(hoje: date) -> list[str]:

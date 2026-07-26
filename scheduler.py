@@ -140,6 +140,21 @@ def setup_schedule():
     # evidence in /costs. Runs late at night to stay out of the way of heartbeats.
     schedule.every().day.at("04:00").do(run_adw, "Uso Modelos DIA", "uso_modelos_dia.py")
 
+    # ── Esteira de conteúdo ──
+    #
+    # Domingo levanta as 21 pautas da semana (3/dia, segunda a domingo)
+    # cruzando notícia da semana com volume de busca real; nada é publicado,
+    # abre um ticket para o humano aprovar o ciclo em lote.
+    #
+    # Todo dia às 06:00 a esteira consome as pautas aprovadas daquele dia:
+    # escreve o artigo com o humanizer, cria o rascunho no Ghost, gera a capa
+    # e para no gate. 06:00 dá folga confortável até o primeiro slot de
+    # publicação (09:00 BRT) para o humano aprovar sem correr.
+    schedule.every().sunday.at("08:00").do(
+        run_adw, "Research Semanal de Pauta", "weekly_content_research.py")
+    schedule.every().day.at("06:00").do(
+        run_adw, "Esteira de Conteúdo", "daily_content_pipeline.py")
+
     # Hourly activity report during business hours (08h-20h BRT)
     schedule.every().hour.do(_hourly_report_safe)
 

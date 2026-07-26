@@ -1227,6 +1227,7 @@ from routes.docs import bp as docs_bp
 from routes.mempalace import bp as mempalace_bp
 from routes.tasks import bp as tasks_bp
 from routes.triggers import bp as triggers_bp
+from routes.pautas import bp as pautas_bp
 from routes.terminal_proxy import bp as terminal_proxy_bp, register_websocket_proxy as _register_terminal_ws
 from routes.backups import bp as backups_bp
 from routes.providers import bp as providers_bp
@@ -1286,6 +1287,7 @@ app.register_blueprint(docs_bp)
 app.register_blueprint(mempalace_bp)
 app.register_blueprint(tasks_bp)
 app.register_blueprint(triggers_bp)
+app.register_blueprint(pautas_bp)
 app.register_blueprint(terminal_proxy_bp)
 
 # Instagram API routes (webhooks, publish, comments, DMs)

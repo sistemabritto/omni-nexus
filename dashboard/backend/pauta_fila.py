@@ -1,0 +1,279 @@
+"""A fila de pautas — o que dá continuidade à esteira de conteúdo.
+
+O research semanal já sabia levantar 21 pautas cruzando notícia da semana com
+volume de busca. O que faltava era memória: as pautas viravam um markdown e um
+ticket de texto, e no dia seguinte nada no sistema sabia responder "o que a
+gente escreve hoje?". Sem essa resposta não existe rotina diária, não existe
+métrica de funil, e o ciclo depende de alguém reler um arquivo.
+
+Aqui a pauta vira estado. Cada uma nasce `proposta`, o humano aprova em lote,
+a rotina diária consome as do dia e a marca `escrita` quando o rascunho existe
+no Ghost, `publicada` quando o artigo vai ao ar. Descartar é explícito — pauta
+que ninguém quis não fica pendurada fingindo que ainda vale.
+
+O ciclo é semanal e recorrente de propósito: pauta escrita com 30 dias de
+antecedência chega velha, e o gancho de notícia — que é o que faz a LLM citar
+o artigo — tem validade de dias.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import sqlite3
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+
+log = logging.getLogger(__name__)
+
+WORKSPACE = Path(__file__).resolve().parent.parent.parent
+DB_PATH = WORKSPACE / "dashboard" / "data" / "evonexus.db"
+
+# proposta  → o research levantou, ninguém olhou ainda
+# aprovada  → o humano liberou; a rotina diária pode escrever
+# escrita   → existe rascunho no Ghost, aguardando o gate do artigo
+# publicada → o artigo foi ao ar (e as redes derivaram dele)
+# descartada→ o humano recusou, ou a pauta venceu sem ser usada
+STATUS = ("proposta", "aprovada", "escrita", "publicada", "descartada")
+
+# Uma pauta é do ciclo da semana. Passou dois dias do alvo sem sair, o gancho
+# de notícia já morreu — insistir nela é publicar assunto velho.
+DIAS_ATE_VENCER = 2
+
+_DDL = """
+CREATE TABLE IF NOT EXISTS pautas (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    ciclo        TEXT NOT NULL,
+    prioridade   INTEGER NOT NULL,
+    keyword      TEXT NOT NULL,
+    titulo       TEXT,
+    angulo       TEXT,
+    volume       INTEGER,
+    kd           REAL,
+    data_alvo    TEXT NOT NULL,
+    publish_at   TEXT NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'proposta'
+                 CHECK(status IN ('proposta','aprovada','escrita','publicada','descartada')),
+    ghost_post_id TEXT,
+    ghost_url     TEXT,
+    motivo        TEXT,
+    criado_em     TEXT NOT NULL,
+    atualizado_em TEXT NOT NULL,
+    UNIQUE(ciclo, prioridade)
+);
+CREATE INDEX IF NOT EXISTS ix_pautas_status_data ON pautas(status, data_alvo);
+CREATE INDEX IF NOT EXISTS ix_pautas_ciclo ON pautas(ciclo);
+"""
+
+
+def conectar() -> sqlite3.Connection:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    conn.executescript(_DDL)
+    return conn
+
+
+def _agora() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def ciclo_de(dia: date) -> str:
+    """Rótulo do ciclo semanal a que um dia pertence (segunda que o abre).
+
+    Ancorar na segunda-feira dá um identificador estável: duas execuções do
+    research na mesma semana caem no mesmo ciclo e a UNIQUE(ciclo, prioridade)
+    faz a segunda substituir a primeira em vez de duplicar a fila.
+    """
+    return (dia - timedelta(days=dia.weekday())).isoformat()
+
+
+def gravar_ciclo(pautas: list[dict], *, conn: sqlite3.Connection | None = None) -> dict:
+    """Grava (ou regrava) as pautas de um ciclo.
+
+    Idempotente por (ciclo, prioridade): rodar o research duas vezes na mesma
+    semana atualiza a fila em vez de duplicá-la. Pauta já `publicada` nunca é
+    sobrescrita — o research não pode apagar trabalho que já foi ao ar.
+    """
+    proprio = conn is None
+    conn = conn or conectar()
+    gravadas = preservadas = 0
+    try:
+        for p in pautas:
+            alvo = p.get("data") or p.get("data_alvo")
+            if not alvo or not p.get("keyword"):
+                continue
+            ciclo = p.get("ciclo") or ciclo_de(date.fromisoformat(alvo))
+            existente = conn.execute(
+                "SELECT status FROM pautas WHERE ciclo=? AND prioridade=?",
+                (ciclo, p["prioridade"]),
+            ).fetchone()
+            if existente and existente["status"] in ("escrita", "publicada"):
+                preservadas += 1
+                continue
+            conn.execute(
+                "INSERT INTO pautas (ciclo, prioridade, keyword, titulo, angulo, volume, kd,"
+                " data_alvo, publish_at, status, criado_em, atualizado_em)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
+                " ON CONFLICT(ciclo, prioridade) DO UPDATE SET"
+                "  keyword=excluded.keyword, titulo=excluded.titulo, angulo=excluded.angulo,"
+                "  volume=excluded.volume, kd=excluded.kd, data_alvo=excluded.data_alvo,"
+                "  publish_at=excluded.publish_at, atualizado_em=excluded.atualizado_em",
+                (ciclo, p["prioridade"], p["keyword"], p.get("titulo") or None,
+                 p.get("angulo") or None, p.get("volume"), p.get("kd"),
+                 alvo, p["publish_at"], "proposta", _agora(), _agora()),
+            )
+            gravadas += 1
+        conn.commit()
+        return {"gravadas": gravadas, "preservadas": preservadas}
+    finally:
+        if proprio:
+            conn.close()
+
+
+def do_dia(dia: date | None = None, *, status: str = "aprovada",
+           conn: sqlite3.Connection | None = None) -> list[dict]:
+    """Pautas de um dia, na ordem de prioridade — o que a rotina diária consome."""
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        linhas = conn.execute(
+            "SELECT * FROM pautas WHERE data_alvo=? AND status=? ORDER BY prioridade ASC",
+            ((dia or date.today()).isoformat(), status),
+        ).fetchall()
+        return [dict(l) for l in linhas]
+    finally:
+        if proprio:
+            conn.close()
+
+
+def mover(pauta_id: int, novo_status: str, *, ghost_post_id: str | None = None,
+          ghost_url: str | None = None, titulo: str | None = None,
+          motivo: str | None = None, conn: sqlite3.Connection | None = None) -> bool:
+    """Move uma pauta de estado, anexando o que aquele estado produziu."""
+    if novo_status not in STATUS:
+        raise ValueError(f"status inválido: {novo_status!r}")
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        cur = conn.execute(
+            "UPDATE pautas SET status=?, atualizado_em=?,"
+            " ghost_post_id=COALESCE(?, ghost_post_id),"
+            " ghost_url=COALESCE(?, ghost_url),"
+            " titulo=COALESCE(?, titulo),"
+            " motivo=COALESCE(?, motivo)"
+            " WHERE id=?",
+            (novo_status, _agora(), ghost_post_id, ghost_url, titulo, motivo, pauta_id),
+        )
+        conn.commit()
+        return cur.rowcount == 1
+    finally:
+        if proprio:
+            conn.close()
+
+
+def aprovar_ciclo(ciclo: str, *, conn: sqlite3.Connection | None = None) -> int:
+    """Libera todas as pautas propostas de um ciclo de uma vez.
+
+    Aprovação é em lote porque a decisão é em lote: o humano olha a semana
+    inteira e diz sim. Aprovar 21 pautas uma a uma seria trabalho de digitação,
+    não de julgamento.
+    """
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        cur = conn.execute(
+            "UPDATE pautas SET status='aprovada', atualizado_em=? WHERE ciclo=? AND status='proposta'",
+            (_agora(), ciclo),
+        )
+        conn.commit()
+        return cur.rowcount
+    finally:
+        if proprio:
+            conn.close()
+
+
+def vencer_atrasadas(*, hoje: date | None = None,
+                     conn: sqlite3.Connection | None = None) -> int:
+    """Descarta pauta aprovada que passou da data sem virar artigo.
+
+    Sem isto a fila acumula pauta velha e a rotina diária começa a publicar
+    assunto de duas semanas atrás como se fosse notícia.
+    """
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        limite = (hoje or date.today()) - timedelta(days=DIAS_ATE_VENCER)
+        cur = conn.execute(
+            "UPDATE pautas SET status='descartada', motivo=?, atualizado_em=?"
+            " WHERE status IN ('proposta','aprovada') AND data_alvo < ?",
+            (f"venceu — passou de {DIAS_ATE_VENCER} dias da data alvo", _agora(),
+             limite.isoformat()),
+        )
+        conn.commit()
+        return cur.rowcount
+    finally:
+        if proprio:
+            conn.close()
+
+
+def resumo(*, conn: sqlite3.Connection | None = None) -> dict:
+    """O funil da esteira, para o painel e para o relatório do Telegram."""
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        por_status = {s: 0 for s in STATUS}
+        for linha in conn.execute("SELECT status, COUNT(*) n FROM pautas GROUP BY status"):
+            por_status[linha["status"]] = linha["n"]
+
+        ciclo_atual = ciclo_de(date.today())
+        do_ciclo = conn.execute(
+            "SELECT status, COUNT(*) n FROM pautas WHERE ciclo=? GROUP BY status",
+            (ciclo_atual,),
+        ).fetchall()
+        ciclo = {s: 0 for s in STATUS}
+        for linha in do_ciclo:
+            ciclo[linha["status"]] = linha["n"]
+
+        proximas = [dict(l) for l in conn.execute(
+            "SELECT id, keyword, titulo, data_alvo, publish_at, status FROM pautas"
+            " WHERE status IN ('aprovada','escrita') AND data_alvo >= ?"
+            " ORDER BY data_alvo ASC, prioridade ASC LIMIT 5",
+            (date.today().isoformat(),),
+        )]
+
+        publicadas = por_status["publicada"]
+        decididas = publicadas + por_status["descartada"]
+        return {
+            "por_status": por_status,
+            "ciclo_atual": {"ciclo": ciclo_atual, "por_status": ciclo,
+                            "total": sum(ciclo.values())},
+            "proximas": proximas,
+            # Taxa sobre o que já foi decidido — incluir pauta ainda na fila no
+            # denominador faria a taxa cair só porque a semana começou.
+            "taxa_aproveitamento": round(publicadas / decididas, 3) if decididas else None,
+        }
+    finally:
+        if proprio:
+            conn.close()
+
+
+def listar(*, ciclo: str | None = None, status: str | None = None, limite: int = 100,
+           conn: sqlite3.Connection | None = None) -> list[dict]:
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        sql = "SELECT * FROM pautas WHERE 1=1"
+        params: list = []
+        if ciclo:
+            sql += " AND ciclo=?"
+            params.append(ciclo)
+        if status:
+            sql += " AND status=?"
+            params.append(status)
+        sql += " ORDER BY data_alvo ASC, prioridade ASC LIMIT ?"
+        params.append(max(1, min(limite, 500)))
+        return [dict(l) for l in conn.execute(sql, params)]
+    finally:
+        if proprio:
+            conn.close()

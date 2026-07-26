@@ -1,6 +1,7 @@
 """Overview endpoint — summary data for the dashboard home."""
 
 import json
+import logging
 from datetime import datetime, timedelta, timezone
 from flask import Blueprint, jsonify
 from routes._helpers import WORKSPACE, safe_read
@@ -173,6 +174,49 @@ def _needs_attention() -> dict:
     }
 
 
+def _funil_de_conteudo() -> dict | None:
+    """O estado da esteira: pauta levantada → artigo escrito → post no ar.
+
+    É a métrica que o Felipe pediu para auditar de um lugar só. Sem ela, saber
+    se a semana fechou exigia abrir o Ghost, o Postiz e o kanban e cruzar na
+    mão — e um ciclo que travou no meio parecia idêntico a um ciclo que nem
+    começou.
+
+    Best-effort: painel quebrado por causa de métrica é pior que painel sem
+    métrica, então qualquer falha aqui vira None e o resto da página carrega.
+    """
+    try:
+        import pauta_fila
+
+        resumo = pauta_fila.resumo()
+    except Exception:  # noqa: BLE001
+        logging.getLogger(__name__).exception("funil de conteúdo indisponível")
+        return None
+
+    ciclo = resumo["ciclo_atual"]
+    por_status = ciclo["por_status"]
+    # Meta do ciclo: 3 posts por dia, 7 dias. Comparar o feito com o planejado
+    # é o que responde "a semana está fechando?" — número absoluto sozinho não.
+    meta = 21
+    concluidas = por_status["publicada"]
+    return {
+        "ciclo": ciclo["ciclo"],
+        "meta": meta,
+        "publicadas": concluidas,
+        "no_ar_pct": round(100 * concluidas / meta) if meta else 0,
+        "fila": {
+            "proposta": por_status["proposta"],
+            "aprovada": por_status["aprovada"],
+            "escrita": por_status["escrita"],
+            "publicada": concluidas,
+            "descartada": por_status["descartada"],
+        },
+        "total_historico": resumo["por_status"],
+        "taxa_aproveitamento": resumo["taxa_aproveitamento"],
+        "proximas": resumo["proximas"],
+    }
+
+
 @bp.route("/api/overview")
 def overview():
     raw_metrics = _metrics_summary()
@@ -180,6 +224,7 @@ def overview():
     reports = _recent_reports()
 
     return jsonify({
+        "funil_conteudo": _funil_de_conteudo(),
         "recent_reports": [
             {
                 "title": r["name"],

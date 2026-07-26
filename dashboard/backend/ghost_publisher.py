@@ -288,6 +288,39 @@ def subir_imagem(caminho: Path) -> tuple[str, str]:
     return devolvida, ""
 
 
+def criar_rascunho(titulo: str, html: str, *, excerpt: str = "",
+                   tags: list[str] | None = None) -> tuple[str, str]:
+    """Cria o artigo como draft no Ghost. Devolve (post_id, erro).
+
+    Nasce draft sempre, nunca published: o gate do artigo é quem decide se vai
+    ao ar, e criar já publicado tiraria do humano exatamente a decisão que o
+    fluxo inteiro existe para preservar.
+
+    `?source=html` é obrigatório, como no update — sem ele o Ghost aceita a
+    requisição, devolve 201 e descarta o corpo do artigo em silêncio.
+    """
+    cfg = _config()
+    if not cfg:
+        return "", "GHOST_URL/GHOST_ADMIN_API_KEY não configurados."
+    url, key = cfg
+    corpo: dict = {"title": titulo[:255], "html": html, "status": "draft"}
+    if excerpt:
+        corpo["custom_excerpt"] = excerpt[:300]
+    if tags:
+        corpo["tags"] = [{"name": t} for t in tags[:6]]
+    try:
+        r = requests.post(f"{url}/ghost/api/admin/posts/?source=html",
+                          headers=_headers(key), json={"posts": [corpo]}, timeout=90)
+    except requests.RequestException as exc:
+        return "", f"Ghost inacessível: {exc}"
+    if r.status_code >= 300:
+        return "", f"Ghost recusou o rascunho ({r.status_code}): {r.text[:250]}"
+    posts = (r.json() or {}).get("posts") or []
+    if not posts or not posts[0].get("id"):
+        return "", f"Ghost não devolveu id do rascunho: {r.text[:200]}"
+    return posts[0]["id"], ""
+
+
 def atualizar(post_id: str, *, html: str | None = None,
               feature_image: str | None = None) -> str:
     """PUT no draft. `?source=html` é obrigatório para o campo html ser aceito —

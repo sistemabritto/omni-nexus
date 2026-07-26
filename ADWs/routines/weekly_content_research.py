@@ -161,7 +161,9 @@ RUIDO = re.compile(
 COMPRA = re.compile(
     r"(automat|automaç|chatbot|\bbot\b|agendar|agendamento|disparo|para empresas|empresarial|"
     r"business|crm|funil|lead|prospec|tráfego|trafego|conversão|conversao|ferramenta|plataforma|"
-    r"software|sistema|como (criar|fazer|automatizar|usar|integrar)|api|integra|agente de ia|"
+    # \b em "api": sem ele o regex casa dentro de "japinha", e "japinha do cv
+    # instagram" (14.800/mês) entrou como a pauta nº 1 da primeira fila real.
+    r"software|sistema|como (criar|fazer|automatizar|usar|integrar)|\bapi\b|integra|agente de ia|"
     r"marketing digital|gestão de redes|postar)", re.I)
 
 # A trava que faltava. `COMPRA` casa palavras genéricas — "sistema",
@@ -173,7 +175,7 @@ DOMINIO = re.compile(
     r"\bia\b|inteligência artificial|inteligencia artificial|\bgpt\b|chatbot|agente|"
     r"marketing|vendas|lead|funil|tráfego|trafego|conversão|conversao|"
     r"\bcrm\b|automaç|automat|postar|post\b|conteúdo|conteudo|seguidor|engajamento|"
-    r"atendimento|disparo|mensagem em massa|api\b|integraç|n8n|zapier|webhook)", re.I)
+    r"atendimento|disparo|mensagem em massa|\bapi\b|integraç|n8n|zapier|webhook)", re.I)
 
 
 # Seeds por funil. Cinco seeds vizinhas produziam 35 keywords que, depois do

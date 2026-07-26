@@ -341,3 +341,46 @@ def test_rotacao_nunca_estoura_o_grupo():
         seeds = research.seeds_da_semana(dia)
         assert len(seeds) == research.SEEDS_POR_RODADA * len(research.SEEDS_POR_FUNIL)
         dia += timedelta(days=7)
+
+
+# ── o filtro que separa pauta de lixo ────────────────────────────────────
+
+def _aprovada(kw: str) -> bool:
+    return (bool(research.COMPRA.search(kw)) and bool(research.DOMINIO.search(kw))
+            and not research.RUIDO.search(kw))
+
+
+@pytest.mark.parametrize("kw", [
+    # O caso real: "api" sem \b casava dentro de "jaPInha", e esta entrou como
+    # pauta nº 1 da primeira fila de verdade, com 14.800 buscas/mês.
+    "japinha do cv instagram",
+    "analista de sistemas jr",
+    "tecnico em desenvolvimento de sistemas",
+    "analise e desenvolvimento de sistemas ead",
+    "caixa ferramenta plastica",
+    "salvador digital agendamento cadastro unico",
+    "sistemas cad cam",
+    "curso de marketing digital gratis",
+])
+def test_lixo_nao_vira_pauta(kw):
+    """Volume alto não é sinal de pauta boa quando a busca vem de outro público."""
+    assert not _aprovada(kw), f"{kw!r} passou pelo filtro"
+
+
+@pytest.mark.parametrize("kw", [
+    "api whatsapp business",
+    "como automatizar o whatsapp de graça",
+    "melhor horário para postar no instagram",
+    "software para envio de whatsapp em massa",
+    "chatbot whatsapp para empresas",
+    "agente de ia para atendimento",
+])
+def test_pauta_boa_passa(kw):
+    assert _aprovada(kw), f"{kw!r} foi barrada indevidamente"
+
+
+def test_dominio_e_exigido_alem_da_intencao_comercial():
+    """'sistema' e 'ferramenta' sozinhos aparecem em busca de curso técnico
+    e de caixa de plástico — a intenção comercial não basta."""
+    assert research.COMPRA.search("melhor sistema de gestao escolar")
+    assert not _aprovada("melhor sistema de gestao escolar")

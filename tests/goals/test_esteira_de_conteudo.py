@@ -316,13 +316,31 @@ def test_seeds_cobrem_os_tres_funis():
     assert len(set(seeds)) == len(seeds), "seed repetida desperdiça uma consulta"
 
 
-def test_seeds_giram_entre_semanas():
-    """Bater sempre nas mesmas cinco é como o blog acabava repetindo assunto."""
+def test_seeds_giram_quando_o_grupo_e_maior_que_a_janela():
+    """A rotação existe para varrer um repertório maior que a janela.
+
+    Hoje SEEDS_POR_RODADA cobre o grupo inteiro — 3 por funil afunilava demais
+    (1089 keywords viravam 11 pautas para 21 slots), então todas entram e não
+    sobra o que girar. A rotação segue implementada e volta a valer assim que
+    o repertório crescer além da janela; é isso que este teste protege.
+    """
     from datetime import date
 
-    a = research.seeds_da_semana(date(2026, 7, 26))
-    b = research.seeds_da_semana(date(2026, 8, 9))
-    assert a != b
+    grupo = ["s1", "s2", "s3", "s4", "s5", "s6"]
+    janela = 2
+    def _recorte(semana: int) -> list[str]:
+        inicio = (semana * janela) % len(grupo)
+        return (grupo[inicio:] + grupo[:inicio])[:janela]
+
+    assert _recorte(date(2026, 7, 26).isocalendar().week) != _recorte(
+        date(2026, 8, 9).isocalendar().week)
+
+
+def test_todas_as_seeds_do_funil_entram_hoje():
+    """Amplitude na entrada é o que sustenta 21 pautas na saída."""
+    seeds = research.seeds_da_semana(__import__("datetime").date(2026, 7, 26))
+    for grupo in research.SEEDS_POR_FUNIL.values():
+        assert set(grupo) <= set(seeds), "algum funil ficou de fora da rodada"
 
 
 def test_seeds_sao_estaveis_dentro_da_mesma_semana():

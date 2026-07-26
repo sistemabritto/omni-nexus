@@ -50,7 +50,40 @@ interface OverviewData {
     aged_approvals: { id: number; gate_type: string; created_at: string }[]
     total: number
   }
+  funil_conteudo?: {
+    ciclo: string
+    meta: number
+    publicadas: number
+    no_ar_pct: number
+    fila: {
+      proposta: number
+      aprovada: number
+      escrita: number
+      publicada: number
+      descartada: number
+    }
+    taxa_aproveitamento: number | null
+    proximas: {
+      id: number
+      keyword: string
+      titulo: string | null
+      data_alvo: string
+      publish_at: string
+      status: string
+    }[]
+  } | null
 }
+
+// Ordem do funil = ordem real da esteira. Cada etapa é um lugar onde a pauta
+// pode ficar presa, e ver onde ela parou é metade do diagnóstico.
+type EtapaDoFunil = 'proposta' | 'aprovada' | 'escrita' | 'publicada'
+
+const ETAPAS_DO_FUNIL: { chave: EtapaDoFunil; rotulo: string; cor: string }[] = [
+  { chave: 'proposta', rotulo: 'Na fila', cor: '#8b949e' },
+  { chave: 'aprovada', rotulo: 'Aprovadas', cor: '#60A5FA' },
+  { chave: 'escrita', rotulo: 'No gate', cor: '#FBBF24' },
+  { chave: 'publicada', rotulo: 'No ar', cor: '#00FFA7' },
+]
 
 interface ActiveAgent {
   name: string
@@ -297,6 +330,71 @@ export default function Overview() {
           ))
         )}
       </div>
+
+      {/* Esteira de conteúdo — pauta levantada → artigo escrito → post no ar.
+          Antes disso, saber se a semana fechou exigia abrir o Ghost, o Postiz
+          e o kanban e cruzar na mão. */}
+      {!loading && data?.funil_conteudo && (
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5 mb-6">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/20">
+                <FileText size={14} className="text-[#00FFA7]" />
+              </div>
+              Esteira de conteúdo
+            </h2>
+            <span className="text-xs text-[#8b949e]">ciclo de {data.funil_conteudo.ciclo}</span>
+            <span className="ml-auto text-sm tabular-nums text-[#e6edf3]">
+              <strong className="text-[#00FFA7]">{data.funil_conteudo.publicadas}</strong>
+              <span className="text-[#8b949e]"> / {data.funil_conteudo.meta} no ar</span>
+            </span>
+          </div>
+
+          <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden mb-4">
+            <div
+              className="h-full rounded-full bg-[#00FFA7] transition-all"
+              style={{ width: `${Math.min(data.funil_conteudo.no_ar_pct, 100)}%` }}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            {ETAPAS_DO_FUNIL.map((etapa) => (
+              <div key={etapa.chave} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3">
+                <div className="text-xl font-semibold tabular-nums" style={{ color: etapa.cor }}>
+                  {data.funil_conteudo!.fila[etapa.chave]}
+                </div>
+                <div className="text-xs text-[#8b949e] mt-0.5">{etapa.rotulo}</div>
+              </div>
+            ))}
+          </div>
+
+          {data.funil_conteudo.proximas.length > 0 && (
+            <div className="border-t border-white/[0.06] pt-3">
+              <div className="text-xs text-[#8b949e] mb-2">Próximas a sair</div>
+              <ul className="space-y-1.5">
+                {data.funil_conteudo.proximas.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-baseline gap-2 text-sm">
+                    <span className="text-xs tabular-nums text-[#8b949e] shrink-0">{p.data_alvo}</span>
+                    <span className="text-[#e6edf3] [overflow-wrap:anywhere]">
+                      {p.titulo || p.keyword}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/[0.06] text-[#8b949e] shrink-0">
+                      {p.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {data.funil_conteudo.taxa_aproveitamento !== null && (
+            <div className="text-xs text-[#8b949e] mt-3">
+              {Math.round(data.funil_conteudo.taxa_aproveitamento * 100)}% das pautas
+              decididas viraram post — o resto foi descartado.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Precisa de atenção — health agregado (panorama 2026-07-17, item 19) */}
       {!loading && data?.needs_attention && data.needs_attention.total > 0 && (

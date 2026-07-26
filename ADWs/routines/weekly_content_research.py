@@ -189,13 +189,44 @@ def montar_pautas(keywords: list[dict], inicio: date) -> list[dict]:
 
 # ── 4. gate de aprovação humana ──────────────────────────────────────────
 
-def abrir_aprovacao(pautas: list[dict], noticias: str, arquivo: Path, dry_run: bool) -> None:
+def gravar_na_fila(pautas: list[dict], dry_run: bool) -> str | None:
+    """Persiste as pautas na fila — sem isto o ciclo não continua sozinho.
+
+    O markdown serve para o humano ler; a fila serve para a rotina diária
+    perguntar "o que a gente escreve hoje?". Enquanto a pauta só existia no
+    arquivo, ninguém conseguia responder isso, e cada dia dependia de alguém
+    reabrir o research da semana.
+    """
+    if dry_run:
+        log("dry-run — fila não tocada.")
+        return None
+    try:
+        import pauta_fila
+
+        ciclo = pauta_fila.ciclo_de(date.fromisoformat(pautas[0]["data"]))
+        resultado = pauta_fila.gravar_ciclo(pautas)
+        log(f"fila do ciclo {ciclo}: {resultado['gravadas']} gravadas, "
+            f"{resultado['preservadas']} preservadas (já escritas/publicadas)")
+        return ciclo
+    except Exception as exc:  # noqa: BLE001 — o markdown já está salvo
+        log(f"não consegui gravar na fila ({exc}); as pautas seguem no arquivo")
+        return None
+
+
+def abrir_aprovacao(pautas: list[dict], noticias: str, arquivo: Path, dry_run: bool,
+                    ciclo: str | None = None) -> None:
     linhas = [f"{p['prioridade']:>2}. {p['data']} {p['slot']} — {p['keyword']} "
               f"(vol {p['volume']}, KD {p['kd']})" for p in pautas[:10]]
     corpo = (f"Research semanal: {len(pautas)} pautas propostas.\n\n"
              + "\n".join(linhas)
              + (f"\n\n(+{len(pautas)-10} restantes)" if len(pautas) > 10 else "")
              + f"\n\nDetalhe completo: {arquivo}")
+    if ciclo:
+        # A aprovação é em lote e tem um endereço concreto: quem aprovar
+        # precisa saber qual ciclo liberar, senão o ticket vira só um aviso.
+        corpo += (f"\n\nAprovar a semana inteira:\n"
+                  f"  POST /api/pautas/ciclo/{ciclo}/aprovar\n"
+                  f"Fila: GET /api/pautas?ciclo={ciclo}")
     if dry_run:
         log("dry-run — ticket não criado. Prévia:")
         print(corpo)
@@ -246,7 +277,8 @@ def main() -> int:
         encoding="utf-8")
     log(f"gravado: {arquivo}")
 
-    abrir_aprovacao(pautas, noticias, arquivo, args.dry_run)
+    ciclo = gravar_na_fila(pautas, args.dry_run)
+    abrir_aprovacao(pautas, noticias, arquivo, args.dry_run, ciclo)
     log("fim — nada publicado; aguarda revisão e aprovação humana.")
     return 0
 

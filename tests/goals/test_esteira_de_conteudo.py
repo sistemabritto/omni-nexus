@@ -1,0 +1,248 @@
+"""
+tests/goals/test_esteira_de_conteudo.py
+
+2026-07-26 — a ponte pauta → artigo, que era o elo manual da esteira.
+
+O research levantava a pauta e o gate sabia publicar, mas ninguém escrevia o
+artigo no meio. Por isso o ciclo parava todo dia esperando alguém sentar e
+escrever.
+
+Run:
+    pytest tests/goals/test_esteira_de_conteudo.py -v
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "dashboard" / "backend"))
+
+import escritor_de_artigo as escritor  # noqa: E402
+
+
+PAUTA = {"id": 1, "prioridade": 1, "keyword": "chatbot whatsapp para empresas",
+         "volume": 1300, "kd": 21.5, "data_alvo": "2026-07-27",
+         "publish_at": "2026-07-27T12:00:00Z"}
+
+
+def _artigo_valido(html_extra: str = "", url_funil: str = "https://sistemabritto.com.br/whatsapp"):
+    corpo = "<p>" + ("palavra " * 700) + "</p>"
+    return json.dumps({
+        "titulo": "Chatbot WhatsApp para empresas: vale a pena?",
+        "excerpt": "Resposta curta com o que muda na operação.",
+        "html": corpo + html_extra + f'<p><a href="{url_funil}">veja como a gente faz</a></p>',
+    })
+
+
+# ── escolha do funil ─────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("keyword,esperado", [
+    ("chatbot whatsapp para empresas", "whatsapp"),
+    ("disparo em massa no whatsapp", "whatsapp"),
+    ("como gerar lead qualificado", "whatsapp"),
+    ("agendar post no instagram", "socialjobs"),
+    ("crescer no tiktok organicamente", "socialjobs"),
+    ("ganhar seguidor no youtube", "socialjobs"),
+    ("automatizar o financeiro da empresa", "sistema"),
+])
+def test_funil_e_escolhido_pelo_assunto(keyword, esperado):
+    """Regra explícita em vez de deixar o modelo inventar: CTA genérico não converte."""
+    url, _ = escritor._funil_para(keyword)
+    assert url.endswith(f"/{esperado}")
+
+
+def test_assunto_desconhecido_cai_no_guarda_chuva():
+    url, _ = escritor._funil_para("assunto que ninguém previu")
+    assert url.endswith("/sistema")
+
+
+# ── o prompt carrega as regras que viraram exigência ─────────────────────
+
+def test_prompt_inclui_o_humanizer():
+    """'Todo blog post deve ser escrito usando a Skill Humanizer' virou regra.
+
+    Antes o guia só entrava na REVISÃO, depois que o Felipe reclamava do tom —
+    o artigo nascia careta e alguém precisava pedir ajuste para corrigir.
+    """
+    prompt = escritor.montar_prompt(PAUTA)
+    assert "ANTI-ESCRITA-DE-IA" in prompt
+    assert len(prompt) > 2000, "o humanizer não foi carregado no prompt"
+
+
+def test_prompt_exige_cta_do_funil_certo():
+    prompt = escritor.montar_prompt(PAUTA)
+    assert "https://sistemabritto.com.br/whatsapp" in prompt
+    assert "CTA OBRIGATÓRIO" in prompt
+
+
+def test_prompt_carrega_as_regras_de_geo():
+    """É o que faz a LLM citar o artigo, não só indexar."""
+    prompt = escritor.montar_prompt(PAUTA)
+    assert "DOIS primeiros parágrafos" in prompt
+    assert "fonte" in prompt.lower()
+
+
+def test_gancho_de_noticia_entra_quando_existe():
+    prompt = escritor.montar_prompt(PAUTA, noticia="A Meta anunciou X na terça.")
+    assert "A Meta anunciou X na terça." in prompt
+
+
+def test_prompt_proibe_os_termos_de_marca():
+    prompt = escritor.montar_prompt(PAUTA)
+    for proibido in ("revolucionar", "transformação digital", "garanta já"):
+        assert proibido in prompt, f"{proibido} deveria estar na lista de proibições"
+
+
+# ── a escrita em si ──────────────────────────────────────────────────────
+
+def test_escreve_o_artigo(monkeypatch):
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo", lambda p, timeout=0: _artigo_valido())
+    artigo, erro = escritor.escrever(PAUTA)
+    assert erro == ""
+    assert artigo["titulo"].startswith("Chatbot WhatsApp")
+    assert artigo["palavras"] >= escritor.MINIMO_DE_PALAVRAS
+
+
+def test_json_dentro_de_cerca_de_codigo_e_aceito(monkeypatch):
+    """O modelo insiste em embrulhar em ```json apesar da instrução."""
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo",
+                        lambda p, timeout=0: f"```json\n{_artigo_valido()}\n```")
+    artigo, erro = escritor.escrever(PAUTA)
+    assert erro == ""
+    assert artigo["html"]
+
+
+def test_json_com_texto_em_volta_e_resgatado(monkeypatch):
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo",
+                        lambda p, timeout=0: f"Claro! Aqui está:\n{_artigo_valido()}\nEspero ter ajudado.")
+    _, erro = escritor.escrever(PAUTA)
+    assert erro == ""
+
+
+def test_artigo_curto_e_recusado(monkeypatch):
+    """300 palavras não é artigo, é resumo — e gastaria o slot da semana."""
+    curto = json.dumps({"titulo": "T", "excerpt": "E", "html": "<p>" + "x " * 50 + "</p>"})
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo", lambda p, timeout=0: curto)
+    artigo, erro = escritor.escrever(PAUTA)
+    assert artigo == {}
+    assert "curto demais" in erro
+
+
+def test_resposta_vazia_do_modelo_e_erro_explicito(monkeypatch):
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo", lambda p, timeout=0: "")
+    artigo, erro = escritor.escrever(PAUTA)
+    assert artigo == {}
+    assert "não respondeu" in erro
+
+
+def test_json_quebrado_nao_vira_artigo(monkeypatch):
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo",
+                        lambda p, timeout=0: "isso não é json nem de longe")
+    artigo, erro = escritor.escrever(PAUTA)
+    assert artigo == {}
+    assert "titulo ou html" in erro
+
+
+def test_artigo_sem_titulo_e_recusado(monkeypatch):
+    sem_titulo = json.dumps({"titulo": "", "html": "<p>" + "x " * 700 + "</p>"})
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo", lambda p, timeout=0: sem_titulo)
+    assert escritor.escrever(PAUTA)[0] == {}
+
+
+def test_cta_ausente_e_anexado_em_vez_de_perder_o_artigo(monkeypatch):
+    """O texto está bom; perder tudo por causa de um link seria desperdício."""
+    sem_cta = json.dumps({
+        "titulo": "Título válido", "excerpt": "E",
+        "html": "<p>" + ("palavra " * 700) + "</p>",
+    })
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo", lambda p, timeout=0: sem_cta)
+    artigo, erro = escritor.escrever(PAUTA)
+    assert erro == ""
+    assert "https://sistemabritto.com.br/whatsapp" in artigo["html"]
+
+
+def test_cta_presente_nao_e_duplicado(monkeypatch):
+    monkeypatch.setattr("ghost_publisher._pedir_ao_modelo", lambda p, timeout=0: _artigo_valido())
+    artigo, _ = escritor.escrever(PAUTA)
+    assert artigo["html"].count("https://sistemabritto.com.br/whatsapp") == 1
+
+
+def test_cta_do_funil_errado_nao_conta(monkeypatch):
+    """Artigo de WhatsApp linkando /socialjobs manda o lead para o funil errado."""
+    monkeypatch.setattr(
+        "ghost_publisher._pedir_ao_modelo",
+        lambda p, timeout=0: _artigo_valido(url_funil="https://sistemabritto.com.br/socialjobs"))
+    artigo, erro = escritor.escrever(PAUTA)
+    assert erro == ""
+    assert "https://sistemabritto.com.br/whatsapp" in artigo["html"]
+
+
+# ── criação do rascunho no Ghost ─────────────────────────────────────────
+
+class _Resposta:
+    def __init__(self, status, corpo):
+        self.status_code = status
+        self._corpo = corpo
+        self.text = json.dumps(corpo)
+
+    def json(self):
+        return self._corpo
+
+
+def test_rascunho_nasce_draft_nunca_publicado(monkeypatch):
+    """Criar já publicado tiraria do humano a decisão que o gate existe para dar."""
+    import ghost_publisher as gp
+
+    enviado = {}
+
+    def _post(url, headers=None, json=None, timeout=0):
+        enviado["url"] = url
+        enviado["corpo"] = json["posts"][0]
+        return _Resposta(201, {"posts": [{"id": "novo-123"}]})
+
+    monkeypatch.setattr(gp, "_config", lambda: ("https://blog.local", "k"))
+    monkeypatch.setattr(gp, "_headers", lambda k: {})
+    monkeypatch.setattr(gp.requests, "post", _post)
+
+    post_id, erro = gp.criar_rascunho("Título", "<p>corpo</p>", excerpt="resumo")
+    assert (post_id, erro) == ("novo-123", "")
+    assert enviado["corpo"]["status"] == "draft"
+    assert enviado["corpo"]["custom_excerpt"] == "resumo"
+    # Sem ?source=html o Ghost devolve 201 e descarta o corpo em silêncio.
+    assert "source=html" in enviado["url"]
+
+
+def test_ghost_recusando_o_rascunho_vira_erro(monkeypatch):
+    import ghost_publisher as gp
+
+    monkeypatch.setattr(gp, "_config", lambda: ("https://blog.local", "k"))
+    monkeypatch.setattr(gp, "_headers", lambda k: {})
+    monkeypatch.setattr(gp.requests, "post",
+                        lambda *a, **k: _Resposta(422, {"errors": [{"message": "inválido"}]}))
+    post_id, erro = gp.criar_rascunho("T", "<p>x</p>")
+    assert post_id == ""
+    assert "422" in erro
+
+
+def test_ghost_sem_id_no_retorno_vira_erro(monkeypatch):
+    """201 sem id é falha silenciosa — a pauta ficaria órfã do rascunho."""
+    import ghost_publisher as gp
+
+    monkeypatch.setattr(gp, "_config", lambda: ("https://blog.local", "k"))
+    monkeypatch.setattr(gp, "_headers", lambda k: {})
+    monkeypatch.setattr(gp.requests, "post", lambda *a, **k: _Resposta(201, {"posts": []}))
+    assert gp.criar_rascunho("T", "<p>x</p>")[0] == ""
+
+
+def test_sem_credencial_do_ghost_nao_finge_sucesso(monkeypatch):
+    import ghost_publisher as gp
+
+    monkeypatch.setattr(gp, "_config", lambda: None)
+    post_id, erro = gp.criar_rascunho("T", "<p>x</p>")
+    assert post_id == ""
+    assert "GHOST_URL" in erro

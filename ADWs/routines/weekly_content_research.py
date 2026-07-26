@@ -213,12 +213,17 @@ def gravar_na_fila(pautas: list[dict], dry_run: bool) -> str | None:
         log("dry-run — fila não tocada.")
         return None
     try:
-        import pauta_fila
+        from sdk_client import evo
 
-        ciclo = pauta_fila.ciclo_de(date.fromisoformat(pautas[0]["data"]))
-        resultado = pauta_fila.gravar_ciclo(pautas)
-        log(f"fila do ciclo {ciclo}: {resultado['gravadas']} gravadas, "
-            f"{resultado['preservadas']} preservadas (já escritas/publicadas)")
+        primeiro = date.fromisoformat(pautas[0]["data"])
+        ciclo = (primeiro - timedelta(days=primeiro.weekday())).isoformat()
+        # Pela API, não por sqlite direto: o container do scheduler NÃO monta
+        # o volume evonexus_dashboard_data, então escrever no arquivo criaria
+        # um banco fantasma na camada efêmera do container — as pautas
+        # "gravadas" sumiriam no próximo redeploy e o dashboard nunca as veria.
+        resultado = evo.post("/api/pautas", {"pautas": pautas})
+        log(f"fila do ciclo {ciclo}: {resultado.get('gravadas')} gravadas, "
+            f"{resultado.get('preservadas')} preservadas (já escritas/publicadas)")
         return ciclo
     except Exception as exc:  # noqa: BLE001 — o markdown já está salvo
         log(f"não consegui gravar na fila ({exc}); as pautas seguem no arquivo")

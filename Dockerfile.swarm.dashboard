@@ -116,6 +116,11 @@ COPY .env.example     ./
 # a página /mcp-servers aparecia sem nada e os agentes rodavam sem as
 # ferramentas que o fork declara. Versionado no repo = igual em toda máquina.
 COPY .mcp.json        ./
+# Sem isto o diretório nem existe no container: /plugins listava vazio mesmo
+# com o open-seo versionado no repo, e qualquer plugin de arquivo sumia no
+# deploy. Os que são MCP (open-seo entre eles) chegam pelo .mcp.json acima —
+# são coisas diferentes e a página precisa das duas.
+COPY plugins/         plugins/
 # Config do provider "opencode_omnirouter" (baseURL/apiKey do OmniRoute) —
 # heartbeats rodam neste container (Flask+terminal-server+heartbeats).
 COPY opencode.json    ./

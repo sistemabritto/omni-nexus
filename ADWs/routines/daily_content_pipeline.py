@@ -71,9 +71,24 @@ def gerar_capa(post: dict, titulo: str) -> tuple[str, str]:
         return subir_imagem(destino)
 
 
+def mover_pauta(pauta_id: int, status: str, **campos) -> None:
+    """Move a pauta pela API.
+
+    Nunca por sqlite direto: o container do scheduler não monta o volume
+    evonexus_dashboard_data, e escrever no arquivo criaria um banco fantasma
+    na camada efêmera — o dashboard continuaria vendo a fila parada e o
+    trabalho sumiria no próximo redeploy.
+    """
+    try:
+        from sdk_client import evo
+
+        evo.patch(f"/api/pautas/{pauta_id}", {"status": status, **campos})
+    except Exception as exc:  # noqa: BLE001 — o efeito real já aconteceu
+        log(f"não consegui mover a pauta {pauta_id} para {status}: {exc}")
+
+
 def processar(pauta: dict, dry_run: bool) -> dict:
     """Uma pauta: escreve, cria o rascunho, gera a capa, abre o gate."""
-    import pauta_fila
     from escritor_de_artigo import escrever
     from ghost_publisher import atualizar, buscar, criar_rascunho
     from ghost_social_bridge import aprovar_artigo
@@ -98,7 +113,7 @@ def processar(pauta: dict, dry_run: bool) -> dict:
     # A pauta vira `escrita` assim que o rascunho existe, ANTES da capa e do
     # gate. Se a capa falhar, o trabalho de escrita não se perde e uma nova
     # execução não reescreve o artigo do zero.
-    pauta_fila.mover(pauta["id"], "escrita", ghost_post_id=post_id, titulo=artigo["titulo"])
+    mover_pauta(pauta["id"], "escrita", ghost_post_id=post_id, titulo=artigo["titulo"])
 
     aviso_capa = ""
     url_capa, erro_capa = gerar_capa(buscar(post_id) or {}, artigo["titulo"])
@@ -128,18 +143,25 @@ def main() -> int:
     args = ap.parse_args()
 
     load_env()
-    import pauta_fila
+    from sdk_client import evo
 
     dia = date.fromisoformat(args.dia) if args.dia else date.today()
 
     # Limpa a fila antes de olhar o dia: pauta que passou da data carrega
     # gancho de notícia morto, e escrever a partir dela publica assunto velho.
     if not args.dry_run:
-        vencidas = pauta_fila.vencer_atrasadas()
-        if vencidas:
-            log(f"{vencidas} pauta(s) vencida(s) descartada(s)")
+        try:
+            vencidas = (evo.post("/api/pautas/vencer", {}) or {}).get("descartadas", 0)
+            if vencidas:
+                log(f"{vencidas} pauta(s) vencida(s) descartada(s)")
+        except Exception as exc:  # noqa: BLE001
+            log(f"não consegui vencer as atrasadas ({exc}); seguindo mesmo assim")
 
-    pautas = pauta_fila.do_dia(dia, status="aprovada")
+    try:
+        pautas = (evo.get("/api/pautas/hoje", {"dia": dia.isoformat()}) or {}).get("pautas", [])
+    except Exception as exc:  # noqa: BLE001
+        log(f"não consegui ler a fila: {exc}")
+        return 1
     if args.limite:
         pautas = pautas[: args.limite]
     if not pautas:

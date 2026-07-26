@@ -395,3 +395,22 @@ def test_prompt_diz_o_ano_corrente():
     prompt = escritor.montar_prompt(PAUTA)
     assert str(date.today().year) in prompt
     assert "HOJE É" in prompt
+
+
+def test_upload_de_capa_usa_a_funcao_de_jwt_que_existe(monkeypatch, tmp_path):
+    """`ghost_jwt` nunca existiu neste módulo (é do ghost_social_bridge). O
+    NameError caía no except genérico e virava "name 'ghost_jwt' is not
+    defined" travestido de erro de rede — nenhuma capa da esteira jamais subiu.
+    """
+    import ghost_publisher as gp
+
+    imagem = tmp_path / "capa.png"
+    imagem.write_bytes(b"png")
+    monkeypatch.setattr(gp, "_config", lambda: ("https://blog.local", "id:segredo"))
+    monkeypatch.setattr(gp, "_jwt", lambda k: "token-falso")
+    monkeypatch.setattr(gp.requests, "post",
+                        lambda *a, **k: _Resposta(200, {"images": [{"url": "/content/capa.png"}]}))
+
+    url, erro = gp.subir_imagem(imagem)
+    assert erro == ""
+    assert url == "https://blog.local/content/capa.png"

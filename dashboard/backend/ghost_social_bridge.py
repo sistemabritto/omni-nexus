@@ -56,10 +56,15 @@ LINK_NO_CORPO = ("x",)
 # cumprir, senão o post manda o leitor para um comentário que não existe.
 LINK_NO_COMENTARIO = ("linkedin",)
 
-# No X toda URL conta 23 caracteres, encurtada pelo t.co, não importa o tamanho
-# real. Reservar os ~90 caracteres de uma URL do blog comeria um terço do post
-# à toa. Nas outras redes o link ocupa o que ocupa.
-CUSTO_DO_LINK = {"x": 23}
+# O link custa o que ele mede, em toda rede.
+#
+# A regra do X é que toda URL conta 23 caracteres (o t.co encurta), e a primeira
+# versão disto reservava 23 para não comer um terço do post à toa. Só que quem
+# recusa o post não é o X — é o Postiz, que valida o texto ANTES de enviar e
+# mede o comprimento bruto: um post de 293 caracteres reais levou
+# `400 {"provider":"x","message":"post is too long, please fix it"}`. Vale a
+# regra do validador que está no caminho, não a da plataforma no fim dele.
+CUSTO_DO_LINK: dict[str, int] = {}
 
 # Espaçamento entre redes: o mesmo texto saindo simultaneamente em três lugares
 # parece bot e performa pior.

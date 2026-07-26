@@ -384,3 +384,14 @@ def test_dominio_e_exigido_alem_da_intencao_comercial():
     e de caixa de plástico — a intenção comercial não basta."""
     assert research.COMPRA.search("melhor sistema de gestao escolar")
     assert not _aprovada("melhor sistema de gestao escolar")
+
+
+def test_prompt_diz_o_ano_corrente():
+    """O corte de treino do modelo é anterior a hoje: o primeiro artigo real
+    saiu como '…em 2025' enquanto o blog publicava em 2026. Ano errado no
+    título envelhece o post no dia em que ele nasce."""
+    from datetime import date
+
+    prompt = escritor.montar_prompt(PAUTA)
+    assert str(date.today().year) in prompt
+    assert "HOJE É" in prompt

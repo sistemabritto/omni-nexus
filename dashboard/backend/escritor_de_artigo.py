@@ -63,13 +63,22 @@ def _briefing_humanizer() -> str:
 
 
 def montar_prompt(pauta: dict, noticia: str = "") -> str:
+    from datetime import date
+
     keyword = pauta["keyword"]
     funil_url, funil_desc = _funil_para(keyword)
+    hoje = date.today()
     return (
         "Você escreve um artigo de blog em português do Brasil para a Sistema Britto, "
         "que vende automação e operação com IA para donos de empresa. Devolva um JSON "
         "com as chaves titulo, excerpt e html — nada além do JSON.\n\n"
 
+        # A data vai explícita porque o corte de treino do modelo é anterior a
+        # ela: o primeiro artigo real saiu intitulado "…em 2025" enquanto o
+        # blog publicava em 2026. Ano errado no título envelhece o post no dia
+        # em que ele nasce.
+        f"HOJE É {hoje:%d/%m/%Y}. O ano corrente é {hoje.year} — se citar ano, "
+        f"é este, nunca um anterior.\n\n"
         f"PALAVRA-CHAVE PRINCIPAL: {keyword}\n"
         + (f"VOLUME DE BUSCA: {pauta.get('volume')} / mês (dificuldade {pauta.get('kd')})\n"
            if pauta.get("volume") else "")

@@ -28,9 +28,12 @@ import os
 import re
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+
+WORKSPACE = Path(__file__).resolve().parent.parent.parent
 
 # O blog está atrás do Cloudflare, que devolve 403 "error code: 1010" para
 # User-Agent de biblioteca HTTP. Ver ghost_social_bridge.UA_NAVEGADOR.
@@ -144,6 +147,154 @@ def resumo_para_aprovacao(post: dict) -> str:
     palavras = len(texto.split())
     linhas.append(f"Tamanho: {palavras} palavras")
     return "\n".join(linhas)
+
+
+def _pedir_ao_modelo(prompt: str, timeout: int = 300) -> str:
+    """Chamada ao x.ai. Devolve string vazia em qualquer falha."""
+    chave = (os.environ.get("XAI_API_KEY") or "").strip()
+    if not chave:
+        return ""
+    try:
+        r = requests.post(
+            (os.environ.get("XAI_BASE_URL") or "https://api.x.ai/v1").rstrip("/") + "/responses",
+            headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"},
+            json={"model": os.environ.get("XAI_MODEL", "grok-4.20-non-reasoning"),
+                  "input": [{"role": "user", "content": prompt}]},
+            timeout=timeout)
+        if r.status_code != 200:
+            return ""
+        texto = ""
+        for item in r.json().get("output", []):
+            if item.get("type") == "message":
+                for parte in item.get("content", []):
+                    if parte.get("type") == "output_text":
+                        texto += parte.get("text", "")
+        return texto.strip()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _e_sobre_imagem(feedback: str) -> bool:
+    """O feedback fala da capa? Decide se vale gastar uma geração de imagem."""
+    baixo = feedback.lower()
+    return any(p in baixo for p in (
+        "thumb", "imagem", "foto", "capa", "arte", "visual", "banner", "rosto"))
+
+
+def _e_sobre_texto(feedback: str) -> bool:
+    """Feedback exclusivamente sobre a capa não deve reescrever o artigo — seria
+    trocar um texto aprovado por outro que o humano não pediu."""
+    baixo = feedback.lower()
+    if not _e_sobre_imagem(feedback):
+        return True
+    return any(p in baixo for p in (
+        "texto", "artigo", "conteúdo", "conteudo", "escrit", "parágrafo", "paragrafo",
+        "título", "titulo", "cta", "humaniz", "tom", "linguagem", "palavra"))
+
+
+def revisar_texto(post: dict, feedback: str) -> str:
+    """Nova versão do corpo, incorporando a crítica. Vazio = manter o atual."""
+    briefing = ""
+    primer = WORKSPACE / ".claude" / "skills" / "mkt-quality-gate" / "experts" / "humanizer.md"
+    if primer.is_file():
+        briefing = primer.read_text(encoding="utf-8", errors="replace")[:6000]
+
+    prompt = (
+        "Você reescreve um artigo de blog em português do Brasil a partir de uma crítica "
+        "concreta do autor. Devolva APENAS o HTML do corpo, sem preâmbulo, sem cercas de "
+        "código, sem comentário.\n\n"
+        f"CRÍTICA DO AUTOR (é ordem, não sugestão):\n{feedback}\n\n"
+        "REGRAS QUE NÃO MUDAM:\n"
+        "- Não invente número, data ou fato. Todo dado precisa manter o link de fonte que "
+        "já está no HTML.\n"
+        "- Preserve os <h2>/<h3> e seus atributos id, e mantenha o link de CTA do final.\n"
+        "- Responda a pergunta do título nos dois primeiros parágrafos.\n"
+        "- Cada <h2> começa com uma resposta curta e direta logo abaixo.\n\n"
+        f"GUIA ANTI-ESCRITA-DE-IA (evite estes padrões):\n{briefing}\n\n"
+        f"TÍTULO: {post.get('title')}\n\nHTML ATUAL:\n{post.get('html') or ''}"
+    )
+    novo = _pedir_ao_modelo(prompt)
+    if not novo:
+        return ""
+    novo = re.sub(r"^```(?:html)?\s*|\s*```$", "", novo.strip())
+    # Guarda contra resposta truncada: metade do original já é regressão, não revisão.
+    if len(novo) < len(post.get("html") or "") * 0.5:
+        return ""
+    return novo
+
+
+def briefing_de_capa(post: dict, feedback: str = "") -> dict:
+    """Headline e hook para a thumbnail, derivados do próprio artigo."""
+    prompt = (
+        "Você define a arte da thumbnail de um artigo, no padrão de YouTube brasileiro do "
+        "nicho de IA e automação. Devolva APENAS um JSON com as chaves headline, hook, "
+        "expressao e badge.\n"
+        "- headline: 2 a 5 PALAVRAS em maiúsculas, sem acento, que provoquem clique sem "
+        "prometer o que o artigo não cumpre.\n"
+        "- hook: descrição curta de UM objeto-símbolo em 3D glossy para o lado oposto ao rosto.\n"
+        "- expressao: expressão facial coerente com a pauta.\n"
+        "- badge: número ou palavra curta para um selo vermelho, ou string vazia.\n\n"
+        f"TÍTULO: {post.get('title')}\nRESUMO: {post.get('custom_excerpt') or ''}\n"
+        + (f"\nCRÍTICA DO AUTOR SOBRE A CAPA ANTERIOR (obedeça):\n{feedback}\n" if feedback else "")
+    )
+    bruto = _pedir_ao_modelo(prompt, timeout=180)
+    try:
+        dados = json.loads(re.sub(r"^```(?:json)?\s*|\s*```$", "", bruto.strip()))
+    except (json.JSONDecodeError, ValueError):
+        dados = {}
+    titulo = (post.get("title") or "ARTIGO").upper()
+    return {
+        "headline": (dados.get("headline") or titulo.split(":")[0])[:60],
+        "hook": dados.get("hook") or "um celular flutuando com a tela de conversa, ícone 3D glossy",
+        "expressao": dados.get("expressao") or "sorriso confiante",
+        "badge": dados.get("badge") or "",
+    }
+
+
+def subir_imagem(caminho: Path) -> tuple[str, str]:
+    """Envia a imagem ao Ghost. Devolve (url, erro)."""
+    cfg = _config()
+    if not cfg:
+        return "", "GHOST_URL/GHOST_ADMIN_API_KEY não configurados."
+    url, key = cfg
+    try:
+        with caminho.open("rb") as fh:
+            r = requests.post(
+                f"{url}/ghost/api/admin/images/upload/",
+                headers={"Authorization": f"Ghost {ghost_jwt(key)}", "User-Agent": UA_NAVEGADOR},
+                files={"file": (caminho.name, fh, "image/png")},
+                data={"purpose": "image"}, timeout=180)
+    except Exception as exc:  # noqa: BLE001
+        return "", str(exc)
+    if r.status_code >= 300:
+        return "", f"{r.status_code}: {r.text[:200]}"
+    devolvida = (r.json().get("images") or [{}])[0].get("url") or ""
+    if devolvida.startswith("/"):
+        devolvida = url + devolvida
+    return devolvida, ""
+
+
+def atualizar(post_id: str, *, html: str | None = None,
+              feature_image: str | None = None) -> str:
+    """PUT no draft. `?source=html` é obrigatório para o campo html ser aceito —
+    sem ele o Ghost devolve 200 e ignora o corpo em silêncio."""
+    cfg = _config()
+    if not cfg:
+        return "GHOST_URL/GHOST_ADMIN_API_KEY não configurados."
+    url, key = cfg
+    atual = buscar(post_id)
+    if not atual:
+        return f"post {post_id} não encontrado"
+    corpo: dict = {"updated_at": atual.get("updated_at")}
+    if html:
+        corpo["html"] = html
+    if feature_image:
+        corpo["feature_image"] = feature_image
+    if len(corpo) == 1:
+        return ""
+    r = requests.put(f"{url}/ghost/api/admin/posts/{post_id}/?source=html",
+                     headers=_headers(key), json={"posts": [corpo]}, timeout=90)
+    return "" if r.status_code < 300 else f"{r.status_code}: {r.text[:200]}"
 
 
 def publicar(post_id: str, quando_utc: str | None = None) -> dict:

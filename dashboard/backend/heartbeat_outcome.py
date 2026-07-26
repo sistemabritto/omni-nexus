@@ -27,6 +27,7 @@ Notification policy (decided with Felipe 2026-06-17):
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import time
@@ -875,7 +876,41 @@ def _run_blog_publish(outcome: dict) -> dict:
 
     from ghost_publisher import publicar
 
-    return publicar(ref, quando.isoformat() if quando else None)
+    resultado = publicar(ref, quando.isoformat() if quando else None)
+
+    # Publicou: derive as redes AQUI, sem esperar o webhook do Ghost.
+    #
+    # O webhook post.published continua funcionando se existir, mas depender
+    # dele é frágil: criar webhook no Ghost exige sessão de staff (chave de API
+    # devolve 403/404), ou seja, é um passo manual no painel que nenhum deploy
+    # de cliente vai lembrar de fazer. O sintoma seria o pior possível — aprovar
+    # o artigo e as redes simplesmente não acontecerem, sem erro nenhum.
+    #
+    # A ponte é idempotente por ticket, então derivar aqui e o webhook disparar
+    # também não duplica aprovação.
+    if resultado.get("published") and resultado.get("status") != "scheduled":
+        _derivar_redes_em_background(ref)
+    return resultado
+
+
+def _derivar_redes_em_background(post_id: str) -> None:
+    """Gera as versões de X/LinkedIn/Threads numa thread.
+
+    Em thread porque são três chamadas de geração de texto, cada uma na casa do
+    minuto — a decisão de aprovar não pode ficar pendurada esperando isso, ainda
+    mais vindo do Telegram, que desiste da requisição antes.
+    """
+    import threading
+
+    def _trabalhar() -> None:
+        try:
+            from ghost_social_bridge import distribuir
+
+            distribuir(post_id)
+        except Exception:  # noqa: BLE001 — thread solta nunca derruba o processo
+            logging.getLogger(__name__).exception("derivação das redes falhou")
+
+    threading.Thread(target=_trabalhar, daemon=True, name=f"deriva-{post_id[:8]}").start()
 
 
 def _run_publish_action(approval_row, conn) -> dict:

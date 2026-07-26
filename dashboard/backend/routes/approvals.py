@@ -208,8 +208,9 @@ def _agendar_refacao(ticket_id: str | None, outcome: dict, feedback: str) -> boo
     """
     if not ticket_id or not isinstance(outcome, dict):
         return False
-    if outcome.get("publish_target") not in ("x", "linkedin", "threads"):
-        return False  # artigo de blog volta para a fila; não se reescreve sozinho
+    alvo = outcome.get("publish_target")
+    if alvo not in ("x", "linkedin", "threads", "blog"):
+        return False
 
     tentativa = db.session.execute(
         db.text("SELECT COUNT(*) FROM pending_approvals WHERE ticket_id=:t AND gate_type='publish'"),
@@ -220,9 +221,17 @@ def _agendar_refacao(ticket_id: str | None, outcome: dict, feedback: str) -> boo
 
     def _trabalhar():
         try:
-            from ghost_social_bridge import refazer
+            if alvo == "blog":
+                # Artigo é refeito no Ghost (texto e/ou capa) e o gate reabre.
+                # Passa de dois minutos entre revisar texto e gerar imagem, o
+                # que é justamente por que isto não cabe dentro do request.
+                from ghost_social_bridge import refazer_artigo
 
-            refazer(outcome, feedback, ticket_id, tentativa=tentativa)
+                refazer_artigo(outcome, feedback, ticket_id, tentativa=tentativa)
+            else:
+                from ghost_social_bridge import refazer
+
+                refazer(outcome, feedback, ticket_id, tentativa=tentativa)
         except Exception:  # noqa: BLE001 — thread solta nunca derruba o processo
             logging.getLogger(__name__).exception("refação automática falhou")
 

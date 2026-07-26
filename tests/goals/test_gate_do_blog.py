@@ -157,3 +157,135 @@ def test_ponte_das_redes_aceita_publicado(monkeypatch):
     monkeypatch.setenv("XAI_API_KEY", "")
     r = bridge.distribuir("abc123", dry_run=True)
     assert set(r["redes"]) == set(bridge.REDES)
+
+
+# ── refazer o artigo (pedido do Felipe, 26/07) ───────────────────────────
+
+def test_feedback_so_sobre_capa_nao_reescreve_o_texto():
+    """Trocar um texto que o humano já aprovou por outro que ele não pediu é
+    regressão disfarçada de melhoria. O feedback real foi: 'o texto está
+    aprovado, mas sem a thumbnail não dá'."""
+    so_imagem = "Essa foto ficou ruim, gera outra thumbnail melhor"
+    assert gp._e_sobre_imagem(so_imagem) is True
+    assert gp._e_sobre_texto(so_imagem) is False
+
+
+def test_feedback_sobre_os_dois_refaz_os_dois():
+    misto = "Falta thumbnail e o texto ficou meio careta, humaniza mais"
+    assert gp._e_sobre_imagem(misto) is True
+    assert gp._e_sobre_texto(misto) is True
+
+
+def test_feedback_so_de_texto_nao_gasta_geracao_de_imagem():
+    so_texto = "O gancho tá fraco e falta CTA pro funil"
+    assert gp._e_sobre_texto(so_texto) is True
+    assert gp._e_sobre_imagem(so_texto) is False
+
+
+def test_revisao_truncada_e_descartada(monkeypatch):
+    """Metade do original já é regressão, não revisão — melhor manter o texto
+    atual do que substituir por um pedaço."""
+    monkeypatch.setattr(gp, "_pedir_ao_modelo", lambda *a, **k: "<p>curto</p>")
+    assert gp.revisar_texto({"title": "T", "html": "<p>" + "x" * 5000 + "</p>"}, "melhora") == ""
+
+
+def test_sem_modelo_configurado_mantem_o_texto(monkeypatch):
+    monkeypatch.setattr(gp, "_pedir_ao_modelo", lambda *a, **k: "")
+    assert gp.revisar_texto({"title": "T", "html": "<p>original</p>"}, "muda") == ""
+
+
+def test_briefing_de_capa_tem_fallback_sem_modelo(monkeypatch):
+    """Modelo fora do ar não pode impedir a capa de ser gerada."""
+    monkeypatch.setattr(gp, "_pedir_ao_modelo", lambda *a, **k: "")
+    b = gp.briefing_de_capa({"title": "Disparo em massa: o que bane seu número"})
+    assert b["headline"] and b["hook"] and b["expressao"]
+
+
+def test_refacao_do_blog_respeita_o_teto(monkeypatch):
+    import ghost_social_bridge as br
+
+    r = br.refazer_artigo({"publish_ref": "abc"}, "muda", "tkt",
+                          tentativa=br.MAX_REFACOES + 1)
+    assert r["ok"] is False and "teto" in r["erro"]
+
+
+def test_blog_entra_na_refacao_automatica():
+    """Antes o blog era excluído de propósito; o Felipe apontou que isso deixa
+    o fluxo incompleto — criticar e não acontecer nada é pior que não ter o
+    botão."""
+    fonte = (REPO_ROOT / "dashboard" / "backend" / "routes" / "approvals.py").read_text(
+        encoding="utf-8")
+    trecho = fonte.split("def _agendar_refacao")[1]
+    assert '"blog"' in trecho
+    assert "refazer_artigo" in trecho
+
+
+# ── aprovar deriva as redes sem depender de webhook ──────────────────────
+
+def test_publicar_dispara_a_derivacao_sem_webhook():
+    """Criar webhook no Ghost exige sessão de staff — chave de API devolve
+    403/404. Depender dele significaria: aprovar o artigo e as redes não
+    acontecerem, sem erro nenhum."""
+    fonte = (REPO_ROOT / "dashboard" / "backend" / "heartbeat_outcome.py").read_text(
+        encoding="utf-8")
+    trecho = fonte.split("def _run_blog_publish")[1].split("def _run_publish_action")[0]
+    assert "_derivar_redes_em_background" in trecho
+
+
+def test_agendado_nao_deriva_ainda(monkeypatch):
+    """Artigo agendado não está no ar; derivar agora publicaria post de rede
+    apontando para uma página que ainda não existe."""
+    chamou = []
+    monkeypatch.setattr(ho, "_derivar_redes_em_background", lambda p: chamou.append(p))
+    monkeypatch.setattr(gp, "publicar",
+                        lambda ref, quando=None: {"published": True, "status": "scheduled",
+                                                  "detail": "agendado"})
+    ho._run_blog_publish({"publish_ref": "abc", "publish_at": None})
+    assert chamou == []
+
+
+def test_publicado_agora_deriva(monkeypatch):
+    chamou = []
+    monkeypatch.setattr(ho, "_derivar_redes_em_background", lambda p: chamou.append(p))
+    monkeypatch.setattr(gp, "publicar",
+                        lambda ref, quando=None: {"published": True, "status": "published",
+                                                  "detail": "publicado"})
+    ho._run_blog_publish({"publish_ref": "abc", "publish_at": None})
+    assert chamou == ["abc"]
+
+
+def test_falha_ao_publicar_nao_deriva(monkeypatch):
+    chamou = []
+    monkeypatch.setattr(ho, "_derivar_redes_em_background", lambda p: chamou.append(p))
+    monkeypatch.setattr(gp, "publicar",
+                        lambda ref, quando=None: {"published": False, "detail": "erro"})
+    ho._run_blog_publish({"publish_ref": "abc", "publish_at": None})
+    assert chamou == []
+
+
+# ── o rosto certo ────────────────────────────────────────────────────────
+
+def test_face_bank_aponta_para_as_fotos_reais():
+    """A capa saiu com a cara de outra pessoa porque o primer dizia que a
+    referência de ESTILO era foto do Felipe."""
+    import thumbnail_maker as tm
+
+    assert tm.ROSTO_PADRAO.is_file(), f"foto de referência ausente: {tm.ROSTO_PADRAO}"
+    assert "thumbnail-refs" not in str(tm.ROSTO_PADRAO), "essa pasta é referência de estilo"
+    assert "faces" in str(tm.FACE_BANK)
+
+
+def test_primer_avisa_que_a_referencia_nao_e_o_felipe():
+    primer = (REPO_ROOT / ".claude" / "skills" / "social-ai-trends-blog" / "assets"
+              / "THUMBNAIL-PRIMER.md").read_text(encoding="utf-8")
+    assert "NÃO é foto do Felipe" in primer
+    assert "library/images/faces" in primer
+
+
+def test_prompt_ancora_os_tracos_do_rosto():
+    import thumbnail_maker as tm
+
+    p = tm.montar_prompt("TESTE", "um celular")
+    assert "sem óculos" in p, "a referência de estilo usa óculos; o rosto certo não"
+    assert "terço DIREITO" in p
+    assert "A3E635" in p, "verde-limão é a cor da marca"

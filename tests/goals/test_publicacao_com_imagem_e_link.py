@@ -87,14 +87,46 @@ def test_link_no_meio_do_texto_tambem_conta():
     assert bridge.garantir_link(original, ARTIGO, "x") == original
 
 
-@pytest.mark.parametrize("rede", ["linkedin", "threads"])
-def test_rede_sem_link_no_corpo_fica_intocada(rede):
-    """No LinkedIn o link vai no comentário; no Threads não vai link nenhum.
-
-    Anexar aqui não seria esquecimento corrigido — seria quebrar o formato.
-    """
+def test_linkedin_nao_leva_link_no_corpo():
+    """No LinkedIn o link vai no primeiro comentário — anexar no corpo aqui
+    não seria esquecimento corrigido, seria quebrar o formato."""
     texto = "Texto sem link, por design."
-    assert bridge.garantir_link(texto, ARTIGO, rede) == texto
+    assert bridge.garantir_link(texto, ARTIGO, "linkedin") == texto
+
+
+@pytest.mark.parametrize("rede", ["x", "threads"])
+def test_toda_rede_de_link_no_corpo_recebe_o_link(rede):
+    """Invertido para o Threads em 2026-07-26.
+
+    O formato "post recompensa" mandava fechar pedindo comentário, sem link. O
+    primeiro post real estourou os 500 caracteres, o corte comeu o fecho, e ele
+    foi ao ar terminando em "Resultado?" — sem link e sem chamada nenhuma.
+    """
+    texto = bridge.garantir_link("Ideia completa e fechada.", ARTIGO, rede)
+    assert texto.endswith(ARTIGO), f"{rede} foi ao ar sem link"
+
+
+@pytest.mark.parametrize("rede", ["x", "threads"])
+def test_o_link_sobrevive_ao_truncamento(rede):
+    """A regressão exata: o corte comia o fim do post, e o link ia junto.
+
+    `garantir_link` reserva o espaço do link ANTES de cortar, então ele deixa
+    de ser a primeira coisa que o truncamento come e passa a ser a última que
+    sobra.
+    """
+    longo = "palavra " * 200
+    texto = bridge.garantir_link(longo.strip(), ARTIGO, rede)
+    assert len(texto) <= bridge.LIMITES[rede]
+    assert texto.endswith(ARTIGO)
+
+
+def test_threads_nao_termina_com_pergunta_no_vazio():
+    """O post real terminou em "Resultado?" — pergunta sem resposta e sem
+    destino. Com o link no fim, o leitor ao menos tem para onde ir."""
+    truncado = "A maioria erra feio usando mensagem fixa como atendimento. Resultado?"
+    texto = bridge.garantir_link(truncado, ARTIGO, "threads")
+    assert not texto.rstrip().endswith("?")
+    assert ARTIGO in texto
 
 
 def test_texto_longo_e_encurtado_para_o_link_caber():

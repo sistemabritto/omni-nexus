@@ -49,7 +49,18 @@ LIMITES = {"x": 280, "linkedin": 3000, "threads": 500, "instagram": 2200}
 # Redes em que o link do artigo tem de estar no corpo do post. No LinkedIn ele
 # vai no primeiro comentário e no Threads não vai link nenhum (post recompensa)
 # — nessas duas um link no corpo é erro, não esquecimento.
-LINK_NO_CORPO = ("x",)
+# Threads entrou aqui em 2026-07-26, por decisão do Felipe.
+#
+# O formato original era "post recompensa": sem link, fechando com pedido de
+# comentário. A teoria era não perder alcance. A prática do primeiro post real
+# foi outra — o texto estourou os 500 caracteres, o corte comeu o fecho, e o
+# post foi ao ar terminando em "Resultado?", sem link e sem chamada nenhuma.
+# Um post que não leva a lugar nenhum não preserva alcance, desperdiça.
+#
+# Com o link em LINK_NO_CORPO, `garantir_link` reserva o espaço dele ANTES de
+# cortar o corpo. O link deixa de ser a primeira coisa que o truncamento come
+# e passa a ser a última que sobra.
+LINK_NO_CORPO = ("x", "threads")
 
 # Redes em que o link sai num comentário do próprio post. O texto do LinkedIn
 # fecha com "está no primeiro comentário" — promessa que o sistema precisa
@@ -113,10 +124,14 @@ FORMATO = {
     # receber o artigo. Duas razões — a rede pune link no corpo com alcance, e
     # cada comentário é um lead que se identificou sozinho, que é o que o
     # formato existe para produzir.
-    "threads": "Máx 500 caracteres. Conversacional, mais solto que o LinkedIn. "
-               "No máximo 1 hashtag. NÃO coloque link nenhum no texto. "
-               "Feche pedindo que comentem uma palavra-chave curta e óbvia "
-               "(uma só palavra, ligada ao tema) para receber o artigo no direct.",
+    # Máx 400 e não 500: os ~100 restantes são a reserva do link. Pedir 500 ao
+    # modelo garantia que o corte comesse o fecho — foi o que aconteceu no
+    # primeiro post real, que terminou em "Resultado?" e não levava a lugar
+    # nenhum.
+    "threads": "Máx 400 caracteres. Conversacional, mais solto que o LinkedIn. "
+               "No máximo 1 hashtag. Entregue uma ideia completa e feche a frase — "
+               "não deixe pergunta no ar. O link do artigo é acrescentado depois, "
+               "então NÃO escreva o link nem 'link na bio'.",
     "instagram": "Máx 2200 caracteres. Primeira linha é o gancho. Quebras curtas. "
                  "CTA no fim + 'link na bio'. 5-8 hashtags no fim.",
 }
@@ -290,13 +305,10 @@ def adaptar(post: dict, rede: str) -> str:
     base = f"{titulo}\n\n{resumo}"
     if rede == "linkedin":
         base += "\n\nLink no primeiro comentário."
-    elif rede == "threads":
-        # Sem link, como no caminho do modelo — a regra do formato não pode
-        # depender de a chave do x.ai estar configurada.
-        base += "\n\nComenta ARTIGO que eu te mando no direct."
-    elif link:
-        base += f"\n\n{link}"
-    return limpar(base, LIMITES[rede])
+    # X e Threads recebem o link por `garantir_link` abaixo, que reserva o
+    # espaço dele antes de cortar. Anexar aqui à mão duplicaria em uma rede e
+    # esqueceria na outra — foi assim que o Threads foi ao ar sem link.
+    return garantir_link(limpar(base, LIMITES[rede]), link, rede)
 
 
 # ── aprovações ───────────────────────────────────────────────────────────

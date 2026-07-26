@@ -246,3 +246,62 @@ def test_sem_credencial_do_ghost_nao_finge_sucesso(monkeypatch):
     post_id, erro = gp.criar_rascunho("T", "<p>x</p>")
     assert post_id == ""
     assert "GHOST_URL" in erro
+
+
+# ── dedupe: não canibalizar o próprio blog ───────────────────────────────
+# Na primeira execução real, "respostas automaticas whatsapp" e "resposta
+# automatica whatsapp" saíram juntas na fila — e o blog tinha publicado
+# exatamente esse tema naquele mesmo dia. Duas pautas quase idênticas na
+# mesma semana disputam a mesma busca entre si e gastam dois dos 21 slots.
+
+import importlib.util  # noqa: E402
+
+_spec = importlib.util.spec_from_file_location(
+    "weekly_content_research", REPO_ROOT / "ADWs" / "routines" / "weekly_content_research.py")
+research = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(research)
+
+
+def _kw(texto: str, vol: int = 500) -> dict:
+    return {"kw": texto, "vol": vol, "kd": 20}
+
+
+def test_plural_e_acento_nao_criam_assunto_novo():
+    """O par exato que passou batido na primeira execução."""
+    sobraram = research.descartar_repetidas(
+        [_kw("respostas automaticas whatsapp"), _kw("resposta automática whatsapp")], [])
+    assert len(sobraram) == 1
+
+
+def test_descarta_o_que_o_blog_ja_publicou():
+    sobraram = research.descartar_repetidas(
+        [_kw("resposta automatica no whatsapp"), _kw("agendar story instagram")],
+        ["Resposta automática no WhatsApp: como configurar sem parecer robô"])
+    assert [k["kw"] for k in sobraram] == ["agendar story instagram"]
+
+
+def test_assuntos_diferentes_sobrevivem():
+    """Compartilhar 'whatsapp' não faz de duas pautas a mesma pauta."""
+    entrada = [_kw("plano whatsapp business"), _kw("grupos de whatsapp marketing"),
+               _kw("agendar story instagram")]
+    assert len(research.descartar_repetidas(entrada, [])) == 3
+
+
+def test_ordem_de_prioridade_e_preservada():
+    """A primeira da lista é a de melhor retorno; ela deve vencer o empate."""
+    entrada = [_kw("chatbot whatsapp para empresas", 1900),
+               _kw("chatbot de whatsapp para empresa", 300)]
+    sobraram = research.descartar_repetidas(entrada, [])
+    assert [k["vol"] for k in sobraram] == [1900]
+
+
+def test_lista_de_cobertos_vazia_nao_descarta_nada():
+    entrada = [_kw("a"), _kw("assunto um qualquer"), _kw("outro tema distinto aqui")]
+    assert len(research.descartar_repetidas(entrada, [])) >= 2
+
+
+def test_palavras_vazias_nao_decidem_colisao():
+    """Sem remover 'de/para/com', quase tudo pareceria parente."""
+    nucleo = research._nucleo("o plano de whatsapp para a empresa")
+    assert "de" not in nucleo and "para" not in nucleo
+    assert {"plano", "whatsapp", "empresa"} <= nucleo

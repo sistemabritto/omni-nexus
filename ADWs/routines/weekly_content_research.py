@@ -182,7 +182,84 @@ def pesquisar_keywords(seeds: list[str]) -> list[dict]:
     return cand
 
 
-# ── 3. montar as 21 pautas ───────────────────────────────────────────────
+# ── 3. não repetir o que o blog já cobre ─────────────────────────────────
+
+# Palavras que não distinguem um assunto do outro. Sem removê-las, "resposta
+# automática whatsapp" e "plano whatsapp business" pareceriam parentes só por
+# compartilharem "whatsapp", e o filtro descartaria pauta boa.
+_VAZIAS = {"de", "da", "do", "para", "por", "com", "sem", "em", "no", "na", "o", "a",
+           "os", "as", "um", "uma", "e", "ou", "que", "como", "seu", "sua", "meu"}
+
+
+def _nucleo(texto: str) -> set[str]:
+    """Palavras que carregam o assunto, sem plural nem acento decidindo nada."""
+    import unicodedata
+
+    limpo = unicodedata.normalize("NFKD", (texto or "").lower())
+    limpo = "".join(c for c in limpo if not unicodedata.combining(c))
+    palavras = re.findall(r"[a-z0-9]+", limpo)
+    # Corta o "s" final: "respostas automaticas" e "resposta automatica" são o
+    # mesmo assunto, e foi exatamente esse par que apareceu duplicado na fila.
+    return {p.rstrip("s") for p in palavras if p not in _VAZIAS and len(p) > 2}
+
+
+def titulos_publicados() -> list[str]:
+    """Títulos e keywords que o blog já cobre — para não canibalizar."""
+    ja = []
+    try:
+        import requests
+        from ghost_publisher import _config, _headers
+
+        cfg = _config()
+        if cfg:
+            url, key = cfg
+            r = requests.get(f"{url}/ghost/api/admin/posts/?limit=100&fields=title,status",
+                             headers=_headers(key), timeout=45)
+            if r.status_code < 300:
+                ja += [p.get("title", "") for p in r.json().get("posts", [])]
+    except Exception as exc:  # noqa: BLE001 — sem a lista o pior caso é repetir
+        log(f"não consegui ler o blog para deduplicar ({exc})")
+    try:
+        from sdk_client import evo
+
+        for p in (evo.get("/api/pautas", {"limit": 200}) or {}).get("pautas", []):
+            if p.get("status") in ("escrita", "publicada"):
+                ja.append(p.get("titulo") or p.get("keyword") or "")
+    except Exception as exc:  # noqa: BLE001
+        log(f"não consegui ler a fila para deduplicar ({exc})")
+    return [t for t in ja if t]
+
+
+def descartar_repetidas(keywords: list[dict], ja_cobertos: list[str]) -> list[dict]:
+    """Tira keyword que repete assunto já publicado — ou outra da própria lista.
+
+    Duas pautas quase idênticas na mesma semana disputam a mesma busca entre
+    si (canibalização) e gastam dois dos 21 slots com um assunto só. Na
+    primeira execução real, "respostas automaticas whatsapp" e "resposta
+    automatica whatsapp" saíram juntas — e o blog já tinha publicado o tema
+    naquele mesmo dia.
+    """
+    nucleos_cobertos = [_nucleo(t) for t in ja_cobertos]
+    escolhidas: list[dict] = []
+    nucleos_escolhidos: list[set] = []
+    for kw in keywords:
+        n = _nucleo(kw["kw"])
+        if not n:
+            continue
+        # 60% das palavras em comum é o mesmo assunto dito de outro jeito.
+        colide = any(len(n & outro) / len(n) >= 0.6
+                     for outro in nucleos_cobertos + nucleos_escolhidos if outro)
+        if colide:
+            continue
+        escolhidas.append(kw)
+        nucleos_escolhidos.append(n)
+    descartadas = len(keywords) - len(escolhidas)
+    if descartadas:
+        log(f"dedupe: {descartadas} keyword(s) repetiam assunto já coberto")
+    return escolhidas
+
+
+# ── 4. montar as 21 pautas ───────────────────────────────────────────────
 
 def montar_pautas(keywords: list[dict], inicio: date) -> list[dict]:
     slots = [("09:00", "12:00"), ("13:00", "16:00"), ("18:00", "21:00")]
@@ -280,6 +357,12 @@ def main() -> int:
     keywords = pesquisar_keywords(seeds)
     if not keywords:
         log("sem keywords — abortando para não propor pauta sem dado.")
+        return 1
+
+    keywords = descartar_repetidas(keywords, titulos_publicados())
+    if len(keywords) < POSTS_POR_DIA:
+        log(f"só {len(keywords)} keyword(s) inédita(s) — o blog já cobre o resto. "
+            "Amplie as seeds antes de rodar de novo.")
         return 1
 
     pautas = montar_pautas(keywords, inicio)

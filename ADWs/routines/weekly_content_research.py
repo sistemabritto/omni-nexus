@@ -540,8 +540,24 @@ def abrir_aprovacao(pautas: list[dict], noticias: str, arquivo: Path, dry_run: b
     try:
         from sdk_client import evo
 
+        # Um ticket por ciclo, não por execução. Rodar o research duas vezes na
+        # mesma semana — o que acontece a cada ajuste de seed ou de filtro —
+        # empilhava um ticket idêntico a cada vez: sete deles apareceram num
+        # único dia de testes. O inbox do agente é o que dispara o heartbeat,
+        # então lixo ali vira trabalho repetido de verdade.
+        titulo = f"[RESEARCH] Aprovar pautas do ciclo {ciclo}" if ciclo else \
+                 f"[RESEARCH] Aprovar {len(pautas)} pautas da semana"
+        abertos = (evo.get("/api/tickets", {"assignee_agent": "pixel-social-media",
+                                            "status": "open"}) or {})
+        existente = next((t for t in (abertos.get("tickets") or abertos if isinstance(abertos, list) else [])
+                          if isinstance(t, dict) and t.get("title") == titulo), None)
+        if existente:
+            evo.patch(f"/api/tickets/{existente['id']}", {"description": corpo})
+            log(f"ticket do ciclo já existia ({existente['id']}) — atualizado em vez de duplicado")
+            return
+
         t = evo.post("/api/tickets", {
-            "title": f"[RESEARCH] Aprovar {len(pautas)} pautas da semana",
+            "title": titulo,
             "description": corpo,
             "assignee_agent": "pixel-social-media",
             "priority": "high",

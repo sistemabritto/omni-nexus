@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user
 from models import db, Heartbeat, HeartbeatRun, HeartbeatTriggerEvent, has_permission, audit
 
@@ -60,6 +60,13 @@ def _mirror_to_db(hb_config):
         existing.goal_id = hb_config.goal_id
         existing.required_secrets_list = hb_config.required_secrets
         existing.decision_prompt = hb_config.decision_prompt
+        # `handler` é o que faz um heartbeat in-process rodar. O runner lê do DB,
+        # não do YAML: sem esta linha o YAML fica correto, o banco fica sem
+        # handler, e o dispatcher morre com "no script for <id>" — que foi
+        # exatamente o que aconteceu ao criar confirmar-publicacoes pela API.
+        # Vale para a UI também: todo heartbeat in-process criado por ela
+        # nascia quebrado.
+        existing.handler = hb_config.handler
         # Note: enabled is NOT updated from YAML on edits — UI toggle is source of truth for enabled
     else:
         new_hb = Heartbeat(
@@ -72,6 +79,7 @@ def _mirror_to_db(hb_config):
             enabled=hb_config.enabled,
             goal_id=hb_config.goal_id,
             decision_prompt=hb_config.decision_prompt,
+            handler=hb_config.handler,
         )
         new_hb.wake_triggers_list = hb_config.wake_triggers
         new_hb.required_secrets_list = hb_config.required_secrets
@@ -166,7 +174,11 @@ def create_heartbeat():
     try:
         hb_config = HeartbeatConfig.model_validate(data)
     except ValidationError as exc:
-        return jsonify({"error": "Validation failed", "details": exc.errors()}), 422
+        # `exc.errors()` carrega a exceção original em `ctx`, que não é
+        # serializável — jsonify estourava e o 422 virava um 500 opaco, sem
+        # dizer qual campo estava errado. Modo JSON resolve na origem.
+        return jsonify({"error": "Validation failed",
+                        "details": exc.errors(include_context=False, include_url=False)}), 422
 
     # Write to YAML atomically
     try:
@@ -249,8 +261,16 @@ def update_heartbeat(heartbeat_id):
         # Non-fatal: DB is the live state, YAML is best-effort
         print(f"[heartbeats] WARNING: YAML sync failed after PATCH: {exc}", flush=True)
 
-    # If dispatcher is running, re-register interval jobs to pick up changes
-    if "interval_seconds" in data or "enabled" in data or "wake_triggers" in data:
+    # If dispatcher is running, re-register interval jobs to pick up changes.
+    #
+    # Nunca sob TESTING: register_interval_jobs lê o banco REAL do workspace
+    # (não o in-memory do teste) e dispara catch-up de tudo que estiver
+    # vencido. Um PATCH num teste chegou a acordar o nexus-orchestrator, que
+    # invocou o hawk-debugger via opencode de verdade — a suíte queimando
+    # token e mexendo em ticket de produção.
+    if (not current_app.config.get("TESTING")) and (
+        "interval_seconds" in data or "enabled" in data or "wake_triggers" in data
+    ):
         try:
             from heartbeat_dispatcher import register_interval_jobs
             register_interval_jobs()

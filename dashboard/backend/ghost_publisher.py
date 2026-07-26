@@ -275,7 +275,11 @@ def subir_imagem(caminho: Path) -> tuple[str, str]:
         with caminho.open("rb") as fh:
             r = requests.post(
                 f"{url}/ghost/api/admin/images/upload/",
-                headers={"Authorization": f"Ghost {ghost_jwt(key)}", "User-Agent": UA_NAVEGADOR},
+                # `_jwt`, não `ghost_jwt` — essa função nunca existiu, e como o
+                # NameError caía no except genérico abaixo, o upload da capa
+                # falhava com "name 'ghost_jwt' is not defined" travestido de
+                # erro de rede. Nenhuma capa gerada pela esteira jamais subiu.
+                headers={"Authorization": f"Ghost {_jwt(key)}", "User-Agent": UA_NAVEGADOR},
                 files={"file": (caminho.name, fh, "image/png")},
                 data={"purpose": "image"}, timeout=180)
     except Exception as exc:  # noqa: BLE001

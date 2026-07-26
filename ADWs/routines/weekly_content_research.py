@@ -488,6 +488,23 @@ def main() -> int:
         return 1
 
     keywords = descartar_repetidas(keywords, titulos_publicados())
+
+    # O regex separa lixo óbvio, mas não julga público: deixava passar
+    # "mercado pago api" (negócio de outro) e "como postar story pelo pc"
+    # (consumidor final). Quem julga isso precisa conhecer o que a Sistema
+    # Britto vende e para quem — uma chamada por semana sobre ~100 candidatas.
+    try:
+        from avaliador_de_pauta import avaliar
+
+        antes = len(keywords)
+        keywords = avaliar(keywords)
+        log(f"relevância: {antes} candidatas -> {len(keywords)} alinhadas ao ICP")
+        for k in keywords[:5]:
+            if "nota" in k:
+                log(f"   {k['nota']:.0f}/10 {k['kw'][:44]} — {k.get('porque', '')}")
+    except Exception as exc:  # noqa: BLE001 — o filtro por regex já rodou
+        log(f"avaliador indisponível ({exc}); seguindo com o filtro por regex")
+
     if len(keywords) < POSTS_POR_DIA:
         log(f"só {len(keywords)} keyword(s) inédita(s) — o blog já cobre o resto. "
             "Amplie as seeds antes de rodar de novo.")

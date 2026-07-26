@@ -148,12 +148,32 @@ RUIDO = re.compile(
     r"(vaga|salario|salário|concurso|prf|aeroporto|sinônim|sinonim|o que faz um|estágio|estagio|"
     r"conteudo 18|adulto|enem|academic|acadêmic|escolar|estudar|curricul|slides|powerpoint|"
     r"apresenta|redação|monografia|tcc|baixar|download|crack|apk|\bgb\b|clonar|espionar|hack|"
-    r"bom dia|boa noite|boa tarde|mensagem de|frases|figurinha|papel de parede|png|emoji)", re.I)
+    r"bom dia|boa noite|boa tarde|mensagem de|frases|figurinha|papel de parede|png|emoji|"
+    # Ampliado em 2026-07-26 depois que a primeira fila de verdade veio com
+    # "japinha do cv instagram" (14.800/mês), "analista de sistemas jr",
+    # "caixa ferramenta plastica" e "salvador digital cadastro único". Volume
+    # alto não é sinal de pauta boa quando a busca vem de outro público.
+    r"curso|faculdade|graduação|graduacao|técnico em|tecnico em|\bead\b|senai|senac|"
+    r"analista|\bjr\b|júnior|junior|pleno|sênior|senior|cbo|piso salarial|quanto ganha|"
+    r"cad ?cam|autocad|solidworks|torno|usinagem|caixa|plastic|maleta|"
+    r"cadastro único|cadastro unico|\bsus\b|prefeitura|inss|detran|cnh|"
+    r"letra|musica|música|novela|jogo|futebol|receita|significado|sonho|signo)", re.I)
 COMPRA = re.compile(
     r"(automat|automaç|chatbot|\bbot\b|agendar|agendamento|disparo|para empresas|empresarial|"
     r"business|crm|funil|lead|prospec|tráfego|trafego|conversão|conversao|ferramenta|plataforma|"
     r"software|sistema|como (criar|fazer|automatizar|usar|integrar)|api|integra|agente de ia|"
     r"marketing digital|gestão de redes|postar)", re.I)
+
+# A trava que faltava. `COMPRA` casa palavras genéricas — "sistema",
+# "ferramenta", "agendamento" — que aparecem em buscas de curso técnico,
+# serviço público e caixa de plástico. Exigir também um termo do NOSSO domínio
+# é o que separa "api whatsapp business" de "sistemas cad cam".
+DOMINIO = re.compile(
+    r"(whatsapp|instagram|tiktok|youtube|linkedin|facebook|threads|"
+    r"\bia\b|inteligência artificial|inteligencia artificial|\bgpt\b|chatbot|agente|"
+    r"marketing|vendas|lead|funil|tráfego|trafego|conversão|conversao|"
+    r"\bcrm\b|automaç|automat|postar|post\b|conteúdo|conteudo|seguidor|engajamento|"
+    r"atendimento|disparo|mensagem em massa|api\b|integraç|n8n|zapier|webhook)", re.I)
 
 
 # Seeds por funil. Cinco seeds vizinhas produziam 35 keywords que, depois do
@@ -219,7 +239,28 @@ def pesquisar_keywords(seeds: list[str]) -> list[dict]:
     precisa de nove para dar diversidade suficiente ao dedupe.
     """
     linhas: dict[str, dict] = {}
-    lotes = [seeds[i:i + SEEDS_POR_CHAMADA] for i in range(0, len(seeds), SEEDS_POR_CHAMADA)]
+
+    # Cache primeiro. Cada seed já consultada nos últimos 30 dias é uma
+    # chamada paga ao DataForSEO que não precisa acontecer de novo — o volume
+    # que ele devolve é média de 12 meses e não muda de uma semana para outra.
+    novas = list(seeds)
+    try:
+        from sdk_client import evo
+
+        resposta = evo.post("/api/pautas/keywords", {"seeds": seeds}) or {}
+        for kw in resposta.get("linhas", []):
+            linhas.setdefault(kw["kw"], kw)
+        novas = resposta.get("faltando", seeds)
+        if resposta.get("em_cache"):
+            log(f"cache: {resposta['em_cache']}/{len(seeds)} seeds reaproveitadas "
+                f"({len(linhas)} keywords sem custo)")
+    except Exception as exc:  # noqa: BLE001 — sem cache o pior caso é pagar de novo
+        log(f"cache de keywords indisponível ({exc}); consultando tudo")
+
+    if not novas:
+        log("todas as seeds vieram do cache — nenhuma chamada à API")
+
+    lotes = [novas[i:i + SEEDS_POR_CHAMADA] for i in range(0, len(novas), SEEDS_POR_CHAMADA)]
     for n, lote in enumerate(lotes, 1):
         payload = {"jsonrpc": "2.0", "id": n, "method": "tools/call", "params": {
             "name": "research_keywords",
@@ -237,16 +278,33 @@ def pesquisar_keywords(seeds: list[str]) -> list[dict]:
             conteudo = str(d.get("result", {}).get("content", ""))[:160]
             log(f"lote {n}/{len(lotes)} sem resultados: {conteudo}")
             continue
-        for res in grupos:
+        # Guardado por seed, não em bloco: assim uma rodada futura que reusa só
+        # três das nove seeds aproveita exatamente essas três.
+        para_guardar: dict[str, list[dict]] = {}
+        for i, res in enumerate(grupos):
+            seed = res.get("seed") or res.get("keyword") or (lote[i] if i < len(lote) else "")
+            desta_seed = []
             for row in res.get("rows", []):
                 kw = (row.get("keyword") or "").strip()
-                if not kw or kw in linhas:
+                if not kw:
                     continue
-                linhas[kw] = {"kw": kw, "vol": row.get("searchVolume") or 0,
-                              "kd": row.get("keywordDifficulty"), "cpc": row.get("cpc")}
+                dado = {"kw": kw, "vol": row.get("searchVolume") or 0,
+                        "kd": row.get("keywordDifficulty"), "cpc": row.get("cpc")}
+                desta_seed.append(dado)
+                linhas.setdefault(kw, dado)
+            if seed and desta_seed:
+                para_guardar[seed] = desta_seed
+        if para_guardar:
+            try:
+                from sdk_client import evo
+
+                evo.post("/api/pautas/keywords", {"guardar": para_guardar})
+            except Exception as exc:  # noqa: BLE001 — as keywords já estão em mãos
+                log(f"não consegui cachear o lote {n} ({exc}); a próxima rodada repagará")
     cand = [r for r in linhas.values()
             if 40 <= r["vol"] <= 20000 and len(r["kw"].split()) >= 3
-            and COMPRA.search(r["kw"]) and not RUIDO.search(r["kw"])]
+            and COMPRA.search(r["kw"]) and DOMINIO.search(r["kw"])
+            and not RUIDO.search(r["kw"])]
     # ordena por retorno esperado: volume alto e dificuldade baixa primeiro
     cand.sort(key=lambda r: (-(r["vol"] / (1 + (r["kd"] or 0))), -r["vol"]))
     log(f"keywords: {len(linhas)} brutas -> {len(cand)} comerciais de cauda longa")

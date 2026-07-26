@@ -63,7 +63,72 @@ CREATE TABLE IF NOT EXISTS pautas (
 );
 CREATE INDEX IF NOT EXISTS ix_pautas_status_data ON pautas(status, data_alvo);
 CREATE INDEX IF NOT EXISTS ix_pautas_ciclo ON pautas(ciclo);
+
+CREATE TABLE IF NOT EXISTS keywords_cache (
+    seed          TEXT NOT NULL,
+    locale        TEXT NOT NULL DEFAULT '2076/pt',
+    linhas        TEXT NOT NULL,
+    consultado_em TEXT NOT NULL,
+    PRIMARY KEY (seed, locale)
+);
 """
+
+# Volume de busca do DataForSEO é média dos últimos 12 meses — não muda de uma
+# semana para a outra. Reconsultar a mesma seed a cada rodada é dinheiro
+# queimado para receber o mesmo número.
+DIAS_DE_CACHE = 30
+
+
+def keywords_em_cache(seeds: list[str], *, locale: str = "2076/pt",
+                      conn: sqlite3.Connection | None = None) -> tuple[dict, list[str]]:
+    """Devolve (linhas já conhecidas, seeds que precisam ir à API).
+
+    O research consulta isto antes de falar com o DataForSEO. Cada seed em
+    cache é uma chamada paga que não acontece.
+    """
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        limite = (datetime.now(timezone.utc) - timedelta(days=DIAS_DE_CACHE)).isoformat()
+        conhecidas: dict[str, dict] = {}
+        faltando: list[str] = []
+        for seed in seeds:
+            linha = conn.execute(
+                "SELECT linhas FROM keywords_cache WHERE seed=? AND locale=? AND consultado_em > ?",
+                (seed, locale, limite),
+            ).fetchone()
+            if not linha:
+                faltando.append(seed)
+                continue
+            try:
+                for kw in json.loads(linha["linhas"]):
+                    conhecidas.setdefault(kw["kw"], kw)
+            except (ValueError, TypeError, KeyError):
+                faltando.append(seed)  # cache corrompido vale menos que nada
+        return conhecidas, faltando
+    finally:
+        if proprio:
+            conn.close()
+
+
+def guardar_keywords(seed: str, linhas: list[dict], *, locale: str = "2076/pt",
+                     conn: sqlite3.Connection | None = None) -> None:
+    """Guarda o resultado de uma seed para as próximas rodadas."""
+    if not linhas:
+        return  # não cachear vazio: mascararia uma falha como resposta legítima
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        conn.execute(
+            "INSERT INTO keywords_cache (seed, locale, linhas, consultado_em) VALUES (?,?,?,?)"
+            " ON CONFLICT(seed, locale) DO UPDATE SET"
+            "  linhas=excluded.linhas, consultado_em=excluded.consultado_em",
+            (seed, locale, json.dumps(linhas, ensure_ascii=False), _agora()),
+        )
+        conn.commit()
+    finally:
+        if proprio:
+            conn.close()
 
 
 def conectar() -> sqlite3.Connection:

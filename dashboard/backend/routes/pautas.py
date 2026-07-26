@@ -116,6 +116,34 @@ def aprovar_ciclo(ciclo: str):
     return jsonify({"ciclo": ciclo, "aprovadas": n})
 
 
+@bp.route("/api/pautas/keywords", methods=["POST"])
+def keywords_cache():
+    """Consulta o cache de keywords e diz quais seeds ainda precisam da API.
+
+    Existe para o research não pagar duas vezes pela mesma pergunta: volume de
+    busca do DataForSEO é média de 12 meses e não muda de uma semana para a
+    outra. `guardar` no corpo grava o resultado de uma seed recém-consultada.
+    """
+    denied = _require("manage")
+    if denied:
+        return denied
+    dados = request.get_json(silent=True) or {}
+
+    guardar = dados.get("guardar")
+    if isinstance(guardar, dict):
+        for seed, linhas in guardar.items():
+            if isinstance(linhas, list):
+                pauta_fila.guardar_keywords(seed, linhas)
+        return jsonify({"guardadas": len(guardar)})
+
+    seeds = dados.get("seeds")
+    if not isinstance(seeds, list) or not seeds:
+        return jsonify({"error": "informe seeds (lista) ou guardar (objeto)"}), 400
+    conhecidas, faltando = pauta_fila.keywords_em_cache([s for s in seeds if isinstance(s, str)])
+    return jsonify({"linhas": list(conhecidas.values()), "faltando": faltando,
+                    "em_cache": len(seeds) - len(faltando)})
+
+
 @bp.route("/api/pautas/vencer", methods=["POST"])
 def vencer_pautas():
     """Descarta o que passou da data — chamado pela rotina diária."""

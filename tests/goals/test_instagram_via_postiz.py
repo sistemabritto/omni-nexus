@@ -296,13 +296,17 @@ def test_suporte_a_instagram_continua_existindo_no_gate():
     assert ho._publish_settings_for("instagram", "t", provider="instagram-standalone")
 
 
-def test_threads_nao_leva_link_no_texto(post_publicado, api_falsa):
-    """Post recompensa: o link sai do texto e vira comentário com palavra-chave.
-    A rede pune link no corpo, e cada comentário é um lead identificado."""
-    r = bridge.distribuir("p1", dry_run=True)
-    texto = r["redes"]["threads"]["preview"]
-    assert "http" not in texto, f"link vazou no Threads: {texto!r}"
-    assert "coment" in texto.lower(), "faltou o CTA de comentário"
+def test_threads_leva_o_link_no_texto(post_publicado, api_falsa):
+    """Invertido em 2026-07-26, por decisão do Felipe.
+
+    O formato era "post recompensa" — sem link, fechando com pedido de
+    comentário — para não perder alcance. O primeiro post real estourou os 500
+    caracteres, o corte comeu o fecho, e ele foi ao ar terminando em
+    "Resultado?": sem link e sem chamada. Post que não leva a lugar nenhum não
+    preserva alcance, desperdiça.
+    """
+    texto = bridge.distribuir("p1", dry_run=True)["redes"]["threads"]["preview"]
+    assert "http" in texto, f"Threads foi ao ar sem link: {texto!r}"
 
 
 def test_x_continua_levando_o_link(post_publicado, api_falsa):

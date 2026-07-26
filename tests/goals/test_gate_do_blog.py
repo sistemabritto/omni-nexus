@@ -338,3 +338,105 @@ def test_artigo_sem_corpo_nao_inventa_abertura():
         "feature_image": "https://blog.local/c.png", "html": "", "plaintext": "",
     })
     assert "começa assim" not in resumo
+
+
+# ── um gate por artigo, não um por execução ──────────────────────────────
+# 2026-07-26: o pipeline foi reprocessado três vezes corrigindo defeitos e
+# abriu três gates do MESMO artigo. O Felipe recebeu as três aprovações e teve
+# de rejeitar uma a uma. Notificação repetida não é só ruído — ensina a ignorar
+# o canal, e é esse canal que sustenta o human-in-the-loop.
+
+def test_nao_abre_gate_se_ja_existe_um_pendente(monkeypatch):
+    import ghost_social_bridge as bridge
+    import sdk_client
+
+    post = {"id": "post-1", "title": "Artigo", "status": "draft",
+            "url": "https://blog.local/p/x/", "html": "<p>corpo</p>", "plaintext": "corpo"}
+    monkeypatch.setattr("ghost_publisher.buscar", lambda _id: post)
+
+    criados = []
+
+    class _Evo:
+        def get(self, path, params=None):
+            return {"approvals": [
+                {"id": 27, "publish": {"publish_ref": "post-1", "target": "blog"}},
+            ]}
+
+        def post(self, path, json=None):
+            criados.append(path)
+            return {"id": "novo"}
+
+    monkeypatch.setattr(sdk_client, "evo", _Evo())
+    r = bridge.aprovar_artigo("post-1")
+    assert r["ok"] is True
+    assert "já existe gate pendente" in r["ignorado"]
+    assert r["aprovacao"] == 27
+    assert criados == [], "não podia ter criado ticket nem aprovação"
+
+
+def test_gate_de_outro_artigo_nao_bloqueia(monkeypatch):
+    """Só o MESMO artigo bloqueia — senão um gate pendente travaria a esteira
+    inteira e a semana pararia no primeiro post."""
+    import ghost_social_bridge as bridge
+    import sdk_client
+
+    post = {"id": "post-2", "title": "Outro", "status": "draft",
+            "url": "https://blog.local/p/y/", "html": "<p>c</p>", "plaintext": "c"}
+    monkeypatch.setattr("ghost_publisher.buscar", lambda _id: post)
+
+    class _Evo:
+        def get(self, path, params=None):
+            return {"approvals": [{"id": 27, "publish": {"publish_ref": "post-1"}}]}
+
+        def post(self, path, json=None):
+            return {"id": "tkt-1"}
+
+    monkeypatch.setattr(sdk_client, "evo", _Evo())
+    r = bridge.aprovar_artigo("post-2")
+    assert "ignorado" not in r
+
+
+def test_api_indisponivel_nao_trava_a_publicacao(monkeypatch):
+    """Sem a checagem, o pior caso é o gate duplicado — melhor que não publicar."""
+    import ghost_social_bridge as bridge
+    import sdk_client
+
+    post = {"id": "post-3", "title": "T", "status": "draft",
+            "url": "https://blog.local/p/z/", "html": "<p>c</p>", "plaintext": "c"}
+    monkeypatch.setattr("ghost_publisher.buscar", lambda _id: post)
+
+    class _Evo:
+        def get(self, path, params=None):
+            raise RuntimeError("api fora do ar")
+
+        def post(self, path, json=None):
+            return {"id": "tkt-1"}
+
+    monkeypatch.setattr(sdk_client, "evo", _Evo())
+    assert "ignorado" not in bridge.aprovar_artigo("post-3")
+
+
+def test_dry_run_nao_consulta_a_api(monkeypatch):
+    import ghost_social_bridge as bridge
+    import sdk_client
+
+    post = {"id": "post-4", "title": "T", "status": "draft",
+            "url": "https://blog.local/p/w/", "html": "<p>c</p>", "plaintext": "c"}
+    monkeypatch.setattr("ghost_publisher.buscar", lambda _id: post)
+
+    class _Evo:
+        def get(self, path, params=None):
+            raise AssertionError("dry_run não deveria consultar a API")
+
+    monkeypatch.setattr(sdk_client, "evo", _Evo())
+    assert bridge.aprovar_artigo("post-4", dry_run=True)["dry_run"] is True
+
+
+def test_preview_expoe_o_publish_ref():
+    """É o campo que permite descobrir o gate duplicado."""
+    from routes.approvals import _render_publish_preview
+
+    p = _render_publish_preview("publish", {"outcome": {
+        "publish_target": "blog", "publish_ref": "post-1",
+        "publish_content": "resumo", "publish_media": []}})
+    assert p["publish_ref"] == "post-1"

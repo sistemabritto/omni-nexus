@@ -1,0 +1,59 @@
+# crawl4ai — camada de crawling para o research de conteúdo.
+#
+# Cole no Portainer em Stacks → Add stack → Web editor, com o nome `crawl4ai`.
+# Depois de criada, a stack fica editável por lá (era o motivo de não usar
+# `docker service create`: serviço solto não aparece como stack).
+#
+# O QUE ELE FAZ AQUI
+# Transforma qualquer página em markdown limpo para LLM. No fluxo de conteúdo
+# serve para ler concorrente e fonte citável sem depender do x.ai adivinhar —
+# o research passa a citar o que leu, não o que lembrou.
+#
+# SOBRE O BIND (a parte que não é óbvia)
+# A imagem sobe em 127.0.0.1 de propósito e só abre para todas as interfaces
+# quando existe credencial. É o próprio entrypoint que decide:
+#
+#     if [[ -n "${CRAWL4AI_API_TOKEN:-}" ... ]]; then
+#         GUNICORN_BIND="${GUNICORN_BIND:-[::]:${PORT}}"
+#
+# Sem o token, o serviço sobe, responde 200 no localhost dele, e ninguém mais
+# na rede alcança — nem o Traefik, que também não fala com loopback alheio.
+# Não é bug: é a imagem recusando ficar aberta sem autenticação.
+#
+# TROQUE O TOKEN ABAIXO antes de aplicar. Qualquer string longa serve:
+#     openssl rand -hex 24
+
+version: "3.8"
+
+services:
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    environment:
+      # Presente => bind em todas as interfaces. Ausente => só loopback.
+      CRAWL4AI_API_TOKEN: TROQUE_ESTE_TOKEN
+      INSTALL_TYPE: default
+    networks:
+      - network_public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      resources:
+        limits:
+          # Chromium headless é o que consome; 3G segura bem uma réplica.
+          memory: 3G
+        reservations:
+          memory: 512M
+      labels:
+        traefik.enable: "true"
+        traefik.docker.network: network_public
+        traefik.http.routers.crawl4ai.rule: Host(`crawl.workflowapi.com.br`)
+        traefik.http.routers.crawl4ai.entrypoints: websecure
+        traefik.http.routers.crawl4ai.tls: "true"
+        traefik.http.routers.crawl4ai.tls.certresolver: letsencryptresolver
+        traefik.http.routers.crawl4ai.service: crawl4ai
+        traefik.http.services.crawl4ai.loadbalancer.server.port: "11235"
+
+networks:
+  network_public:
+    external: true

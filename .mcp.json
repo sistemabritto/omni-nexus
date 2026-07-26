@@ -4,6 +4,13 @@
       "type": "http",
       "url": "http://openseo:3001/mcp"
     },
+    "crawl4ai": {
+      "type": "sse",
+      "url": "http://crawl4ai_crawl4ai:11235/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${CRAWL4AI_API_TOKEN}"
+      }
+    },
     "linear-server": {
       "type": "http",
       "url": "https://mcp.linear.app/mcp"

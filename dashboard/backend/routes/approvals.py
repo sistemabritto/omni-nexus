@@ -652,6 +652,11 @@ def _render_publish_preview(gate_type: str, payload: dict) -> dict | None:
     fonte = outcome.get("source_url")
     return {
         "target": outcome.get("publish_target"),
+        # Identifica o artefato que este gate publica (id do post no Ghost).
+        # É o que permite a quem for abrir um gate novo descobrir que já existe
+        # um pendente para o mesmo artigo — sem isto, reprocessar a mesma pauta
+        # empilha aprovações e o Felipe recebe a mesma coisa três vezes.
+        "publish_ref": outcome.get("publish_ref"),
         "publish_at": outcome.get("publish_at"),
         "content": outcome.get("publish_content"),
         "media": media,

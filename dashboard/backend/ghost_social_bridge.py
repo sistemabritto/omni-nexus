@@ -662,6 +662,28 @@ def aprovar_artigo(post_id: str, *, publicar_em: str | None = None,
     if post.get("status") == "published":
         return {"ok": True, "ignorado": "artigo já está publicado"}
 
+    # Um gate por artigo, não um por execução.
+    #
+    # Reprocessar a mesma pauta — o que acontece a cada correção, e vai
+    # acontecer sozinho quando a rotina diária reprocessar uma pauta que
+    # falhou — abria um gate novo e deixava o anterior pendurado. Em 26/07 o
+    # Felipe recebeu três aprovações do MESMO artigo e teve de rejeitar as
+    # três. Notificação repetida não é só ruído: ensina a ignorar o canal, e
+    # é justamente esse canal que sustenta o human-in-the-loop.
+    if not dry_run:
+        try:
+            from sdk_client import evo
+
+            pendentes = (evo.get("/api/approvals", {"status": "pending"}) or {})
+            for a in (pendentes.get("approvals") or []):
+                if ((a.get("publish") or {}).get("publish_ref")) == post.get("id"):
+                    return {"ok": True, "ignorado": f"já existe gate pendente (#{a.get('id')}) "
+                                                    "para este artigo",
+                            "aprovacao": a.get("id")}
+        except Exception as exc:  # noqa: BLE001 — sem a checagem, o pior caso é o de hoje
+            log_aviso = f"não consegui checar gates pendentes ({exc})"
+            print(f"[ghost_social_bridge] {log_aviso}", flush=True)
+
     resumo = resumo_para_aprovacao(post)
     capa = (post.get("feature_image") or "").strip()
     outcome = {

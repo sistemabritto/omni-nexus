@@ -259,3 +259,76 @@ def test_limite_da_listagem_e_sanitizado(banco):
     banco.gravar_ciclo([_pauta(i + 1, date(2026, 7, 27)) for i in range(5)])
     assert len(banco.listar(limite=0)) == 1      # mínimo 1, nunca zero ou negativo
     assert len(banco.listar(limite=99999)) == 5  # teto não estoura a consulta
+
+
+# ── cache de keywords: não pagar duas vezes pela mesma pergunta ──────────
+# Pedido do Felipe: cada chamada ao DataForSEO custa, e uma rodada de research
+# consome nove seeds. Volume de busca é média de 12 meses — reconsultar a
+# mesma seed toda semana é dinheiro queimado para receber o mesmo número.
+
+def _linhas(*termos: str) -> list[dict]:
+    return [{"kw": t, "vol": 500, "kd": 20, "cpc": 1.5} for t in termos]
+
+
+def test_seed_nova_precisa_ir_a_api(banco):
+    conhecidas, faltando = banco.keywords_em_cache(["chatbot whatsapp"])
+    assert conhecidas == {}
+    assert faltando == ["chatbot whatsapp"]
+
+
+def test_seed_ja_consultada_volta_do_cache(banco):
+    banco.guardar_keywords("chatbot whatsapp", _linhas("chatbot whatsapp para empresas"))
+    conhecidas, faltando = banco.keywords_em_cache(["chatbot whatsapp"])
+    assert faltando == []
+    assert "chatbot whatsapp para empresas" in conhecidas
+
+
+def test_so_as_seeds_faltantes_sao_cobradas(banco):
+    """Uma rodada que reusa três de nove seeds paga por seis, não por nove."""
+    banco.guardar_keywords("seed-a", _linhas("kw a"))
+    banco.guardar_keywords("seed-b", _linhas("kw b"))
+    conhecidas, faltando = banco.keywords_em_cache(["seed-a", "seed-b", "seed-c"])
+    assert faltando == ["seed-c"]
+    assert set(conhecidas) == {"kw a", "kw b"}
+
+
+def test_cache_vencido_e_reconsultado(banco, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    banco.guardar_keywords("seed-velha", _linhas("kw velha"))
+    conn = banco.conectar()
+    antigo = (datetime.now(timezone.utc) - timedelta(days=banco.DIAS_DE_CACHE + 1)).isoformat()
+    conn.execute("UPDATE keywords_cache SET consultado_em=?", (antigo,))
+    conn.commit()
+    conn.close()
+
+    _, faltando = banco.keywords_em_cache(["seed-velha"])
+    assert faltando == ["seed-velha"]
+
+
+def test_reconsultar_atualiza_em_vez_de_duplicar(banco):
+    banco.guardar_keywords("seed", _linhas("antiga"))
+    banco.guardar_keywords("seed", _linhas("nova"))
+    conhecidas, _ = banco.keywords_em_cache(["seed"])
+    assert set(conhecidas) == {"nova"}
+
+
+def test_resultado_vazio_nao_e_cacheado(banco):
+    """Cachear vazio mascararia uma falha da API como resposta legítima —
+    e a seed ficaria 30 dias sem ser consultada de novo."""
+    banco.guardar_keywords("seed", [])
+    assert banco.keywords_em_cache(["seed"])[1] == ["seed"]
+
+
+def test_cache_corrompido_manda_reconsultar(banco):
+    banco.guardar_keywords("seed", _linhas("kw"))
+    conn = banco.conectar()
+    conn.execute("UPDATE keywords_cache SET linhas='{isso nao e json'")
+    conn.commit()
+    conn.close()
+    assert banco.keywords_em_cache(["seed"])[1] == ["seed"]
+
+
+def test_locales_diferentes_nao_se_misturam(banco):
+    banco.guardar_keywords("seed", _linhas("kw br"), locale="2076/pt")
+    assert banco.keywords_em_cache(["seed"], locale="2840/en")[1] == ["seed"]

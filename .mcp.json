@@ -11,6 +11,16 @@
         "Authorization": "Bearer ${CRAWL4AI_API_TOKEN}"
       }
     },
+    "reddit": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/adhikasp/mcp-reddit.git", "mcp-reddit"],
+      "env": {
+        "REDDIT_CLIENT_ID": "${REDDIT_CLIENT_ID}",
+        "REDDIT_CLIENT_SECRET": "${REDDIT_CLIENT_SECRET}",
+        "REDDIT_REFRESH_TOKEN": "${REDDIT_REFRESH_TOKEN}"
+      }
+    },
     "linear-server": {
       "type": "http",
       "url": "https://mcp.linear.app/mcp"

@@ -143,9 +143,11 @@ class _FakeClient:
     def is_safe_media_url(self, url):
         return url.startswith("https://")
 
-    def schedule_post(self, *, integration_id, content, media, settings, scheduled_at_utc):
+    def schedule_post(self, *, integration_id, content, media, settings, scheduled_at_utc,
+                      comments=None):
         self.scheduled_calls.append(
-            {"content": content, "settings": settings, "at": scheduled_at_utc, "media": media}
+            {"content": content, "settings": settings, "at": scheduled_at_utc, "media": media,
+             "comments": comments or []}
         )
         return [{"postId": "post-123"}]
 

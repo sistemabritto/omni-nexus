@@ -177,6 +177,14 @@ _OUTCOME_SCHEMA = {
         # moment instead of publishing immediately (Postiz is the official
         # scheduling intermediary). Absent/null => publish now, as before.
         "publish_at": {"type": ["string", "null"]},
+        # Comentários encadeados no próprio post, na ordem. É o que sustenta o
+        # "link no primeiro comentário" do LinkedIn: sem isto o texto promete um
+        # comentário que nunca existe. Não entra em `required` porque o modelo
+        # não precisa emitir — quem preenche é o bridge, que sabe o link.
+        "publish_comments": {
+            "type": ["array", "null"],
+            "items": {"type": "string"},
+        },
     },
     # publish_intent is required (not just present-with-default) so the
     # strict json_schema call is forced to emit it explicitly — the publish
@@ -990,6 +998,14 @@ def _run_publish_action(approval_row, conn) -> dict:
 
     settings = _publish_settings_for(target, content, provider=integration.get("identifier"))
 
+    # Comentários encadeados no post (LinkedIn: o link do artigo, que o texto
+    # aprovado promete estar "no primeiro comentário"). Validados como texto
+    # simples — nunca como URL de mídia, que segue outra allowlist.
+    comentarios_brutos = outcome.get("publish_comments") or []
+    if not isinstance(comentarios_brutos, list):
+        return {"published": False, "detail": "publish_comments deve ser uma lista de textos."}
+    comentarios = [c.strip() for c in comentarios_brutos if isinstance(c, str) and c.strip()]
+
     # Scheduling path — Postiz is the official scheduling intermediary. When the
     # approved outcome carries publish_at, we hand Postiz the date and let it
     # own the timer instead of publishing on the spot.
@@ -1001,7 +1017,7 @@ def _run_publish_action(approval_row, conn) -> dict:
         try:
             created = client.schedule_post(
                 integration_id=integration["id"], content=content, media=media, settings=settings,
-                scheduled_at_utc=scheduled_at.isoformat(),
+                scheduled_at_utc=scheduled_at.isoformat(), comments=comentarios,
             )
         except PostizError as exc:
             return {"published": False, "detail": f"Postiz recusou o agendamento: {exc}"}
@@ -1023,12 +1039,19 @@ def _run_publish_action(approval_row, conn) -> dict:
             "published": bool(confirmation.get("scheduled")),
             "scheduled_at": scheduled_at.isoformat(),
             "detail": confirmation.get("detail", ""),
+            # Vazio enquanto agendado — a plataforma só devolve o endereço do
+            # post depois de publicar. Quem fecha essa lacuna é o confirmador
+            # de agendamentos (scripts/confirmar_agendamentos.py).
+            "release_urls": confirmation.get("release_urls") or [],
+            "post_ids": confirmation.get("post_ids") or post_ids,
+            "media_count": len(media),
+            "comment_count": len(comentarios),
         }
 
     try:
         created = client.create_post_now(
             integration_id=integration["id"], content=content, media=media, settings=settings,
-            now_iso_utc=_now_iso(),
+            now_iso_utc=_now_iso(), comments=comentarios,
         )
     except PostizError as exc:
         return {"published": False, "detail": f"Postiz recusou a publicação: {exc}"}
@@ -1044,11 +1067,15 @@ def _run_publish_action(approval_row, conn) -> dict:
         (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
     )
     try:
-        return client.wait_for_publication(
+        resultado = client.wait_for_publication(
             post_ids, wait_seconds=wait_seconds, poll_seconds=poll_seconds, window=window
         )
     except PostizError as exc:
         return {"published": False, "detail": f"Falha ao confirmar publicação no Postiz: {exc}"}
+    resultado.setdefault("post_ids", post_ids)
+    resultado["media_count"] = len(media)
+    resultado["comment_count"] = len(comentarios)
+    return resultado
 
 
 def _last_review_reset_at(ticket_id: str, conn) -> str | None:

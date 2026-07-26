@@ -98,8 +98,14 @@ def _append_bot_memory(chat_id: str, text: str) -> None:
         pass
 
 
-def _send_telegram(text: str) -> bool:
-    """Send Telegram message. Returns True on success."""
+def _send_telegram(text: str, *, preview: bool = False) -> bool:
+    """Send Telegram message. Returns True on success.
+
+    `preview=True` libera o card do link. O padrão é desligado porque em alerta
+    de rotina o card só ocupa tela; na confirmação de publicação ele é o ponto:
+    é o card que mostra a imagem e o título com que o post saiu, sem precisar
+    abrir a rede.
+    """
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     cid = os.environ.get("TELEGRAM_CHAT_ID", "")
     if not token or not cid:
@@ -109,7 +115,7 @@ def _send_telegram(text: str) -> bool:
             "chat_id": cid,
             "text": text,
             "parse_mode": "HTML",
-            "disable_web_page_preview": True,
+            "disable_web_page_preview": not preview,
         }).encode()
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         req = urllib.request.Request(url, data=payload, method="POST")
@@ -246,6 +252,68 @@ def send_whatsapp(text: str, phone: str, instance: str | None = None) -> bool:
 def _esc(s: str) -> str:
     """Escape HTML special chars for Telegram parse_mode=HTML."""
     return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+_REDE_LABEL = {
+    "x": "X", "linkedin": "LinkedIn", "threads": "Threads", "instagram": "Instagram",
+    "blog": "blog", "youtube": "YouTube", "tiktok": "TikTok",
+    "discord": "Discord", "whatsapp": "WhatsApp",
+}
+
+
+def _hora_brt(iso: str) -> str:
+    """ISO-8601 UTC no fuso do Felipe, para ler sem converter de cabeça."""
+    from datetime import datetime, timezone
+
+    try:
+        quando = datetime.fromisoformat((iso or "").replace("Z", "+00:00"))
+    except ValueError:
+        return iso or ""
+    if quando.tzinfo is None:
+        quando = quando.replace(tzinfo=timezone.utc)
+    try:
+        from zoneinfo import ZoneInfo
+
+        quando = quando.astimezone(ZoneInfo(os.environ.get("WORKSPACE_TIMEZONE") or "America/Sao_Paulo"))
+    except Exception:  # noqa: BLE001 — sem tzdata, UTC ainda é melhor que nada
+        pass
+    return quando.strftime("%d/%m às %H:%M")
+
+
+def notify_publicacao(rede: str, titulo: str, *, links: list[str] | None = None,
+                      agendado_para: str = "", imagens: int = 0, comentarios: int = 0) -> bool:
+    """Confirma ao Felipe o que foi de fato ao ar, com o endereço do post.
+
+    Pedido dele, literal: "queria um feedback do link da publicação para ver e
+    garantir que foi com imagem e link certinho". Um "publicado com sucesso"
+    sem endereço não permite conferir nada — e foi exatamente assim que um post
+    saiu sem imagem por semanas sem ninguém notar. Quando o post está apenas
+    agendado, a plataforma ainda não tem endereço: aqui isso é dito com todas
+    as letras em vez de mandar um link vazio.
+    """
+    label = _REDE_LABEL.get(rede, rede or "?")
+    if agendado_para:
+        cabeca = f"🗓 <b>Agendado no {_esc(label)}</b> para {_esc(_hora_brt(agendado_para))}"
+    else:
+        cabeca = f"✅ <b>Publicado no {_esc(label)}</b>"
+
+    partes = [cabeca, _esc(titulo[:160])]
+    inventario = []
+    inventario.append(f"🖼 {imagens} imagem" + ("s" if imagens != 1 else "")
+                      if imagens else "⚠️ sem imagem")
+    if comentarios:
+        inventario.append(f"💬 {comentarios} comentário" + ("s" if comentarios != 1 else ""))
+    partes.append(" · ".join(inventario))
+
+    for link in links or []:
+        partes.append(f"🔗 {_esc(link)}")
+    if not links:
+        partes.append("<i>O endereço do post chega quando ele for ao ar.</i>"
+                      if agendado_para else
+                      "<i>A plataforma não devolveu o endereço do post.</i>")
+    # Com link, o card do Telegram já mostra a imagem e o título com que o post
+    # saiu — é a conferência visual sem sair da conversa.
+    return _send_telegram("\n".join(partes), preview=bool(links))
 
 
 def notify_agent_result(agent: str, ticket_title: str, new_status: str,

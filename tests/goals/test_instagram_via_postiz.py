@@ -168,16 +168,22 @@ def post_publicado(monkeypatch, postiz_permissivo):
     return post
 
 
-def test_as_redes_do_blog_nao_levam_a_capa(post_publicado):
-    """No X/LinkedIn/Threads a imagem competiria com o preview do link."""
+def test_as_redes_do_blog_levam_a_capa(post_publicado):
+    """Invertido em 2026-07-26. A regra anterior mandava imagem só para o
+    Instagram, com o argumento de que nas outras a capa competiria com o
+    preview do link. Como o Instagram saiu deste gatilho, na prática todo post
+    saía sem imagem nenhuma — e o argumento não vale para as três que ficaram:
+    no LinkedIn o link vai no primeiro comentário e no Threads não vai link,
+    então não existe preview para competir.
+    """
     r = bridge.distribuir("p1", dry_run=True)
     for rede in bridge.REDES:
-        assert r["redes"][rede]["midia"] == []
+        assert r["redes"][rede]["midia"] == [post_publicado["feature_image"]]
 
 
 def test_artigo_sem_capa_nao_atrapalha_a_distribuicao(monkeypatch, post_publicado):
-    """A capa só importava para o Instagram, que saiu da ponte — sem ela as
-    três redes do blog seguem normalmente."""
+    """Sem capa as três redes seguem normalmente — post sem imagem é pior que
+    post com imagem, mas melhor que post nenhum."""
     monkeypatch.setattr(bridge, "buscar_post", lambda _: {**post_publicado, "feature_image": ""})
     r = bridge.distribuir("p1", dry_run=True)
     assert set(r["redes"]) == set(bridge.REDES)

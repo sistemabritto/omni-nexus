@@ -301,6 +301,8 @@ def _apply_decision(approval_id: int, decision: str, decided_by: str, reason: st
                     )
                     _move_ticket(row.ticket_id, "resolved", row.agent or "system",
                                  f"Publicado: {result['detail']}", conn)
+                    _confirmar_no_telegram(payload_da_aprovacao(row), result)
+                    _registrar_para_confirmar(approval_id, row, result)
                 else:
                     # Approved but nothing was actually published (no automated
                     # integration for the target) — back to in_progress, not
@@ -653,12 +655,87 @@ def _render_publish_preview(gate_type: str, payload: dict) -> dict | None:
         "publish_at": outcome.get("publish_at"),
         "content": outcome.get("publish_content"),
         "media": media,
+        # Comentários que sairão encadeados no post. No LinkedIn é onde o link
+        # do artigo aparece — sem mostrar aqui, aprova-se um texto que promete
+        # "link no primeiro comentário" sem poder conferir se o link está certo.
+        "comments": [c for c in (outcome.get("publish_comments") or []) if isinstance(c, str)],
         # Link do artigo que originou o post. Em draft o Ghost devolve a URL de
         # preview (/p/<uuid>/), que abre sem login — dá para conferir o artigo
         # inteiro sem sair da aprovação. São artefatos diferentes: aqui se
         # valida o post da rede, lá o artigo.
         "source_url": fonte if isinstance(fonte, str) and fonte.startswith("http") else None,
     }
+
+
+def payload_da_aprovacao(row) -> dict:
+    """payload da linha como dict, tolerante a JSON quebrado."""
+    try:
+        return json.loads(getattr(row, "payload", None) or "{}")
+    except (ValueError, TypeError):
+        return {}
+
+
+def _confirmar_no_telegram(payload: dict, resultado: dict) -> None:
+    """Avisa o que foi ao ar, com o endereço do post quando já existe.
+
+    Best-effort de propósito: a publicação já aconteceu quando isto roda, e
+    falhar em avisar não pode desfazer nem mascarar o efeito real. O erro vai
+    para o log; a aprovação segue publicada.
+    """
+    outcome = payload.get("outcome") or {}
+    # O Ghost devolve `url`; o Postiz devolve `release_urls`. São dois formatos
+    # para a mesma pergunta — onde é que isso foi parar.
+    links = list(resultado.get("release_urls") or [])
+    if not links and isinstance(resultado.get("url"), str):
+        links = [resultado["url"]]
+    # No blog "agendado" vem como status do Ghost, não como scheduled_at.
+    agendado = resultado.get("scheduled_at") or ""
+    if not agendado and resultado.get("status") == "scheduled":
+        agendado = outcome.get("publish_at") or ""
+    try:
+        from notifications import notify_publicacao
+
+        notify_publicacao(
+            outcome.get("publish_target") or "",
+            payload.get("title") or outcome.get("result") or "",
+            links=links,
+            agendado_para=agendado,
+            # O Postiz conta o que realmente subiu; o Ghost não devolve contagem,
+            # então cai no que o outcome aprovado declarava.
+            imagens=resultado.get("media_count",
+                                  len(outcome.get("publish_media") or [])),
+            comentarios=resultado.get("comment_count",
+                                      len(outcome.get("publish_comments") or [])),
+        )
+    except Exception:  # noqa: BLE001 — avisar é secundário ao efeito já produzido
+        logging.getLogger(__name__).exception("falha ao confirmar publicação no Telegram")
+
+
+def _registrar_para_confirmar(approval_id: int, row, resultado: dict) -> None:
+    """Enfileira o agendamento para o confirmador buscar o link quando publicar.
+
+    Só faz sentido para post agendado sem endereço ainda; publicação imediata
+    já saiu com link na notificação acima. Ver `publicacoes.tick`.
+    """
+    if not resultado.get("scheduled_at") or resultado.get("release_urls"):
+        return
+    payload = payload_da_aprovacao(row)
+    outcome = payload.get("outcome") or {}
+    try:
+        from publicacoes import registrar
+
+        registrar(
+            approval_id,
+            ticket_id=row.ticket_id,
+            rede=outcome.get("publish_target") or "",
+            titulo=payload.get("title") or "",
+            post_ids=[p for p in (resultado.get("post_ids") or []) if isinstance(p, str)],
+            agendado_para=resultado.get("scheduled_at") or "",
+            imagens=resultado.get("media_count") or 0,
+            comentarios=resultado.get("comment_count") or 0,
+        )
+    except Exception:  # noqa: BLE001 — o agendamento em si já está feito
+        logging.getLogger(__name__).exception("falha ao registrar publicação para confirmação")
 
 
 def _approval_to_dict(row) -> dict:

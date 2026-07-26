@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
-import { CheckCircle2, XCircle, Clock, RefreshCw, ExternalLink, PencilLine } from 'lucide-react'
+import {
+  CheckCircle2, XCircle, Clock, RefreshCw, ExternalLink, PencilLine, CornerDownRight,
+} from 'lucide-react'
 import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
 
@@ -10,6 +12,7 @@ interface PublishPreview {
   publish_at: string | null
   content: string | null
   media: string[]
+  comments: string[]
   source_url: string | null
 }
 
@@ -181,6 +184,20 @@ function PublishPreview({ p }: { p: PublishPreview }) {
       <pre className="px-3 py-2 text-sm text-white/80 whitespace-pre-wrap [overflow-wrap:anywhere] font-sans max-h-64 overflow-y-auto">
         {texto || <span className="text-red-400">conteúdo vazio — nada seria publicado</span>}
       </pre>
+
+      {/* O texto do LinkedIn fecha dizendo que o link está no primeiro
+          comentário. Mostrar o comentário aqui é o que permite conferir se a
+          promessa do post tem o link certo por trás dela. */}
+      {(p.comments ?? []).length > 0 && (
+        <div className="border-t border-white/10">
+          {(p.comments ?? []).map((c, i) => (
+            <div key={i} className="flex gap-2 px-3 py-2 text-xs text-white/60">
+              <CornerDownRight size={13} className="mt-0.5 shrink-0 text-white/30" />
+              <span className="[overflow-wrap:anywhere]">{c}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

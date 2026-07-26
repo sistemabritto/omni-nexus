@@ -46,6 +46,21 @@ REDES = ("x", "linkedin", "threads")
 
 LIMITES = {"x": 280, "linkedin": 3000, "threads": 500, "instagram": 2200}
 
+# Redes em que o link do artigo tem de estar no corpo do post. No LinkedIn ele
+# vai no primeiro comentário e no Threads não vai link nenhum (post recompensa)
+# — nessas duas um link no corpo é erro, não esquecimento.
+LINK_NO_CORPO = ("x",)
+
+# Redes em que o link sai num comentário do próprio post. O texto do LinkedIn
+# fecha com "está no primeiro comentário" — promessa que o sistema precisa
+# cumprir, senão o post manda o leitor para um comentário que não existe.
+LINK_NO_COMENTARIO = ("linkedin",)
+
+# No X toda URL conta 23 caracteres, encurtada pelo t.co, não importa o tamanho
+# real. Reservar os ~90 caracteres de uma URL do blog comeria um terço do post
+# à toa. Nas outras redes o link ocupa o que ocupa.
+CUSTO_DO_LINK = {"x": 23}
+
 # Espaçamento entre redes: o mesmo texto saindo simultaneamente em três lugares
 # parece bot e performa pior.
 OFFSET_MIN = {"x": 0, "linkedin": 20, "threads": 40, "instagram": 60}
@@ -195,6 +210,36 @@ def limpar(texto: str, limite: int) -> str:
     return (corte[:espaco] if espaco > 0 else corte).rstrip(" ,;:-") + "…"
 
 
+def comentarios_da_rede(rede: str, link: str) -> list[str]:
+    """Comentários a encadear no post — hoje, o link que o corpo prometeu.
+
+    Só o LinkedIn usa: o formato manda o link para o primeiro comentário para
+    não perder alcance, e o texto aprovado diz isso ao leitor em voz alta.
+    """
+    if rede not in LINK_NO_COMENTARIO or not link:
+        return []
+    return [f"Artigo completo: {link}"]
+
+
+def garantir_link(texto: str, link: str, rede: str) -> str:
+    """Anexa o link do artigo quando a rede exige e o modelo esqueceu.
+
+    O FORMATO já manda "Link no fim" para o X, mas pedir não é garantir: uma
+    derivação real saiu no X com duas frases e nenhum link, virando um
+    comentário solto que não leva a lugar nenhum. O fallback sem modelo sempre
+    põe o link — o caminho do modelo precisava da mesma garantia.
+
+    Idempotente: link já presente no texto sai intacto, inclusive quando o
+    modelo o pôs no meio em vez do fim.
+    """
+    if rede not in LINK_NO_CORPO or not link or link in texto:
+        return texto
+    sobra = LIMITES.get(rede, 280) - CUSTO_DO_LINK.get(rede, len(link)) - 2  # 2 = "\n\n"
+    if sobra <= 0:
+        return texto
+    return f"{limpar(texto, sobra)}\n\n{link}"
+
+
 def adaptar(post: dict, rede: str) -> str:
     """Versão da rede via x.ai; sem chave ou em erro, cai num fallback que não inventa nada."""
     titulo = post.get("title", "")
@@ -233,7 +278,7 @@ def adaptar(post: dict, rede: str) -> str:
                             if c.get("type") == "output_text":
                                 txt += c.get("text", "")
                 if txt.strip():
-                    return limpar(txt, LIMITES[rede])
+                    return garantir_link(limpar(txt, LIMITES[rede]), link, rede)
         except Exception:  # noqa: BLE001 — fallback abaixo cobre qualquer falha
             pass
 
@@ -323,6 +368,11 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
     quando = datetime.now(timezone.utc) + timedelta(hours=em_horas)
     resultado: dict = {"ok": True, "post": post.get("title"), "redes": {}, "pulados": {}}
     midia, sem_midia = midia_do_post(post)
+    if not midia:
+        # Post sem imagem ainda vale — só não pode sair calado. Um artigo sem
+        # capa, ou com a capa num host fora da allowlist do Postiz, produz três
+        # posts sem imagem, e sem esta linha ninguém descobre por quê.
+        resultado["aviso_midia"] = sem_midia
 
     for rede in REDES:
         texto = adaptar(post, rede)
@@ -346,9 +396,16 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             "publish_intent": True,
             "publish_target": rede,
             "publish_content": texto,
-            # Só o Instagram exige imagem; nas outras redes a capa competiria
-            # com o preview do link, que é o que dá clique.
-            "publish_media": midia if rede == "instagram" else [],
+            # A capa do artigo vai em todas as redes. A regra anterior mandava
+            # imagem só para o Instagram, com o argumento de que nas outras a
+            # capa competiria com o preview do link — e como o Instagram saiu
+            # deste gatilho (vídeo é outro esquema), na prática TODO post saía
+            # sem imagem nenhuma. O argumento também não se sustenta nas três
+            # redes que restaram: no LinkedIn o link vai no primeiro comentário
+            # e no Threads não vai link nenhum, então não existe preview para
+            # competir; e no X uma imagem própria rende mais que o card de link.
+            "publish_media": midia,
+            "publish_comments": comentarios_da_rede(rede, post.get("url") or ""),
             "publish_at": agendado.isoformat().replace("+00:00", "Z"),
             # Link do artigo, para conferir o texto completo na hora de aprovar.
             # Em draft o Ghost devolve a URL de preview (/p/<uuid>/), que abre
@@ -442,6 +499,11 @@ def refazer(outcome_anterior: dict, feedback: str, ticket_id: str,
 
     novo = dict(outcome_anterior)
     novo["publish_content"] = texto
+    # A capa é relida do artigo, não herdada do outcome anterior: entre uma
+    # versão e outra o gate do blog pode ter trocado a imagem, e republicar a
+    # antiga entregaria uma thumb que o Felipe já reprovou.
+    novo["publish_media"] = midia_do_post(post)[0]
+    novo["publish_comments"] = comentarios_da_rede(rede, post.get("url") or "")
     novo["result"] = (f"Versão {tentativa + 1} de {rede} do artigo "
                       f"'{post.get('title')}' (após ajuste pedido)")
 

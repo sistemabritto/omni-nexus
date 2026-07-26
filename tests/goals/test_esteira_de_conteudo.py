@@ -305,3 +305,39 @@ def test_palavras_vazias_nao_decidem_colisao():
     nucleo = research._nucleo("o plano de whatsapp para a empresa")
     assert "de" not in nucleo and "para" not in nucleo
     assert {"plano", "whatsapp", "empresa"} <= nucleo
+
+
+# ── seeds: diversidade é o que sustenta 21 pautas por semana ─────────────
+
+def test_seeds_cobrem_os_tres_funis():
+    """Pauta sem funil claro é tráfego sem destino."""
+    seeds = research.seeds_da_semana(__import__("datetime").date(2026, 7, 26))
+    assert len(seeds) == research.SEEDS_POR_RODADA * len(research.SEEDS_POR_FUNIL)
+    assert len(set(seeds)) == len(seeds), "seed repetida desperdiça uma consulta"
+
+
+def test_seeds_giram_entre_semanas():
+    """Bater sempre nas mesmas cinco é como o blog acabava repetindo assunto."""
+    from datetime import date
+
+    a = research.seeds_da_semana(date(2026, 7, 26))
+    b = research.seeds_da_semana(date(2026, 8, 9))
+    assert a != b
+
+
+def test_seeds_sao_estaveis_dentro_da_mesma_semana():
+    """Duas execuções na mesma semana pedem as mesmas seeds — previsível."""
+    from datetime import date
+
+    assert research.seeds_da_semana(date(2026, 7, 27)) == research.seeds_da_semana(date(2026, 8, 1))
+
+
+def test_rotacao_nunca_estoura_o_grupo():
+    """Qualquer semana do ano tem de devolver seeds válidas."""
+    from datetime import date, timedelta
+
+    dia = date(2026, 1, 1)
+    while dia.year == 2026:
+        seeds = research.seeds_da_semana(dia)
+        assert len(seeds) == research.SEEDS_POR_RODADA * len(research.SEEDS_POR_FUNIL)
+        dia += timedelta(days=7)

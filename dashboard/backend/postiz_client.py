@@ -362,9 +362,18 @@ class PostizClient:
         post_type: str,
         date_iso_utc: str,
         extra: dict | None = None,
+        comments: list[str] | None = None,
     ) -> list[dict]:
         if post_type not in ("draft", "schedule", "now"):
             raise ValueError(f"post_type inválido: {post_type!r}")
+        # `value` é uma lista: o primeiro item é o post e cada item seguinte é
+        # um comentário nele. Confirmado no provider do LinkedIn da instância
+        # (linkedin.provider.js): `post()` consome o primeiro item e `comment()`
+        # é chamado para os demais, sempre encadeados no id do post principal.
+        # No X o mesmo array vira thread. Só o primeiro item leva mídia — um
+        # comentário que existe para carregar o link não precisa repetir a capa.
+        valores = [{"content": content, "image": media}]
+        valores += [{"content": c, "image": []} for c in (comments or []) if (c or "").strip()]
         body = {
             "type": post_type,
             "date": date_iso_utc,
@@ -373,7 +382,7 @@ class PostizClient:
             **(extra or {}),
             "posts": [{
                 "integration": {"id": integration_id},
-                "value": [{"content": content, "image": media}],
+                "value": valores,
                 "settings": settings,
             }],
         }
@@ -402,14 +411,14 @@ class PostizClient:
         )
 
     def schedule_post(self, *, integration_id: str, content: str, media: list[dict], settings: dict,
-                       scheduled_at_utc: str) -> list[dict]:
+                       scheduled_at_utc: str, comments: list[str] | None = None) -> list[dict]:
         return self._create_post_raw(
             integration_id=integration_id, content=content, media=media, settings=settings,
-            post_type="schedule", date_iso_utc=scheduled_at_utc,
+            post_type="schedule", date_iso_utc=scheduled_at_utc, comments=comments,
         )
 
     def create_post_now(self, *, integration_id: str, content: str, media: list[dict], settings: dict,
-                         now_iso_utc: str) -> list[dict]:
+                         now_iso_utc: str, comments: list[str] | None = None) -> list[dict]:
         """type=now — publishes immediately. Never called by the media-jobs
         pipeline in this feature (SOCIAL_DEFAULT_POST_MODE=draft always);
         kept for parity with the existing publish-gate flow in
@@ -422,6 +431,7 @@ class PostizClient:
         return self._create_post_raw(
             integration_id=integration_id, content=content, media=media, settings=settings,
             post_type="now", date_iso_utc=now_iso_utc, extra={"creationMethod": "API"},
+            comments=comments,
         )
 
     def change_status(self, post_id: str, status: str) -> dict:
@@ -452,6 +462,24 @@ class PostizClient:
             raise PostizAPIError("Postiz retornou um corpo não-JSON em GET /posts.") from None
         posts = body.get("posts", body) if isinstance(body, dict) else body
         return [item for item in (posts or []) if isinstance(item, dict)]
+
+    @staticmethod
+    def release_urls_de(posts: list[dict], post_ids: list[str]) -> list[str]:
+        """URLs públicas dos posts na plataforma, quando já existem.
+
+        `releaseURL` é o endereço do post no X/LinkedIn/Threads — é o que
+        permite abrir e conferir se saiu com a imagem e o link certos, em vez
+        de acreditar num "publicado com sucesso". Vem `null` enquanto o post
+        está agendado; só a publicação de fato o preenche.
+        """
+        return [
+            item["releaseURL"]
+            for item in posts
+            if isinstance(item, dict)
+            and item.get("id") in post_ids
+            and isinstance(item.get("releaseURL"), str)
+            and item["releaseURL"].startswith("http")
+        ]
 
     def confirm_scheduled(self, post_ids: list[str], *, window: tuple[str, str]) -> dict:
         """Confirm a type=schedule post really landed on the Postiz queue.
@@ -489,6 +517,11 @@ class PostizClient:
             "scheduled": True,
             "detail": f"Postiz confirmou agendamento de {', '.join(post_ids)} (estado: {states}).",
             "states": states,
+            # Agendado ainda não tem releaseURL (a plataforma só devolve o
+            # endereço depois de publicar de fato). Vem vazio aqui e é o
+            # confirmador de agendamentos que o busca quando a hora chega.
+            "release_urls": self.release_urls_de(posts, post_ids),
+            "post_ids": list(post_ids),
         }
 
     def wait_for_publication(self, post_ids: list[str], *, wait_seconds: float, poll_seconds: float,
@@ -523,7 +556,12 @@ class PostizClient:
             if any(states.get(pid) == "ERROR" for pid in post_ids):
                 return {"published": False, "detail": f"Postiz marcou publicação como ERROR: {states}."}
             if all(states.get(pid) == "PUBLISHED" for pid in post_ids):
-                return {"published": True, "detail": f"Postiz confirmou PUBLISHED para {', '.join(post_ids)}."}
+                return {
+                    "published": True,
+                    "detail": f"Postiz confirmou PUBLISHED para {', '.join(post_ids)}.",
+                    "release_urls": self.release_urls_de(posts or [], post_ids),
+                    "post_ids": list(post_ids),
+                }
             _time.sleep(poll_seconds)
         return {
             "published": False,

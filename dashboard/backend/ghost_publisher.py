@@ -133,6 +133,20 @@ def resumo_para_aprovacao(post: dict) -> str:
     if resumo:
         linhas += ["", resumo.strip()[:400]]
 
+    # A abertura real do artigo, não só o excerpt.
+    #
+    # Sem isto o card é puramente estrutural — título, excerpt, CTA, contagem —
+    # e uma reescrita completa do corpo não muda nada visível nele. Aconteceu:
+    # o Felipe pediu para reescrever com o humanizer, o texto foi de 1492 para
+    # 1308 palavras num tom bem melhor, e o card voltou com a mesma cara. Ele
+    # concluiu, com razão, que nada tinha sido refeito. Tom é o que ele valida
+    # neste gate, e tom só se julga lendo as primeiras linhas.
+    abertura = texto[:700].strip()
+    if abertura:
+        corte = abertura.rfind(". ")
+        linhas += ["", "── começa assim ──",
+                   abertura[: corte + 1] if corte > 300 else abertura + "…"]
+
     linhas.append("")
     if ctas["funis"]:
         linhas.append(f"CTA de funil ({len(ctas['funis'])}):")

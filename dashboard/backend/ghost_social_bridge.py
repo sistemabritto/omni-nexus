@@ -557,6 +557,9 @@ def refazer_artigo(outcome_anterior: dict, feedback: str, ticket_id: str,
         return {"ok": False, "erro": f"artigo {post_id} não encontrado"}
 
     feito: list[str] = []
+    # Medida antes de mexer, para o card poder provar que mudou. "Refeito
+    # (texto)" é afirmação nossa; "1492 → 1308 palavras" é evidência.
+    palavras_antes = len((post.get("plaintext") or "").split())
 
     if _e_sobre_texto(feedback):
         novo_html = revisar_texto(post, feedback)
@@ -595,6 +598,22 @@ def refazer_artigo(outcome_anterior: dict, feedback: str, ticket_id: str,
     novo["publish_media"] = [capa] if capa else []
     novo["result"] = f"Versão {tentativa + 1} do artigo '{atualizado.get('title')}'"
 
+    # A prova de que mudou, em números. Dizer "refeito (texto)" e mostrar um
+    # resumo estrutural de cara idêntica é o que fez o Felipe concluir que o
+    # sistema tinha devolvido o mesmo artigo — o texto tinha sido reescrito
+    # inteiro, mas nada no card dizia isso.
+    palavras_depois = len((atualizado.get("plaintext") or "").split())
+    mudancas = []
+    if "texto" in feito:
+        mudancas.append(f"texto reescrito: {palavras_antes} → {palavras_depois} palavras")
+    if "capa" in feito:
+        mudancas.append("capa refeita")
+    for item in feito:
+        if "falhou" in item:
+            mudancas.append(f"⚠ {item}")
+    if not mudancas:
+        mudancas.append(", ".join(feito))
+
     try:
         from sdk_client import evo
 
@@ -603,7 +622,8 @@ def refazer_artigo(outcome_anterior: dict, feedback: str, ticket_id: str,
             "ticket_id": ticket_id,
             "agent": "pixel-social-media",
             "payload": {"title": f"[v{tentativa + 1}] Publicar no blog: {atualizado.get('title')}",
-                        "body": f"Refeito ({', '.join(feito)}) com a crítica: {feedback[:250]}\n\n{resumo[:500]}",
+                        "body": (f"✏️ {' · '.join(mudancas)}\n"
+                                 f"Crítica aplicada: {feedback[:220]}\n\n{resumo}"),
                         "outcome": novo},
         })
     except Exception as exc:  # noqa: BLE001

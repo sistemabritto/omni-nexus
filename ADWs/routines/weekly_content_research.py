@@ -156,12 +156,65 @@ COMPRA = re.compile(
     r"marketing digital|gestão de redes|postar)", re.I)
 
 
+# Seeds por funil. Cinco seeds vizinhas produziam 35 keywords que, depois do
+# dedupe, viravam 13 pautas — abaixo das 21 que o ciclo precisa. O gargalo do
+# ciclo semanal não é volume de busca, é DIVERSIDADE de assunto: keyword
+# parecida vira pauta descartada, e pauta descartada é slot vazio na semana.
+#
+# Cada grupo aponta para um funil real, o que também alimenta a escolha de CTA
+# em escritor_de_artigo — pauta sem funil claro é tráfego sem destino.
+SEEDS_POR_FUNIL = {
+    "whatsapp": [
+        "chatbot whatsapp para empresas", "resposta automatica whatsapp",
+        "whatsapp business api", "disparo em massa whatsapp",
+        "atendimento automatizado whatsapp", "crm integrado ao whatsapp",
+        "recuperar carrinho abandonado whatsapp", "agente de ia no whatsapp",
+    ],
+    "socialjobs": [
+        "agendar post instagram", "automatizar redes sociais com ia",
+        "criar conteudo com inteligencia artificial", "crescer no instagram organicamente",
+        "ferramenta de agendamento de posts", "roteiro para reels",
+        "youtube shorts para empresas", "calendario editorial redes sociais",
+    ],
+    "sistema": [
+        "gerar leads com inteligencia artificial", "trafego qualificado",
+        "automatizar processos da empresa com ia", "agentes de ia para negocios",
+        "integrar sistemas com api", "reduzir custo operacional com automacao",
+        "dashboard de metricas do negocio", "funil de vendas automatizado",
+    ],
+}
+
+# O MCP aceita poucas seeds por chamada; girar a janela a cada semana faz o
+# ciclo varrer o repertório inteiro ao longo do mês em vez de bater sempre nas
+# mesmas cinco — que é como o blog acabava repetindo assunto.
+SEEDS_POR_RODADA = 3
+
+
+def seeds_da_semana(hoje: date) -> list[str]:
+    """Seeds desta rodada: um recorte rotativo de cada funil.
+
+    A rotação usa o número da semana, então duas execuções na mesma semana
+    pedem as mesmas seeds (previsível) e semanas seguidas pedem seeds
+    diferentes (variedade).
+    """
+    semana = hoje.isocalendar().week
+    escolhidas = []
+    for grupo in SEEDS_POR_FUNIL.values():
+        inicio = (semana * SEEDS_POR_RODADA) % len(grupo)
+        girado = grupo[inicio:] + grupo[:inicio]
+        escolhidas += girado[:SEEDS_POR_RODADA]
+    return escolhidas
+
+
 def pesquisar_keywords(seeds: list[str]) -> list[dict]:
     payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {
         "name": "research_keywords",
         "arguments": {"projectId": OPENSEO_PROJECT, "resultLimit": 150,
                       "seeds": [{"seed": s, "locationCode": 2076, "languageCode": "pt"}
-                                for s in seeds[:5]]}}}
+                                # 9 seeds (3 por funil) e não 5: com cinco
+                                # seeds vizinhas o dedupe derrubava 22 das 35
+                                # keywords e a semana fechava com 13 pautas.
+                                for s in seeds[:9]]}}}
     d = _mcp(payload)
     if not d:
         return []
@@ -351,10 +404,7 @@ def main() -> int:
     log(f"research semanal — abastecendo {inicio} + {DIAS-1} dias ({POSTS_POR_DIA}/dia)")
 
     noticias = pesquisar_noticias(hoje - timedelta(days=7), hoje)
-    seeds = ["automatizar redes sociais com ia", "chatbot whatsapp para empresas",
-             "agendar post instagram", "gerar leads com inteligencia artificial",
-             "trafego qualificado"]
-    keywords = pesquisar_keywords(seeds)
+    keywords = pesquisar_keywords(seeds_da_semana(hoje))
     if not keywords:
         log("sem keywords — abortando para não propor pauta sem dado.")
         return 1

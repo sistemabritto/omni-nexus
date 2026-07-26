@@ -394,6 +394,83 @@ def descartar_repetidas(keywords: list[dict], ja_cobertos: list[str]) -> list[di
     return escolhidas
 
 
+# ── 3b. o X quando o SEO não dá o bastante ───────────────────────────────
+
+def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> list[dict]:
+    """Completa a semana com o que está sendo discutido no X agora.
+
+    O DataForSEO responde sobre o passado: volume é média de 12 meses, então
+    assunto que estourou esta semana ainda não tem número — e é exatamente a
+    pauta que a concorrência não escreveu. Quando o funil de keyword não fecha
+    os 21 slots, o X preenche a diferença.
+
+    Volume vem como 0 de propósito: fingir um número que ninguém mediu seria
+    pior que admitir que esta pauta veio de outra fonte.
+    """
+    import requests
+
+    chave = (os.environ.get("XAI_API_KEY") or "").strip()
+    if not chave or quantas <= 0:
+        return []
+
+    evitar = "\n".join(f"- {k}" for k in ja_escolhidas[:40])
+    prompt = (
+        "Você acha pauta de blog vasculhando o que está sendo discutido AGORA no X "
+        "e na web, em português do Brasil.\n\n"
+        "NEGÓCIO: Sistema Britto vende automação com IA para dono de empresa — "
+        "WhatsApp que qualifica e vende sozinho, conteúdo diário nas redes, e "
+        "sistemas sob medida. O leitor é dono de negócio, não desenvolvedor nem "
+        "estudante.\n\n"
+        f"Proponha {quantas} pautas sobre o que está em alta nesta semana e que um "
+        "dono de empresa procuraria. Cada uma precisa de um gancho real e "
+        "verificável — se não achou na busca, não invente.\n\n"
+        + (f"CONTEXTO DA SEMANA:\n{noticias[:2000]}\n\n" if noticias else "")
+        + (f"JÁ ESCOLHIDAS (não repita assunto):\n{evitar}\n\n" if evitar else "")
+        + 'Responda APENAS um JSON: {"pautas": [{"keyword": "<termo de busca que '
+          'alguém digitaria>", "porque": "<o gancho, até 12 palavras>"}]}'
+    )
+
+    try:
+        r = requests.post(
+            XAI_URL,
+            headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"},
+            json={"model": XAI_MODEL, "input": [{"role": "user", "content": prompt}],
+                  "tools": [{"type": "web_search"}, {"type": "x_search"}]},
+            timeout=600)
+    except Exception as exc:  # noqa: BLE001 — a semana segue com o que o SEO deu
+        log(f"X indisponível para completar a pauta: {exc}")
+        return []
+    if r.status_code != 200:
+        log(f"x.ai respondeu {r.status_code} ao buscar trending")
+        return []
+
+    texto = ""
+    for item in r.json().get("output", []):
+        if item.get("type") == "message":
+            for c in item.get("content", []):
+                if c.get("type") == "output_text":
+                    texto += c.get("text", "")
+
+    try:
+        dados = json.loads(re.sub(r"^```(?:json)?\s*|\s*```$", "", texto.strip()))
+    except (json.JSONDecodeError, ValueError):
+        m = re.search(r"\{.*\}", texto, re.S)
+        try:
+            dados = json.loads(m.group(0)) if m else {}
+        except (json.JSONDecodeError, ValueError):
+            dados = {}
+
+    achadas = []
+    for p in (dados.get("pautas") or [])[:quantas]:
+        termo = (p.get("keyword") or "").strip()
+        if not termo or RUIDO.search(termo):
+            continue
+        achadas.append({"kw": termo, "vol": 0, "kd": None,
+                        "origem": "x-trending", "porque": (p.get("porque") or "")[:80]})
+    # Mesmo vindo de outra fonte, não pode repetir o que o blog já cobre.
+    return descartar_repetidas(achadas, ja_escolhidas + titulos_publicados())
+
+
 # ── 4. montar as 21 pautas ───────────────────────────────────────────────
 
 def montar_pautas(keywords: list[dict], inicio: date) -> list[dict]:
@@ -509,9 +586,22 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001 — o filtro por regex já rodou
         log(f"avaliador indisponível ({exc}); seguindo com o filtro por regex")
 
+    # Faltou pauta? O X sabe o que está sendo discutido agora, e o que está
+    # em alta hoje não tem histórico de volume no DataForSEO — é justamente a
+    # pauta que a concorrência ainda não escreveu.
+    alvo = POSTS_POR_DIA * DIAS
+    if len(keywords) < alvo:
+        faltam = alvo - len(keywords)
+        log(f"faltam {faltam} pauta(s) para fechar a semana — buscando no X")
+        extras = pautas_do_x(faltam, [k["kw"] for k in keywords], noticias)
+        if extras:
+            keywords += extras
+            log(f"X completou com {len(extras)}: "
+                + ", ".join(k["kw"][:34] for k in extras[:3]))
+
     if len(keywords) < POSTS_POR_DIA:
-        log(f"só {len(keywords)} keyword(s) inédita(s) — o blog já cobre o resto. "
-            "Amplie as seeds antes de rodar de novo.")
+        log(f"só {len(keywords)} keyword(s) inédita(s) — nem o SEO nem o X deram "
+            "material suficiente. Amplie as seeds antes de rodar de novo.")
         return 1
 
     pautas = montar_pautas(keywords, inicio)

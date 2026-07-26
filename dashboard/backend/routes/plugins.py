@@ -305,6 +305,47 @@ def _seed_plugin_host_rows(conn: sqlite3.Connection, slug: str, plugin_dir: Path
 # GET /api/plugins — list installed plugins
 # ---------------------------------------------------------------------------
 
+def _plugins_no_disco() -> list[dict]:
+    """Plugins presentes em `plugins/` que a tabela não conhece.
+
+    A tabela só ganha linha quando alguém instala pela UI. Plugin que veio
+    versionado no repo — como o open-seo, que alimenta o research semanal —
+    existia no disco, funcionava, e a página jurava que não havia plugin
+    nenhum instalado. Ler o disco é o que faz a página descrever a realidade
+    em vez do histórico de cliques.
+    """
+    import yaml
+
+    raiz = PLUGINS_DIR
+    if not raiz.is_dir():
+        return []
+    achados = []
+    for pasta in sorted(p for p in raiz.iterdir() if p.is_dir()):
+        manifesto = pasta / "plugin.yaml"
+        dados = {}
+        if manifesto.is_file():
+            try:
+                dados = yaml.safe_load(manifesto.read_text(encoding="utf-8")) or {}
+            except Exception:  # noqa: BLE001 — manifesto quebrado não esconde a pasta
+                logger.warning("plugin.yaml ilegível em %s", pasta.name)
+        achados.append({
+            "slug": dados.get("id") or pasta.name,
+            "name": dados.get("name") or pasta.name,
+            "version": str(dados.get("version") or "?"),
+            "description": (dados.get("description") or "").strip(),
+            "tier": dados.get("tier") or "essential",
+            "enabled": True,
+            "source_type": "repo",
+            "source_url": dados.get("homepage"),
+            "capabilities": dados.get("capabilities") or [],
+            # Sinaliza a diferença em vez de escondê-la: está no disco e
+            # funcionando, mas nunca passou pelo fluxo de instalação, então
+            # não tem histórico de update nem checksum registrado.
+            "status": "present_unregistered",
+        })
+    return achados
+
+
 @bp.route("/api/plugins", methods=["GET"])
 @login_required
 def list_plugins():
@@ -313,11 +354,20 @@ def list_plugins():
         rows = conn.execute(
             "SELECT * FROM plugins_installed ORDER BY installed_at DESC"
         ).fetchall()
-        return jsonify([_plugin_to_dict(r) for r in rows])
+        instalados = [_plugin_to_dict(r) for r in rows]
     except sqlite3.OperationalError as exc:
         return jsonify({"error": str(exc)}), 500
     finally:
         conn.close()
+
+    # A tabela vence no conflito: se o plugin foi instalado pela UI, o registro
+    # dela é mais completo (checksum, versão instalada, capacidades desligadas).
+    conhecidos = {p.get("slug") for p in instalados}
+    try:
+        instalados += [p for p in _plugins_no_disco() if p["slug"] not in conhecidos]
+    except Exception:  # noqa: BLE001 — a lista do banco vale mais que a varredura
+        logger.exception("varredura de plugins no disco falhou")
+    return jsonify(instalados)
 
 
 # ---------------------------------------------------------------------------

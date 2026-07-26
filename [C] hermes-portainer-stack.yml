@@ -1,0 +1,51 @@
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    command: gateway run
+    stop_grace_period: 90s
+    volumes:
+      - /mnt/docker-volumes/hermes-unified:/opt/data
+    networks:
+      - network_public
+      - hermes_internal
+    environment:
+      - HERMES_DASHBOARD=1
+      - HERMES_DASHBOARD_HOST=0.0.0.0
+      - HERMES_DASHBOARD_PORT=9119
+      - HERMES_DASHBOARD_BASIC_AUTH_USERNAME=felipe
+      - HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=hermes@Workflow01
+      - HERMES_DASHBOARD_BASIC_AUTH_SECRET=8e376c48e6501e6834d80625eb2633d6421c2c23c0dbfc8ba9d99d62be046ce1
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=network_public
+        - traefik.http.routers.hermes-dashboard.rule=Host(`hermes.workflowapi.com.br`)
+        - traefik.http.routers.hermes-dashboard.entrypoints=websecure
+        - traefik.http.routers.hermes-dashboard.tls=true
+        - traefik.http.routers.hermes-dashboard.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.hermes-dashboard.service=hermes-dashboard-svc
+        - traefik.http.services.hermes-dashboard-svc.loadbalancer.server.port=9119
+        - traefik.http.routers.hermes-mistica.rule=Host(`mistica.workflowapi.com.br`)
+        - traefik.http.routers.hermes-mistica.entrypoints=websecure
+        - traefik.http.routers.hermes-mistica.tls=true
+        - traefik.http.routers.hermes-mistica.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.hermes-mistica.service=hermes-mistica-svc
+        - traefik.http.services.hermes-mistica-svc.loadbalancer.server.port=8642
+networks:
+  network_public:
+    external: true
+  hermes_internal:
+    external: true

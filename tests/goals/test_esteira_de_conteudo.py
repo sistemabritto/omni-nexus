@@ -432,3 +432,98 @@ def test_upload_de_capa_usa_a_funcao_de_jwt_que_existe(monkeypatch, tmp_path):
     url, erro = gp.subir_imagem(imagem)
     assert erro == ""
     assert url == "https://blog.local/content/capa.png"
+
+
+# ── o X como segunda fonte de pauta ──────────────────────────────────────
+# O DataForSEO responde sobre o passado: volume é média de 12 meses, então
+# assunto que estourou esta semana não tem número — e é exatamente a pauta que
+# a concorrência ainda não escreveu.
+
+class _RespX:
+    status_code = 200
+
+    def __init__(self, texto):
+        self._t = texto
+
+    def json(self):
+        return {"output": [{"type": "message",
+                            "content": [{"type": "output_text", "text": self._t}]}]}
+
+
+def _payload_x(*termos):
+    return json.dumps({"pautas": [{"keyword": t, "porque": "gancho"} for t in termos]})
+
+
+def test_x_completa_a_semana(monkeypatch):
+    import requests
+
+    monkeypatch.setenv("XAI_API_KEY", "k")
+    monkeypatch.setattr(research, "titulos_publicados", lambda: [])
+    monkeypatch.setattr(requests, "post",
+                        lambda *a, **k: _RespX(_payload_x("meta lanca agente de ia no whatsapp")))
+    achadas = research.pautas_do_x(2, [])
+    assert achadas[0]["kw"] == "meta lanca agente de ia no whatsapp"
+
+
+def test_pauta_do_x_nao_finge_volume(monkeypatch):
+    """Inventar um número que ninguém mediu é pior que admitir a origem."""
+    monkeypatch.setenv("XAI_API_KEY", "k")
+    monkeypatch.setattr(research, "titulos_publicados", lambda: [])
+    import requests
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _RespX(_payload_x("assunto quente")))
+    p = research.pautas_do_x(1, [])[0]
+    assert p["vol"] == 0
+    assert p["origem"] == "x-trending"
+
+
+def test_x_nao_repete_o_que_ja_esta_na_fila(monkeypatch):
+    monkeypatch.setenv("XAI_API_KEY", "k")
+    monkeypatch.setattr(research, "titulos_publicados", lambda: [])
+    import requests
+    monkeypatch.setattr(requests, "post",
+                        lambda *a, **k: _RespX(_payload_x("chatbot whatsapp para empresas")))
+    assert research.pautas_do_x(1, ["chatbot whatsapp para empresa"]) == []
+
+
+def test_x_respeita_o_filtro_de_ruido(monkeypatch):
+    monkeypatch.setenv("XAI_API_KEY", "k")
+    monkeypatch.setattr(research, "titulos_publicados", lambda: [])
+    import requests
+    monkeypatch.setattr(requests, "post",
+                        lambda *a, **k: _RespX(_payload_x("curso de marketing digital")))
+    assert research.pautas_do_x(1, []) == []
+
+
+def test_sem_chave_do_xai_nao_quebra(monkeypatch):
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    assert research.pautas_do_x(3, []) == []
+
+
+def test_pedir_zero_nao_chama_o_modelo(monkeypatch):
+    monkeypatch.setenv("XAI_API_KEY", "k")
+    import requests
+
+    def _explode(*a, **k):
+        raise AssertionError("não deveria chamar o x.ai")
+
+    monkeypatch.setattr(requests, "post", _explode)
+    assert research.pautas_do_x(0, []) == []
+
+
+def test_x_fora_do_ar_nao_derruba_a_semana(monkeypatch):
+    monkeypatch.setenv("XAI_API_KEY", "k")
+    import requests
+
+    def _erro(*a, **k):
+        raise requests.RequestException("timeout")
+
+    monkeypatch.setattr(requests, "post", _erro)
+    assert research.pautas_do_x(3, []) == []
+
+
+def test_resposta_sem_json_nao_vira_pauta(monkeypatch):
+    monkeypatch.setenv("XAI_API_KEY", "k")
+    monkeypatch.setattr(research, "titulos_publicados", lambda: [])
+    import requests
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _RespX("não achei nada relevante"))
+    assert research.pautas_do_x(3, []) == []

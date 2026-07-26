@@ -114,15 +114,27 @@ Prefiro 3 fatos verificados a 10 inventados. Priorize saturação baixa em portu
 # ── 2. keywords reais (DataForSEO via OpenSEO MCP) ───────────────────────
 
 def _mcp(payload: dict, timeout: int = 480) -> dict | None:
-    """Chama o MCP do OpenSEO. Em Swarm o host é o alias `openseo` na overlay."""
+    """Chama o MCP do OpenSEO. Em Swarm o host é o alias `openseo` na overlay.
+
+    O Host header vai explícito porque o OpenSEO roda atrás do Vite, que só
+    aceita o host listado em `ALLOWED_HOST` (o domínio público). Chamando pelo
+    alias da overlay, o header sai como `openseo` e o Vite responde 403
+    "This host is not allowed" — a rotina abortava sem keyword nenhuma.
+    Mandar o Host esperado resolve sem sair da rede interna e sem precisar
+    reconfigurar um serviço de terceiro.
+    """
     import requests
 
+    headers = {"Content-Type": "application/json",
+               "Accept": "application/json, text/event-stream"}
+    host_esperado = (os.environ.get("OPENSEO_ALLOWED_HOST") or "seo.workflowapi.com.br").strip()
+    # Só quando falamos com o alias interno; chamando o domínio público
+    # direto, o Host já é o certo e forçá-lo seria redundante.
+    if host_esperado and host_esperado not in OPENSEO_URL:
+        headers["Host"] = host_esperado
+
     try:
-        r = requests.post(
-            OPENSEO_URL, json=payload, timeout=timeout,
-            headers={"Content-Type": "application/json",
-                     "Accept": "application/json, text/event-stream"},
-        )
+        r = requests.post(OPENSEO_URL, json=payload, timeout=timeout, headers=headers)
         if r.status_code != 200:
             log(f"OpenSEO MCP {r.status_code}: {r.text[:160]}")
             return None

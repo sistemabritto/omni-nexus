@@ -206,26 +206,44 @@ def seeds_da_semana(hoje: date) -> list[str]:
     return escolhidas
 
 
+# Teto do research_keywords do OpenSEO. Seis seeds numa chamada devolvem
+# "Input validation error" com 200 e zero linhas — o erro vem dentro do corpo,
+# não no status, então mandar mais que isto falha em silêncio.
+SEEDS_POR_CHAMADA = 5
+
+
 def pesquisar_keywords(seeds: list[str]) -> list[dict]:
-    payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {
-        "name": "research_keywords",
-        "arguments": {"projectId": OPENSEO_PROJECT, "resultLimit": 150,
-                      "seeds": [{"seed": s, "locationCode": 2076, "languageCode": "pt"}
-                                # 9 seeds (3 por funil) e não 5: com cinco
-                                # seeds vizinhas o dedupe derrubava 22 das 35
-                                # keywords e a semana fechava com 13 pautas.
-                                for s in seeds[:9]]}}}
-    d = _mcp(payload)
-    if not d:
-        return []
+    """Consulta o OpenSEO em lotes e junta o resultado.
+
+    Em lotes porque o MCP recusa mais de cinco seeds por chamada, e uma rodada
+    precisa de nove para dar diversidade suficiente ao dedupe.
+    """
     linhas: dict[str, dict] = {}
-    for res in d.get("result", {}).get("structuredContent", {}).get("results", []):
-        for row in res.get("rows", []):
-            kw = (row.get("keyword") or "").strip()
-            if not kw or kw in linhas:
-                continue
-            linhas[kw] = {"kw": kw, "vol": row.get("searchVolume") or 0,
-                          "kd": row.get("keywordDifficulty"), "cpc": row.get("cpc")}
+    lotes = [seeds[i:i + SEEDS_POR_CHAMADA] for i in range(0, len(seeds), SEEDS_POR_CHAMADA)]
+    for n, lote in enumerate(lotes, 1):
+        payload = {"jsonrpc": "2.0", "id": n, "method": "tools/call", "params": {
+            "name": "research_keywords",
+            "arguments": {"projectId": OPENSEO_PROJECT, "resultLimit": 150,
+                          "seeds": [{"seed": s, "locationCode": 2076, "languageCode": "pt"}
+                                    for s in lote]}}}
+        d = _mcp(payload)
+        if not d:
+            log(f"lote {n}/{len(lotes)} falhou — seguindo com o que já veio")
+            continue
+        grupos = d.get("result", {}).get("structuredContent", {}).get("results", [])
+        if not grupos:
+            # O OpenSEO devolve erro de validação com HTTP 200 e o motivo
+            # enterrado no content. Sem este log, um lote inválido some.
+            conteudo = str(d.get("result", {}).get("content", ""))[:160]
+            log(f"lote {n}/{len(lotes)} sem resultados: {conteudo}")
+            continue
+        for res in grupos:
+            for row in res.get("rows", []):
+                kw = (row.get("keyword") or "").strip()
+                if not kw or kw in linhas:
+                    continue
+                linhas[kw] = {"kw": kw, "vol": row.get("searchVolume") or 0,
+                              "kd": row.get("keywordDifficulty"), "cpc": row.get("cpc")}
     cand = [r for r in linhas.values()
             if 40 <= r["vol"] <= 20000 and len(r["kw"].split()) >= 3
             and COMPRA.search(r["kw"]) and not RUIDO.search(r["kw"])]

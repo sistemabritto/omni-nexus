@@ -289,3 +289,52 @@ def test_prompt_ancora_os_tracos_do_rosto():
     assert "sem óculos" in p, "a referência de estilo usa óculos; o rosto certo não"
     assert "terço DIREITO" in p
     assert "A3E635" in p, "verde-limão é a cor da marca"
+
+
+# ── o card precisa provar que o artigo mudou ─────────────────────────────
+# 2026-07-26: o Felipe pediu para reescrever um artigo com o humanizer. O texto
+# foi reescrito inteiro (1492 → 1308 palavras, tom bem melhor) e o card voltou
+# com a mesma cara — título, excerpt, CTA e contagem são quase invariantes a uma
+# reescrita de corpo. Ele concluiu que o sistema tinha devolvido o mesmo artigo.
+
+def test_resumo_mostra_a_abertura_do_artigo(monkeypatch):
+    """Tom é o que se valida neste gate, e tom só se julga lendo o texto."""
+    import ghost_publisher as gp
+
+    post = {
+        "title": "Disparo em massa no WhatsApp",
+        "status": "draft",
+        "custom_excerpt": "Resumo curto que não muda quando o corpo é reescrito.",
+        "feature_image": "https://blog.local/capa.png",
+        "html": '<p>x</p><a href="https://sistemabritto.com.br/whatsapp">CTA</a>',
+        "plaintext": ("Disparo em massa no WhatsApp é permitido, sim. Você pode mandar "
+                      "mensagem para muita gente desde que cada pessoa tenha te passado o "
+                      "número dela e dado autorização clara. A política oficial é direta: "
+                      "só vale falar com quem forneceu o telefone e confirmou que quer "
+                      "receber. Lista comprada não conta como autorização de ninguém."),
+    }
+    resumo = gp.resumo_para_aprovacao(post)
+    assert "começa assim" in resumo
+    assert "Disparo em massa no WhatsApp é permitido, sim." in resumo
+
+
+def test_abertura_diferente_muda_o_resumo(monkeypatch):
+    """A regressão concreta: dois textos distintos produziam o mesmo card."""
+    import ghost_publisher as gp
+
+    base = {"title": "T", "status": "draft", "custom_excerpt": "Mesmo excerpt.",
+            "feature_image": "https://blog.local/c.png",
+            "html": '<a href="https://sistemabritto.com.br/whatsapp">CTA</a>'}
+    a = gp.resumo_para_aprovacao({**base, "plaintext": "Primeira versão do texto. " * 12})
+    b = gp.resumo_para_aprovacao({**base, "plaintext": "Segunda versão, bem diferente. " * 12})
+    assert a != b
+
+
+def test_artigo_sem_corpo_nao_inventa_abertura():
+    import ghost_publisher as gp
+
+    resumo = gp.resumo_para_aprovacao({
+        "title": "T", "status": "draft", "custom_excerpt": "E.",
+        "feature_image": "https://blog.local/c.png", "html": "", "plaintext": "",
+    })
+    assert "começa assim" not in resumo

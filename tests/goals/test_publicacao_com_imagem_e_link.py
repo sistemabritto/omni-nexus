@@ -101,9 +101,9 @@ def test_texto_longo_e_encurtado_para_o_link_caber():
     longo = "palavra " * 60  # ~480 caracteres, muito além dos 280 do X
     texto = bridge.garantir_link(longo.strip(), ARTIGO, "x")
     corpo = texto.rsplit("\n\n", 1)[0]
-    # A URL conta 23 no X (t.co), não o tamanho real — reservar os ~90 reais
-    # cortaria um terço do post à toa.
-    assert len(corpo) <= 280 - 23 - 2
+    # Reserva o tamanho REAL da URL: quem recusa o post é o Postiz, que mede o
+    # texto bruto, não o X, que contaria 23. Ver o teste do 400 mais abaixo.
+    assert len(corpo) <= 280 - len(ARTIGO) - 2
     assert texto.endswith(ARTIGO)
 
 
@@ -477,3 +477,118 @@ def test_comentario_invalido_no_outcome_e_recusado(monkeypatch):
     resultado = ho._run_publish_action(_Row(), None)
     assert resultado["published"] is False
     assert "publish_comments" in resultado["detail"]
+
+
+# ── 8. o que o teste real na VPS revelou ─────────────────────────────────
+
+def test_link_do_x_reserva_o_tamanho_real_da_url():
+    """O X conta URL como 23, mas quem recusa o post é o Postiz — e ele mede
+    o texto bruto. Um post de 293 caracteres reais levou
+    400 {"provider":"x","message":"post is too long, please fix it"}.
+    """
+    longo = "palavra " * 60
+    texto = bridge.garantir_link(longo.strip(), ARTIGO, "x")
+    assert len(texto) <= 280, f"{len(texto)} caracteres — o Postiz recusa"
+    assert texto.endswith(ARTIGO)
+
+
+def test_post_curto_com_link_cabe_inteiro():
+    curto = "Resposta automática no WhatsApp vira robô quando não sabe quem está falando."
+    texto = bridge.garantir_link(curto, ARTIGO, "x")
+    assert len(texto) <= 280
+    assert curto in texto and ARTIGO in texto
+
+
+def test_preview_do_telegram_usa_capa_redimensionada():
+    """A capa original tem ~2,3 MB. Três cards em cinco segundos mandando o
+    Telegram baixar isso é o que provoca o 429 — e o fallback silencioso
+    entregava um card sem imagem."""
+    import notifications
+
+    original = "https://blog.sistemabritto.com.br/content/images/2026/07/capa1-2.png"
+    assert notifications._preview_leve(original) == (
+        "https://blog.sistemabritto.com.br/content/images/size/w1000/2026/07/capa1-2.png"
+    )
+
+
+def test_capa_ja_redimensionada_nao_e_redimensionada_de_novo():
+    import notifications
+
+    ja = "https://blog.sistemabritto.com.br/content/images/size/w1000/2026/07/capa.png"
+    assert notifications._preview_leve(ja) == ja
+
+
+def test_url_de_outro_host_passa_intacta():
+    import notifications
+
+    fora = "https://s3.workflowapi.com.br/capas/thumb.png"
+    assert notifications._preview_leve(fora) == fora
+
+
+def test_429_no_sendphoto_e_repetido_respeitando_retry_after(monkeypatch):
+    """Antes, um 429 caía direto no texto sem imagem, calado."""
+    import notifications
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "tok")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "123")
+    monkeypatch.setattr(notifications.time, "sleep", lambda s: None)
+    monkeypatch.setattr(notifications, "_append_bot_memory", lambda *a: None)
+
+    chamadas = []
+
+    def _resposta(req, timeout=0):
+        metodo = req.full_url.rsplit("/", 1)[-1]
+        chamadas.append(metodo)
+        corpo = ({"ok": False, "parameters": {"retry_after": 3}}
+                 if len([c for c in chamadas if c == "sendPhoto"]) == 1
+                 else {"ok": True, "result": {"message_id": 99}})
+
+        class _R:
+            def read(self_inner):
+                return json.dumps(corpo).encode()
+
+            def __enter__(self_inner):
+                return self_inner
+
+            def __exit__(self_inner, *a):
+                return False
+
+        return _R()
+
+    monkeypatch.setattr(notifications.urllib.request, "urlopen", _resposta)
+    msg = notifications.send_approval_request(1, "Título", "Corpo", photo_url="https://x/y.png")
+    assert msg == 99
+    # Duas tentativas de foto, e nenhuma queda para texto puro.
+    assert chamadas == ["sendPhoto", "sendPhoto"]
+
+
+def test_foto_recusada_de_vez_ainda_entrega_a_aprovacao(monkeypatch):
+    """Aprovação sem imagem é ruim; aprovação que some é pior."""
+    import notifications
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "tok")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "123")
+    monkeypatch.setattr(notifications, "_append_bot_memory", lambda *a: None)
+    chamadas = []
+
+    def _resposta(req, timeout=0):
+        metodo = req.full_url.rsplit("/", 1)[-1]
+        chamadas.append(metodo)
+        corpo = ({"ok": False, "description": "wrong file identifier"}
+                 if metodo == "sendPhoto" else {"ok": True, "result": {"message_id": 7}})
+
+        class _R:
+            def read(self_inner):
+                return json.dumps(corpo).encode()
+
+            def __enter__(self_inner):
+                return self_inner
+
+            def __exit__(self_inner, *a):
+                return False
+
+        return _R()
+
+    monkeypatch.setattr(notifications.urllib.request, "urlopen", _resposta)
+    assert notifications.send_approval_request(1, "T", "B", photo_url="https://x/y.png") == 7
+    assert chamadas[-1] == "sendMessage"

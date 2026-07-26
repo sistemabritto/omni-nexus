@@ -17,13 +17,17 @@ from __future__ import annotations
 
 import html
 import json
+import logging
 import os
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
 
@@ -138,6 +142,22 @@ def send_telegram_alert(text: str) -> bool:
     return _send_telegram(text)
 
 
+def _preview_leve(url: str) -> str:
+    """Versão redimensionada da capa do Ghost, para o card do Telegram.
+
+    O Ghost serve qualquer imagem de `/content/images/<resto>` também em
+    `/content/images/size/w1000/<resto>`. A capa original tem ~2,3 MB, e mandar
+    o Telegram baixar isso três vezes em cinco segundos é o que provoca o rate
+    limit. Aqui é só preview — a publicação continua usando a imagem original,
+    em tamanho cheio.
+    """
+    marca = "/content/images/"
+    if marca not in url or "/content/images/size/" in url:
+        return url
+    base, _, resto = url.partition(marca)
+    return f"{base}{marca}size/w1000/{resto}"
+
+
 def send_approval_request(approval_id: int, title: str, body: str,
                           photo_url: str | None = None) -> int | None:
     """Send a Telegram approval prompt with an inline approve/reject keyboard.
@@ -187,20 +207,47 @@ def send_approval_request(approval_id: int, title: str, body: str,
                 f"https://api.telegram.org/bot{token}/{metodo}",
                 data=json.dumps(corpo).encode(),
                 headers={"Content-Type": "application/json"}, method="POST")
-            with urllib.request.urlopen(req, timeout=20) as resp:
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.loads(resp.read().decode("utf-8"))
-        except Exception:
+        except urllib.error.HTTPError as exc:
+            corpo_erro = ""
+            try:
+                corpo_erro = exc.read().decode("utf-8")[:300]
+            except Exception:  # noqa: BLE001 — o motivo do erro não pode virar outro erro
+                pass
+            log.warning("Telegram %s devolveu %s: %s", metodo, exc.code, corpo_erro)
+            try:
+                return json.loads(corpo_erro)
+            except ValueError:
+                return None
+        except Exception as exc:  # noqa: BLE001
+            log.warning("Telegram %s falhou: %s", metodo, exc)
             return None
 
     result = None
     if photo_url:
         legenda = text if len(text) <= _TELEGRAM_CAPTION_LIMIT else (
             text[: _TELEGRAM_CAPTION_LIMIT - 20].rstrip() + "\n… (texto completo no painel)")
-        result = _enviar("sendPhoto", {
-            "chat_id": cid, "photo": photo_url, "caption": legenda,
-            "parse_mode": "HTML", "reply_markup": reply_markup,
-        })
+        pedido = {"chat_id": cid, "photo": _preview_leve(photo_url), "caption": legenda,
+                  "parse_mode": "HTML", "reply_markup": reply_markup}
+        result = _enviar("sendPhoto", pedido)
+
+        # 429 é o caso comum e o mais traiçoeiro: três gates abertos em cinco
+        # segundos, cada um mandando o Telegram baixar a capa, e o terceiro
+        # leva rate limit. Antes disso, o fallback mandava texto sem foto em
+        # silêncio — o Felipe recebia um card sem imagem e concluía que o post
+        # ia sair sem imagem, o que não era verdade. Respeitar o retry_after
+        # que o próprio Telegram informa custa segundos e salva o card.
         if result is not None and not result.get("ok"):
+            espera = ((result.get("parameters") or {}).get("retry_after") or 0)
+            if espera and espera <= 30:
+                log.info("Telegram pediu %ss antes de reenviar a foto; aguardando", espera)
+                time.sleep(espera + 1)
+                result = _enviar("sendPhoto", pedido)
+
+        if result is not None and not result.get("ok"):
+            log.warning("sendPhoto recusado (%s) — a aprovação vai sem imagem",
+                        result.get("description"))
             result = None  # cai no texto abaixo
 
     if result is None:
@@ -263,8 +310,6 @@ _REDE_LABEL = {
 
 def _hora_brt(iso: str) -> str:
     """ISO-8601 UTC no fuso do Felipe, para ler sem converter de cabeça."""
-    from datetime import datetime, timezone
-
     try:
         quando = datetime.fromisoformat((iso or "").replace("Z", "+00:00"))
     except ValueError:

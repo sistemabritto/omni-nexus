@@ -556,10 +556,22 @@ def _recompute_goal_from_tickets(goal_id, conn) -> None:
     if not goal_row:
         return
     metric_type = goal_row["metric_type"] if hasattr(goal_row, "keys") else goal_row[0]
-    if metric_type != "count":
-        # COUNT-of-terminal-tickets only makes sense for count goals — for
-        # currency/percentage/boolean goals it would clobber the real value
-        # (e.g. R$45.000 MRR -> 1) on the first ticket status transition.
+    # `tasks` conta exatamente a mesma coisa que `count` — tarefas concluídas,
+    # que hoje são tickets. Ele ficou de fora deste guard e, como goal_tasks
+    # foi congelado no goal-ticket-unification, NADA passou a escrever nessas
+    # metas: elas congelaram no valor de junho.
+    #
+    # O estrago é silencioso e foi o que o Felipe descreveu como "meta que não
+    # foi cumprida marcada como cumprida". Medido em 2026-07-26: a meta
+    # `pipeline-reels-vertical-pronto` estava `achieved` com current_value=7 e
+    # ZERO tickets — o pipeline de vídeo nem existe. `reports-whatsapp`
+    # marcava 5/5 com 4 tickets reais, e `evonexus-self-heal` subestimava
+    # trabalho já feito (2 gravado contra 3 reais).
+    #
+    # currency/percentage/boolean seguem de fora com razão: contar tickets ali
+    # destruiria o valor real (R$ 45.000 de MRR viraria 1 na primeira
+    # transição de status).
+    if metric_type not in ("count", "tasks"):
         return
     done = conn.execute(
         "SELECT COUNT(*) FROM tickets WHERE goal_id = ? AND status IN ('resolved','closed')",

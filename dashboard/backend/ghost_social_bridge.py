@@ -230,7 +230,22 @@ def limpar(texto: str, limite: int) -> str:
     return (corte[:espaco] if espaco > 0 else corte).rstrip(" ,;:-") + "…"
 
 
-def comentarios_da_rede(rede: str, link: str) -> list[str]:
+def link_com_origem(link: str, rede: str, titulo: str = "") -> str:
+    """O link do artigo carregando a rede de onde o clique veio.
+
+    Sem isto o site registra tudo como "direct": em 30 dias, 134 de 141 visitas
+    chegaram sem origem, e não havia como saber se o tráfego dos funis vinha do
+    blog, do X ou de indicação.
+    """
+    try:
+        from utm import marcar
+
+        return marcar(link, rede, campanha=titulo)
+    except Exception:  # noqa: BLE001 — link sem marcação ainda é link
+        return link
+
+
+def comentarios_da_rede(rede: str, link: str, titulo: str = "") -> list[str]:
     """Comentários a encadear no post — hoje, o link que o corpo prometeu.
 
     Só o LinkedIn usa: o formato manda o link para o primeiro comentário para
@@ -238,10 +253,10 @@ def comentarios_da_rede(rede: str, link: str) -> list[str]:
     """
     if rede not in LINK_NO_COMENTARIO or not link:
         return []
-    return [f"Artigo completo: {link}"]
+    return [f"Artigo completo: {link_com_origem(link, rede, titulo)}"]
 
 
-def garantir_link(texto: str, link: str, rede: str) -> str:
+def garantir_link(texto: str, link: str, rede: str, titulo: str = "") -> str:
     """Anexa o link do artigo quando a rede exige e o modelo esqueceu.
 
     O FORMATO já manda "Link no fim" para o X, mas pedir não é garantir: uma
@@ -254,10 +269,14 @@ def garantir_link(texto: str, link: str, rede: str) -> str:
     """
     if rede not in LINK_NO_CORPO or not link or link in texto:
         return texto
-    sobra = LIMITES.get(rede, 280) - CUSTO_DO_LINK.get(rede, len(link)) - 2  # 2 = "\n\n"
+    # Marcado com a rede de origem antes de medir: o UTM ocupa espaço real no
+    # limite de caracteres, e reservar sem contá-lo estouraria o post do X —
+    # que é exatamente como o Postiz devolveu 400 "post is too long".
+    marcado = link_com_origem(link, rede, titulo)
+    sobra = LIMITES.get(rede, 280) - CUSTO_DO_LINK.get(rede, len(marcado)) - 2  # 2 = "\n\n"
     if sobra <= 0:
         return texto
-    return f"{limpar(texto, sobra)}\n\n{link}"
+    return f"{limpar(texto, sobra)}\n\n{marcado}"
 
 
 def adaptar(post: dict, rede: str) -> str:
@@ -298,7 +317,7 @@ def adaptar(post: dict, rede: str) -> str:
                             if c.get("type") == "output_text":
                                 txt += c.get("text", "")
                 if txt.strip():
-                    return garantir_link(limpar(txt, LIMITES[rede]), link, rede)
+                    return garantir_link(limpar(txt, LIMITES[rede]), link, rede, titulo)
         except Exception:  # noqa: BLE001 — fallback abaixo cobre qualquer falha
             pass
 
@@ -308,7 +327,7 @@ def adaptar(post: dict, rede: str) -> str:
     # X e Threads recebem o link por `garantir_link` abaixo, que reserva o
     # espaço dele antes de cortar. Anexar aqui à mão duplicaria em uma rede e
     # esqueceria na outra — foi assim que o Threads foi ao ar sem link.
-    return garantir_link(limpar(base, LIMITES[rede]), link, rede)
+    return garantir_link(limpar(base, LIMITES[rede]), link, rede, titulo)
 
 
 # ── aprovações ───────────────────────────────────────────────────────────
@@ -422,7 +441,7 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             # e no Threads não vai link nenhum, então não existe preview para
             # competir; e no X uma imagem própria rende mais que o card de link.
             "publish_media": midia,
-            "publish_comments": comentarios_da_rede(rede, post.get("url") or ""),
+            "publish_comments": comentarios_da_rede(rede, post.get("url") or "", post.get("title") or ""),
             "publish_at": agendado.isoformat().replace("+00:00", "Z"),
             # Link do artigo, para conferir o texto completo na hora de aprovar.
             # Em draft o Ghost devolve a URL de preview (/p/<uuid>/), que abre
@@ -520,7 +539,7 @@ def refazer(outcome_anterior: dict, feedback: str, ticket_id: str,
     # versão e outra o gate do blog pode ter trocado a imagem, e republicar a
     # antiga entregaria uma thumb que o Felipe já reprovou.
     novo["publish_media"] = midia_do_post(post)[0]
-    novo["publish_comments"] = comentarios_da_rede(rede, post.get("url") or "")
+    novo["publish_comments"] = comentarios_da_rede(rede, post.get("url") or "", post.get("title") or "")
     novo["result"] = (f"Versão {tentativa + 1} de {rede} do artigo "
                       f"'{post.get('title')}' (após ajuste pedido)")
 

@@ -73,7 +73,8 @@ def test_artigo_sem_capa_diz_o_motivo_em_vez_de_sair_calado(monkeypatch, post_co
 
 def test_x_ganha_o_link_quando_o_modelo_esquece():
     texto = bridge.garantir_link("Gancho sem link nenhum.", ARTIGO, "x")
-    assert texto.endswith(ARTIGO)
+    assert ARTIGO in texto
+    assert "utm_source=x" in texto, "o link precisa dizer de onde veio o clique"
     assert texto.startswith("Gancho sem link nenhum.")
 
 
@@ -103,7 +104,8 @@ def test_toda_rede_de_link_no_corpo_recebe_o_link(rede):
     foi ao ar terminando em "Resultado?" — sem link e sem chamada nenhuma.
     """
     texto = bridge.garantir_link("Ideia completa e fechada.", ARTIGO, rede)
-    assert texto.endswith(ARTIGO), f"{rede} foi ao ar sem link"
+    assert ARTIGO in texto, f"{rede} foi ao ar sem link"
+    assert f"utm_source={rede}" in texto
 
 
 @pytest.mark.parametrize("rede", ["x", "threads"])
@@ -117,7 +119,7 @@ def test_o_link_sobrevive_ao_truncamento(rede):
     longo = "palavra " * 200
     texto = bridge.garantir_link(longo.strip(), ARTIGO, rede)
     assert len(texto) <= bridge.LIMITES[rede]
-    assert texto.endswith(ARTIGO)
+    assert ARTIGO in texto
 
 
 def test_threads_nao_termina_com_pergunta_no_vazio():
@@ -132,11 +134,10 @@ def test_threads_nao_termina_com_pergunta_no_vazio():
 def test_texto_longo_e_encurtado_para_o_link_caber():
     longo = "palavra " * 60  # ~480 caracteres, muito além dos 280 do X
     texto = bridge.garantir_link(longo.strip(), ARTIGO, "x")
-    corpo = texto.rsplit("\n\n", 1)[0]
-    # Reserva o tamanho REAL da URL: quem recusa o post é o Postiz, que mede o
-    # texto bruto, não o X, que contaria 23. Ver o teste do 400 mais abaixo.
-    assert len(corpo) <= 280 - len(ARTIGO) - 2
-    assert texto.endswith(ARTIGO)
+    # Reserva o tamanho REAL da URL JÁ MARCADA: quem recusa o post é o Postiz,
+    # que mede o texto bruto, não o X, que contaria 23. O UTM entra nessa conta.
+    assert len(texto) <= 280
+    assert ARTIGO in texto
 
 
 def test_sem_link_no_artigo_nada_e_inventado():
@@ -146,7 +147,9 @@ def test_sem_link_no_artigo_nada_e_inventado():
 # ── 3. o link no primeiro comentário do LinkedIn ─────────────────────────
 
 def test_linkedin_leva_o_link_como_comentario():
-    assert bridge.comentarios_da_rede("linkedin", ARTIGO) == [f"Artigo completo: {ARTIGO}"]
+    c = bridge.comentarios_da_rede("linkedin", ARTIGO)[0]
+    assert c.startswith("Artigo completo: ")
+    assert ARTIGO in c and "utm_source=linkedin" in c
 
 
 @pytest.mark.parametrize("rede", ["x", "threads", "instagram"])
@@ -521,7 +524,7 @@ def test_link_do_x_reserva_o_tamanho_real_da_url():
     longo = "palavra " * 60
     texto = bridge.garantir_link(longo.strip(), ARTIGO, "x")
     assert len(texto) <= 280, f"{len(texto)} caracteres — o Postiz recusa"
-    assert texto.endswith(ARTIGO)
+    assert ARTIGO in texto
 
 
 def test_post_curto_com_link_cabe_inteiro():

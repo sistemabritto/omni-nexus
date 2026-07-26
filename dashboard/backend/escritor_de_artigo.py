@@ -164,6 +164,13 @@ def escrever(pauta: dict, *, noticia: str = "") -> tuple[dict, str]:
                  f'do zero, <a href="{funil_url}">veja como a gente faz</a>.</p>')
         log.info("CTA de funil ausente no artigo '%s' — anexado ao final", titulo[:60])
 
+    # Marca a origem no link do funil. Sem isto o clique chega ao site como
+    # "direct" e não há como saber que veio do blog — em 30 dias, 134 de 141
+    # visitas caíram nesse balde cego.
+    from utm import marcar_no_texto
+
+    html = marcar_no_texto(html, "blog", campanha=titulo)
+
     return {
         "titulo": titulo,
         "excerpt": (artigo.get("excerpt") or "").strip()[:300],

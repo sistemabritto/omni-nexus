@@ -217,3 +217,50 @@ def test_leads_indisponiveis_nao_perdem_o_analytics(monkeypatch):
     m = {x["metrica"] for x in sa.coletar()}
     assert mc.VISITAS in m
     assert mc.LEADS not in m
+
+
+# ── atribuição do clique ao artigo ───────────────────────────────────────
+# 2026-07-27: `trackCta` existia no site e nenhum botão a chamava — 636
+# pageviews contra 1 clique registrado. Depois de instrumentar, o que faltava
+# era responder QUAL artigo converteu: o total sozinho não distingue um post
+# que converte de vinte que não convertem.
+
+def test_resumo_mostra_quais_artigos_converteram(banco):
+    hoje = date.today()
+    banco.gravar([
+        {"metrica": mc.CLIQUES_POR_ARTIGO, "origem": "bot-para-whatsapp", "valor": 7},
+        {"metrica": mc.CLIQUES_POR_ARTIGO, "origem": "trafego-pago-instagram", "valor": 2},
+    ], dia=hoje)
+
+    por_artigo = banco.resumo()["por_artigo"]
+    assert [a["artigo"] for a in por_artigo] == ["bot-para-whatsapp", "trafego-pago-instagram"]
+    assert por_artigo[0]["valor"] == 7
+
+
+def test_taxa_de_clique_fecha_o_funil(banco):
+    """De quem chegou, quantos clicaram — o número que dizia zero enquanto
+    nenhum botão do site registrava."""
+    hoje = date.today()
+    banco.gravar([{"metrica": mc.VISITAS, "valor": 200},
+                  {"metrica": mc.CLIQUES_CTA, "valor": 13}], dia=hoje)
+    assert banco.resumo()["taxa_clique_pct"] == 6.5
+
+
+def test_taxa_de_clique_sem_visita_e_nula_em_vez_de_zero(banco):
+    """Zero sugere "ninguém clicou"; nulo diz "ainda não há o que medir"."""
+    assert banco.resumo()["taxa_clique_pct"] is None
+
+
+def test_variacao_de_cliques_entra_no_resumo(banco):
+    """Sem a série de cliques, dá para ver o total mas não se está subindo."""
+    hoje = date.today()
+    banco.gravar([{"metrica": mc.CLIQUES_CTA, "valor": 4}], dia=hoje - timedelta(days=7))
+    banco.gravar([{"metrica": mc.CLIQUES_CTA, "valor": 12}], dia=hoje)
+    v = banco.resumo()["variacao_7d"][mc.CLIQUES_CTA]
+    assert (v["de"], v["para"], v["pct"]) == (4.0, 12.0, 200.0)
+
+
+def test_resumo_de_base_vazia_nao_quebra(banco):
+    r = banco.resumo()
+    assert r["por_artigo"] == []
+    assert r["taxa_clique_pct"] is None

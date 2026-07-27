@@ -60,6 +60,11 @@ CLIQUES_CTA = "cliques_cta"
 LEADS = "leads"
 LEADS_FECHADOS = "leads_fechados"
 VISITAS_FUNIL = "visitas_funil"
+# Clique em CTA atribuído ao artigo que trouxe a visita. A `origem` aqui é o
+# slug da campanha — que `utm.py` monta a partir do post —, então esta é a
+# única métrica que responde "qual artigo converteu", e não apenas "quantos
+# cliques houve". É a pergunta que justifica publicar 21 artigos por semana.
+CLIQUES_POR_ARTIGO = "cliques_por_artigo"
 
 
 def conectar() -> sqlite3.Connection:
@@ -199,12 +204,32 @@ def resumo(*, conn: sqlite3.Connection | None = None) -> dict:
         soma = sum(o["valor"] for o in por_origem) or (total or 0)
         cego = round(100 * direto / soma, 1) if soma else None
 
+        # Quais artigos converteram. Publicar 21 por semana só faz sentido se
+        # der para dizer quais deles trouxeram clique — o total sozinho não
+        # distingue um artigo que converte de vinte que não convertem.
+        por_artigo = []
+        dia_artigo = conn.execute(
+            "SELECT MAX(dia) d FROM metricas_crescimento WHERE metrica=?",
+            (CLIQUES_POR_ARTIGO,),
+        ).fetchone()
+        if dia_artigo and dia_artigo["d"]:
+            por_artigo = [dict(r) for r in conn.execute(
+                "SELECT origem AS artigo, valor FROM metricas_crescimento"
+                " WHERE metrica=? AND dia=? AND origem<>'total'"
+                " ORDER BY valor DESC LIMIT 10", (CLIQUES_POR_ARTIGO, dia_artigo["d"]))]
+
+        # A taxa que fecha o funil: de quem chegou, quantos clicaram. É o
+        # número que dizia zero enquanto nenhum botão do site registrava.
+        visitas = atual.get(VISITAS) or 0
+        cliques = atual.get(CLIQUES_CTA) or 0
         return {
             "atual": atual,
             "por_origem": por_origem,
+            "por_artigo": por_artigo,
+            "taxa_clique_pct": round(100 * cliques / visitas, 2) if visitas else None,
             "trafego_sem_origem_pct": cego,
             "variacao_7d": {m: variacao(m, dias=7, conn=conn)
-                            for m in (VISITAS, LEADS, VISITAS_FUNIL)},
+                            for m in (VISITAS, CLIQUES_CTA, LEADS, VISITAS_FUNIL)},
             "ultimo_dia": ultimo_dia["d"] if ultimo_dia else None,
         }
     finally:

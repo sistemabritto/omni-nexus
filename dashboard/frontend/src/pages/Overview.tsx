@@ -53,6 +53,8 @@ interface OverviewData {
   crescimento?: {
     atual: Record<string, number | null>
     por_origem: { origem: string; valor: number }[]
+    por_artigo: { artigo: string; valor: number }[]
+    taxa_clique_pct: number | null
     trafego_sem_origem_pct: number | null
     variacao_7d: Record<string, { de: number; para: number; delta: number; pct: number | null } | null>
     ultimo_dia: string | null
@@ -357,8 +359,10 @@ export default function Overview() {
             {([
               ['visitas', 'Visitas'],
               ['visitas_funil', 'Nos funis'],
+              // O passo que faltava entre chegar e virar lead. Ficou em zero
+              // até 27/07/2026 porque nenhum botão do site registrava clique.
+              ['cliques_cta', 'Cliques'],
               ['leads', 'Leads'],
-              ['leads_fechados', 'Fechados'],
             ] as const).map(([chave, rotulo]) => {
               const valor = data.crescimento!.atual[chave]
               const v = data.crescimento!.variacao_7d?.[chave]
@@ -402,8 +406,22 @@ export default function Overview() {
             </div>
           )}
 
+          {/* Taxa de clique: de quem chegou, quantos agiram. É o elo que
+              faltava — leads sem cliques não dizia se o problema era o
+              tráfego ou a oferta. */}
+          {data.crescimento.taxa_clique_pct !== null && (
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3 mb-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="text-xs text-[#8b949e]">Visitas que clicaram num CTA</span>
+                <span className="text-sm font-semibold tabular-nums text-[#e6edf3]">
+                  {data.crescimento.taxa_clique_pct}%
+                </span>
+              </div>
+            </div>
+          )}
+
           {data.crescimento.por_origem.length > 0 && (
-            <div>
+            <div className="mb-4">
               <div className="text-xs text-[#8b949e] mb-2">De onde vem o tráfego</div>
               <div className="flex flex-wrap gap-2">
                 {data.crescimento.por_origem.map((o) => (
@@ -413,6 +431,22 @@ export default function Overview() {
                   >
                     {o.origem} <span className="text-[#8b949e] tabular-nums">{o.valor}</span>
                   </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Qual artigo converteu. Publicar 21 por semana só se sustenta se
+              der para separar os que trazem clique dos que não trazem. */}
+          {data.crescimento.por_artigo.length > 0 && (
+            <div>
+              <div className="text-xs text-[#8b949e] mb-2">Artigos que geraram clique</div>
+              <div className="space-y-1.5">
+                {data.crescimento.por_artigo.map((a) => (
+                  <div key={a.artigo} className="flex items-baseline justify-between gap-3 text-xs">
+                    <span className="text-[#e6edf3] truncate">{a.artigo}</span>
+                    <span className="text-[#00FFA7] tabular-nums shrink-0">{a.valor}</span>
+                  </div>
                 ))}
               </div>
             </div>

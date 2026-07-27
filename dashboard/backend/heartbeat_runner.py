@@ -240,7 +240,7 @@ def _load_trigger_payload(trigger_id: str | None, conn) -> dict | None:
         return None
     if not row:
         return None
-    raw = row["payload"] if hasattr(row, "keys") else row[0]
+    raw = row["payload"]
     if not raw:
         return None
     try:

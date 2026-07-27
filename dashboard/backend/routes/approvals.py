@@ -22,7 +22,7 @@ from flask import Blueprint, jsonify, request, g
 from flask_login import current_user
 
 from models import db, has_permission, Ticket, TICKET_PRIORITIES, PRIORITY_RANK, GoalProject, Goal
-from routes._helpers import valid_approval_bridge_token
+from routes._helpers import raw_conn, valid_approval_bridge_token
 
 bp = Blueprint("approvals", __name__)
 
@@ -182,7 +182,7 @@ def _pedir_ajuste(approval_id: int, feedback: str, decided_by: str,
     if row.ticket_id:
         from heartbeat_outcome import _move_ticket
 
-        conn = sqlite3.connect(_db_path())
+        conn = raw_conn()
         try:
             _move_ticket(row.ticket_id, "in_progress", row.agent or "system",
                          f"Ajuste pedido por {decided_by}: {feedback[:400]}", conn)
@@ -291,7 +291,7 @@ def _apply_decision(approval_id: int, decision: str, decided_by: str, reason: st
     if row.gate_type == "publish":
         from heartbeat_outcome import _move_ticket, _run_publish_action
 
-        conn = sqlite3.connect(_db_path())
+        conn = raw_conn()
         try:
             if decision == "approve":
                 result = _run_publish_action(row, conn)

@@ -11,6 +11,28 @@ log = logging.getLogger(__name__)
 WORKSPACE = Path(__file__).resolve().parent.parent.parent.parent
 
 
+def db_path() -> str:
+    return str(WORKSPACE / "dashboard" / "data" / "evonexus.db")
+
+
+def raw_conn():
+    """Conexão crua para as funções de `heartbeat_outcome`.
+
+    Elas recebem a conexão de quem chama e não sabem como ela foi aberta.
+    Enquanto cada rota fazia `sqlite3.connect(_db_path())` puro, chegavam ora
+    `sqlite3.Row`, ora tupla — e a mesma linha precisava ser lida das duas
+    formas, o que produziu doze `row["x"] if hasattr(row, "keys") else row[0]`
+    espalhados. O timeout também importa: estes são caminhos de ESCRITA, e o
+    padrão de 5 s dava `database is locked` sob concorrência com o heartbeat,
+    que usa 30.
+    """
+    import sqlite3
+
+    conn = sqlite3.connect(db_path(), timeout=30)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 def valid_approval_bridge_token(auth_header: str | None) -> bool:
     """Constant-time check against APPROVAL_BRIDGE_TOKEN (goal-ticket-unification).
 

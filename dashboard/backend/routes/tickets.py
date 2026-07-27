@@ -27,6 +27,7 @@ from models import (
     PRIORITY_RANK, TICKET_PRIORITIES, TICKET_STATUSES,
     db, has_permission, audit,
 )
+from routes._helpers import raw_conn
 
 bp = Blueprint("tickets", __name__)
 
@@ -397,7 +398,7 @@ def update_ticket(ticket_id: str):
     if ("status" in changes or "goal_id" in data) and (old_goal_id or ticket.goal_id):
         import sqlite3
         from heartbeat_outcome import _recompute_goal_from_tickets
-        _conn = sqlite3.connect(_db_path())
+        _conn = raw_conn()
         try:
             for _gid in {gid for gid in (old_goal_id, ticket.goal_id) if gid}:
                 _recompute_goal_from_tickets(_gid, _conn)
@@ -439,7 +440,7 @@ def delete_ticket(ticket_id: str):
         if ticket.goal_id:
             import sqlite3
             from heartbeat_outcome import _recompute_goal_from_tickets
-            _conn = sqlite3.connect(_db_path())
+            _conn = raw_conn()
             try:
                 _recompute_goal_from_tickets(ticket.goal_id, _conn)
                 _conn.commit()
@@ -632,7 +633,7 @@ def bulk_action():
     if goal_ids_to_recompute:
         import sqlite3
         from heartbeat_outcome import _recompute_goal_from_tickets
-        _conn = sqlite3.connect(_db_path())
+        _conn = raw_conn()
         try:
             for goal_id in goal_ids_to_recompute:
                 _recompute_goal_from_tickets(goal_id, _conn)

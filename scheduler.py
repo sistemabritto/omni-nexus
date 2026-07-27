@@ -159,6 +159,13 @@ def setup_schedule():
     schedule.every().day.at("05:30").do(
         run_adw, "Métricas de Crescimento", "daily_growth_metrics.py")
 
+    # Domingo 09:00, uma hora depois do research: a semana já fechou e as
+    # métricas de sábado já foram coletadas. Lê o funil, acha o maior
+    # vazamento e abre um ticket com a hipótese — a decisão continua humana,
+    # e é ela que vira memória para a revisão seguinte.
+    schedule.every().sunday.at("09:00").do(
+        run_adw, "Revisão do Funil", "weekly_funnel_review.py")
+
     # Hourly activity report during business hours (08h-20h BRT)
     schedule.every().hour.do(_hourly_report_safe)
 

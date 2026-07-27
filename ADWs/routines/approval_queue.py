@@ -120,11 +120,18 @@ def get_stats() -> dict:
 
 
 def format_telegram_notification(item: dict) -> str:
-    """Format a queue item for Telegram notification."""
-    ct = item.get("content_type", "post")
-    title = item.get("title", "Sem título")[:100]
-    body = item.get("body", "")[:300]
-    agent = item.get("agent", "sistema")
+    """Format a queue item for Telegram notification.
+
+    Título e corpo são texto de conteúdo — passam por `_esc` porque a
+    mensagem vai com parse_mode=HTML e um `<` no título derruba o envio
+    inteiro com 400, sem deixar rastro além de um `False` silencioso.
+    """
+    from notifications import _esc
+
+    ct = _esc(str(item.get("content_type", "post")))
+    title = _esc(str(item.get("title", "Sem título"))[:100])
+    body = _esc(str(item.get("body", ""))[:300])
+    agent = _esc(str(item.get("agent", "sistema")))
     item_id = item["id"]
 
     return (

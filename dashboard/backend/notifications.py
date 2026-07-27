@@ -113,6 +113,7 @@ def _send_telegram(text: str, *, preview: bool = False) -> bool:
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     cid = os.environ.get("TELEGRAM_CHAT_ID", "")
     if not token or not cid:
+        log.warning("Telegram não enviou: TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID ausentes")
         return False
     try:
         payload = urllib.parse.urlencode({
@@ -125,7 +126,19 @@ def _send_telegram(text: str, *, preview: bool = False) -> bool:
         req = urllib.request.Request(url, data=payload, method="POST")
         with urllib.request.urlopen(req, timeout=15) as resp:
             ok = resp.status == 200
-    except Exception:
+    except urllib.error.HTTPError as exc:
+        # Distinguir "sem credencial" de "Telegram recusou o payload" é o que
+        # torna o log útil: o 400 por HTML malformado era engolido junto com
+        # tudo, e quem investigava ia conferir o .env em vez do texto enviado.
+        detalhe = ""
+        try:
+            detalhe = exc.read()[:300].decode(errors="replace")
+        except Exception:  # noqa: BLE001
+            pass
+        log.warning("Telegram recusou a mensagem (%s): %s", exc.code, detalhe)
+        return False
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Telegram inacessível: %s", exc)
         return False
     if ok:
         _append_bot_memory(cid, text)
@@ -424,8 +437,8 @@ def notify_heartbeat_success(heartbeat_id: str, agent: str, duration_ms: int,
 
     text = (
         f"✅ <b>Heartbeat OK</b>\n\n"
-        f"🔧 <b>{heartbeat_id}</b> | 🤖 {agent}\n"
-        f"⏱ {dur}{cost}{model_str}{tok}"
+        f"🔧 <b>{_esc(str(heartbeat_id))}</b> | 🤖 {_esc(str(agent))}\n"
+        f"⏱ {dur}{cost}{_esc(model_str)}{tok}"
     )
     return _send_telegram(text)
 
@@ -442,9 +455,9 @@ def notify_heartbeat_failure(heartbeat_id: str, agent: str, error: str,
 
     text = (
         f"⚠️ <b>Heartbeat FAIL</b>\n\n"
-        f"🔧 <b>{heartbeat_id}</b> | 🤖 {agent}\n"
+        f"🔧 <b>{_esc(str(heartbeat_id))}</b> | 🤖 {_esc(str(agent))}\n"
         f"⏱ {dur}{att}\n"
-        f"📝 <code>{err}</code>"
+        f"📝 <code>{_esc(err)}</code>"
     )
     return _send_telegram(text)
 
@@ -455,10 +468,10 @@ def notify_task_success(task_name: str, task_type: str = "",
     if not _should_send("task_success", task_name):
         return False
 
-    preview = f"\n📋 {result_preview[:150]}" if result_preview else ""
+    preview = f"\n📋 {_esc(result_preview[:150])}" if result_preview else ""
     text = (
         f"✅ <b>Task Completa</b>\n\n"
-        f"📌 <b>{task_name}</b> ({task_type}){preview}"
+        f"📌 <b>{_esc(str(task_name))}</b> ({_esc(str(task_type))}){preview}"
     )
     return _send_telegram(text)
 
@@ -470,8 +483,8 @@ def notify_task_failure(task_name: str, error: str) -> bool:
 
     text = (
         f"❌ <b>Task Falhou</b>\n\n"
-        f"📌 <b>{task_name}</b>\n"
-        f"📝 <code>{error[:200]}</code>"
+        f"📌 <b>{_esc(str(task_name))}</b>\n"
+        f"📝 <code>{_esc(str(error)[:200])}</code>"
     )
     return _send_telegram(text)
 
@@ -484,7 +497,7 @@ def notify_routine_success(routine_name: str, duration_s: float = 0) -> bool:
     dur = f"⏱ {duration_s:.0f}s" if duration_s > 0 else ""
     text = (
         f"✅ <b>Rotina OK</b>\n\n"
-        f"🔄 <b>{routine_name}</b> {dur}"
+        f"🔄 <b>{_esc(str(routine_name))}</b> {dur}"
     )
     return _send_telegram(text)
 
@@ -495,15 +508,15 @@ def notify_approval_pending(item_name: str, item_type: str = "post",
     """Report pending approval — ALWAYS sends (no debounce)."""
     text = (
         f"🔔 <b>Aprovação Pendente</b>\n\n"
-        f"📝 <b>{item_name}</b> ({item_type})\n"
+        f"📝 <b>{_esc(str(item_name))}</b> ({_esc(str(item_type))})\n"
     )
     if details:
-        text += f"📋 {details[:300]}\n"
+        text += f"📋 {_esc(str(details)[:300])}\n"
     text += f"\n"
     if approve_cmd:
-        text += f"✅ <code>{approve_cmd}</code>\n"
+        text += f"✅ <code>{_esc(str(approve_cmd))}</code>\n"
     if reject_cmd:
-        text += f"❌ <code>{reject_cmd}</code>\n"
+        text += f"❌ <code>{_esc(str(reject_cmd))}</code>\n"
     if not approve_cmd and not reject_cmd:
         text += f"\nResponda com o ID para aprovar/reprovar"
 
@@ -522,11 +535,11 @@ def notify_agent_event(agent: str, event: str, details: str = "") -> bool:
         return False
 
     text = (
-        f"🤖 <b>{agent}</b>\n"
-        f"📌 {event}\n"
+        f"🤖 <b>{_esc(str(agent))}</b>\n"
+        f"📌 {_esc(str(event))}\n"
     )
     if details:
-        text += f"📋 {details[:200]}"
+        text += f"📋 {_esc(str(details)[:200])}"
 
     return _send_telegram(text)
 
@@ -535,5 +548,5 @@ def notify_info(title: str, message: str) -> bool:
     """Generic info notification."""
     if not _should_send("info", f"{title}:{int(time.time())}"):
         return False
-    text = f"ℹ️ <b>{title}</b>\n\n{message[:400]}"
+    text = f"ℹ️ <b>{_esc(str(title))}</b>\n\n{_esc(str(message)[:400])}"
     return _send_telegram(text)

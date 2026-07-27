@@ -108,6 +108,16 @@ O prompt já carrega:
 - **Gancho de notícia da semana**, quando existe — é o que faz a LLM citar o artigo.
 - **Proibição dos termos de marca** que não são nossos.
 
+**Travessão é proibido, e a proibição não é só no prompt.** `sem_travessao()`
+(`escritor_de_artigo.py`) roda no título, no excerpt e no HTML antes de publicar,
+e em `ghost_social_bridge.limpar()` antes do corte de limite de caractere — nessa
+ordem, porque trocar `—` por vírgula muda o tamanho e um post de X medido a 280
+antes da troca estoura depois. O símbolo é gramatical em português; o problema é
+que hoje o leitor o lê como assinatura de texto gerado, e foi a primeira coisa
+que o Felipe apontou ao revisar o site em 27/07/2026. Instrução negativa no
+prompt sozinha não resolve: o modelo reincide, porque encaixar aposto com
+travessão é hábito de treino. Testes: `tests/goals/test_sem_travessao.py`.
+
 Artigo nasce **sempre `draft`** no Ghost (`criar_rascunho`). Quem decide se vai ao
 ar é o gate no Telegram — criar já publicado tiraria do humano exatamente a
 decisão que o fluxo inteiro existe para preservar.

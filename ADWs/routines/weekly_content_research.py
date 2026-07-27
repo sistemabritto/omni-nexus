@@ -394,6 +394,43 @@ def descartar_repetidas(keywords: list[dict], ja_cobertos: list[str]) -> list[di
     return escolhidas
 
 
+def alternar_funis(keywords: list[dict], alvo: int) -> list[dict]:
+    """Rodízio entre os três funis, na ordem de retorno esperado dentro de cada.
+
+    Sem isto a seleção é puramente por volume/dificuldade, e o WhatsApp — que
+    tem volume de busca muito acima dos outros dois — leva a semana inteira. No
+    ciclo de 27/07/2026 foi exatamente o que aconteceu: 18 das 21 pautas eram
+    variação de "whatsapp alguma coisa", e os três posts de um mesmo dia
+    falavam do mesmo assunto. O dedupe não pega isso, porque "bot para
+    whatsapp" e "crm integrado ao whatsapp" são de fato pautas diferentes.
+
+    O rodízio também resolve o efeito no leitor, e não só no total: como as
+    pautas saem intercaladas e os dias são fatiados em blocos de três, cada dia
+    nasce com um assunto de cada funil.
+
+    Funil que esgota não segura os outros — o alvo continua sendo preenchido.
+    """
+    from escritor_de_artigo import FUNIS, funil_de
+
+    filas: dict[str, list[dict]] = {}
+    for kw in keywords:
+        filas.setdefault(funil_de(kw["kw"]), []).append(kw)
+
+    ordem = [f for f in FUNIS if filas.get(f)]
+    saida: list[dict] = []
+    while len(saida) < alvo and any(filas.values()):
+        for f in ordem:
+            if filas[f]:
+                saida.append(filas[f].pop(0))
+                if len(saida) >= alvo:
+                    break
+    if keywords:
+        distribuicao = ", ".join(f"{f}:{sum(1 for k in saida if funil_de(k['kw']) == f)}"
+                                 for f in ordem)
+        log(f"rodízio de funis — {distribuicao}")
+    return saida
+
+
 # ── 3b. o X quando o SEO não dá o bastante ───────────────────────────────
 
 def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> list[dict]:
@@ -606,6 +643,12 @@ def main() -> int:
     # em alta hoje não tem histórico de volume no DataForSEO — é justamente a
     # pauta que a concorrência ainda não escreveu.
     alvo = POSTS_POR_DIA * DIAS
+
+    # Equilibra a semana entre os funis ANTES de contar o que falta: sem isto o
+    # WhatsApp preenche os 21 slots sozinho e o X nunca é chamado, mesmo com os
+    # outros dois funis sem nenhuma pauta.
+    keywords = alternar_funis(keywords, alvo)
+
     if len(keywords) < alvo:
         faltam = alvo - len(keywords)
         log(f"faltam {faltam} pauta(s) para fechar a semana — buscando no X")

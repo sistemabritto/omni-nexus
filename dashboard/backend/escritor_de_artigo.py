@@ -39,20 +39,34 @@ FUNIS = {
 }
 
 
-def _funil_para(keyword: str) -> tuple[str, str]:
-    """Escolhe o funil pelo assunto da pauta.
+def funil_de(keyword: str) -> str:
+    """Slug do funil a que uma pauta pertence.
 
     Regra simples e explícita em vez de deixar o modelo escolher: ele inventaria
     um CTA genérico, e CTA genérico não converte. Na dúvida vai para /sistema,
     que é o guarda-chuva.
+
+    Pública porque o research semanal também precisa dela — é assim que ele
+    equilibra a semana entre os três funis em vez de deixar o WhatsApp, que tem
+    volume de busca muito maior, levar todos os 21 slots.
     """
     texto = keyword.lower()
-    if any(t in texto for t in ("whatsapp", "atendimento", "chatbot", "disparo", "lead")):
-        return FUNIS["whatsapp"]
+    # "lead" ficou de fora de propósito: é vocabulário dos três funis, e
+    # mandava "gerar leads com inteligência artificial" — seed do /sistema —
+    # para o CTA do WhatsApp.
+    if any(t in texto for t in ("whatsapp", "atendimento", "chatbot", "disparo")):
+        return "whatsapp"
     if any(t in texto for t in ("instagram", "tiktok", "youtube", "post", "conteúdo",
-                                "conteudo", "rede social", "seguidor")):
-        return FUNIS["socialjobs"]
-    return FUNIS["sistema"]
+                                "conteudo", "rede social", "redes sociais", "seguidor",
+                                "reels", "shorts", "stories", "story", "carrossel",
+                                "editorial", "engajamento")):
+        return "socialjobs"
+    return "sistema"
+
+
+def _funil_para(keyword: str) -> tuple[str, str]:
+    """URL e descrição do funil da pauta."""
+    return FUNIS[funil_de(keyword)]
 
 
 def _briefing_humanizer() -> str:

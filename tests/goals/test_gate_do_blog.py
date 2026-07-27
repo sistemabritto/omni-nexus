@@ -268,6 +268,21 @@ def test_falha_ao_publicar_nao_deriva(monkeypatch):
 
 # ── o rosto certo ────────────────────────────────────────────────────────
 
+# O banco de rostos é acervo pessoal e não vai para o repositório — no CI a
+# pasta não existe. Os testes que dependem do arquivo em disco são pulados lá;
+# os que verificam a lógica (rodízio de pose, lado, determinismo) rodam sempre,
+# porque não abrem imagem nenhuma.
+def _sem_banco_de_rostos() -> bool:
+    import thumbnail_maker as tm
+
+    return not tm.FACE_BANK.is_dir()
+
+
+precisa_das_fotos = pytest.mark.skipif(
+    _sem_banco_de_rostos(), reason="banco de rostos não versionado (ausente no CI)")
+
+
+@precisa_das_fotos
 def test_face_bank_aponta_para_as_fotos_reais():
     """A capa saiu com a cara de outra pessoa porque o primer dizia que a
     referência de ESTILO era foto do Felipe."""
@@ -300,6 +315,7 @@ def test_prompt_ancora_os_tracos_do_rosto():
 # referência, "terço DIREITO" fixo no prompt e "sorriso confiante" como
 # fallback de expressão em toda capa que o modelo não descrevesse.
 
+@precisa_das_fotos
 def test_todas_as_poses_do_banco_existem_em_disco():
     """Referência ausente derruba a capa inteira — e falha tarde, na API."""
     import thumbnail_maker as tm

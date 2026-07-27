@@ -198,7 +198,10 @@ def test_briefing_de_capa_tem_fallback_sem_modelo(monkeypatch):
     """Modelo fora do ar não pode impedir a capa de ser gerada."""
     monkeypatch.setattr(gp, "_pedir_ao_modelo", lambda *a, **k: "")
     b = gp.briefing_de_capa({"title": "Disparo em massa: o que bane seu número"})
-    assert b["headline"] and b["hook"] and b["expressao"]
+    # Expressão fica de fora: o registro sorteado pelo rodízio já descreve a
+    # cara, e o antigo fallback "sorriso confiante" era o que fazia toda capa
+    # sair igual quando o modelo não detalhava.
+    assert b["headline"] and b["hook"]
 
 
 def test_refacao_do_blog_respeita_o_teto(monkeypatch):
@@ -289,6 +292,97 @@ def test_prompt_ancora_os_tracos_do_rosto():
     assert "sem óculos" in p, "a referência de estilo usa óculos; o rosto certo não"
     assert "terço DIREITO" in p
     assert "A3E635" in p, "verde-limão é a cor da marca"
+
+
+# ── nem toda capa pode ter a mesma cara ──────────────────────────────────
+# 2026-07-27: "a thumbnail tá vindo muito parecida... o que não dá é pra sair
+# todas as thumb com a mesma cara e pose". Era literal: uma única foto de
+# referência, "terço DIREITO" fixo no prompt e "sorriso confiante" como
+# fallback de expressão em toda capa que o modelo não descrevesse.
+
+def test_todas_as_poses_do_banco_existem_em_disco():
+    """Referência ausente derruba a capa inteira — e falha tarde, na API."""
+    import thumbnail_maker as tm
+
+    faltando = [p["arquivo"].name for p in tm.POSES if not p["arquivo"].is_file()]
+    assert faltando == []
+
+
+def test_nenhuma_pose_vem_de_foto_com_outra_pessoa():
+    """`/v1/images/edits` com foto de grupo pode escolher o rosto errado — foi
+    exatamente o erro que este módulo existe para não repetir."""
+    import thumbnail_maker as tm
+
+    assert [p["arquivo"].name for p in tm.POSES if "family" in p["arquivo"].name] == []
+
+
+def test_capas_vizinhas_nunca_repetem_pose_nem_expressao():
+    import thumbnail_maker as tm
+
+    for n in range(24):
+        a, b = tm.variacao_de(n), tm.variacao_de(n + 1)
+        assert a["pose"]["arquivo"] != b["pose"]["arquivo"], f"pose repetida em {n}→{n+1}"
+        assert a["registro"] != b["registro"], f"registro repetido em {n}→{n+1}"
+
+
+def test_uma_semana_de_esteira_varre_o_banco_de_poses():
+    """21 pautas por ciclo têm de passar por todas as poses, não por duas."""
+    import thumbnail_maker as tm
+
+    usadas = {tm.variacao_de(n)["pose"]["arquivo"] for n in range(1, 22)}
+    assert len(usadas) == len(tm.POSES)
+
+
+def test_o_lado_do_quadro_tambem_alterna():
+    import thumbnail_maker as tm
+
+    lados = {tm.variacao_de(n)["lado"] for n in range(1, 22)}
+    assert lados == set(tm.LADOS)
+
+
+def test_a_mesma_pauta_gera_sempre_a_mesma_capa():
+    """Determinismo é o que faz retry não virar arte nova a cada tentativa."""
+    import thumbnail_maker as tm
+
+    assert tm.variacao_de(7) == tm.variacao_de(7)
+    assert tm.montar_prompt("X", "y", variacao=7) == tm.montar_prompt("X", "y", variacao=7)
+
+
+def test_o_prompt_muda_de_verdade_entre_variacoes():
+    import thumbnail_maker as tm
+
+    prompts = {tm.montar_prompt("MESMO TEXTO", "mesmo hook", variacao=n) for n in range(8)}
+    assert len(prompts) == 8
+
+
+def test_o_texto_vai_para_o_lado_oposto_ao_rosto():
+    """Rosto e headline no mesmo terço é capa ilegível em miniatura."""
+    import thumbnail_maker as tm
+
+    for n in range(8):
+        p = tm.montar_prompt("HEADLINE", "hook", variacao=n)
+        lado = tm.variacao_de(n)["lado"]
+        oposto = "esquerdo" if lado == "DIREITO" else "direito"
+        assert f"terço {lado}" in p
+        assert f"TEXTO GRANDE no lado {oposto}" in p
+
+
+def test_briefing_recebe_o_registro_sorteado(monkeypatch):
+    """Sem isto o modelo devolve "sorriso confiante" em toda capa."""
+    import ghost_publisher as gp
+    import thumbnail_maker as tm
+
+    visto = {}
+    monkeypatch.setattr(gp, "_pedir_ao_modelo", lambda p, **k: visto.setdefault("prompt", p) and "")
+    gp.briefing_de_capa({"title": "Artigo"}, registro=tm.REGISTROS[2])
+    assert tm.REGISTROS[2] in visto["prompt"]
+
+
+def test_expressao_nao_tem_mais_fallback_fixo(monkeypatch):
+    import ghost_publisher as gp
+
+    monkeypatch.setattr(gp, "_pedir_ao_modelo", lambda p, **k: "não é json")
+    assert gp.briefing_de_capa({"title": "Artigo"})["expressao"] == ""
 
 
 # ── o card precisa provar que o artigo mudou ─────────────────────────────

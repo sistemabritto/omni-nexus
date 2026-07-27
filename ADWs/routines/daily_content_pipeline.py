@@ -52,20 +52,27 @@ def load_env() -> None:
             os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
-def gerar_capa(post: dict, titulo: str) -> tuple[str, str]:
+def gerar_capa(post: dict, titulo: str, variacao: int = 0) -> tuple[str, str]:
     """Thumbnail com o rosto do Felipe. Devolve (url, erro).
 
     Usa o banco de rostos real — a referência errada já foi ao ar uma vez com
     a cara de outra pessoa, e o primer foi corrigido justamente por isso.
+
+    `variacao` é a prioridade da pauta: gira pose, expressão, lado do quadro e
+    enquadramento a cada capa. Enquanto era sempre a mesma foto de referência e
+    o mesmo "terço DIREITO, sorriso confiante", a esteira produzia a mesma
+    thumbnail com texto diferente, e o padrão só ensinava o leitor a ignorá-la.
     """
     from ghost_publisher import briefing_de_capa, subir_imagem
-    from thumbnail_maker import gerar, montar_prompt
+    from thumbnail_maker import gerar, montar_prompt, variacao_de
 
-    brief = briefing_de_capa({**post, "title": titulo})
+    var = variacao_de(variacao)
+    brief = briefing_de_capa({**post, "title": titulo}, registro=var["registro"])
     with tempfile.TemporaryDirectory() as tmp:
         destino = Path(tmp) / "capa.png"
-        erro = gerar(montar_prompt(brief["headline"], brief["hook"],
-                                   brief["expressao"], brief["badge"]), destino)
+        erro = gerar(montar_prompt(brief["headline"], brief["hook"], brief["expressao"],
+                                   brief["badge"], variacao=variacao),
+                     destino, referencia=var["pose"]["arquivo"])
         if erro:
             return "", erro
         return subir_imagem(destino)
@@ -116,7 +123,8 @@ def processar(pauta: dict, dry_run: bool) -> dict:
     mover_pauta(pauta["id"], "escrita", ghost_post_id=post_id, titulo=artigo["titulo"])
 
     aviso_capa = ""
-    url_capa, erro_capa = gerar_capa(buscar(post_id) or {}, artigo["titulo"])
+    url_capa, erro_capa = gerar_capa(buscar(post_id) or {}, artigo["titulo"],
+                                     variacao=pauta["prioridade"])
     if erro_capa:
         aviso_capa = f"capa falhou: {erro_capa}"
         log(f"{rotulo} — {aviso_capa}")

@@ -237,8 +237,14 @@ def revisar_texto(post: dict, feedback: str) -> str:
     return novo
 
 
-def briefing_de_capa(post: dict, feedback: str = "") -> dict:
-    """Headline e hook para a thumbnail, derivados do próprio artigo."""
+def briefing_de_capa(post: dict, feedback: str = "", registro: str = "") -> dict:
+    """Headline e hook para a thumbnail, derivados do próprio artigo.
+
+    `registro` é o tom facial já sorteado pelo rodízio de variações (ver
+    `thumbnail_maker.variacao_de`). Vai no prompt para o modelo escrever uma
+    expressão dentro daquele tom em vez de devolver "sorriso confiante" toda
+    vez — era isso que fazia todas as capas saírem com a mesma cara.
+    """
     prompt = (
         "Você define a arte da thumbnail de um artigo, no padrão de YouTube brasileiro do "
         "nicho de IA e automação. Devolva APENAS um JSON com as chaves headline, hook, "
@@ -246,8 +252,12 @@ def briefing_de_capa(post: dict, feedback: str = "") -> dict:
         "- headline: 2 a 5 PALAVRAS em maiúsculas, sem acento, que provoquem clique sem "
         "prometer o que o artigo não cumpre.\n"
         "- hook: descrição curta de UM objeto-símbolo em 3D glossy para o lado oposto ao rosto.\n"
-        "- expressao: expressão facial coerente com a pauta.\n"
-        "- badge: número ou palavra curta para um selo vermelho, ou string vazia.\n\n"
+        + (f"- expressao: descreva em até 12 palavras uma expressão facial concreta "
+           f"(olhos, sobrancelha, boca) para ESTE registro: {registro}. "
+           f"Ligue-a à pauta, sem repetir o registro palavra por palavra.\n"
+           if registro else
+           "- expressao: expressão facial concreta, coerente com a pauta.\n")
+        + "- badge: número ou palavra curta para um selo vermelho, ou string vazia.\n\n"
         f"TÍTULO: {post.get('title')}\nRESUMO: {post.get('custom_excerpt') or ''}\n"
         + (f"\nCRÍTICA DO AUTOR SOBRE A CAPA ANTERIOR (obedeça):\n{feedback}\n" if feedback else "")
     )
@@ -260,7 +270,9 @@ def briefing_de_capa(post: dict, feedback: str = "") -> dict:
     return {
         "headline": (dados.get("headline") or titulo.split(":")[0])[:60],
         "hook": dados.get("hook") or "um celular flutuando com a tela de conversa, ícone 3D glossy",
-        "expressao": dados.get("expressao") or "sorriso confiante",
+        # Sem fallback de expressão: o registro sorteado já descreve a cara, e
+        # "sorriso confiante" era justamente o que voltava sempre igual.
+        "expressao": dados.get("expressao") or "",
         "badge": dados.get("badge") or "",
     }
 

@@ -112,9 +112,20 @@ def test_step1_load_identity_missing_raises():
 # Step 7: Timeout enforcement
 # ---------------------------------------------------------------------------
 
-def test_step7_timeout_hard_kill():
-    """Subprocess exceeding timeout_seconds must be killed with status=timeout."""
+def test_step7_timeout_hard_kill(monkeypatch):
+    """Subprocess exceeding timeout_seconds must be killed with status=timeout.
+
+    HEARTBEAT_PROVIDER_FALLBACK=0 é o que faz o teste medir o que ele diz
+    medir. O teste é anterior ao provider_fallback: ele mocka subprocess.Popen,
+    mas step7 passou a rotear por invoke_with_fallback, que sem cadeia de
+    provider configurada devolve "No attempts made" e nunca chega ao Popen. O
+    resultado era status='fail' por um motivo que nada tem a ver com timeout —
+    e sem chave de provider (CI, e agora a suíte inteira pelo conftest) isso
+    falhava sempre.
+    """
     from heartbeat_runner import step7_invoke_claude
+
+    monkeypatch.setenv("HEARTBEAT_PROVIDER_FALLBACK", "0")
 
     # Patch subprocess to simulate a slow process
     import subprocess as _subprocess

@@ -82,15 +82,22 @@ def app(tmp_path):
         _models.db.session.add(admin)
         _models.db.session.commit()
 
-    # Blueprints are registered as-is: reloading them would rebind `db` in the
-    # route modules to whatever instance existed at reload time, which is the
-    # same trap the models reload set above.
+    # Os módulos de rota fazem `from models import db` no import, então ficam
+    # presos à instância que existia naquele momento. Vários outros arquivos da
+    # suíte (tests/goals, tests/backend, tests/heartbeats) ainda chamam
+    # `importlib.reload(models)` nas suas próprias fixtures — quando um deles
+    # roda antes, `models.db` já é outra instância e a rota chama a antiga com
+    # o app novo: "The current Flask app is not registered with this
+    # 'SQLAlchemy' instance". Recarregar as ROTAS (nunca `models`) as
+    # ressincroniza com o `db` corrente, seja ele qual for.
     import routes.tickets as _tickets_routes
+    importlib.reload(_tickets_routes)
     _app.register_blueprint(_tickets_routes.bp)
 
     # Register auth blueprint so /api/auth/login works
     try:
         import routes.auth_routes as _auth_routes
+        importlib.reload(_auth_routes)
         _app.register_blueprint(_auth_routes.bp)
     except Exception:
         pass
@@ -105,9 +112,23 @@ def app(tmp_path):
 
 @pytest.fixture
 def client(app):
+    """Cliente já autenticado como admin, sem passar pelo endpoint de login.
+
+    Logar por `POST /api/auth/login` arrastava `routes.auth_routes` — e com ele
+    o `limiter` global de `rate_limit`, preso ao app de quem o importou
+    primeiro. Rodando depois de tests/backend, o login falhava com "The current
+    Flask app is not registered with this 'SQLAlchemy' instance" e três testes
+    de tickets viravam ERROR sem nunca executar. A autenticação não é o assunto
+    deste arquivo: quem cobre login é tests/backend/test_auth_security.py.
+    """
+    from models import User
+
     with app.test_client() as c:
-        # Log in as admin
-        c.post("/api/auth/login", json={"username": "admin", "password": "password"})
+        with app.app_context():
+            admin_id = User.query.filter_by(username="admin").first().id
+        with c.session_transaction() as sessao:
+            sessao["_user_id"] = str(admin_id)
+            sessao["_fresh"] = True
         yield c
 
 

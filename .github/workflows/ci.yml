@@ -42,8 +42,22 @@ jobs:
       - name: Sync Python dependencies
         run: uv sync --frozen --dev
 
+      # tests/goals, tests/tickets e tests/heartbeats nunca rodavam em PR —
+      # eram 47 dos ~50 arquivos de teste no ponto cego. Todos os defeitos da
+      # auditoria de 2026-07-27 (CHECK sem 'archived', HTML não escapado no
+      # Telegram, formato de timestamp que matava o re-nudge) viviam ali.
+      #
+      # tests/backend/test_mempalace_routes.py segue de fora: 23 falhas por
+      # ModuleNotFoundError, porque mempalace só vem instalado na imagem do
+      # dashboard. É dívida de teste, não defeito de produto.
       - name: Run backend tests
-        run: uv run python -m pytest tests/backend/test_auth_security.py tests/backend/test_health_routes.py
+        run: >
+          uv run python -m pytest
+          tests/backend/test_auth_security.py
+          tests/backend/test_health_routes.py
+          tests/backend/test_share_publico.py
+          tests/goals tests/tickets tests/heartbeats
+          -q
 
   terminal-server:
     runs-on: ubuntu-latest

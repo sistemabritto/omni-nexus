@@ -359,8 +359,84 @@ class TestAtomicCheckout:
             json={"agent": "agent-y"},
             content_type="application/json",
         )
-        # 401 (not logged in via test client) or 403 (wrong agent)
-        assert resp.status_code in (401, 403)
+        assert resp.status_code == 403
+        assert resp.get_json()["error"] == "not_locked_by_you"
+
+    def _ticket_travado_por(self, app, dono: str) -> str:
+        from models import db, Ticket, PRIORITY_RANK
+
+        now = "2026-01-01T00:00:00.000000Z"
+        ticket_id = str(uuid.uuid4())
+        with app.app_context():
+            db.session.add(Ticket(
+                id=ticket_id, title="Release test", status="open", priority="medium",
+                priority_rank=PRIORITY_RANK["medium"], created_by="test",
+                created_at=now, updated_at=now, locked_at=now, locked_by=dono,
+            ))
+            db.session.commit()
+        return ticket_id
+
+    def test_soltar_lock_de_outro_agente_exige_manage(self, client, app):
+        """A autorização saía do corpo da requisição — os dois lados da
+        comparação eram controlados pelo chamador, e o checkout ainda devolve
+        `locked_by` no 409, então nem era preciso adivinhar. Qualquer um com
+        tickets:execute soltava o lock de qualquer agente."""
+        from models import Ticket, User, db
+
+        ticket_id = self._ticket_travado_por(app, "zara-cs")
+
+        # operator tem tickets:execute, mas só workspace:view.
+        with app.app_context():
+            operador = User(username="operador", role="operator")
+            operador.set_password("x")
+            db.session.add(operador)
+            db.session.commit()
+            operador_id = operador.id
+        with client.session_transaction() as sessao:
+            sessao["_user_id"] = str(operador_id)
+
+        resp = client.post(f"/api/tickets/{ticket_id}/release",
+                           json={"agent": "zara-cs"}, content_type="application/json")
+        assert resp.status_code == 403
+        assert resp.get_json()["error"] == "forced_release_requires_manage"
+
+        # E o lock continua de pé — negar sem soltar é o ponto.
+        with app.app_context():
+            assert db.session.get(Ticket, ticket_id).locked_by == "zara-cs"
+
+    def test_quem_tem_manage_solta_mas_fica_registrado_como_quebra(self, client, app):
+        """Quebrar o lock de um agente travado precisa continuar possível.
+        O que não pode é acontecer por acidente ou sem rastro."""
+        from models import Ticket, TicketActivity, db
+
+        ticket_id = self._ticket_travado_por(app, "zara-cs")
+
+        resp = client.post(f"/api/tickets/{ticket_id}/release",
+                           json={"agent": "zara-cs"}, content_type="application/json")
+        assert resp.status_code == 200
+
+        with app.app_context():
+            assert db.session.get(Ticket, ticket_id).locked_by is None
+            evento = TicketActivity.query.filter_by(
+                ticket_id=ticket_id, action="release").first()
+            assert evento is not None
+            assert evento.actor == "admin", "quem quebrou tem de aparecer, não o agente"
+            assert evento.payload_dict["forced"] is True
+
+    def test_soltar_o_proprio_lock_segue_sem_atrito(self, client, app):
+        """O caminho normal de um agente não pode ter ficado mais caro."""
+        from models import Ticket, TicketActivity, db
+
+        ticket_id = self._ticket_travado_por(app, "admin")
+
+        resp = client.post(f"/api/tickets/{ticket_id}/release",
+                           json={}, content_type="application/json")
+        assert resp.status_code == 200
+        with app.app_context():
+            assert db.session.get(Ticket, ticket_id).locked_by is None
+            evento = TicketActivity.query.filter_by(
+                ticket_id=ticket_id, action="release").first()
+            assert evento.payload_dict.get("forced") is None
 
 
 # ---------------------------------------------------------------------------

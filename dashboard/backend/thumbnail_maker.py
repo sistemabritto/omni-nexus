@@ -28,8 +28,45 @@ WORKSPACE = Path(__file__).resolve().parent.parent.parent
 
 FACE_BANK = WORKSPACE / "workspace" / "social" / "brands" / "evolution-foundation" / \
     "library" / "images" / "faces"
-# Melhor referência: bem iluminada, camiseta da marca, rosto nítido de frente.
-ROSTO_PADRAO = FACE_BANK / "front" / "fsbritto-corporate-arms-crossed-sistema-britto-2026-06-14.jpg"
+
+# Poses de referência. O banco tem mais fotos, mas só entram aqui as que o
+# modelo consegue usar sem errar a pessoa: nada de foto com outra gente no
+# quadro (o `/v1/images/edits` pode escolher o rosto errado) e nada de arte de
+# marca, que não é rosto.
+POSES = (
+    {"arquivo": FACE_BANK / "front" / "fsbritto-corporate-arms-crossed-sistema-britto-2026-06-14.jpg",
+     "pose": "de pé com os braços cruzados, postura de autoridade tranquila",
+     "cenario": "escritório escuro ao fundo, camiseta preta da marca"},
+    {"arquivo": FACE_BANK / "front" / "fsbritto-front-selfie-headset-notebook-2026-06-14.jpg",
+     "pose": "recostado na cadeira com headset no pescoço, ângulo de bastidor",
+     "cenario": "mesa de trabalho com notebook, clima de quem está operando agora"},
+    {"arquivo": FACE_BANK / "gestures" / "fsbritto-front-smile-fist-car-stronger-than-ever-2026-06-14.jpg",
+     "pose": "punho fechado erguido na altura do ombro, gesto de conquista",
+     "cenario": "camiseta preta, energia de quem acabou de resolver algo"},
+    {"arquivo": FACE_BANK / "expressions" / "fsbritto-front-smile-foco-2026-06-14.jpg",
+     "pose": "cabeça levemente inclinada, rosto próximo da câmera",
+     "cenario": "camiseta preta, fundo limpo, foco total no rosto"},
+)
+
+# Registro emocional da capa. Rotaciona junto com a pose para que duas capas
+# seguidas nunca cheguem com a mesma cara — a queixa que originou isto foi
+# "todas as thumbs com a mesma cara e pose". Metade contraria o texto de
+# propósito: capa que confirma o título é a que o olho já aprendeu a ignorar.
+REGISTROS = (
+    "expressão CONGRUENTE com o texto, intensidade alta",
+    "expressão INCONGRUENTE com o texto — se o texto alarma, o rosto está "
+    "tranquilo e debochado; se o texto promete, o rosto duvida",
+    "descrença: uma sobrancelha erguida, canto da boca torto, olhar de lado",
+    "espanto genuíno: olhos arregalados, boca entreaberta, sobrancelhas no alto",
+    "seriedade quase parada, sem sorriso, olhar fixo e direto na câmera",
+    "riso aberto e solto, cabeça levemente jogada para trás",
+)
+
+LADOS = ("DIREITO", "ESQUERDO")
+ENQUADRAMENTOS = ("close do peito para cima", "plano médio, da cintura para cima")
+
+# Compatibilidade: quem só quer "uma foto boa" continua pedindo esta.
+ROSTO_PADRAO = POSES[0]["arquivo"]
 
 # Traços que ancoram a identidade. Sem eles o modelo tende a "melhorar" o rosto
 # até virar outra pessoa, que é o erro que este módulo existe para evitar.
@@ -44,16 +81,44 @@ def _chave() -> str:
             or os.environ.get("OPENAI_API_KEY") or "").strip()
 
 
-def montar_prompt(headline: str, hook: str, expressao: str = "sorriso confiante",
-                  badge: str = "") -> str:
+def variacao_de(n: int) -> dict:
+    """A combinação visual da enésima capa: pose, lado, enquadramento, registro.
+
+    Determinística de propósito — regerar a capa da mesma pauta devolve a mesma
+    arte, o que faz retry e feedback funcionarem. Pose (4) e registro (6) andam
+    em passos diferentes, então capas vizinhas nunca coincidem em nenhum dos
+    dois, e a combinação inteira só se repete a cada 48 — mais de duas semanas
+    de esteira sem uma capa igual à outra.
+    """
+    n = int(n)
+    return {
+        "pose": POSES[n % len(POSES)],
+        "lado": LADOS[(n // len(POSES)) % len(LADOS)],
+        "enquadramento": ENQUADRAMENTOS[(n // (len(POSES) * len(LADOS))) % len(ENQUADRAMENTOS)],
+        "registro": REGISTROS[n % len(REGISTROS)],
+    }
+
+
+def montar_prompt(headline: str, hook: str, expressao: str = "",
+                  badge: str = "", variacao: int = 0) -> str:
     """Prompt no formato do primer: rosto num terço, texto black do outro lado."""
+    var = variacao_de(variacao)
+    pose, lado = var["pose"], var["lado"]
+    oposto = "esquerdo" if lado == "DIREITO" else "direito"
+    # A expressão do briefing já foi escrita a partir deste mesmo registro, e
+    # é mais concreta (olhos, sobrancelha, boca). Somar as duas só produziria
+    # contradição — "espanto genuíno, olhos semicerrados" — quando o modelo do
+    # briefing não obedecer. O registro fica como rede, para quando ele falhar.
+    rosto = expressao or var["registro"]
     linhas = [
         "Thumbnail 16:9 para YouTube/blog no nicho de IA e automação, em português do Brasil.",
-        f"PESSOA: mantenha EXATAMENTE o mesmo homem da imagem de referência — {DESCRICAO_ROSTO}. "
-        f"{expressao}, olhando para a câmera, ocupando o terço DIREITO do quadro, "
+        f"PESSOA: mantenha EXATAMENTE o mesmo homem da imagem de referência — {DESCRICAO_ROSTO}.",
+        f"EXPRESSÃO: {rosto}. Olhando para a câmera.",
+        f"POSE: {pose['pose']}. {pose['cenario']}.",
+        f"ENQUADRAMENTO: {var['enquadramento']}, ocupando o terço {lado} do quadro, "
         f"recorte limpo com rim light verde-limão.",
-        f"HOOK VISUAL à esquerda: {hook}",
-        f"TEXTO GRANDE no lado esquerdo, exatamente estas palavras: {headline}",
+        f"HOOK VISUAL do lado {oposto}: {hook}",
+        f"TEXTO GRANDE no lado {oposto}, exatamente estas palavras: {headline}",
         "Fonte black bem pesada, letras maiúsculas, branca com contorno preto grosso, "
         "altíssimo contraste, ocupando bastante espaço.",
     ]

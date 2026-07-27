@@ -599,13 +599,20 @@ def refazer_artigo(outcome_anterior: dict, feedback: str, ticket_id: str,
             feito.append("texto" if not erro else f"texto falhou ({erro})")
 
     if _e_sobre_imagem(feedback) or not (post.get("feature_image") or "").strip():
-        from thumbnail_maker import gerar, montar_prompt
+        from thumbnail_maker import gerar, montar_prompt, variacao_de
 
-        brief = briefing_de_capa(post, feedback)
+        # A variação sai do par (artigo, feedback): o mesmo feedback repetido
+        # devolve a mesma capa — retry é idempotente —, mas um feedback novo
+        # cai em outra pose e outro registro facial. Repetir a arte anterior
+        # depois de o autor pedir outra é a pior resposta possível ao gate.
+        variacao = int(hashlib.sha1(f"{post_id}:{feedback}".encode()).hexdigest()[:8], 16)
+        var = variacao_de(variacao)
+        brief = briefing_de_capa(post, feedback, registro=var["registro"])
         with tempfile.TemporaryDirectory() as tmp:
             destino = Path(tmp) / "capa.png"
-            erro = gerar(montar_prompt(brief["headline"], brief["hook"],
-                                       brief["expressao"], brief["badge"]), destino)
+            erro = gerar(montar_prompt(brief["headline"], brief["hook"], brief["expressao"],
+                                       brief["badge"], variacao=variacao),
+                         destino, referencia=var["pose"]["arquivo"])
             if erro:
                 feito.append(f"capa falhou ({erro})")
             else:

@@ -71,8 +71,9 @@ def coletar(*, janela: str = "7d") -> list[dict]:
     curta faz cada ponto da série refletir o período recente em vez de arrastar
     um mês inteiro de história a cada medição.
     """
-    from metricas_crescimento import (CLIQUES_CTA, LEADS, LEADS_FECHADOS,
-                                      VISITANTES, VISITAS, VISITAS_FUNIL)
+    from metricas_crescimento import (CLIQUES_CTA, CLIQUES_POR_ARTIGO, LEADS,
+                                      LEADS_FECHADOS, VISITANTES, VISITAS,
+                                      VISITAS_FUNIL)
 
     token = _token()
     a = _get("/api/admin/analytics", token, range=janela)
@@ -89,6 +90,25 @@ def coletar(*, janela: str = "7d") -> list[dict]:
         if origem:
             medicoes.append({"metrica": VISITAS, "origem": origem,
                              "valor": item.get("views") or 0})
+
+    # Cliques por origem e por artigo. Visita diz que a pessoa chegou; clique
+    # diz que o conteúdo convenceu. Sem esta separação, um artigo que traz mil
+    # visitas e nenhum clique parece igual a um que traz cem e converte dez.
+    #
+    # O site atribui o clique pela sessão: o session_id do clique é o mesmo do
+    # pageview de entrada, que carregou a UTM. Ausente até 27/07/2026, quando
+    # nenhum botão do site chamava trackCta e a tabela tinha 1 linha.
+    atribuicao = a.get("attribution") or {}
+    for item in (atribuicao.get("bySource") or []):
+        origem = (item.get("source") or "").strip().lower()
+        if origem:
+            medicoes.append({"metrica": CLIQUES_CTA, "origem": origem,
+                             "valor": item.get("clicks") or 0})
+    for item in (atribuicao.get("byCampaign") or []):
+        artigo = (item.get("campaign") or "").strip().lower()
+        if artigo:
+            medicoes.append({"metrica": CLIQUES_POR_ARTIGO, "origem": artigo,
+                             "valor": item.get("clicks") or 0})
 
     # Visitas que chegaram às páginas de oferta, somadas e por funil.
     paginas = {p.get("path"): p.get("views") or 0 for p in (a.get("topPages") or [])}

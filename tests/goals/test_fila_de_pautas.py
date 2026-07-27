@@ -92,6 +92,36 @@ def test_pauta_escrita_tambem_e_preservada(banco):
     assert banco.listar()[0]["ghost_post_id"] == "abc123"
 
 
+def test_trocar_o_assunto_de_uma_pauta_aprovada_pede_aprovacao_de_novo(banco):
+    """Aprovação é sobre um assunto, não sobre uma posição no calendário.
+
+    O UPDATE do research não tocava o status: regravar trocava a keyword e
+    herdava a aprovação. O humano tinha liberado "whatsapp business api preço"
+    e a fila passava a carregar "automação de whatsapp" como se ele tivesse
+    visto — o gate era contornado sem ninguém perceber.
+    """
+    dia = date(2026, 7, 28)
+    banco.gravar_ciclo([_pauta(1, dia, "whatsapp business api preco")])
+    pid = banco.listar()[0]["id"]
+    banco.mover(pid, "aprovada")
+
+    banco.gravar_ciclo([_pauta(1, dia, "automacao de whatsapp")])
+    depois = banco.listar()[0]
+    assert depois["keyword"] == "automacao de whatsapp"
+    assert depois["status"] == "proposta"
+
+
+def test_regravar_a_mesma_pauta_nao_derruba_a_aprovacao(banco):
+    """Rodar o research duas vezes com o mesmo resultado não pode custar um
+    novo ciclo de aprovação — senão a idempotência deixa de valer na prática."""
+    dia = date(2026, 7, 28)
+    banco.gravar_ciclo([_pauta(1, dia, "bot para whatsapp")])
+    banco.mover(banco.listar()[0]["id"], "aprovada")
+
+    banco.gravar_ciclo([_pauta(1, dia, "bot para whatsapp")])
+    assert banco.listar()[0]["status"] == "aprovada"
+
+
 def test_pauta_escrita_nao_apaga_o_slot_de_outro_dia(banco):
     """O dia 27/07/2026 amanheceu sem post por causa disto.
 

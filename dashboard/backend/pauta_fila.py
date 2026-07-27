@@ -213,7 +213,15 @@ def gravar_ciclo(pautas: list[dict], *, conn: sqlite3.Connection | None = None) 
                 " ON CONFLICT(ciclo, prioridade) DO UPDATE SET"
                 "  keyword=excluded.keyword, titulo=excluded.titulo, angulo=excluded.angulo,"
                 "  volume=excluded.volume, kd=excluded.kd, data_alvo=excluded.data_alvo,"
-                "  publish_at=excluded.publish_at, atualizado_em=excluded.atualizado_em",
+                "  publish_at=excluded.publish_at, atualizado_em=excluded.atualizado_em,"
+                # Assunto novo no lugar de um já aprovado volta para `proposta`.
+                # O UPDATE não tocava o status, então uma regravação trocava a
+                # keyword e herdava a aprovação: o humano tinha liberado
+                # "whatsapp business api preço" e a fila passava a carregar
+                # "automação de whatsapp" como se ele tivesse visto. Aprovação é
+                # sobre um assunto concreto, não sobre uma posição no calendário.
+                "  status=CASE WHEN pautas.keyword <> excluded.keyword"
+                "              THEN 'proposta' ELSE pautas.status END",
                 (ciclo, prioridade, p["keyword"], p.get("titulo") or None,
                  p.get("angulo") or None, p.get("volume"), p.get("kd"),
                  alvo, p["publish_at"], "proposta", _agora(), _agora()),

@@ -96,6 +96,16 @@ def test_o_primer_nao_contradiz_o_rodizio():
     assert "alternando o lado" in primer
 
 
+def test_a_rule_ensina_a_convencao_de_utm(rule):
+    """A atribuição do clique ao artigo depende inteiramente disto: a campanha
+    tem de ser o slug do post. Um agente que marcar o link de outro jeito
+    quebra a única métrica que diz qual artigo converteu."""
+    assert "utm_campaign" in rule
+    assert "slug do artigo" in rule
+    assert "trackCta" in rule, "quem mexer no site precisa saber que CTA registra"
+    assert "keepalive" in rule, "o CTA que sai do site é o que mais converte"
+
+
 def test_a_rule_registra_o_que_nao_pode_ser_reintroduzido(rule):
     """Cada item aqui é um defeito que já foi a produção. A rule existe para
     que a próxima pessoa não os redescubra do zero."""

@@ -155,7 +155,44 @@ Ordem das etapas, e o que cada uma protege:
 
 ---
 
-## 5. O que nunca muda
+## 5. Medição — o clique é o que fecha o funil
+
+```
+artigo publicado → visita com UTM → clique no CTA → lead → fechado
+```
+
+Cada seta acima é medida. A do meio faltou até 27/07/2026: `trackCta` existia
+no site com endpoint e tabela prontos, e **nenhum botão a chamava** — 636
+pageviews contra 1 clique registrado. A taxa de conversão do painel ficava
+travada em zero, e não dava para dizer se um artigo gerava interesse.
+
+**Convenção de UTM** (`dashboard/backend/utm.py`):
+
+| Parâmetro | Valor | Para quê |
+|---|---|---|
+| `utm_source` | `blog`, `x`, `linkedin`, `threads` | de qual canal veio |
+| `utm_campaign` | **slug do artigo** | qual post converteu |
+| `utm_content` | rede/variação, quando houver | qual peça converteu |
+
+`marcar()` é idempotente: link que já tem `utm_source` volta intacto. Marcar
+duas vezes produziria `utm_source=blog&utm_source=x` e o analytics leria o
+primeiro — origem errada com cara de origem certa.
+
+**Como a atribuição funciona.** `cta_clicks` não guarda UTM e não precisa: o
+`session_id` do clique é o mesmo do pageview de entrada, que carrega a UTM. O
+endpoint `/api/admin/analytics` do site junta os dois e devolve
+`attribution.bySource` e `attribution.byCampaign`. Clique sem pageview na
+janela entra como `clicksUnattributed` — **nunca inventar origem para não
+deixar o número feio**.
+
+**Ao mexer no site** (`sistemabritto/site`): todo CTA novo chama
+`trackCta(page, label, action)`. O terceiro argumento diz de qual seção da
+página veio — sem ele o painel informa que `/whatsapp` converteu, mas não se
+foi o botão do topo ou o do preço. Em CTA que leva para fora (`wa.me`), o
+`track()` usa `fetch` com `keepalive`, então o registro sobrevive à navegação;
+sem isso os cliques que mais convertem seriam os que nunca aparecem.
+
+## 6. O que nunca muda
 
 - **Nada é publicado sem gate humano.** Um gate por artigo, um por rede. A
   esteira produz e para.

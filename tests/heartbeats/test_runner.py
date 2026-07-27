@@ -126,6 +126,11 @@ def test_step7_timeout_hard_kill(monkeypatch):
     from heartbeat_runner import step7_invoke_claude
 
     monkeypatch.setenv("HEARTBEAT_PROVIDER_FALLBACK", "0")
+    # O caminho nativo desiste em `shutil.which("claude")` antes de chegar ao
+    # Popen, e a máquina do CI não tem o binário — daria status='fail' por
+    # ausência de CLI, não por timeout, que é o que este teste mede. O import
+    # de shutil é local à função, então o patch tem de ser no módulo.
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/claude")
 
     # Patch subprocess to simulate a slow process
     import subprocess as _subprocess

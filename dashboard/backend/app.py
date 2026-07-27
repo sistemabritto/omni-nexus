@@ -507,6 +507,43 @@ with app.app_context():
         _conn.commit()
     # --- End pending_approvals CHECK-constraint upgrade ---
 
+    # --- ck_ticket_status: 'archived' faltava na CHECK ---
+    # TICKET_STATUSES ganhou 'archived' e a CHECK, escrita à mão ao lado, não.
+    # Arquivar uma thread movia a pasta de memória para _archive/ e só então
+    # falhava no commit: pasta movida, transação revertida, memory_md_path
+    # apontando para um diretório inexistente. Mesmo truque do bloco acima —
+    # SQLite não faz ALTER de CHECK, então a tabela é reconstruída. O DDL novo
+    # é derivado do atual em vez de reescrito, porque `tickets` acumulou colunas
+    # por ALTERs sucessivos e uma lista à mão divergiria no primeiro esquecimento.
+    _cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='tickets'")
+    _tk_row = _cur.fetchone()
+    if _tk_row and "'archived'" not in (_tk_row[0] or ""):
+        _ddl_novo = (_tk_row[0]
+                     .replace("'resolved','closed')", "'resolved','closed','archived')")
+                     # De carona: a recriação de `projects` deixou esta FK
+                     # apontando para projects_old, que já não existe.
+                     .replace('"projects_old"', "projects"))
+        _tk_cols = ", ".join(
+            f'"{row[1]}"' for row in _cur.execute("PRAGMA table_info(tickets)").fetchall())
+        _tk_idx = [r[0] for r in _cur.execute(
+            "SELECT sql FROM sqlite_master WHERE type='index' AND tbl_name='tickets'"
+            " AND sql IS NOT NULL").fetchall()]
+        # legacy_alter_table=ON é o que impede o RENAME de reescrever as FKs de
+        # ticket_comments/ticket_activity para apontarem à tabela temporária.
+        _cur.executescript(
+            "PRAGMA foreign_keys=OFF;\n"
+            "PRAGMA legacy_alter_table=ON;\n"
+            "ALTER TABLE tickets RENAME TO tickets_old_ck;\n"
+            f"{_ddl_novo};\n"
+            f"INSERT INTO tickets ({_tk_cols}) SELECT {_tk_cols} FROM tickets_old_ck;\n"
+            "DROP TABLE tickets_old_ck;\n"
+            + "".join(f"{sql};\n" for sql in _tk_idx)
+            + "PRAGMA legacy_alter_table=OFF;\n"
+            "PRAGMA foreign_keys=ON;\n"
+        )
+        _conn.commit()
+    # --- End ck_ticket_status upgrade ---
+
     # --- completed_at/started_at + projects.status CHECK constraint ---
     # missions/goals/goal_tasks: plain additive ALTER (no CHECK involved).
     _cur.execute("PRAGMA table_info(missions)")

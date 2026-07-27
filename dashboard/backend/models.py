@@ -795,12 +795,17 @@ PRIORITY_RANK = {"urgent": 4, "high": 3, "medium": 2, "low": 1}
 class Ticket(db.Model):
     __tablename__ = "tickets"
     __table_args__ = (
+        # Derivadas das constantes de propósito. Enquanto a lista era escrita à
+        # mão, 'archived' entrou em TICKET_STATUSES e não na CHECK: arquivar uma
+        # thread movia a pasta de memória para _archive/ e só então descobria,
+        # no commit, que o status era inválido — pasta movida, transação
+        # revertida, ticket apontando para um diretório que não existe mais.
         db.CheckConstraint(
-            "status IN ('open','in_progress','blocked','review','resolved','closed')",
+            "status IN (%s)" % ",".join(f"'{s}'" for s in TICKET_STATUSES),
             name="ck_ticket_status",
         ),
         db.CheckConstraint(
-            "priority IN ('urgent','high','medium','low')",
+            "priority IN (%s)" % ",".join(f"'{p}'" for p in TICKET_PRIORITIES),
             name="ck_ticket_priority",
         ),
         db.CheckConstraint(

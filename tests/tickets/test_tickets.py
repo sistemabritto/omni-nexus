@@ -26,21 +26,38 @@ sys.path.insert(0, str(BACKEND_DIR))
 
 
 # ---------------------------------------------------------------------------
-# Fixture: in-memory Flask app with tickets tables
+# Fixture: Flask app on a per-test SQLite file, with tickets tables
 # ---------------------------------------------------------------------------
+#
+# Two things here were load-bearing and both were wrong before:
+#
+# 1. `importlib.reload(models)` built a fresh `db` object per test, but every
+#    module that had already done `from models import db` kept the previous
+#    one. From the second test in a class onwards, route code called the old
+#    `db` with the new app and got "The current Flask app is not registered
+#    with this 'SQLAlchemy' instance". Three tests never ran at all — including
+#    the only one covering release authorization.
+#
+# 2. `sqlite:///:memory:` handed the same connection to the ten threads of the
+#    concurrency test. They raced on the driver, not on the row lock, and the
+#    test that certifies "exactly one process acts on a ticket at a time"
+#    failed nine runs out of ten. A file gives each thread its own connection,
+#    which is what makes the UPDATE ... WHERE locked_at IS NULL meaningful.
 
 @pytest.fixture
-def app():
+def app(tmp_path):
     import flask
     from flask_login import LoginManager
     import models as _models
-    importlib.reload(_models)
 
     _app = flask.Flask(__name__)
     _app.config["TESTING"] = True
     _app.config["SECRET_KEY"] = "test-tickets"
-    _app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    _app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{tmp_path / 'tickets.db'}"
     _app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    _app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "connect_args": {"check_same_thread": False, "timeout": 30},
+    }
 
     _models.db.init_app(_app)
 
@@ -65,20 +82,25 @@ def app():
         _models.db.session.add(admin)
         _models.db.session.commit()
 
-    # Register tickets blueprint
+    # Blueprints are registered as-is: reloading them would rebind `db` in the
+    # route modules to whatever instance existed at reload time, which is the
+    # same trap the models reload set above.
     import routes.tickets as _tickets_routes
-    importlib.reload(_tickets_routes)
     _app.register_blueprint(_tickets_routes.bp)
 
     # Register auth blueprint so /api/auth/login works
     try:
         import routes.auth_routes as _auth_routes
-        importlib.reload(_auth_routes)
         _app.register_blueprint(_auth_routes.bp)
     except Exception:
         pass
 
-    return _app
+    yield _app
+
+    # Each test gets its own app; without releasing the engine, `db` keeps one
+    # per test for the whole session and holds every file handle open.
+    for engine in (_models.db._app_engines.pop(_app, None) or {}).values():
+        engine.dispose()
 
 
 @pytest.fixture
@@ -481,7 +503,19 @@ class TestModelsRegression:
         from models import TICKET_STATUSES
         assert "open" in TICKET_STATUSES
         assert "closed" in TICKET_STATUSES
-        assert len(TICKET_STATUSES) == 6
+        assert "archived" in TICKET_STATUSES
+        assert len(TICKET_STATUSES) == 7
+
+    def test_check_constraint_accepts_every_declared_status(self):
+        """A CHECK era escrita à mão ao lado da constante e ficou para trás:
+        'archived' entrou na tupla e não na constraint, então arquivar uma
+        thread movia a pasta de memória e só depois falhava no commit."""
+        from models import TICKET_STATUSES, Ticket
+
+        check = next(c for c in Ticket.__table__.constraints
+                     if getattr(c, "name", "") == "ck_ticket_status")
+        for status in TICKET_STATUSES:
+            assert f"'{status}'" in str(check.sqltext), f"{status} não está na CHECK"
 
     def test_ticket_priorities_constant(self):
         from models import TICKET_PRIORITIES

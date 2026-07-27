@@ -153,29 +153,59 @@ def ciclo_de(dia: date) -> str:
     return (dia - timedelta(days=dia.weekday())).isoformat()
 
 
+def _travas_do_ciclo(conn: sqlite3.Connection, ciclo: str) -> dict:
+    """Slots e prioridades do ciclo tomados por trabalho já feito."""
+    linhas = conn.execute(
+        "SELECT prioridade, publish_at FROM pautas"
+        " WHERE ciclo=? AND status IN ('escrita','publicada')",
+        (ciclo,),
+    ).fetchall()
+    return {
+        "ocupadas": {l["prioridade"] for l in linhas},
+        "slots": {l["publish_at"] for l in linhas},
+        "proxima": 1,
+    }
+
+
 def gravar_ciclo(pautas: list[dict], *, conn: sqlite3.Connection | None = None) -> dict:
     """Grava (ou regrava) as pautas de um ciclo.
 
-    Idempotente por (ciclo, prioridade): rodar o research duas vezes na mesma
-    semana atualiza a fila em vez de duplicá-la. Pauta já `publicada` nunca é
-    sobrescrita — o research não pode apagar trabalho que já foi ao ar.
+    Quem decide se uma pauta sobrevive é o **slot** (`publish_at`), não a
+    prioridade: pauta já `escrita`/`publicada` mantém seu lugar no calendário e
+    o research não pode apagar trabalho que já saiu da fila. A prioridade segue
+    sendo a chave de regravação — rodar o research duas vezes na mesma semana
+    atualiza a fila em vez de duplicá-la.
+
+    A preservação era por prioridade, e isso abria buraco no calendário: em
+    26/07/2026 a pauta #1 já estava `escrita` no slot das 18h daquele dia, então
+    a pauta nova que ocuparia a prioridade 1 — o post das 09h do dia 27 — foi
+    "preservada" e simplesmente não existiu. O dia amanheceu sem post da manhã.
+    Agora ela é empurrada para a próxima prioridade livre em vez de sumir.
     """
     proprio = conn is None
     conn = conn or conectar()
     gravadas = preservadas = 0
+    travas: dict[str, dict] = {}
     try:
         for p in pautas:
             alvo = p.get("data") or p.get("data_alvo")
             if not alvo or not p.get("keyword"):
                 continue
             ciclo = p.get("ciclo") or ciclo_de(date.fromisoformat(alvo))
-            existente = conn.execute(
-                "SELECT status FROM pautas WHERE ciclo=? AND prioridade=?",
-                (ciclo, p["prioridade"]),
-            ).fetchone()
-            if existente and existente["status"] in ("escrita", "publicada"):
+            trava = travas.setdefault(ciclo, _travas_do_ciclo(conn, ciclo))
+            if p["publish_at"] in trava["slots"]:
                 preservadas += 1
                 continue
+            prioridade = p["prioridade"]
+            if prioridade in trava["ocupadas"]:
+                # A prioridade está tomada por trabalho já feito, mas esta pauta
+                # tem slot próprio no calendário e precisa existir. Empurra para
+                # a próxima livre — o deslocamento cascateia e a fila fecha sem
+                # lacuna, mantendo a ordem relativa que o research definiu.
+                while trava["proxima"] in trava["ocupadas"]:
+                    trava["proxima"] += 1
+                prioridade = trava["proxima"]
+            trava["ocupadas"].add(prioridade)
             conn.execute(
                 "INSERT INTO pautas (ciclo, prioridade, keyword, titulo, angulo, volume, kd,"
                 " data_alvo, publish_at, status, criado_em, atualizado_em)"
@@ -184,7 +214,7 @@ def gravar_ciclo(pautas: list[dict], *, conn: sqlite3.Connection | None = None) 
                 "  keyword=excluded.keyword, titulo=excluded.titulo, angulo=excluded.angulo,"
                 "  volume=excluded.volume, kd=excluded.kd, data_alvo=excluded.data_alvo,"
                 "  publish_at=excluded.publish_at, atualizado_em=excluded.atualizado_em",
-                (ciclo, p["prioridade"], p["keyword"], p.get("titulo") or None,
+                (ciclo, prioridade, p["keyword"], p.get("titulo") or None,
                  p.get("angulo") or None, p.get("volume"), p.get("kd"),
                  alvo, p["publish_at"], "proposta", _agora(), _agora()),
             )

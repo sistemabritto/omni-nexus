@@ -971,6 +971,23 @@ def archive_thread(ticket_id: str):
 
     archive_root.mkdir(parents=True, exist_ok=True)
 
+    # O banco primeiro, o disco depois. A ordem inversa deixava a pasta de
+    # memória já movida para _archive/ quando o commit falhava, e o ticket
+    # apontando para um diretório que não existia mais; repetir a chamada caía
+    # no ramo `archive_dir.exists()` e criava uma segunda cópia com sufixo de
+    # timestamp. Efeito irreversível em disco nunca precede a escrita que pode
+    # falhar — se o move der errado, o status volta atrás.
+    now = _now()
+    old_status = ticket.status
+    ticket.status = "archived"
+    ticket.updated_at = now
+    _log_activity(ticket_id, current_user.username, "status_changed", {"from": old_status, "to": "archived"})
+    try:
+        db.session.commit()
+    except Exception as exc:  # noqa: BLE001 — nada foi movido ainda
+        db.session.rollback()
+        return jsonify({"error": "archive_failed", "message": str(exc)}), 500
+
     if src_dir.exists():
         # If archive_dir already exists (previous partial archive), rename with timestamp suffix
         if archive_dir.exists():
@@ -978,6 +995,11 @@ def archive_thread(ticket_id: str):
         try:
             shutil.move(str(src_dir), str(archive_dir))
         except OSError as exc:
+            ticket.status = old_status
+            ticket.updated_at = _now()
+            _log_activity(ticket_id, current_user.username, "status_changed",
+                          {"from": "archived", "to": old_status, "reason": "archive_move_failed"})
+            db.session.commit()
             return jsonify({"error": "archive_move_failed", "message": str(exc)}), 500
         # Write tombstone
         try:
@@ -987,13 +1009,6 @@ def archive_thread(ticket_id: str):
             )
         except OSError:
             pass  # tombstone is best-effort
-
-    now = _now()
-    old_status = ticket.status
-    ticket.status = "archived"
-    ticket.updated_at = now
-    _log_activity(ticket_id, current_user.username, "status_changed", {"from": old_status, "to": "archived"})
-    db.session.commit()
 
     audit(current_user, "manage", "tickets", f"archived thread {ticket_id}")
     return jsonify(ticket.to_dict())

@@ -509,14 +509,38 @@ def release_ticket(ticket_id: str):
             "locked_by": ticket.locked_by,
         }), 403
 
+    # Os dois lados da comparação acima vêm do chamador: `agent` sai do corpo e
+    # `locked_by` é devolvido no 409 do checkout, então nem era preciso
+    # adivinhar. Qualquer um com tickets:execute soltava o lock de qualquer
+    # agente mandando {"agent": "zara-cs"}, e a garantia de "exatamente um
+    # processo age sobre um ticket por vez" caía.
+    #
+    # Não dá para tirar a identidade do token: todos os agentes compartilham
+    # DASHBOARD_API_TOKEN. Então soltar em nome de outro continua possível — é
+    # preciso, quando um agente trava —, mas vira caminho de força explícito:
+    # exige workspace:manage e fica no ticket_activity marcado como quebra,
+    # com quem a fez. Nunca mais por acidente, nunca mais sem rastro.
+    forcado = agent != current_user.username
+    if forcado and not has_permission(current_user.role, "workspace", "manage"):
+        return jsonify({
+            "error": "forced_release_requires_manage",
+            "message": f"soltar o lock de '{agent}' é uma quebra; exige workspace:manage",
+            "locked_by": ticket.locked_by,
+        }), 403
+
     now = _now()
     ticket.locked_at = None
     ticket.locked_by = None
     ticket.updated_at = now
-    _log_activity(ticket_id, agent, "release")
+    if forcado:
+        _log_activity(ticket_id, current_user.username, "release",
+                      {"forced": True, "on_behalf_of": agent})
+    else:
+        _log_activity(ticket_id, agent, "release")
     db.session.commit()
 
-    audit(current_user, "execute", "tickets", f"release ticket {ticket_id} by {agent}")
+    audit(current_user, "execute", "tickets",
+          f"{'FORCED release' if forcado else 'release'} ticket {ticket_id} by {agent}")
     return jsonify({"success": True, "ticket_id": ticket_id})
 
 

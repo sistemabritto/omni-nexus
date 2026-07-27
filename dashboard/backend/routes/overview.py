@@ -217,6 +217,24 @@ def _funil_de_conteudo() -> dict | None:
     }
 
 
+def _crescimento() -> dict | None:
+    """Resultado da esteira: quem chegou, de onde, e quantos viraram lead.
+
+    O funil de conteúdo ao lado mede produção — quantos posts saíram. Este
+    mede consequência. Ver os dois juntos é o que distingue "publiquei 21
+    artigos" de "21 artigos trouxeram gente".
+
+    Best-effort: painel quebrado por métrica é pior que painel sem métrica.
+    """
+    try:
+        import metricas_crescimento as mc
+
+        return mc.resumo()
+    except Exception:  # noqa: BLE001
+        logging.getLogger(__name__).exception("resumo de crescimento indisponível")
+        return None
+
+
 @bp.route("/api/overview")
 def overview():
     raw_metrics = _metrics_summary()
@@ -225,6 +243,7 @@ def overview():
 
     return jsonify({
         "funil_conteudo": _funil_de_conteudo(),
+        "crescimento": _crescimento(),
         "recent_reports": [
             {
                 "title": r["name"],

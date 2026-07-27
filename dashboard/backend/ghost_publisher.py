@@ -24,6 +24,7 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import re
 import time
@@ -32,6 +33,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+
+log = logging.getLogger(__name__)
 
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
 
@@ -277,12 +280,35 @@ def briefing_de_capa(post: dict, feedback: str = "", registro: str = "") -> dict
     }
 
 
+_MIME = {".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+         ".png": "image/png", ".gif": "image/gif"}
+
+
 def subir_imagem(caminho: Path) -> tuple[str, str]:
-    """Envia a imagem ao Ghost. Devolve (url, erro)."""
+    """Envia a imagem ao Ghost, otimizada. Devolve (url, erro).
+
+    A otimização acontece aqui, e não em quem gera a capa, porque este é o
+    único ponto por onde toda imagem passa — a esteira diária, a regeração por
+    feedback e o que vier depois. Colocar em cada chamador significaria
+    esquecer em um deles.
+
+    O gerador devolve PNG de ~2,3 MB. Foto em PNG é o erro clássico: a variante
+    de 750px que o Ghost cria sozinho ainda ficava em 665 KB, e três delas na
+    home custaram 5 pontos de Lighthouse.
+    """
     cfg = _config()
     if not cfg:
         return "", "GHOST_URL/GHOST_ADMIN_API_KEY não configurados."
     url, key = cfg
+
+    try:
+        from otimizar_imagem import otimizar
+
+        caminho, _ = otimizar(caminho)   # fail-open: devolve o original se falhar
+    except Exception as exc:  # noqa: BLE001 — nunca impedir o upload
+        log.warning("otimização indisponível (%s); subindo o original", exc)
+
+    mime = _MIME.get(caminho.suffix.lower(), "application/octet-stream")
     try:
         with caminho.open("rb") as fh:
             r = requests.post(
@@ -292,7 +318,7 @@ def subir_imagem(caminho: Path) -> tuple[str, str]:
                 # falhava com "name 'ghost_jwt' is not defined" travestido de
                 # erro de rede. Nenhuma capa gerada pela esteira jamais subiu.
                 headers={"Authorization": f"Ghost {_jwt(key)}", "User-Agent": UA_NAVEGADOR},
-                files={"file": (caminho.name, fh, "image/png")},
+                files={"file": (caminho.name, fh, mime)},
                 data={"purpose": "image"}, timeout=180)
     except Exception as exc:  # noqa: BLE001
         return "", str(exc)

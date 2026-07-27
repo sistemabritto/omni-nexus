@@ -92,6 +92,31 @@ def test_pauta_escrita_tambem_e_preservada(banco):
     assert banco.listar()[0]["ghost_post_id"] == "abc123"
 
 
+def test_pauta_escrita_nao_apaga_o_slot_de_outro_dia(banco):
+    """O dia 27/07/2026 amanheceu sem post por causa disto.
+
+    A pauta #1 do ciclo estava `escrita` no slot das 18h do dia 26. Na rodada
+    seguinte, a pauta que ocuparia a prioridade 1 — o post das 09h do dia 27 —
+    foi tratada como "já existe" e descartada. Preservar trabalho feito não
+    pode custar um slot vazio no calendário.
+    """
+    ontem, hoje = date(2026, 7, 26), date(2026, 7, 27)
+    banco.gravar_ciclo([{**_pauta(1, ontem, "a que ja virou rascunho"),
+                         "publish_at": f"{ontem.isoformat()}T21:00:00Z"}])
+    banco.mover(banco.listar()[0]["id"], "escrita", ghost_post_id="abc123")
+
+    novas = [{**_pauta(i + 1, hoje, f"pauta {i}"),
+              "publish_at": f"{hoje.isoformat()}T{h}:00:00Z"}
+             for i, h in enumerate(("12", "16", "21"))]
+    assert banco.gravar_ciclo(novas)["gravadas"] == 3
+
+    do_dia = banco.listar(limite=50)
+    slots = sorted(p["publish_at"] for p in do_dia if p["data_alvo"] == hoje.isoformat())
+    assert slots == [f"{hoje.isoformat()}T{h}:00:00Z" for h in ("12", "16", "21")]
+    # E o rascunho de ontem segue intocado, com seu vínculo no Ghost.
+    assert [p for p in do_dia if p["data_alvo"] == ontem.isoformat()][0]["ghost_post_id"] == "abc123"
+
+
 def test_pauta_sem_keyword_ou_data_e_ignorada(banco):
     """Pauta incompleta não entra na fila fingindo que dá para escrever."""
     dia = date(2026, 7, 27)

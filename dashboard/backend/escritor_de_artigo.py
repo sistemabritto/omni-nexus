@@ -34,8 +34,14 @@ FUNIS = {
                  "automação de atendimento e vendas no WhatsApp"),
     "socialjobs": ("https://sistemabritto.com.br/socialjobs",
                    "produção de conteúdo e presença nas redes"),
+    # Reposicionado em 27/07/2026: a página não vende mais "solução web sob
+    # encomenda", vende a call de 1h que produz o PRD do projeto. O CTA do
+    # artigo precisa prometer o que a página entrega — senão o leitor clica
+    # esperando uma coisa e encontra outra, que é a forma mais cara de perder
+    # alguém que já estava interessado.
     "sistema": ("https://sistemabritto.com.br/sistema",
-                "o sistema completo de operação com IA"),
+                "a call de 1h que define seu projeto inteiro — escopo, prazo e "
+                "preço no mesmo documento"),
 }
 
 

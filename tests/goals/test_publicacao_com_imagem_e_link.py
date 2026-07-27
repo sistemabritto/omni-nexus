@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -27,6 +28,15 @@ sys.path.insert(0, str(REPO_ROOT / "dashboard" / "backend"))
 
 import ghost_social_bridge as bridge  # noqa: E402
 import postiz_client as pc  # noqa: E402
+
+
+def _agendado(horas_atras: float) -> str:
+    return (datetime.now(timezone.utc)
+            - timedelta(hours=horas_atras)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+# Dentro da janela de HORAS_ATE_DESISTIR: o tick ainda espera, não desiste.
+AGENDADO_RECENTE = _agendado(1)
 
 
 ARTIGO = "https://blog.sistemabritto.com.br/resposta-automatica-no-whatsapp/"
@@ -305,7 +315,7 @@ def _avisos(monkeypatch):
 def test_agendado_que_publicou_vira_aviso_com_link(publicacoes, monkeypatch):
     recebidos = _avisos(monkeypatch)
     publicacoes.registrar(16, ticket_id="t1", rede="x", titulo="Resposta automática",
-                          post_ids=["p1"], agendado_para="2026-07-26T15:00:00Z", imagens=1)
+                          post_ids=["p1"], agendado_para=AGENDADO_RECENTE, imagens=1)
 
     monkeypatch.setattr(pc.PostizClient, "from_env",
                         classmethod(lambda cls: cls(base_url="https://p.local", api_key="k")))
@@ -325,7 +335,7 @@ def test_confirmado_nao_avisa_de_novo(publicacoes, monkeypatch):
     """Idempotência: o tick roda a cada 20min e não pode repetir o aviso."""
     recebidos = _avisos(monkeypatch)
     publicacoes.registrar(16, ticket_id="t1", rede="x", titulo="T", post_ids=["p1"],
-                          agendado_para="2026-07-26T15:00:00Z")
+                          agendado_para=AGENDADO_RECENTE)
     monkeypatch.setattr(pc.PostizClient, "from_env",
                         classmethod(lambda cls: cls(base_url="https://p.local", api_key="k")))
     monkeypatch.setattr(pc.PostizClient, "list_posts",
@@ -339,7 +349,7 @@ def test_confirmado_nao_avisa_de_novo(publicacoes, monkeypatch):
 def test_ainda_na_fila_nao_afirma_nada(publicacoes, monkeypatch):
     recebidos = _avisos(monkeypatch)
     publicacoes.registrar(17, ticket_id="t2", rede="linkedin", titulo="T", post_ids=["p9"],
-                          agendado_para="2026-07-26T15:00:00Z")
+                          agendado_para=AGENDADO_RECENTE)
     monkeypatch.setattr(pc.PostizClient, "from_env",
                         classmethod(lambda cls: cls(base_url="https://p.local", api_key="k")))
     monkeypatch.setattr(pc.PostizClient, "list_posts",
@@ -353,7 +363,7 @@ def test_ainda_na_fila_nao_afirma_nada(publicacoes, monkeypatch):
 def test_erro_no_postiz_avisa_a_falha_e_encerra(publicacoes, monkeypatch):
     recebidos = _avisos(monkeypatch)
     publicacoes.registrar(18, ticket_id="t3", rede="threads", titulo="T", post_ids=["pz"],
-                          agendado_para="2026-07-26T15:00:00Z")
+                          agendado_para=AGENDADO_RECENTE)
     monkeypatch.setattr(pc.PostizClient, "from_env",
                         classmethod(lambda cls: cls(base_url="https://p.local", api_key="k")))
     monkeypatch.setattr(pc.PostizClient, "list_posts",
@@ -367,7 +377,7 @@ def test_postiz_fora_do_ar_nao_fecha_a_linha(publicacoes, monkeypatch):
     """Indisponibilidade não pode virar 'desisti' — tenta de novo no próximo tick."""
     _avisos(monkeypatch)
     publicacoes.registrar(19, ticket_id="t4", rede="x", titulo="T", post_ids=["pk"],
-                          agendado_para="2026-07-26T15:00:00Z")
+                          agendado_para=AGENDADO_RECENTE)
 
     def _explode(self, window):
         raise pc.PostizAPIError("Postiz respondeu 401")
@@ -391,7 +401,7 @@ def test_parcialmente_publicado_ainda_nao_e_publicado(publicacoes, monkeypatch):
     que ainda vai mudar."""
     recebidos = _avisos(monkeypatch)
     publicacoes.registrar(21, ticket_id="t6", rede="linkedin", titulo="T",
-                          post_ids=["p1", "p2"], agendado_para="2026-07-26T15:00:00Z")
+                          post_ids=["p1", "p2"], agendado_para=AGENDADO_RECENTE)
     monkeypatch.setattr(pc.PostizClient, "from_env",
                         classmethod(lambda cls: cls(base_url="https://p.local", api_key="k")))
     monkeypatch.setattr(pc.PostizClient, "list_posts", lambda self, window: [
@@ -438,7 +448,7 @@ def test_agendado_diz_que_o_link_ainda_nao_existe(monkeypatch):
     monkeypatch.setattr(notifications, "_send_telegram",
                         lambda texto, **kw: enviados.append((texto, kw)) or True)
     notifications.notify_publicacao("x", "Título", links=[],
-                                    agendado_para="2026-07-26T15:00:00Z", imagens=1)
+                                    agendado_para=AGENDADO_RECENTE, imagens=1)
     texto, kwargs = enviados[0]
     assert "Agendado no X" in texto
     assert "chega quando ele for ao ar" in texto
@@ -451,6 +461,8 @@ def test_horario_sai_no_fuso_do_felipe(monkeypatch):
     enviados = []
     monkeypatch.setattr(notifications, "_send_telegram",
                         lambda texto, **kw: enviados.append(texto) or True)
+    # Aqui a data é fixa de propósito: o teste é sobre a conversão de fuso,
+    # e uma data relativa mediria o relógio em vez do formatador.
     notifications.notify_publicacao("x", "T", links=[], agendado_para="2026-07-26T15:00:00Z")
     # 15:00Z = 12:00 em São Paulo. Ler UTC de cabeça é onde nasce o erro de
     # agendar para as 5 da manhã sem perceber.

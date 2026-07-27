@@ -344,8 +344,8 @@ def structure_via_nvidia(agent_output, agent: str, conn) -> dict | None:
         "AND status IN ('open','in_progress') ORDER BY priority_rank DESC LIMIT 10",
         (agent,),
     ).fetchall()
-    tickets = [{"id": (r["id"] if hasattr(r, "keys") else r[0]),
-                "title": (r["title"] if hasattr(r, "keys") else r[1])} for r in rows]
+    tickets = [{"id": (r["id"]),
+                "title": (r["title"])} for r in rows]
 
     prompt = (
         "Converta o relatório de um agente em um JSON de outcome.\n"
@@ -571,7 +571,7 @@ def _recompute_goal_from_tickets(goal_id, conn) -> None:
     goal_row = conn.execute("SELECT metric_type FROM goals WHERE id = ?", (goal_id,)).fetchone()
     if not goal_row:
         return
-    metric_type = goal_row["metric_type"] if hasattr(goal_row, "keys") else goal_row[0]
+    metric_type = goal_row["metric_type"]
     # `tasks` conta exatamente a mesma coisa que `count` — tarefas concluídas,
     # que hoje são tickets. Ele ficou de fora deste guard e, como goal_tasks
     # foi congelado no goal-ticket-unification, NADA passou a escrever nessas
@@ -614,8 +614,8 @@ def _recompute_goal_from_tickets(goal_id, conn) -> None:
     # needs to bubble up, not just the ORM-side routes/goals.py::patch_goal.
     row = conn.execute("SELECT project_id, status FROM goals WHERE id = ?", (goal_id,)).fetchone()
     if row:
-        project_id = row["project_id"] if hasattr(row, "keys") else row[0]
-        goal_status = row["status"] if hasattr(row, "keys") else row[1]
+        project_id = row["project_id"]
+        goal_status = row["status"]
         if goal_status == "achieved" and project_id:
             _maybe_complete_project_raw(project_id, conn)
 
@@ -631,13 +631,13 @@ def _maybe_complete_project_raw(project_id, conn) -> None:
     proj = conn.execute("SELECT status FROM projects WHERE id = ?", (project_id,)).fetchone()
     if not proj:
         return
-    proj_status = proj["status"] if hasattr(proj, "keys") else proj[0]
+    proj_status = proj["status"]
     if proj_status == "completed":
         return
     rows = conn.execute("SELECT status FROM goals WHERE project_id = ?", (project_id,)).fetchall()
     if not rows:
         return
-    statuses = [r["status"] if hasattr(r, "keys") else r[0] for r in rows]
+    statuses = [r["status"] for r in rows]
     if all(s in ("achieved", "cancelled") for s in statuses):
         now = _now_iso()
         conn.execute(
@@ -650,7 +650,7 @@ def _move_ticket(ticket_id: str, new_status: str, agent: str, comment: str, conn
     """Update ticket status + log a comment and an activity event."""
     now = _now_iso()
     prev = conn.execute("SELECT goal_id FROM tickets WHERE id = ?", (ticket_id,)).fetchone()
-    goal_id = (prev["goal_id"] if prev and hasattr(prev, "keys") else (prev[0] if prev else None))
+    goal_id = (prev["goal_id"] if prev else None)
     resolved_at = now if new_status in ("resolved", "closed") else None
     conn.execute(
         "UPDATE tickets SET status = ?, updated_at = ?, "
@@ -692,8 +692,8 @@ def _publish_context_line(ticket_id: str, conn) -> str:
         return ""
     if not row:
         return ""
-    project_title = row["project_title"] if hasattr(row, "keys") else row[0]
-    mission_title = row["mission_title"] if hasattr(row, "keys") else row[1]
+    project_title = row["project_title"]
+    mission_title = row["mission_title"]
     if not project_title and not mission_title:
         return ""
     return f"Missão: {mission_title or '—'} · Projeto: {project_title or '—'}"
@@ -793,7 +793,7 @@ def _maybe_park_for_publish(ticket_id: str, agent: str, outcome: dict, title: st
     approval_row = conn.execute(
         "SELECT id FROM pending_approvals WHERE idempotency_key = ?", (idempotency_key,)
     ).fetchone()
-    approval_id = approval_row["id"] if hasattr(approval_row, "keys") else approval_row[0]
+    approval_id = approval_row["id"]
 
     conn.execute(
         "UPDATE tickets SET blocked_reason = 'pending_human_approval', requires_human_approval = 1 WHERE id = ?",
@@ -1115,7 +1115,7 @@ def _last_review_reset_at(ticket_id: str, conn) -> str | None:
     ).fetchone()
     if not row:
         return None
-    return row["created_at"] if hasattr(row, "keys") else row[0]
+    return row["created_at"]
 
 
 def _count_review_bounces(ticket_id: str, conn) -> int:

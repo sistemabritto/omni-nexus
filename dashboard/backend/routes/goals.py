@@ -10,6 +10,7 @@ from typing import Optional
 from flask import Blueprint, jsonify, request
 from flask_login import current_user
 from models import db, Mission, GoalProject, Goal, GoalTask, has_permission, audit
+from routes._helpers import raw_conn
 
 bp = Blueprint("goals", __name__)
 
@@ -419,7 +420,7 @@ def recalculate_goal(goal_id: int):
     Goal.query.get_or_404(goal_id)
 
     from heartbeat_outcome import _recompute_goal_from_tickets
-    conn = sqlite3.connect(_db_path())
+    conn = raw_conn()
     try:
         _recompute_goal_from_tickets(goal_id, conn)
         conn.commit()
@@ -544,7 +545,7 @@ def _recalculate_goal_value(goal_id: int):
     truth (tickets) — see heartbeat_outcome._recompute_goal_from_tickets.
     goal_progress_v (goal_tasks) is frozen legacy post goal-ticket-unification."""
     from heartbeat_outcome import _recompute_goal_from_tickets
-    conn = sqlite3.connect(_db_path())
+    conn = raw_conn()
     try:
         _recompute_goal_from_tickets(goal_id, conn)
         conn.commit()

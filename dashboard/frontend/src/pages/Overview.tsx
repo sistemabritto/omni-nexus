@@ -50,6 +50,13 @@ interface OverviewData {
     aged_approvals: { id: number; gate_type: string; created_at: string }[]
     total: number
   }
+  crescimento?: {
+    atual: Record<string, number | null>
+    por_origem: { origem: string; valor: number }[]
+    trafego_sem_origem_pct: number | null
+    variacao_7d: Record<string, { de: number; para: number; delta: number; pct: number | null } | null>
+    ultimo_dia: string | null
+  } | null
   funil_conteudo?: {
     ciclo: string
     meta: number
@@ -330,6 +337,88 @@ export default function Overview() {
           ))
         )}
       </div>
+
+      {/* Crescimento — o resultado da esteira. O card de conteúdo abaixo mede
+          produção; este mede consequência. Ver os dois juntos é o que
+          distingue "publiquei 21 artigos" de "21 artigos trouxeram gente". */}
+      {!loading && data?.crescimento && data.crescimento.ultimo_dia && (
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5 mb-6">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#60A5FA]/10 border border-[#60A5FA]/20">
+                <TrendingUp size={14} className="text-[#60A5FA]" />
+              </div>
+              Crescimento
+            </h2>
+            <span className="text-xs text-[#8b949e]">medido em {data.crescimento.ultimo_dia}</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            {([
+              ['visitas', 'Visitas'],
+              ['visitas_funil', 'Nos funis'],
+              ['leads', 'Leads'],
+              ['leads_fechados', 'Fechados'],
+            ] as const).map(([chave, rotulo]) => {
+              const valor = data.crescimento!.atual[chave]
+              const v = data.crescimento!.variacao_7d?.[chave]
+              return (
+                <div key={chave} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3">
+                  <div className="text-xl font-semibold tabular-nums text-[#e6edf3]">
+                    {valor ?? '—'}
+                  </div>
+                  <div className="text-xs text-[#8b949e] mt-0.5">{rotulo}</div>
+                  {v && v.delta !== 0 && (
+                    <div className={`text-[11px] mt-1 tabular-nums ${v.delta > 0 ? 'text-[#00FFA7]' : 'text-red-400'}`}>
+                      {v.delta > 0 ? '+' : ''}{v.delta} em 7d
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* A régua da convenção de UTM. Começou em 95%: de 141 visitas,
+              134 chegavam sem origem. Tem que cair conforme a esteira publica
+              com os links marcados — se não cair, o UTM não está chegando. */}
+          {data.crescimento.trafego_sem_origem_pct !== null && (
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3 mb-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+                <span className="text-xs text-[#8b949e]">Tráfego sem origem identificada</span>
+                <span className={`text-sm font-semibold tabular-nums ${
+                  data.crescimento.trafego_sem_origem_pct > 50 ? 'text-amber-400' : 'text-[#00FFA7]'
+                }`}>
+                  {data.crescimento.trafego_sem_origem_pct}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    data.crescimento.trafego_sem_origem_pct > 50 ? 'bg-amber-400' : 'bg-[#00FFA7]'
+                  }`}
+                  style={{ width: `${Math.min(data.crescimento.trafego_sem_origem_pct, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {data.crescimento.por_origem.length > 0 && (
+            <div>
+              <div className="text-xs text-[#8b949e] mb-2">De onde vem o tráfego</div>
+              <div className="flex flex-wrap gap-2">
+                {data.crescimento.por_origem.map((o) => (
+                  <span
+                    key={o.origem}
+                    className="text-xs px-2 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[#e6edf3]"
+                  >
+                    {o.origem} <span className="text-[#8b949e] tabular-nums">{o.valor}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Esteira de conteúdo — pauta levantada → artigo escrito → post no ar.
           Antes disso, saber se a semana fechou exigia abrir o Ghost, o Postiz

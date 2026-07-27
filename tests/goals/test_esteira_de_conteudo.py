@@ -44,11 +44,17 @@ def _artigo_valido(html_extra: str = "", url_funil: str = "https://sistemabritto
 @pytest.mark.parametrize("keyword,esperado", [
     ("chatbot whatsapp para empresas", "whatsapp"),
     ("disparo em massa no whatsapp", "whatsapp"),
-    ("como gerar lead qualificado", "whatsapp"),
     ("agendar post no instagram", "socialjobs"),
     ("crescer no tiktok organicamente", "socialjobs"),
     ("ganhar seguidor no youtube", "socialjobs"),
+    ("roteiro para reels", "socialjobs"),
+    ("calendario editorial redes sociais", "socialjobs"),
     ("automatizar o financeiro da empresa", "sistema"),
+    # "lead" é vocabulário dos três funis. Enquanto pertencia ao /whatsapp,
+    # mandava para lá a seed "gerar leads com inteligencia artificial", que é
+    # do /sistema — e o artigo saía com o CTA errado no rodapé.
+    ("como gerar lead qualificado", "sistema"),
+    ("captar lead pelo whatsapp", "whatsapp"),
 ])
 def test_funil_e_escolhido_pelo_assunto(keyword, esperado):
     """Regra explícita em vez de deixar o modelo inventar: CTA genérico não converte."""

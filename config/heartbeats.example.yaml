@@ -246,7 +246,10 @@ heartbeats:
     wake_triggers:
       - interval
       - manual
-    enabled: true
+    # Como todos os outros seeds: desligado. Ligar é decisão de quem instala,
+    # não do repositório — mesmo um handler in-process fala com o Postiz a
+    # cada 20 minutos, e uma instalação nova não pediu por isso.
+    enabled: false
     goal_id: null
     required_secrets: [POSTIZ_API_KEY]
     handler: publicacoes.tick

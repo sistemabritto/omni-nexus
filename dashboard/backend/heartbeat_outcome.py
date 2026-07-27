@@ -59,7 +59,23 @@ _STATUS_ALIASES = {
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    """Timestamp no formato do resto do sistema: sufixo Z, sem offset.
+
+    Era `isoformat()`, que produz `+00:00`. Duas linhas adjacentes gravavam
+    formatos diferentes na MESMA linha de `pending_approvals` — `created_at`
+    com `+00:00`, `expires_at` com `Z` —, e `ticket_janitor._parse_iso` faz
+    `strptime(ts.rstrip("Z"), "%Y-%m-%dT%H:%M:%S.%f")`, que levanta
+    `ValueError: unconverted data remains: +00:00`. O erro caía num `continue`
+    e os re-nudges de 2h e 4h nunca aconteceram para nenhuma aprovação criada
+    pelo heartbeat — que é o caminho real. A expiração de 8h funcionava só
+    porque lia o outro campo.
+
+    Tornar o parser tolerante trataria o sintoma e deixaria dois formatos
+    convivendo no banco. `routes/goals.py`, `routes/tickets.py`,
+    `routes/approvals.py` e `ticket_janitor.py` já usavam este; era este
+    módulo que estava fora do padrão.
+    """
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def _normalize_status(raw: str | None) -> str | None:

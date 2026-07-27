@@ -22,8 +22,13 @@ na skill `ai-image-creator`.
 > Sinais do rosto certo: barba cheia escura com bigode, cabelo curto escuro,
 > **sem óculos**. O da referência de estilo usa óculos de aro redondo.
 
-- Rosto do apresentador à direita/centro, expressão forte (sorriso confiante,
-  dedo apontando, ou surpresa). Recorte limpo com leve rim light.
+- Rosto do apresentador ocupando um terço do quadro, **alternando o lado a cada
+  capa**, expressão forte. Recorte limpo com leve rim light.
+- **A expressão e a pose variam sempre.** Ora congruentes com o texto, ora
+  deliberadamente incongruentes — texto de alerta com cara de deboche tranquilo
+  quebra padrão. O que não pode é toda capa sair com a mesma cara e a mesma pose:
+  capa previsível é a que o olho aprendeu a pular. Quem sorteia isso é
+  `thumbnail_maker.variacao_de(n)`; não escolha à mão nem fixe um padrão.
 - Ícones de app 3D glossy flutuando (Claude, Obsidian, ChatGPT, PIX).
 - 1 seta branca desenhada à mão (curva), apontando pro elemento-chave.
 - Fundo escuro com dados/dashboard, tons de **verde-limão** (marca).
@@ -45,7 +50,8 @@ Pegar a **legibilidade e energia** do gringo + a **credibilidade e marca** do BR
 | Elemento | Regra |
 |---|---|
 | Proporção | 16:9, 1280×720 |
-| Rosto | Felipe (do face-bank), 1/3 do quadro, expressão coerente com a pauta |
+| Rosto | Felipe (do face-bank), 1/3 do quadro, lado e pose vindos de `variacao_de(n)` |
+| Expressão | do rodízio de registros — congruente OU incongruente com o texto, nunca repetida na capa seguinte |
 | Hook visual | objeto-símbolo no lado oposto: ícone de app / celular / dashboard / dinheiro / logo |
 | Headline | 2-5 palavras, fonte black, branco ou verde-limão, stroke escuro grosso |
 | Badge | opcional — número/resultado ou "GRÁTIS"/"NOVO" em círculo/retângulo |

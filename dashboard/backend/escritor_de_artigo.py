@@ -123,10 +123,42 @@ def montar_prompt(pauta: dict, noticia: str = "") -> str:
         "- Tom direto, de quem construiu. Nunca de quem vende.\n"
         "- PROIBIDO: 'juntos vamos', 'revolucionar', 'transformação digital', "
         "'disruptivo', 'garanta já', 'últimas vagas', promessa de resultado sem dado.\n"
+        # O travessão é correto em português, mas hoje ele lê como assinatura de
+        # texto gerado — foi a primeira coisa que o Felipe apontou ao revisar as
+        # páginas do site. Percepção do leitor decide, não a gramática.
+        "- NUNCA use travessão (— ou –). Reescreva a frase com vírgula, ponto ou "
+        "dois-pontos. Hífen só dentro de palavra composta.\n"
         "- Nunca invente número, data, caso de cliente ou métrica.\n\n"
 
         f"GUIA ANTI-ESCRITA-DE-IA (obrigatório, não é sugestão):\n{_briefing_humanizer()}"
     )
+
+
+def sem_travessao(texto: str) -> str:
+    """Troca travessão por pontuação comum.
+
+    A proibição já está no prompt, mas o modelo desobedece: travessão é o que
+    ele mais usa para encaixar aposto, e uma instrução negativa não vence um
+    hábito de treino. Esta é a rede embaixo — o prompt evita a maioria, isto
+    garante o resto.
+
+    ` — ` vira `, ` porque em português o travessão de aposto e o de explicação
+    aceitam vírgula no lugar sem mudar o sentido. Travessão colado (`palavra—
+    palavra`) só some, senão sobra vírgula onde não havia pausa.
+    """
+    if not texto:
+        return texto
+    # Entre dígitos é intervalo ("2020—2024"), e ali o certo é hífen, não vírgula.
+    limpo = re.sub(r"(?<=\d)\s*[—–]\s*(?=\d)", "-", texto)
+    # Entre palavras, com ou sem espaço em volta: vírgula. Colar as duas
+    # palavras ("redes—uma" virando "redesuma") seria pior que o travessão.
+    limpo = re.sub(r"\s*[—–]\s*(?=\w)", ", ", limpo)
+    limpo = re.sub(r"[—–]", "", limpo)             # sobra no fim de linha ou solto
+    # ", ," sai de "x, — y"; ", ." de travessão antes do ponto final.
+    limpo = re.sub(r",\s*([,.;:!?])", r"\1", limpo)
+    # O travessão no fim da frase deixa espaço pendurado antes do </p>.
+    limpo = re.sub(r"[ \t]+(?=<|$)", "", limpo)
+    return limpo
 
 
 def _extrair_json(bruto: str) -> dict:
@@ -176,6 +208,9 @@ def escrever(pauta: dict, *, noticia: str = "") -> tuple[dict, str]:
     if palavras < MINIMO_DE_PALAVRAS:
         return {}, f"artigo curto demais ({palavras} palavras, mínimo {MINIMO_DE_PALAVRAS})"
 
+    html = sem_travessao(html)
+    titulo = sem_travessao(titulo)
+
     funil_url, _ = _funil_para(pauta["keyword"])
     if funil_url not in html:
         # Preferimos anexar a recusar: o texto está bom, só faltou o CTA, e
@@ -193,7 +228,7 @@ def escrever(pauta: dict, *, noticia: str = "") -> tuple[dict, str]:
 
     return {
         "titulo": titulo,
-        "excerpt": (artigo.get("excerpt") or "").strip()[:300],
+        "excerpt": sem_travessao((artigo.get("excerpt") or "").strip())[:300],
         "html": html,
         "palavras": palavras,
     }, ""

@@ -111,6 +111,8 @@ BRIEFING = """Regras de marca do Sistema Britto (obrigatórias):
 - PROIBIDO: "juntos vamos", "revolucionar", "transformação digital", "disruptivo",
   "garanta já", "últimas vagas", promessa de resultado sem dado.
 - Nunca invente número ou métrica. Só use dado que está no artigo.
+- NUNCA use travessão (— ou –). Reescreva com vírgula, ponto ou dois-pontos.
+  É gramatical em português, mas hoje lê como assinatura de texto de IA.
 - Emoji com parcimônia e propósito.
 - Humor seco quando couber; nunca meme forçado."""
 
@@ -220,6 +222,11 @@ def limpar(texto: str, limite: int) -> str:
         prev = texto
         texto = _PREAMBULO.sub("", texto).strip()
         texto = _REGUA.sub("", texto, count=1).strip() if _REGUA.match(texto) else texto
+    # Antes do corte, não depois: trocar travessão por vírgula muda o tamanho,
+    # e um post de X medido a 280 antes da troca estoura o limite depois.
+    from escritor_de_artigo import sem_travessao
+
+    texto = sem_travessao(texto)
     if len(texto) <= limite:
         return texto
     corte = texto[:limite]

@@ -231,7 +231,29 @@ def view_share(token: str):
     # HTML/HTM: serve raw so browser renders it as a full page
     if suffix in (".html", ".htm"):
         content = full.read_bytes()
-        return Response(content, mimetype="text/html; charset=utf-8")
+        response = Response(content, mimetype="text/html; charset=utf-8")
+        # `_resolve_path_safe` já impede path traversal; o problema aqui é
+        # outro: este HTML executa na MESMA origem do dashboard. E
+        # `.claude/rules/artifacts.md` institucionaliza a rota — todo relatório
+        # de agente é HTML publicado por aqui. Um agente com prompt injetado
+        # grava um <script> no relatório, o superadmin abre o link logado, e o
+        # script faz fetch('/api/...') com a sessão dele. HttpOnly não protege:
+        # o script não precisa ler o cookie, só que o navegador o envie.
+        #
+        # `sandbox` dá origem opaca e mata script e form. Os dois tokens que
+        # sobram devolvem só o que um relatório precisa e nenhum script pode
+        # usar sozinho: abrir um link em nova aba, e navegar quando o clique
+        # partiu do usuário. Sem eles, todo link do relatório vira texto morto.
+        #
+        # O resto é exatamente o que a rule de artefatos já exige de um share:
+        # arquivo único, CSS inline, imagem em data:.
+        response.headers["Content-Security-Policy"] = (
+            "sandbox allow-popups allow-popups-to-escape-sandbox "
+            "allow-top-navigation-by-user-activation; "
+            "default-src 'none'; style-src 'unsafe-inline'; "
+            "img-src data:; font-src data:"
+        )
+        return response
 
     # Images: serve binary with correct MIME type
     if suffix in _IMAGE_EXTS:

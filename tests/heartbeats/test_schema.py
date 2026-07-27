@@ -65,10 +65,20 @@ def test_valid_all_wake_triggers():
 
 
 def test_valid_seeds_from_yaml():
-    """The 3 seed heartbeats in config/heartbeats.yaml should parse without error."""
+    """The seed heartbeats shipped with the repo should parse, all disabled.
+
+    Reads heartbeats.example.yaml explicitly. It used to call
+    load_heartbeats_yaml() with no argument, which prefers the operator's own
+    config/heartbeats.yaml when present — so on any machine that had actually
+    configured heartbeats, this test asserted things about a personal file it
+    has no business policing, and failed for the right reason on the wrong
+    subject. The example is what a fresh install gets, and that is the thing
+    that must never wake an agent without an explicit opt-in.
+    """
     from heartbeat_schema import load_heartbeats_yaml
 
-    cfg = load_heartbeats_yaml()
+    example = REPO_ROOT / "config" / "heartbeats.example.yaml"
+    cfg = load_heartbeats_yaml(path=example, include_plugins=False)
     assert len(cfg.heartbeats) >= 3
 
     ids = [h.id for h in cfg.heartbeats]
@@ -76,9 +86,8 @@ def test_valid_seeds_from_yaml():
     assert "zara-2h" in ids
     assert "flux-6h" in ids
 
-    # All seeds should be disabled by default
-    for hb in cfg.heartbeats:
-        assert hb.enabled is False, f"{hb.id} should have enabled=false in seeds"
+    ligados = [h.id for h in cfg.heartbeats if h.enabled]
+    assert ligados == [], f"seeds ligados por padrão: {ligados}"
 
 
 def test_seeds_interval_values():

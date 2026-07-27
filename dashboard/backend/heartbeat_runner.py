@@ -614,21 +614,30 @@ def step_alert_on_failure(heartbeat_id: str, result: dict) -> bool:
     if result.get("duration_ms"):
         duration_s = f"{result['duration_ms'] / 1000:.1f}s"
 
+    # Everything below is interpolated into a parse_mode=HTML message, so any
+    # free-form field has to be escaped. A traceback carries `<module>` and
+    # `<class '...'>`; Telegram answered 400, urlopen raised, and
+    # notifications._send_telegram swallowed it — meaning the failure alert
+    # disappeared exactly when the error had a stack trace, which is exactly
+    # when it mattered.
+    from notifications import _esc, send_telegram_alert
+
     error_preview = ""
     if result.get("error"):
-        error_preview = result["error"][:200].replace("\n", " ")
+        error_preview = _esc(result["error"][:200].replace("\n", " "))
 
     # Build compact Telegram message
     lines = [
         f"⚠️ <b>Heartbeat Fail</b>",
         f"",
-        f"🔧 <b>{heartbeat_id}</b>  |  🤖 {agent}",
-        f"📌 Status: <code>{status}</code>  |  🏷 {category}",
+        f"🔧 <b>{_esc(str(heartbeat_id))}</b>  |  🤖 {_esc(str(agent))}",
+        f"📌 Status: <code>{_esc(str(status))}</code>  |  🏷 {_esc(str(category))}",
     ]
     if duration_s:
         lines.append(f"⏱ {duration_s}")
     if result.get("provider_id"):
-        lines.append(f"🔗 Provider: {result['provider_id']}:{result.get('model', '?')}")
+        lines.append(f"🔗 Provider: {_esc(str(result['provider_id']))}:"
+                     f"{_esc(str(result.get('model', '?')))}")
     if result.get("attempt_number"):
         lines.append(f"🔄 Attempt #{result['attempt_number']}")
     if error_preview:
@@ -637,12 +646,16 @@ def step_alert_on_failure(heartbeat_id: str, result: dict) -> bool:
 
     text = "\n".join(lines)
 
-    from notifications import send_telegram_alert
     sent = send_telegram_alert(text)
     if sent:
         print(f"[heartbeat_runner] alert sent for {heartbeat_id} fail ({category})", flush=True)
     else:
-        print(f"[heartbeat_runner] alert NOT sent (Telegram not configured) for {heartbeat_id}", flush=True)
+        # Não afirmar o motivo: send_telegram_alert devolve False tanto para
+        # credencial ausente quanto para payload recusado. Dizer "Telegram not
+        # configured" mandava quem investigava conferir o .env, achar tudo
+        # certo e descartar o log — o motivo real sai de _send_telegram.
+        print(f"[heartbeat_runner] alert NOT sent for {heartbeat_id} "
+              f"(see the reason logged by notifications)", flush=True)
     return sent
 
 
@@ -707,14 +720,20 @@ def _step_report_success(heartbeat_id: str, result: dict) -> bool:
     if result.get("cost_usd") is not None and result["cost_usd"] > 0:
         cost_str = f"  |  💰 US${result['cost_usd']:.4f}"
 
+    # Mesma regra do alerta de falha: tudo que é texto livre vai escapado,
+    # porque a mensagem sai com parse_mode=HTML. Aqui o campo perigoso é o
+    # progresso — ele vem da saída do provider, que pode conter qualquer coisa.
+    from notifications import _esc
+
     provider_str = ""
     if result.get("provider_id"):
-        provider_str = f"  |  🔗 {result['provider_id']}:{result.get('model', '?')}"
+        provider_str = (f"  |  🔗 {_esc(str(result['provider_id']))}:"
+                        f"{_esc(str(result.get('model', '?')))}")
 
     lines = [
         f"✅ <b>Heartbeat OK</b>",
         f"",
-        f"🔧 <b>{heartbeat_id}</b>  |  🤖 {agent}",
+        f"🔧 <b>{_esc(str(heartbeat_id))}</b>  |  🤖 {_esc(str(agent))}",
         f"⏱ {duration_s}{cost_str}{provider_str}",
     ]
 
@@ -723,7 +742,7 @@ def _step_report_success(heartbeat_id: str, result: dict) -> bool:
         lines.extend([
             "",
             "📌 Progresso:",
-            progress[:650],
+            _esc(progress[:650]),
         ])
     else:
         lines.extend([

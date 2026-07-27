@@ -43,17 +43,25 @@ def _overdue_tickets(conn: sqlite3.Connection) -> list[sqlite3.Row]:
 
 
 def _build_alert(goals: list[sqlite3.Row], tickets: list[sqlite3.Row]) -> str:
+    """Monta o alerta. Título é texto que o humano escreveu, então é escapado.
+
+    A mensagem vai com parse_mode=HTML. Uma única Meta chamada
+    `A/B de preço < R$100` fazia o Telegram devolver 400 e o alerta inteiro
+    sumia — não só aquele item, todos os outros junto.
+    """
+    from notifications import _esc
+
     lines = [f"⏰ <b>{len(goals)} Meta(s) e {len(tickets)} Ticket(s) vencidos</b>"]
     if goals:
         lines.append("\n🎯 Metas:")
         for g in goals[:_MAX_ITEMS_PER_ALERT]:
-            lines.append(f"  • #{g['id']} {g['title']} — venceu {g['due_date']}")
+            lines.append(f"  • #{g['id']} {_esc(str(g['title']))} — venceu {_esc(str(g['due_date']))}")
         if len(goals) > _MAX_ITEMS_PER_ALERT:
             lines.append(f"  … e mais {len(goals) - _MAX_ITEMS_PER_ALERT}")
     if tickets:
         lines.append("\n🎫 Tickets:")
         for t in tickets[:_MAX_ITEMS_PER_ALERT]:
-            lines.append(f"  • {t['title']} — venceu {t['due_date']}")
+            lines.append(f"  • {_esc(str(t['title']))} — venceu {_esc(str(t['due_date']))}")
         if len(tickets) > _MAX_ITEMS_PER_ALERT:
             lines.append(f"  … e mais {len(tickets) - _MAX_ITEMS_PER_ALERT}")
     return "\n".join(lines)

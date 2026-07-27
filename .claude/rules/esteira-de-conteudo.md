@@ -75,6 +75,12 @@ depois que o autor pediu outra é a pior resposta possível ao gate.
 | `socialjobs` | `sistemabritto.com.br/socialjobs` | instagram, tiktok, youtube, reels, conteúdo |
 | `sistema` | `sistemabritto.com.br/sistema` | automação, agentes, dados, leads, vendas |
 
+**O `/sistema` é a oferta principal desde 27/07/2026.** Ele não vende mais
+"solução web sob encomenda" — vende a **call de 1h por R$ 147 que produz o
+PRD** do projeto. Quem chega pedindo site entra por ali. O CTA do artigo tem de
+prometer isso, e não a solução pronta: clicar esperando uma coisa e encontrar
+outra é a forma mais cara de perder quem já estava interessado.
+
 Regra explícita, nunca escolha do modelo: ele inventa CTA genérico, e CTA
 genérico não converte. Na dúvida vai para `/sistema`, o guarda-chuva.
 

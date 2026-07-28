@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -58,6 +59,15 @@ MARGEM_S = 0.2
 # `denoise`. 10 min mantém o pico de memória em torno de 500 MB.
 BLOCO_S = 600
 SOBREPOSICAO_S = 1.0
+
+# Quantos trechos entram na mesma expressão `select` do corte. Medido em
+# 28/07/2026 na live real (3h28, ~2800 trechos): uma expressão só com todos os
+# `between()` encadeados derruba o ffmpeg com "Error initializing complex
+# filters. Cannot allocate memory" — o parser de expressão do libavfilter não
+# escala para milhares de termos, é limite do parser, não do container (o
+# processo tinha memória de sobra). Cortar em lotes menores e concatenar por
+# demuxer (sem reencode) evita o limite mantendo poucos processos ffmpeg.
+LOTE_TRECHOS = 150
 
 
 class FalhaDeMidia(RuntimeError):
@@ -306,24 +316,16 @@ def trechos_com_fala(silencios: Iterable[Trecho], duracao: float, *,
     return trechos
 
 
-def cortar(midia: Path, trechos: list[Trecho], destino: Path, *,
-           progresso: Progresso | None = None) -> Path:
-    """Mantém só os trechos indicados, num arquivo contínuo.
-
-    O filtro vai por `-filter_complex_script`, não pela linha de comando: uma
-    live de 3h28 gera na casa de mil trechos, e a expressão passa de 40 KB —
-    tamanho que ainda cabe no ARG_MAX mas trava qualquer log legível.
+def _cortar_lote(midia: Path, trechos: list[Trecho], destino: Path) -> Path:
+    """Um único corte por `select`/`aselect`, para um lote de até
+    `LOTE_TRECHOS` trechos. O filtro vai por `-filter_complex_script`, não
+    pela linha de comando: mesmo um lote de 150 trechos passa do que é
+    legível como argumento, e isso ainda cabe no ARG_MAX.
 
     `select` + `setpts` no vídeo e `aselect` + `asetpts` no áudio precisam andar
     juntos; mexer em um só entrega uma peça com áudio e imagem em tempos
     diferentes, que é pior que não cortar.
     """
-    if not trechos:
-        raise FalhaDeMidia("nenhum trecho com fala — nada a cortar")
-    if progresso:
-        total = sum(t.duracao for t in trechos)
-        progresso("cortando", f"{len(trechos)} trechos, {total / 60:.1f} min de saída")
-
     expr = "+".join(f"between(t,{t.inicio:.3f},{t.fim:.3f})" for t in trechos)
     script = destino.with_suffix(".filtro.txt")
     script.write_text(
@@ -334,8 +336,50 @@ def cortar(midia: Path, trechos: list[Trecho], destino: Path, *,
     _rodar(["ffmpeg", "-y", "-v", "error", "-i", str(midia),
             "-filter_complex_script", str(script), "-map", "[v]", "-map", "[a]",
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
-            "-c:a", "aac", "-b:a", "160k", str(destino)], o_que="corte")
+            "-c:a", "aac", "-b:a", "160k", str(destino)], o_que="corte de lote")
     script.unlink(missing_ok=True)
+    return destino
+
+
+def cortar(midia: Path, trechos: list[Trecho], destino: Path, *,
+           progresso: Progresso | None = None) -> Path:
+    """Mantém só os trechos indicados, num arquivo contínuo.
+
+    Trechos são cortados em lotes de `LOTE_TRECHOS` (ver a constante) e os
+    lotes concatenados por demuxer, sem reencode — ver o motivo no comentário
+    da constante. Para uma peça curta com um único lote, é exatamente o
+    comportamento anterior (um corte só, sem concatenação).
+    """
+    if not trechos:
+        raise FalhaDeMidia("nenhum trecho com fala — nada a cortar")
+    if progresso:
+        total = sum(t.duracao for t in trechos)
+        progresso("cortando", f"{len(trechos)} trechos, {total / 60:.1f} min de saída")
+
+    lotes = [trechos[i:i + LOTE_TRECHOS] for i in range(0, len(trechos), LOTE_TRECHOS)]
+    if len(lotes) == 1:
+        return _cortar_lote(midia, lotes[0], destino)
+
+    lotes_dir = destino.parent / f"{destino.stem}_lotes"
+    lotes_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        linhas = []
+        for i, lote in enumerate(lotes):
+            if progresso:
+                progresso("cortando", f"lote {i + 1} de {len(lotes)}")
+            saida_lote = lotes_dir / f"lote{i:04d}.mp4"
+            _cortar_lote(midia, lote, saida_lote)
+            linhas.append(f"file '{saida_lote.resolve()}'")
+
+        lista = lotes_dir / "lista.txt"
+        lista.write_text("\n".join(linhas), encoding="utf-8")
+
+        if progresso:
+            progresso("concatenando", f"{len(lotes)} lotes")
+        _rodar(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                "-i", str(lista), "-c", "copy", str(destino)], o_que="concatenação dos lotes")
+    finally:
+        shutil.rmtree(lotes_dir, ignore_errors=True)
     return destino
 
 

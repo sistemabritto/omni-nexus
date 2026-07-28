@@ -39,6 +39,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
+# Denoise for the video pipeline (esteira de vídeo, Fase 1A). Static musl
+# binary straight from the GitHub release: it carries no Torch/Python runtime
+# with it (36MB), and pinning the version keeps a rebuild from silently
+# changing how every recording sounds.
+#
+# Runtime ordering, documented here because it is the one thing that silently
+# ruins the output: denoise ALWAYS runs before silence detection. Measured on
+# this image with a 2-minute slice of a real 3h28 recording (2026-07-28), the
+# noise floor is what decides whether anything gets cut at all — after
+# denoise, `silencedetect=noise=-30dB:d=0.4` finds 17% of the runtime as
+# silence; on the raw audio that threshold finds almost nothing.
+#
+# auto-editor is deliberately NOT here. Its releases from 28.x on are a
+# prebuilt binary linked against GLIBC 2.38, and this image is Debian 12
+# (glibc 2.36) — it fails with "version `GLIBC_2.38' not found" at exec time,
+# and the PyPI package just downloads that same binary on first run. The cut
+# list is built from ffmpeg's own silencedetect instead, which is what
+# auto-editor's default `--edit audio` measures anyway (amplitude threshold,
+# not VAD) and keeps the cut list ours to show in the approval gate.
+ARG DEEP_FILTER_VERSION=0.5.6
+RUN curl -fsSL -o /usr/local/bin/deep-filter \
+        "https://github.com/Rikorose/DeepFilterNet/releases/download/v${DEEP_FILTER_VERSION}/deep-filter-${DEEP_FILTER_VERSION}-x86_64-unknown-linux-musl" \
+    && chmod +x /usr/local/bin/deep-filter
+
 # opencode CLI — pinned to the same version as Dockerfile.swarm /
 # Dockerfile.swarm.dashboard (never @latest — see those files for why).
 ARG CACHEBUST=1
@@ -119,6 +143,11 @@ RUN mkdir -p /workspace/config /workspace/workspace/.locks
 # image build if Chrome/FFmpeg/Node aren't all green.
 RUN hyperframes doctor || (echo "hyperframes doctor reported a hard failure" && exit 1)
 RUN ffmpeg -version && ffprobe -version && opencode --version
+# Same contract for the audio chain: an image that ships without a working
+# deep-filter is an image whose video jobs fail an hour into a render, not at
+# deploy time. `--version` also proves the musl binary actually execs here,
+# which is exactly the check that caught auto-editor's glibc mismatch.
+RUN deep-filter --version
 
 LABEL org.opencontainers.image.title="evo-nexus-media-worker" \
       org.opencontainers.image.description="social-media-production render worker (HyperFrames + OpenCode via OmniRoute + FFmpeg)" \

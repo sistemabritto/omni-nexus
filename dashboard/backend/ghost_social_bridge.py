@@ -400,6 +400,43 @@ def midia_do_post(post: dict) -> tuple[list[str], str]:
     return [capa], ""
 
 
+def redes_ja_derivadas(post_id: str) -> set[str]:
+    """Redes que já têm aprovação aberta para este artigo.
+
+    Chave da idempotência de toda a derivação. Três caminhos independentes
+    podem mandar derivar o mesmo artigo — o gate do blog ao publicar na hora, o
+    webhook `post.published` do Ghost e o varredor de agendados — e sem esta
+    checagem cada um abriria seu próprio trio de aprovações. O Felipe receberia
+    o mesmo post três vezes no Telegram, que é exatamente o ruído que
+    `aprovar_artigo` já aprendeu a evitar no gate do artigo.
+
+    Olha TODOS os estados, não só `pending`: uma versão já aprovada, rejeitada
+    ou publicada também significa que aquela rede já foi trabalhada. Derivar de
+    novo o que o humano rejeitou seria insistir num texto que ele recusou.
+
+    Falha para conjunto vazio de propósito. Sem conseguir consultar, o pior
+    caso é uma aprovação repetida — que dá para rejeitar; o caso oposto é o
+    artigo nunca chegar às redes, que é o problema que estamos corrigindo.
+    """
+    try:
+        from sdk_client import evo
+
+        resposta = evo.get("/api/approvals", {"status": "all", "gate_type": "publish"}) or {}
+    except Exception as exc:  # noqa: BLE001
+        print(f"[ghost_social_bridge] não consegui checar derivações anteriores ({exc})",
+              flush=True)
+        return set()
+
+    achadas: set[str] = set()
+    for a in (resposta.get("approvals") or []):
+        pub = a.get("publish") or {}
+        # `source_id` é o artigo de origem do post de rede; `publish_ref` é o
+        # artigo do gate do blog. Só o primeiro identifica uma derivação.
+        if pub.get("source_id") == post_id and pub.get("target") in REDES:
+            achadas.add(pub["target"])
+    return achadas
+
+
 def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) -> dict:
     """Gera as versões e abre uma aprovação por rede. Nada é publicado aqui."""
     post = buscar_post(post_id)
@@ -410,6 +447,9 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
 
     quando = datetime.now(timezone.utc) + timedelta(hours=em_horas)
     resultado: dict = {"ok": True, "post": post.get("title"), "redes": {}, "pulados": {}}
+    # Em dry-run ninguém grava nada, então não há o que duplicar — e consultar
+    # a API só para simular tornaria o modo de teste dependente do servidor.
+    ja_feitas = set() if dry_run else redes_ja_derivadas(post_id)
     midia, sem_midia = midia_do_post(post)
     if not midia:
         # Post sem imagem ainda vale — só não pode sair calado. Um artigo sem
@@ -418,6 +458,9 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
         resultado["aviso_midia"] = sem_midia
 
     for rede in REDES:
+        if rede in ja_feitas:
+            resultado["pulados"][rede] = "já derivado (aprovação existente)"
+            continue
         texto = adaptar(post, rede)
         if not texto:
             resultado["pulados"][rede] = "texto vazio"
@@ -760,6 +803,87 @@ def aprovar_artigo(post_id: str, *, publicar_em: str | None = None,
                 "publish_at": publicar_em, "preview": post.get("url")}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "erro": str(exc)}
+
+
+# Janela do varredor. 26h e não 24 porque o varredor roda a cada 15 minutos e
+# o relógio do Ghost não é o nosso: uma folga de duas horas cobre atraso de
+# agendamento e diferença de fuso sem alcançar o artigo de anteontem.
+JANELA_VARREDURA_HORAS = float(os.environ.get("GHOST_VARREDURA_HORAS", "26"))
+
+
+def posts_publicados_recentes(horas: float = JANELA_VARREDURA_HORAS,
+                              limite: int = 15) -> list[dict]:
+    """Artigos que o Ghost publicou na janela, do mais recente para o mais antigo.
+
+    A data é filtrada aqui e não em NQL de propósito: `published_at:>'...'` é
+    sintaxe que o Ghost recusa calado quando o formato não bate, e um filtro
+    que devolve zero por erro de aspas é indistinguível de "não há artigo novo".
+    Ordenar e cortar em Python custa uma lista de 15 itens e não mente.
+    """
+    url = (os.environ.get("GHOST_URL") or "").strip().rstrip("/")
+    key = (os.environ.get("GHOST_ADMIN_API_KEY") or "").strip()
+    if not url or not key:
+        return []
+    r = requests.get(
+        f"{url}/ghost/api/admin/posts/"
+        f"?filter=status:published&order=published_at%20desc&limit={limite}"
+        f"&fields=id,title,status,published_at,url",
+        headers={"Authorization": f"Ghost {ghost_jwt(key)}", "User-Agent": UA_NAVEGADOR},
+        timeout=45)
+    if r.status_code >= 300:
+        return []
+    corte = datetime.now(timezone.utc) - timedelta(hours=horas)
+    recentes = []
+    for p in (r.json().get("posts") or []):
+        quando = (p.get("published_at") or "").replace("Z", "+00:00")
+        try:
+            if datetime.fromisoformat(quando) >= corte:
+                recentes.append(p)
+        except ValueError:
+            continue
+    return recentes
+
+
+def derivar_pendentes(horas: float = JANELA_VARREDURA_HORAS,
+                      *, dry_run: bool = False) -> dict:
+    """Deriva as redes de todo artigo publicado na janela que ainda não derivou.
+
+    A rede de segurança do artigo AGENDADO, e a razão de ela existir:
+
+    O gate do blog aceita `publish_at`. Quando o humano agenda, o Ghost devolve
+    `status="scheduled"` e publica sozinho horas depois — sem passar por código
+    nosso. `_run_blog_publish` só derivava as redes no caminho da publicação
+    imediata, então todo artigo agendado nascia órfão. Em 27/07/2026 os dois
+    artigos do dia foram agendados (13h e 18h BRT), o Ghost publicou os dois, e
+    nenhum post de X, LinkedIn ou Threads existiu.
+
+    O webhook `post.published` cobriria isso, mas não está cadastrado e não dá
+    para cadastrar por aqui: a chave de Admin API devolve 403 NoPermissionError
+    no endpoint de integrações, ou seja, criar o webhook exige alguém logado no
+    painel do Ghost. Uma etapa manual que ninguém lembra de repetir não é
+    garantia; este varredor é.
+
+    Idempotente por `redes_ja_derivadas`, então rodar a cada 15 minutos sobre a
+    mesma janela não empilha aprovação. Nada é publicado: cada rede continua
+    parando no seu gate.
+    """
+    resultado: dict = {"ok": True, "janela_horas": horas, "artigos": []}
+    for post in posts_publicados_recentes(horas):
+        post_id = post.get("id") or ""
+        faltando = [r for r in REDES if r not in redes_ja_derivadas(post_id)]
+        item = {"id": post_id, "titulo": post.get("title"),
+                "published_at": post.get("published_at"), "faltando": faltando}
+        if not faltando:
+            item["acao"] = "nada a fazer"
+        elif dry_run:
+            item["acao"] = "derivaria (dry-run)"
+        else:
+            item["acao"] = "derivado"
+            item["resultado"] = distribuir(post_id)
+            if not item["resultado"].get("ok"):
+                resultado["ok"] = False
+        resultado["artigos"].append(item)
+    return resultado
 
 
 def distribuir_do_webhook(payload: dict, **kwargs) -> dict:

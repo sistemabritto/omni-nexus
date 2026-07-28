@@ -159,6 +159,17 @@ def setup_schedule():
     schedule.every().day.at("05:30").do(
         run_adw, "Métricas de Crescimento", "daily_growth_metrics.py")
 
+    # A cada 15 minutos: artigo publicado que ainda não virou post de rede.
+    #
+    # O gate do blog aceita agendamento, e artigo agendado o Ghost publica
+    # sozinho, sem passar por código nosso — a derivação das redes só rodava no
+    # caminho da publicação imediata. Em 27/07/2026 os dois artigos do dia foram
+    # agendados, o Ghost publicou os dois, e nenhum post de X, LinkedIn ou
+    # Threads existiu. O varredor é idempotente (checa aprovação já aberta antes
+    # de derivar), então passar de 15 em 15 minutos não empilha notificação.
+    schedule.every(15).minutes.do(
+        run_adw, "Derivar Redes Pendentes", "derivar_redes_pendentes.py")
+
     # Domingo 09:00, uma hora depois do research: a semana já fechou e as
     # métricas de sábado já foram coletadas. Lê o funil, acha o maior
     # vazamento e abre um ticket com a hipótese — a decisão continua humana,

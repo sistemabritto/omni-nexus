@@ -94,12 +94,51 @@ test('attempt final anthropic é claude nativo com env limpo', () => {
   assert.equal(last.model, null);
 });
 
-test('cadeia vazia quando o provider ativo é anthropic (caminho nativo não usa fallback)', () => {
+// 2026-07-28 — o Claude nativo ativo era o único provider SEM plano B.
+//
+// A cadeia só era montada para provider externo, então a configuração padrão
+// (anthropic ativo) rodava sem fallback nenhum: estourar a cota mensal
+// derrubava a sessão do agente no meio da conversa, com o erro cru na tela.
+// É o caso mais provável de todos — a cota acaba sozinha, sem ninguém mexer
+// em nada.
+test('anthropic ativo abre a cadeia com o nativo e segue para os outros providers', () => {
+  const config = makeConfig();
+  config.active = 'anthropic';
+  config.cli_command = 'claude';
+  config.env_vars = {};
+  const labels = buildProviderFallbackChain(config).map((c) => `${c.providerId}:${c.model || 'native'}`);
+  assert.equal(labels[0], 'anthropic:native', 'o provider ativo tem de ser o primeiro attempt');
+  assert.ok(labels.length > 1, 'anthropic ativo precisa ter para onde cair');
+  assert.ok(labels.includes('omnirouter:auto'), 'o gateway é o primeiro socorro');
+});
+
+test('anthropic não se repete no fim da cadeia que já começou nele', () => {
   const config = makeConfig();
   config.active = 'anthropic';
   config.env_vars = {};
-  const chain = buildProviderFallbackChain(config);
-  assert.equal(chain.length, 0);
+  const labels = buildProviderFallbackChain(config).map((c) => `${c.providerId}:${c.model || 'native'}`);
+  assert.equal(labels.filter((l) => l === 'anthropic:native').length, 1);
+});
+
+test('provider sem chave fica fora da cadeia derivada', () => {
+  // Attempt sem credencial só rende 401 — e 401 é fatal, o que ENCERRARIA a
+  // rotação em vez de continuar. Um provider vazio na cadeia é pior do que
+  // não ter cadeia.
+  const config = makeConfig();
+  config.active = 'anthropic';
+  config.env_vars = {};
+  config.providers.omnirouter.env_vars = { OPENAI_BASE_URL: 'http://omniroute:20128/v1' };
+  const labels = buildProviderFallbackChain(config).map((c) => c.providerId);
+  assert.ok(!labels.includes('omnirouter'));
+});
+
+test('fallback_providers declarado vence a derivação automática', () => {
+  const config = makeConfig();
+  config.active = 'anthropic';
+  config.env_vars = {};
+  config.providers.anthropic.fallback_providers = ['nvidia'];
+  const labels = buildProviderFallbackChain(config).map((c) => c.providerId);
+  assert.deepEqual([...new Set(labels)], ['anthropic', 'nvidia']);
 });
 
 test('isRetryableProviderError reconhece o 503 do OmniRoute', () => {
@@ -107,6 +146,18 @@ test('isRetryableProviderError reconhece o 503 do OmniRoute', () => {
   assert.ok(isRetryableProviderError(new Error('429 Too Many Requests')));
   assert.ok(isRetryableProviderError(new Error('Service Unavailable')));
   assert.ok(!isRetryableProviderError(new Error('SyntaxError: unexpected token')));
+});
+
+// O texto exato que o CLI devolve quando a cota mensal acaba. Nenhum dos
+// padrões clássicos (429, "rate limit", "quota") aparece nele — era por isso
+// que o erro chegava inteiro ao chat em vez de rotacionar o provider.
+test('isRetryableProviderError reconhece a cota do Claude Code esgotada', () => {
+  const real = "Claude Code returned an error result: You've hit your monthly spend limit · " +
+    'raise it at claude.ai/settings/usage?from=cc_cli_limit_message';
+  assert.ok(isRetryableProviderError(new Error(real)));
+  assert.ok(!isFatalProviderError(real), 'cota esgotada não é erro de credencial');
+  assert.ok(isRetryableProviderError(new Error('Claude AI usage limit reached')));
+  assert.ok(isRetryableProviderError(new Error('Your credit balance is too low')));
 });
 
 test('isFatalProviderError reconhece erros de auth', () => {

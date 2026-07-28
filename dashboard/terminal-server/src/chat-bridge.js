@@ -54,13 +54,48 @@ function _emitChatHud(session, onMessage, patch = {}) {
 }
 
 /**
+ * Um provider só serve de fallback se tiver como responder: credencial
+ * própria (ou base URL própria, caso do gateway self-hosted) e um CLI que
+ * fale o protocolo do Agent SDK. Entrar na cadeia sem chave só gasta um
+ * attempt para colher 401 — e 401 é fatal, o que encerraria a rotação.
+ */
+function _podeServirDeFallback(providerId, fp) {
+  if (providerId === 'anthropic') return true;   // credencial vem de ~/.claude
+  if (!SDK_COMPATIBLE_CLI.has(fp.cli_command || 'openclaude')) return false;
+  const env = fp.env_vars || {};
+  const temChave = !!(env.OPENAI_API_KEY || fp.api_key);
+  const temBase = !!(env.OPENAI_BASE_URL || fp.default_base_url);
+  return temChave && temBase;
+}
+
+/**
+ * Providers de fallback do provider ativo. Quando ele não declara nenhum,
+ * derivamos dos que estão configurados — o `omnirouter` primeiro, por já
+ * carregar sua própria cadeia interna de providers.
+ *
+ * A derivação existe porque a configuração real quase nunca declara
+ * `fallback_providers` no `anthropic`: o provider nativo é o padrão de
+ * fábrica e ninguém volta nele para escrever uma cadeia. Sem a derivação,
+ * "provider ativo = anthropic" significava "sem fallback nenhum".
+ */
+function _cadeiaDeProviders(activeId, activeProvider, providers) {
+  const declarados = (activeProvider.fallback_providers || []).filter((id) => providers[id]);
+  if (declarados.length) return declarados;
+
+  const preferidos = ['omnirouter', 'nvidia', 'openrouter', 'codex_auth', 'openai'];
+  const derivados = preferidos.filter(
+    (id) => id !== activeId && providers[id] && _podeServirDeFallback(id, providers[id]));
+  return derivados;
+}
+
+/**
  * Build provider fallback chain from config.
  * Returns array of { providerId, model, cliCommand, envVars, baseUrl } attempts.
  * Order: active provider's primary model → fallback_models → fallback_providers (with their chains).
  */
 function buildProviderFallbackChain(providerConfig) {
   const providers = providerConfig.providers || {};
-  const activeId = providerConfig.active;
+  const activeId = providerConfig.active || 'anthropic';
   const activeProvider = providers[activeId] || providerConfig;
 
   const chain = [];
@@ -71,7 +106,18 @@ function buildProviderFallbackChain(providerConfig) {
   const activeEnvVars = { ...(activeProvider.env_vars || {}), ...(providerConfig.env_vars || {}) };
   const activeBaseUrl = activeEnvVars.OPENAI_BASE_URL || activeProvider.default_base_url;
 
-  if (primaryModel) {
+  if (activeId === 'anthropic') {
+    // Claude nativo não tem modelo em providers.json — o modelo vem da
+    // definição do agente. Sem este attempt a cadeia começaria vazia e o
+    // provider ativo nem seria tentado.
+    chain.push({
+      providerId: 'anthropic',
+      model: null,
+      cliCommand: 'claude',
+      envVars: {},
+      baseUrl: null,
+    });
+  } else if (primaryModel) {
     chain.push({
       providerId: activeId,
       model: primaryModel,
@@ -95,9 +141,10 @@ function buildProviderFallbackChain(providerConfig) {
   }
 
   // Fallback providers
-  for (const fallbackProviderId of (activeProvider.fallback_providers || [])) {
+  for (const fallbackProviderId of _cadeiaDeProviders(activeId, activeProvider, providers)) {
     const fp = providers[fallbackProviderId];
     if (!fp) continue;
+    if (!_podeServirDeFallback(fallbackProviderId, fp)) continue;
 
     const fpModel = resolveProviderModel(fp);
     const fpCliCommand = fp.cli_command || 'openclaude';
@@ -140,7 +187,16 @@ function buildProviderFallbackChain(providerConfig) {
     });
   }
 
-  return chain;
+  // Dedupe por (provider, modelo): um provider pode aparecer declarado como
+  // fallback e de novo no fecho da cadeia. Attempt repetido é um turno gasto
+  // para colher exatamente o mesmo erro.
+  const vistos = new Set();
+  return chain.filter((a) => {
+    const chave = `${a.providerId}:${a.model || 'native'}`;
+    if (vistos.has(chave)) return false;
+    vistos.add(chave);
+    return true;
+  });
 }
 
 /**
@@ -178,7 +234,16 @@ function isRetryableProviderError(error) {
     '429', 'rate limit', 'rate-limit', 'quota', 'too many requests',
     'resource exhausted', 'capacity', 'overloaded',
     'service unavailable', 'temporarily unavailable',
-    'insufficient quota', 'billing limit', 'plan limit'
+    'insufficient quota', 'billing limit', 'plan limit',
+
+    // Cota do Claude Code esgotada. O texto que o CLI devolve é
+    // "You've hit your monthly spend limit · raise it at
+    // claude.ai/settings/usage?from=cc_cli_limit_message" — nenhum dos
+    // padrões acima casa com ele, e por isso a sessão morria em vez de
+    // rotacionar. É o caso mais frequente na prática: a cota acaba no meio
+    // do expediente e todo agente para junto.
+    'spend limit', 'usage limit', 'monthly limit', 'weekly limit',
+    'cc_cli_limit_message', 'credit balance', 'out of credit',
   ];
 
   return retryablePatterns.some(p => msg.includes(p));
@@ -883,6 +948,16 @@ class ChatBridge {
       if (claudeExe) queryOptions.pathToClaudeCodeExecutable = claudeExe;
     }
 
+    // As duas formas do system prompt do agente. Elas não são
+    // intercambiáveis: o Claude nativo recebe o preset `claude_code` com o
+    // append, e o provider externo recebe o prompt inteiro por substituição
+    // (o append é fraco demais para segurar a persona em modelo de fora).
+    // Guardar as duas é o que permite rotacionar entre as duas famílias no
+    // meio da conversa sem mandar o formato errado para o CLI da vez.
+    let systemPromptNativo = null;
+    let systemPromptExterno = null;
+    let modeloDoAgente = null;
+
     // Load agent definition from .claude/agents/{name}.md
     if (agentName) {
       const agentDef = loadAgentFile(agentName, queryOptions.cwd);
@@ -912,29 +987,33 @@ class ChatBridge {
         if (systemPromptExtras && !sdkSessionId) {
           promptAppend = promptAppend + '\n\n' + systemPromptExtras;
         }
+        // Mirror ClaudeBridge: --append-system-prompt is too weak for GPT
+        // models, so REPLACE the system prompt to force the agent persona.
+        // agentDef.model is a Claude model name — meaningless there; the
+        // model comes from the provider's OPENAI_MODEL env var.
+        const priorMemory = loadAgentMemory(agentName);
+        const promptExterno = (priorMemory
+          ? promptAppend + '\n\n## Previous Session Memory (yours — resume/summarize before acting)\n' + priorMemory
+          : promptAppend);
+        systemPromptExterno = promptExterno + '\n\n' +
+          'CRITICAL: You MUST fully embody this agent persona. ' +
+          'You are NOT Claude, OpenClaude, or a generic assistant — you ARE ' + agentName + '. ' +
+          'When asked who you are, ALWAYS respond as ' + agentName + '. ' +
+          'Never break character. Follow ALL instructions above.';
+        systemPromptNativo = {
+          type: 'preset',
+          preset: 'claude_code',
+          append: promptAppend,
+        };
+        modeloDoAgente = agentDef.model || null;
+
         if (isExternalProvider) {
-          // Mirror ClaudeBridge: --append-system-prompt is too weak for GPT
-          // models, so REPLACE the system prompt to force the agent persona.
-          // agentDef.model is a Claude model name — meaningless here; the
-          // model comes from the provider's OPENAI_MODEL env var.
-          const priorMemory = loadAgentMemory(agentName);
-          if (priorMemory) {
-            promptAppend += '\n\n## Previous Session Memory (yours — resume/summarize before acting)\n' + priorMemory;
-          }
-          queryOptions.systemPrompt = promptAppend + '\n\n' +
-            'CRITICAL: You MUST fully embody this agent persona. ' +
-            'You are NOT Claude, OpenClaude, or a generic assistant — you ARE ' + agentName + '. ' +
-            'When asked who you are, ALWAYS respond as ' + agentName + '. ' +
-            'Never break character. Follow ALL instructions above.';
+          queryOptions.systemPrompt = systemPromptExterno;
           console.log(`[chat-bridge] Loaded agent "${agentName}" via systemPrompt replace (${agentDef.prompt.length} chars, external provider)`);
         } else {
-          queryOptions.systemPrompt = {
-            type: 'preset',
-            preset: 'claude_code',
-            append: promptAppend,
-          };
-          if (agentDef.model) queryOptions.model = agentDef.model;
-          console.log(`[chat-bridge] Loaded agent "${agentName}" via systemPrompt.append (${agentDef.prompt.length} chars, model: ${agentDef.model || 'inherit'})`);
+          queryOptions.systemPrompt = systemPromptNativo;
+          if (modeloDoAgente) queryOptions.model = modeloDoAgente;
+          console.log(`[chat-bridge] Loaded agent "${agentName}" via systemPrompt.append (${agentDef.prompt.length} chars, model: ${modeloDoAgente || 'inherit'})`);
         }
       } else {
         console.warn(`[chat-bridge] Agent "${agentName}" not found, running without agent`);
@@ -1062,28 +1141,46 @@ class ChatBridge {
     this.sessions.set(sessionId, session);
 
     // Build provider fallback chain for external providers
-    let fallbackChain = [];
     let currentFallbackIndex = 0;
-    if (isExternalProvider) {
-      // Drop attempts whose cli_command can't speak the Agent SDK protocol
-      // (see SDK_COMPATIBLE_CLI) — e.g. opencode. buildProviderFallbackChain
-      // always appends a trailing native-anthropic entry when the active
-      // provider isn't anthropic, so this never filters down to empty.
-      fallbackChain = buildProviderFallbackChain(providerConfig)
-        .filter((attempt) => SDK_COMPATIBLE_CLI.has(attempt.cliCommand));
-      console.log(`[chat-bridge] Built fallback chain with ${fallbackChain.length} attempts:`,
-        fallbackChain.map(c => `${c.providerId}:${c.model || 'native'}`).join(' → '));
-    }
+    // A cadeia é montada SEMPRE, inclusive com o Claude nativo ativo. Antes
+    // ela só existia para provider externo, e o efeito era o pior possível:
+    // exatamente na configuração padrão (anthropic ativo), acabar a cota
+    // mensal derrubava a sessão sem tentar nenhum outro provider.
+    //
+    // Drop attempts whose cli_command can't speak the Agent SDK protocol
+    // (see SDK_COMPATIBLE_CLI) — e.g. opencode.
+    const fallbackChain = buildProviderFallbackChain(providerConfig)
+      .filter((attempt) => SDK_COMPATIBLE_CLI.has(attempt.cliCommand));
+    const hasFallbackChain = fallbackChain.length > 1;
+    console.log(`[chat-bridge] Built fallback chain with ${fallbackChain.length} attempts:`,
+      fallbackChain.map(c => `${c.providerId}:${c.model || 'native'}`).join(' → '));
 
     // Run query with provider fallback
     const runQueryWithFallback = async () => {
       while (currentFallbackIndex < (fallbackChain.length || 1)) {
         if (!session.active) return;
 
-        // Apply current fallback config if using external provider
-        if (isExternalProvider && fallbackChain.length > 0) {
+        // Aplica a configuração do attempt da vez — para qualquer provider
+        // ativo, não só externo.
+        if (fallbackChain.length > 0) {
           const attempt = fallbackChain[currentFallbackIndex];
+          const nativo = attempt.providerId === 'anthropic' && attempt.cliCommand === 'claude';
           console.log(`[chat-bridge] Attempt ${currentFallbackIndex + 1}/${fallbackChain.length}: ${attempt.providerId}:${attempt.model || 'native'}`);
+
+          // Trocar de família (nativo ↔ externo) troca o formato do system
+          // prompt e a validade do `model`. Mandar o preset `claude_code`
+          // para o openclaude, ou um nome de modelo Claude para um provider
+          // de fora, faz o attempt de socorro falhar por configuração — e
+          // parecer que o fallback não funciona.
+          if (nativo) {
+            if (systemPromptNativo) queryOptions.systemPrompt = systemPromptNativo;
+            if (modeloDoAgente) queryOptions.model = modeloDoAgente;
+            const claudeExe = resolveClaudeExecutable();
+            if (claudeExe) queryOptions.pathToClaudeCodeExecutable = claudeExe;
+          } else {
+            if (systemPromptExterno) queryOptions.systemPrompt = systemPromptExterno;
+            delete queryOptions.model;
+          }
 
           // AbortController novo por attempt — abortar o anterior mata um
           // child preso no backoff de retry sem derrubar a sessão nova.
@@ -1122,10 +1219,10 @@ class ChatBridge {
           session.sdkSessionId = sdkSessionId || null;
         }
 
-        const hudProviderId = (isExternalProvider && fallbackChain.length > 0)
+        const hudProviderId = (fallbackChain.length > 0)
           ? fallbackChain[currentFallbackIndex].providerId
           : (providerConfig.active || 'anthropic');
-        const hudProviderModel = (isExternalProvider && fallbackChain.length > 0)
+        const hudProviderModel = (fallbackChain.length > 0)
           ? (fallbackChain[currentFallbackIndex].model || 'native')
           : (resolveProviderModel(providerConfig) || 'default');
         const turnStartedAt = Date.now();
@@ -1156,7 +1253,7 @@ class ChatBridge {
               const status = Number(message.error_status) || 0;
               const attemptNum = Number(message.attempt) || 0;
               const retryableStatus = status === 429 || (status >= 500 && status <= 599);
-              const hasMoreFallbacks = isExternalProvider &&
+              const hasMoreFallbacks = hasFallbackChain &&
                 currentFallbackIndex < fallbackChain.length - 1;
               if (hasMoreFallbacks && retryableStatus && attemptNum >= 2) {
                 console.warn(`[chat-bridge] api_retry ${attemptNum}x status=${status} on attempt ${currentFallbackIndex + 1} — advancing fallback chain early`);
@@ -1196,7 +1293,7 @@ class ChatBridge {
                 const errText = [message.result, ...(Array.isArray(message.errors) ? message.errors : [])]
                   .filter((x) => typeof x === 'string' && x)
                   .join(' ') || JSON.stringify(message).slice(0, 500);
-                const hasMoreFallbacks = isExternalProvider &&
+                const hasMoreFallbacks = hasFallbackChain &&
                   currentFallbackIndex < fallbackChain.length - 1;
                 if (hasMoreFallbacks && session.active && !isFatalProviderError(errText)) {
                   console.warn(`[chat-bridge] Error result (subtype=${message.subtype}) on attempt ${currentFallbackIndex + 1}: ${errText.slice(0, 300)} — advancing fallback chain`);
@@ -1273,11 +1370,11 @@ class ChatBridge {
           // fallback — erros do CLI chegam como "process exited with code N"
           // sem o texto 503/429, então filtrar só por padrão retryable
           // deixaria a sessão morrer exatamente no caso que queremos cobrir.
-          const isRetryable = isExternalProvider && isRetryableProviderError(err);
-          const isFatal = isExternalProvider && isFatalProviderError(err);
+          const isRetryable = isRetryableProviderError(err);
+          const isFatal = isFatalProviderError(err);
           const isAbort = err.name === 'AbortError';
 
-          if (!isFatal && !isAbort && isExternalProvider && session.active &&
+          if (!isFatal && !isAbort && hasFallbackChain && session.active &&
               currentFallbackIndex < fallbackChain.length - 1) {
             currentFallbackIndex++;
             console.warn(`[chat-bridge] ${isRetryable ? 'Retryable' : 'Non-fatal'} error, advancing to fallback ${currentFallbackIndex + 1}/${fallbackChain.length}: ${fallbackChain[currentFallbackIndex].providerId}:${fallbackChain[currentFallbackIndex].model || 'native'}`);

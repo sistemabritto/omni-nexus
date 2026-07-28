@@ -15,7 +15,53 @@ humano    aprova o ciclo em lote   → aprovada
 06:00     daily_content_pipeline   → escreve, cria draft, gera capa, abre o gate
 humano    aprova o artigo          → publica no Ghost (publicada)
 automático                         → deriva X/LinkedIn/Threads, um gate cada
+15 em 15 derivar_redes_pendentes   → recupera o artigo agendado que ficou órfão
 ```
+
+---
+
+## 0. Derivação das redes — o agendado é o caso que falha
+
+Aprovar o artigo pode **publicar agora** ou **agendar**. Os dois caminhos
+publicam, e só um deles passa por código nosso na hora de ir ao ar:
+
+| Caminho | Quem deriva as redes |
+|---|---|
+| Publicar agora | `heartbeat_outcome._derivar_redes_em_background`, na hora |
+| Agendar (`publish_at`) | **ninguém, no momento da aprovação** — o Ghost publica sozinho depois |
+
+Em 27/07/2026 os dois artigos do dia foram agendados (13h e 18h BRT). O Ghost
+publicou os dois no horário e **nenhum post de X, LinkedIn ou Threads existiu**.
+Nada acusou erro: `_run_blog_publish` deriva só quando `status != "scheduled"`,
+e ali o artigo ainda nem estava publicado — `distribuir` recusa post fora de
+`published`, então derivar na aprovação produziria um "ignorado" silencioso.
+
+O webhook `post.published` do Ghost cobriria o caso. Ele **não cobre**: o
+trigger existe e está habilitado no Nexus, mas `trigger_executions` está vazia
+desde sempre, porque o webhook nunca foi cadastrado do lado do Ghost. E não dá
+para cadastrar por código: a chave de Admin API devolve
+`403 NoPermissionError` no endpoint de integrações. Criar webhook exige sessão
+de staff no painel. Etapa manual que ninguém repete não é garantia.
+
+Quem fecha o buraco é **`ADWs/routines/derivar_redes_pendentes.py`**, a cada 15
+minutos: lista o que o Ghost publicou nas últimas 26h e deriva o que ainda não
+foi. Lógica em `ghost_social_bridge.derivar_pendentes`.
+
+**A idempotência é `redes_ja_derivadas(post_id)`**, e ela é obrigatória: três
+caminhos podem mandar derivar o mesmo artigo (gate imediato, webhook, varredor)
+e sem ela cada um abriria seu próprio trio de aprovações. Ela consulta
+`/api/approvals` por `publish.source_id` e conta **todos** os estados, não só
+`pending` — reabrir o que o humano rejeitou é insistir num texto que ele leu e
+recusou. Dois cuidados ao mexer:
+
+- **`source_id` ≠ `publish_ref`.** O primeiro é o artigo que originou um post de
+  rede; o segundo é o artigo que o gate do blog publica. Confundir faz a
+  aprovação do próprio artigo parecer derivação, e as três redes são puladas
+  para sempre. `routes/approvals._render_publish_preview` expõe os dois.
+- **Pular a rede ANTES de `adaptar`**, nunca depois. Gerar para descartar é uma
+  chamada de modelo por rede a cada 15 minutos, 96 vezes ao dia.
+
+Testes: `tests/goals/test_derivacao_de_agendado.py`.
 
 ---
 

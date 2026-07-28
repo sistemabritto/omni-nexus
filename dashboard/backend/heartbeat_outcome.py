@@ -922,8 +922,15 @@ def _run_blog_publish(outcome: dict) -> dict:
     # de cliente vai lembrar de fazer. O sintoma seria o pior possível — aprovar
     # o artigo e as redes simplesmente não acontecerem, sem erro nenhum.
     #
-    # A ponte é idempotente por ticket, então derivar aqui e o webhook disparar
-    # também não duplica aprovação.
+    # A ponte é idempotente (`redes_ja_derivadas` checa aprovação já aberta para
+    # o artigo antes de gerar), então derivar aqui, o webhook disparar e o
+    # varredor passar não produzem aprovação duplicada.
+    #
+    # Agendado NÃO deriva aqui, e não pode: `distribuir` recusa post que ainda
+    # não está `published`, e o Ghost só publica na hora marcada. Quem cobre o
+    # agendado é a rotina `derivar_redes_pendentes.py`, a cada 15 minutos — sem
+    # ela o artigo agendado nunca chegava às redes, que foi o que aconteceu em
+    # 27/07/2026 com os dois artigos do dia.
     if resultado.get("published") and resultado.get("status") != "scheduled":
         _derivar_redes_em_background(ref)
     return resultado

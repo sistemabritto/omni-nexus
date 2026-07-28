@@ -657,6 +657,12 @@ def _render_publish_preview(gate_type: str, payload: dict) -> dict | None:
         # um pendente para o mesmo artigo — sem isto, reprocessar a mesma pauta
         # empilha aprovações e o Felipe recebe a mesma coisa três vezes.
         "publish_ref": outcome.get("publish_ref"),
+        # O artigo que ORIGINOU este post de rede (`publish_ref` é o artigo que
+        # o gate do blog publica — são gates diferentes). É por ele que a ponte
+        # descobre que um artigo já foi derivado e não deriva de novo: sem este
+        # campo exposto, o varredor de agendados reabriria as três aprovações a
+        # cada passada.
+        "source_id": outcome.get("source_id"),
         "publish_at": outcome.get("publish_at"),
         "content": outcome.get("publish_content"),
         "media": media,

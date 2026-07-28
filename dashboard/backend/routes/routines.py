@@ -41,9 +41,17 @@ def get_routines():
     # "Morning, 0 execuções" — metade da lista era esse fantasma, e não havia
     # como saber qual das duas linhas era a real.
     for make_id, spec in list(discovered.items()):
-        kebab = (spec.get("script") or "").replace("custom/", "").replace(".py", "").replace("_", "-")
-        if kebab and kebab != make_id and kebab in data and make_id not in data:
-            discovered[make_id] = {**spec, "_alias_de": kebab}
+        stem = (spec.get("script") or "").replace("custom/", "").replace(".py", "")
+        if not stem or make_id in data:
+            continue
+        # Duas grafias, porque as rotinas não concordam entre si: a maioria
+        # grava a métrica em kebab (`good-morning`), e `uso_modelos_dia` grava
+        # com underscore. Checar só uma delas deixava esse fantasma na tela
+        # depois de todos os outros sumirem.
+        for variante in (stem.replace("_", "-"), stem):
+            if variante != make_id and variante in data:
+                discovered[make_id] = {**spec, "_alias_de": variante}
+                break
 
     for make_id, spec in discovered.items():
         if spec.get("_alias_de"):

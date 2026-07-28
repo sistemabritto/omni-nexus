@@ -256,8 +256,17 @@ services:
       - MEDIA_WORKSPACE=/workspace/media
       - MEDIA_SKILLS_DIR=/workspace/.claude/skills-media
       - MEDIA_WORKER_POLL_SECONDS=${MEDIA_WORKER_POLL_SECONDS:-10}
-      - MEDIA_JOB_TIMEOUT_SECONDS=${MEDIA_JOB_TIMEOUT_SECONDS:-3600}
-      - MEDIA_MAX_FILE_SIZE_BYTES=${MEDIA_MAX_FILE_SIZE_BYTES:-1073741824}
+      ## 6h, not 1h. Measured on this exact image (2026-07-28): DeepFilterNet
+      ## denoises at ~0.5x realtime on this box, so a 3h28 live costs ~1h47 in
+      ## denoise alone, plus two loudnorm passes and the silence cut. The old
+      ## 3600s ceiling failed every full-length recording halfway through.
+      ## A stuck job is detected by per-step progress on the job row, not by
+      ## this timeout — see the video pipeline feature folder.
+      - MEDIA_JOB_TIMEOUT_SECONDS=${MEDIA_JOB_TIMEOUT_SECONDS:-21600}
+      ## 8GiB. A 3h28 720p recording is 1.25GiB on its own, and the pipeline's
+      ## intermediate WAV is 2.3GiB — the previous 1GiB limit rejected the very
+      ## files this worker now exists to process.
+      - MEDIA_MAX_FILE_SIZE_BYTES=${MEDIA_MAX_FILE_SIZE_BYTES:-8589934592}
       - TZ=${TZ:-America/Bahia}
 
     deploy:

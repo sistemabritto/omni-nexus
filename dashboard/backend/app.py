@@ -994,6 +994,22 @@ with app.app_context():
         _conn.commit()
     # --- End social-media-production migration ---
 
+    # --- esteira-de-video migration: job_type on media_jobs ---
+    # Coluna nova, não CHECK constraint nova: adicionar um job_type exige só
+    # um ALTER TABLE ADD COLUMN idempotente, nunca recriar a tabela em
+    # produção. A validação do valor aceito vive em routes/media_jobs.py.
+    _mj_cols = {row[1] for row in _cur.execute("PRAGMA table_info(media_jobs)").fetchall()}
+    if "job_type" not in _mj_cols:
+        _cur.execute("ALTER TABLE media_jobs ADD COLUMN job_type TEXT NOT NULL DEFAULT 'social_clip'")
+    if "source_path" not in _mj_cols:
+        _cur.execute("ALTER TABLE media_jobs ADD COLUMN source_path TEXT")
+    if "progress_message" not in _mj_cols:
+        _cur.execute("ALTER TABLE media_jobs ADD COLUMN progress_message TEXT")
+    if "result_json" not in _mj_cols:
+        _cur.execute("ALTER TABLE media_jobs ADD COLUMN result_json TEXT")
+    _conn.commit()
+    # --- End esteira-de-video migration ---
+
     # Fix corrupted datetime columns (NULL or non-string values crash SQLAlchemy)
     for _tbl, _col in [("roles", "created_at"), ("users", "created_at"), ("users", "last_login")]:
         try:

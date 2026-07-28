@@ -43,6 +43,18 @@ estava 100% quebrada desde 24/07 — os 10 itens da fila em `failed`, falhando
 todo dia às 19:00. O que ela tinha de único, pauta em alta no X, a esteira
 principal já faz em `weekly_content_research.pautas_do_x()`.
 
+## Log do scheduler ficava mudo — corrigido em 28/07/2026
+
+`run_adw()` imprimia o resultado de cada rotina sem `flush=True`, e a imagem
+não setava `PYTHONUNBUFFERED`. Sem TTY, o stdout do Python fica em buffer de
+bloco: `docker service logs` mostrava só o banner de start e nada mais,
+mesmo com 15+ jobs agendados e o processo vivo havia 21h. Não era rotina
+parada — era log invisível. Confirmado batendo `daily_growth_metrics.py`
+contra o dado real gravado (visitas de hoje presentes na série) enquanto o
+log não tinha uma linha sequer. `ENV PYTHONUNBUFFERED=1` no `Dockerfile.swarm`
+(imagem `evo-nexus-runtime`, usada por scheduler e telegram) resolve pra
+sempre; o `flush=True` em `run_adw` é redundante mas fica.
+
 ## Core (`scheduler.py`, ships with the repo)
 
 | Time | Routine | Script |
@@ -52,6 +64,7 @@ principal já faz em `weekly_content_research.pautas_do_x()`.
 | 21:00 | Daily Backup | `backup.py` |
 | 21:15 | Memory Sync | `memory_sync.py` |
 | 04:00 | Uso Modelos DIA (cost telemetry) | `uso_modelos_dia.py` |
+| 05:30 | Métricas de Crescimento | `daily_growth_metrics.py` — lê o analytics do próprio site (pageviews por UTM, cliques de CTA, pipeline de leads) e grava a série em `metricas_crescimento`. Roda antes da esteira das 06:00 pra medir o que ontem produziu, não hoje. Confirmado rodando e gravando dado real em 28/07/2026 |
 | Every hour, 08h-20h BRT | Hourly Report | `hourly_report.py` |
 | Sunday 09:00 | Memory Lint | `memory_lint.py` |
 | A cada 15 min | Derivar Redes Pendentes | `derivar_redes_pendentes.py` — recupera o artigo agendado que o Ghost publicou sozinho e ninguém derivou (ver `esteira-de-conteudo.md` §0) |

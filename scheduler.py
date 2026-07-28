@@ -106,11 +106,11 @@ def run_adw(name: str, script: str, args: str = ""):
             text=True,
         )
         status = "✓" if result.returncode == 0 else "✗"
-        print(f"  {now} {status} {name}")
+        print(f"  {now} {status} {name}", flush=True)
     except subprocess.TimeoutExpired:
-        print(f"  {now} ✗ {name} timeout (15min)")
+        print(f"  {now} ✗ {name} timeout (15min)", flush=True)
     except Exception as e:
-        print(f"  {now} ✗ {name} error: {e}")
+        print(f"  {now} ✗ {name} error: {e}", flush=True)
 
 
 def _hourly_report_safe():

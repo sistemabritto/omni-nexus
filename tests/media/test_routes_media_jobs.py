@@ -64,6 +64,45 @@ def test_create_job_writes_input_manifest(admin_client, app, tmp_path):
     assert manifest["platform"] == "instagram"
 
 
+def test_create_job_rejects_invalid_job_type(admin_client):
+    resp = _create_job(admin_client, job_type="nao_existe")
+    assert resp.status_code == 400
+
+
+def test_create_corte_bruto_requires_source_path(admin_client):
+    resp = admin_client.post("/api/media/jobs", json={"title": "Live 3h28", "job_type": "corte_bruto"})
+    assert resp.status_code == 400
+
+
+def test_create_corte_bruto_only_requires_title_and_source(admin_client):
+    resp = admin_client.post("/api/media/jobs", json={
+        "title": "Live 3h28", "job_type": "corte_bruto", "source_path": "/opt/media-in/live.mp4",
+    })
+    assert resp.status_code == 201
+    data = resp.get_json()
+    assert data["job_type"] == "corte_bruto"
+    assert data["source_path"] == "/opt/media-in/live.mp4"
+    assert data["status"] == "queued"
+    # placeholders documentados — nenhum destes descreve uma saída de rede real
+    assert data["platform"] == "youtube"
+    assert data["width"] == 1280 and data["height"] == 720
+
+
+def test_create_corte_bruto_does_not_write_opencode_manifest(admin_client):
+    resp = admin_client.post("/api/media/jobs", json={
+        "title": "Live 3h28", "job_type": "corte_bruto", "source_path": "/opt/media-in/live.mp4",
+    })
+    data = resp.get_json()
+    manifest_path = Path(data["workspace_path"]) / "input" / "job.json"
+    assert not manifest_path.exists()
+
+
+def test_create_job_defaults_job_type_to_social_clip(admin_client):
+    resp = _create_job(admin_client)
+    data = resp.get_json()
+    assert data["job_type"] == "social_clip"
+
+
 def test_create_job_schedule_mode_requires_future_date(admin_client):
     past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     resp = _create_job(admin_client, publication_mode="schedule", scheduled_at=past)

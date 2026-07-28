@@ -33,8 +33,10 @@ bp = Blueprint("media_jobs", __name__)
 _WORKER_PATCHABLE_FIELDS = (
     "render_path", "render_sha256", "render_size_bytes", "render_duration_seconds",
     "render_width", "render_height", "render_fps", "render_has_audio", "last_error",
-    "title", "brief", "caption",
+    "title", "brief", "caption", "progress_message", "result_json",
 )
+
+MEDIA_JOB_TYPES = frozenset({"social_clip", "corte_bruto"})
 
 
 def _require(action: str):
@@ -136,6 +138,26 @@ def create_media_job():
         return denied
     data = request.get_json() or {}
 
+    job_type = data.get("job_type", "social_clip")
+    if job_type not in MEDIA_JOB_TYPES:
+        return jsonify({"error": f"job_type inválido: {job_type!r}. Aceita: {sorted(MEDIA_JOB_TYPES)}"}), 400
+
+    if job_type == "corte_bruto":
+        # Fase 1A: não passa por OpenCode/Postiz, então platform/width/height/
+        # duration_seconds não descrevem uma saída de rede — são preenchidos
+        # com o formato conhecido do material de origem e sobrescritos pelos
+        # campos render_* reais quando o worker termina (ver worker.py).
+        if not (data.get("title") or "").strip():
+            return jsonify({"error": "Campos obrigatórios ausentes: ['title']"}), 400
+        if not (data.get("source_path") or "").strip():
+            return jsonify({"error": "corte_bruto exige source_path (vídeo de origem já acessível ao worker)."}), 400
+        data.setdefault("platform", "youtube")
+        data.setdefault("width", 1280)
+        data.setdefault("height", 720)
+        data.setdefault("fps", 24)
+        data.setdefault("duration_seconds", 0.0)
+        data.setdefault("format", "landscape")
+
     required = ["title", "platform", "width", "height", "duration_seconds"]
     missing = [f for f in required if data.get(f) in (None, "")]
     if missing:
@@ -175,6 +197,8 @@ def create_media_job():
         goal_id=data.get("goal_id"),
         task_id=data.get("task_id"),
         created_by=getattr(current_user, "username", "system"),
+        job_type=job_type,
+        source_path=data.get("source_path"),
         title=data["title"],
         brief=data.get("brief"),
         platform=platform,
@@ -199,17 +223,19 @@ def create_media_job():
     db.session.add(job)
     db.session.commit()
 
-    # Scaffold the isolated workspace + write the input manifest OpenCode will read.
+    # Scaffold the isolated workspace. Só job_type='social_clip' escreve o
+    # manifesto que o OpenCode lê — corte_bruto não passa por composição.
     base = ensure_job_scaffold(job_id)
     job.workspace_path = str(base)
-    manifest = {
-        "job_id": job_id, "title": job.title, "brief": job.brief, "platform": job.platform,
-        "format": job.format, "width": job.width, "height": job.height, "fps": job.fps,
-        "duration_seconds": job.duration_seconds, "language": job.language, "caption": job.caption,
-        "platform_settings": platform_settings or {},
-        "project_id": job.project_id, "campaign_id": job.campaign_id,
-    }
-    (base / "input" / "job.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    if job_type == "social_clip":
+        manifest = {
+            "job_id": job_id, "title": job.title, "brief": job.brief, "platform": job.platform,
+            "format": job.format, "width": job.width, "height": job.height, "fps": job.fps,
+            "duration_seconds": job.duration_seconds, "language": job.language, "caption": job.caption,
+            "platform_settings": platform_settings or {},
+            "project_id": job.project_id, "campaign_id": job.campaign_id,
+        }
+        (base / "input" / "job.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     db.session.commit()
 
     audit(current_user, "execute", "media_jobs", f"create media job {job_id} ({platform})")

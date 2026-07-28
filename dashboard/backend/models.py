@@ -989,6 +989,23 @@ class MediaJob(db.Model):
     goal_id = db.Column(db.Integer, db.ForeignKey("goals.id", ondelete="SET NULL"), nullable=True)
     task_id = db.Column(db.Integer, db.ForeignKey("goal_tasks.id", ondelete="SET NULL"), nullable=True)
     created_by = db.Column(db.String(100), nullable=False, default="system")
+    # job_type distingue o fluxo que o worker roda para este job. 'social_clip'
+    # (default) é o fluxo original: OpenCode -> HyperFrames -> Postiz.
+    # 'corte_bruto' é a Fase 1A da esteira de vídeo: media_audio.primeiro_corte
+    # (denoise -> loudnorm -> corte de silêncio), sem OpenCode nem Postiz.
+    # Validado em Python (routes/media_jobs.py), não em CHECK constraint —
+    # adicionar um valor novo não pode exigir recriar a tabela em produção.
+    job_type = db.Column(db.String(20), nullable=False, default="social_clip")
+    # Caminho do vídeo de origem para job_type='corte_bruto'. Se vazio, o
+    # worker procura input/source.* dentro do workspace do próprio job.
+    source_path = db.Column(db.Text, nullable=True)
+    # Progresso textual da etapa atual (ex: "[85.0 min] loudnorm passo 1 de 2"),
+    # para diferenciar um job rodando de um job travado — ver
+    # workspace/development/features/esteira-de-video/[C]plan-esteira-de-video.md.
+    progress_message = db.Column(db.Text, nullable=True)
+    # Estatísticas do processamento que não cabem nos campos render_* (ex:
+    # duracao_original_s, cortado_pct, número de trechos) — JSON livre.
+    result_json = db.Column(db.Text, nullable=True)
     title = db.Column(db.String(500), nullable=False)
     brief = db.Column(db.Text, nullable=True)
     platform = db.Column(db.String(20), nullable=False)
@@ -1038,6 +1055,10 @@ class MediaJob(db.Model):
             "goal_id": self.goal_id,
             "task_id": self.task_id,
             "created_by": self.created_by,
+            "job_type": self.job_type,
+            "source_path": self.source_path,
+            "progress_message": self.progress_message,
+            "result": json.loads(self.result_json) if self.result_json else None,
             "title": self.title,
             "brief": self.brief,
             "platform": self.platform,

@@ -30,9 +30,10 @@ sys.path.insert(0, str(BACKEND_DIR))
 from sdk_client import evo  # noqa: E402
 from media_executor import run_opencode_media_job, MediaExecutionError  # noqa: E402
 from media_render import render_composition, run_doctor, RenderError  # noqa: E402
-from media_validation import validate_mp4, ValidationError  # noqa: E402
+from media_validation import validate_mp4, extract_metadata, ValidationError  # noqa: E402
 from media_manifest import load_and_validate_manifest, ManifestValidationError  # noqa: E402
 from media_workspace import job_dir, media_workspace_root, sha256_file  # noqa: E402
+from media_audio import primeiro_corte, FalhaDeMidia  # noqa: E402
 
 POLL_SECONDS = float(os.environ.get("MEDIA_WORKER_POLL_SECONDS", "10"))
 JOB_TIMEOUT_SECONDS = int(os.environ.get("MEDIA_JOB_TIMEOUT_SECONDS", "3600"))
@@ -81,6 +82,102 @@ def _claim_next_job() -> dict | None:
 
 
 def process_job(job: dict) -> None:
+    job_type = job.get("job_type") or "social_clip"
+    if job_type == "corte_bruto":
+        process_corte_bruto_job(job)
+    else:
+        process_social_clip_job(job)
+
+
+def _resolve_source_video(job: dict, base: Path) -> Path | None:
+    """corte_bruto's input: an explicit `source_path` (already reachable
+    inside this container), or fall back to whatever landed in the job's
+    own input/ dir under the name `source.*` (e.g. dropped there by scp/ops
+    after POST /api/media/jobs returned the job_id).
+    """
+    source_path = job.get("source_path")
+    if source_path:
+        p = Path(source_path)
+        return p if p.is_file() else None
+    for candidate in sorted((base / "input").glob("source.*")):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def process_corte_bruto_job(job: dict) -> None:
+    """Fase 1A da esteira de vídeo: extrair áudio -> denoise em blocos ->
+    loudnorm 2 passes -> remux -> cortar silêncio -> concatenar. Sem
+    OpenCode, sem Postiz — o resultado fica em ready_for_review para a
+    aprovação humana da Fase 1B decidir o corte editorial.
+    """
+    job_id = job["id"]
+    base = job_dir(job_id)
+    print(f"[media-worker] processing corte_bruto job {job_id}", flush=True)
+
+    source = _resolve_source_video(job, base)
+    if source is None:
+        _fail_job(
+            job_id,
+            f"Vídeo de origem não encontrado (source_path={job.get('source_path')!r}, "
+            f"nem input/source.* em {base / 'input'})",
+            terminal=True,
+        )
+        return
+
+    inicio = time.monotonic()
+
+    def progresso(etapa: str, detalhe: str = "") -> None:
+        minutos = (time.monotonic() - inicio) / 60
+        msg = f"[{minutos:.1f} min] {etapa} {detalhe}".rstrip()
+        print(f"[media-worker] {job_id}: {msg}", flush=True)
+        try:
+            _patch(job_id, progress_message=msg)
+        except Exception:
+            pass
+
+    try:
+        origem_meta = extract_metadata(source)
+    except ValidationError as exc:
+        _fail_job(job_id, f"Vídeo de origem inválido: {exc}", terminal=True)
+        return
+
+    _patch(job_id, status="generating")
+    output_path = base / "output" / "final.mp4"
+    trabalho = base / "work"
+    trabalho.mkdir(parents=True, exist_ok=True)
+    try:
+        resultado = primeiro_corte(source, output_path, trabalho=trabalho, progresso=progresso)
+    except FalhaDeMidia as exc:
+        _fail_job(job_id, f"Corte bruto falhou: {exc}")
+        return
+
+    # `generating` só permite ir para `rendering` na máquina de estados —
+    # primeiro_corte já produziu o arquivo final, então isso é só o registro
+    # formal de que a etapa de "render" (corte+concat) terminou.
+    _patch(job_id, status="rendering")
+    _patch(job_id, status="validating")
+    try:
+        meta = validate_mp4(
+            output_path,
+            expected_width=origem_meta.width, expected_height=origem_meta.height,
+            expected_duration_seconds=float(resultado["duracao_final_s"]),
+            expected_fps=round(origem_meta.fps),
+            max_size_bytes=MAX_FILE_SIZE_BYTES, workspace_root=media_workspace_root(),
+        )
+    except ValidationError as exc:
+        _fail_job(job_id, f"Validação falhou: {exc}")
+        return
+
+    checksum = sha256_file(output_path)
+    _patch(
+        job_id, status="ready_for_review", render_path=str(output_path), render_sha256=checksum,
+        result_json=json.dumps(resultado, ensure_ascii=False), progress_message="concluído", **meta.to_dict(),
+    )
+    print(f"[media-worker] corte_bruto job {job_id} ready_for_review (sha256={checksum[:12]}...)", flush=True)
+
+
+def process_social_clip_job(job: dict) -> None:
     job_id = job["id"]
     base = job_dir(job_id)
     print(f"[media-worker] processing job {job_id} ({job.get('platform')}, {job.get('width')}x{job.get('height')})", flush=True)

@@ -3,6 +3,7 @@
 import re
 from flask import Blueprint, jsonify
 from routes._helpers import WORKSPACE, safe_read, get_script_agents, discover_routines
+from routines_registry import agendamento_real, descrever_frequencia, motor_do_script
 
 bp = Blueprint("scheduler", __name__)
 
@@ -33,9 +34,47 @@ def _command_for(script: str) -> str:
 
 @bp.route("/api/scheduler")
 def get_schedule():
+    """O que está agendado. Do agendador de verdade, com o regex como reserva.
+
+    O regex sobre `scheduler.py` era a única fonte e produzia fantasma: ele não
+    distingue uma rotina agendada de uma linha do carregador de YAML, e a tela
+    listava uma rotina sem nome rodando "every interval_min min". Continua aqui
+    como plano B — se o agendador não puder ser lido, uma lista aproximada é
+    melhor que uma tela vazia — mas nunca mais é a primeira opção.
+    """
+    real = agendamento_real()
+    if real is not None:
+        return jsonify(_do_agendador(real))
+    return jsonify(_do_regex())
+
+
+def _do_agendador(jobs: list) -> list:
+    entradas = []
+    for job in jobs:
+        script = job.get("script") or ""
+        rotulo, bucket = descrever_frequencia(job)
+        chave = script.replace("custom/", "").replace(".py", "")
+        entradas.append({
+            "name": job.get("name") or (chave.replace("_", " ").title() if chave else ""),
+            "script": script,
+            "schedule": rotulo,
+            "frequency": bucket,
+            "time": (job.get("at_time") or "")[:5],
+            "next_run": job.get("next_run") or "",
+            "agent": get_script_agents().get(chave, ""),
+            # Quem gasta token e quem não gasta — a informação que decide se
+            # uma rotina pode rodar de 15 em 15 minutos sem doer.
+            "engine": motor_do_script(script),
+            "custom": "custom/" in script,
+            "command": _command_for(script),
+        })
+    return entradas
+
+
+def _do_regex() -> list:
     content = safe_read(WORKSPACE / "scheduler.py")
     if not content:
-        return jsonify([])
+        return []
 
     entries = []
 
@@ -99,7 +138,7 @@ def get_schedule():
     # Also load custom routines from config/routines.yaml
     _load_yaml_routines(entries)
 
-    return jsonify(entries)
+    return entries
 
 
 def _load_yaml_routines(entries: list):

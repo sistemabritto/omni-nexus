@@ -24,6 +24,8 @@ interface ScheduledTask {
   script: string
   custom?: boolean
   command?: string
+  /** "python" (determinística) ou "modelo" (chama LLM e custa por execução). */
+  engine?: string
 }
 
 const DAY_ORDER: Record<string, number> = {
@@ -186,7 +188,9 @@ export default function Scheduler() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      {/* `flex-wrap`: no celular o título e os dois botões não cabem na mesma
+          linha, e sem quebrar eles espremiam o texto até virar duas letras. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
             <Clock size={20} className="text-[#00FFA7]" />
@@ -337,63 +341,33 @@ export default function Scheduler() {
         </div>
       )}
 
-      {/* Scheduled Tasks */}
-      <div className="flex items-center gap-3 mb-3">
-        <h2 className="text-base font-semibold text-[#e6edf3]">Scheduled Routines</h2>
-        <span className="text-[11px] font-medium text-[#667085] bg-[#21262d] px-2 py-0.5 rounded-full">{tasks.length}</span>
-      </div>
-      <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-[#667085] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
-              <th className="text-left p-4 font-medium">Task</th>
-              <th className="text-left p-4 font-medium">Schedule</th>
-              <th className="text-left p-4 font-medium">Agent</th>
-              <th className="text-left p-4 font-medium">Command</th>
-              <th className="text-left p-4 font-medium">Script</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task, i) => (
-              <tr key={i} className="border-t border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
-                <td className="p-4 text-[#e6edf3] font-medium">
-                  <div className="flex items-center gap-2">
-                    {task.name}
-                    {task.custom ? (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#21262d]/60 border-[#21262d] text-[#667085]">custom</span>
-                    ) : (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#00FFA7]/8 border-[#00FFA7]/20 text-[#00FFA7]">core</span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-4">
-                  <code className="text-[11px] bg-[#0d1117] border border-[#21262d] px-2 py-1 rounded text-[#e6edf3] font-mono">{task.schedule}</code>
-                </td>
-                <td className="p-4">
-                  {task.agent === 'system' ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#8b949e]/10 border border-[#8b949e]/20 text-[#8b949e]">
-                      systematic
-                    </span>
-                  ) : task.agent ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#00FFA7]/8 border border-[#00FFA7]/20 text-[#00FFA7]">
-                      @{task.agent}
-                    </span>
-                  ) : (
-                    <span className="text-[#667085]">--</span>
-                  )}
-                </td>
-                <td className="p-4">
-                  {task.command ? (
-                    <code className="text-[11px] bg-[#0d1117] border border-[#21262d] px-2 py-1 rounded text-[#00FFA7] font-mono">{task.command}</code>
-                  ) : (
-                    <span className="text-[#667085]">--</span>
-                  )}
-                </td>
-                <td className="p-4 text-[#667085] text-xs font-mono">{task.script}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* As rotinas moram em /routines, e só lá.
+          Esta tabela existia em paralelo com a de lá, lendo a MESMA API por
+          outro caminho e mostrando outras colunas — duas telas para a mesma
+          pergunta, cada uma com metade da resposta e nenhuma com a próxima
+          execução. Aqui fica o resumo e o link; o detalhe é de uma página só. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#161b22] border border-[#21262d] rounded-xl p-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 shrink-0 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15 flex items-center justify-center">
+            <Clock size={16} className="text-[#00FFA7]" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[#e6edf3]">
+              {tasks.length} rotinas agendadas
+            </p>
+            <p className="text-xs text-[#667085]">
+              {tasks.filter(t => t.engine === 'modelo').length} chamam modelo
+              {' · '}
+              {tasks.filter(t => t.engine === 'python').length} são Python puro
+            </p>
+          </div>
+        </div>
+        <a
+          href="/routines"
+          className="text-xs px-3 py-2 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors whitespace-nowrap"
+        >
+          Ver rotinas
+        </a>
       </div>
     </div>
   )

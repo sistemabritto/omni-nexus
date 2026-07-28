@@ -34,16 +34,42 @@ def get_routines():
     except Exception:
         discovered = {}
 
+    # O runner grava a métrica com o nome da rotina em kebab (`good-morning`),
+    # e `discover_routines` inventa um id abreviado para o Makefile
+    # (`good_morning` → `morning`). São chaves diferentes para a MESMA rotina:
+    # sem fundir, a tela mostra "Good Morning, 25 execuções" e logo abaixo
+    # "Morning, 0 execuções" — metade da lista era esse fantasma, e não havia
+    # como saber qual das duas linhas era a real.
+    for make_id, spec in list(discovered.items()):
+        kebab = (spec.get("script") or "").replace("custom/", "").replace(".py", "").replace("_", "-")
+        if kebab and kebab != make_id and kebab in data and make_id not in data:
+            discovered[make_id] = {**spec, "_alias_de": kebab}
+
     for make_id, spec in discovered.items():
+        if spec.get("_alias_de"):
+            # Já existe com a chave que o runner usa; só enriquece aquela.
+            entry = data.get(spec["_alias_de"])
+            if isinstance(entry, dict):
+                entry.setdefault("agent", spec.get("agent", ""))
+                entry["name"] = spec.get("name") or spec["_alias_de"]
+                entry["script"] = spec.get("script", "")
+            continue
         if make_id in data:
             # already has execution metrics; enrich with agent/name if missing
             entry = data[make_id]
             if isinstance(entry, dict):
                 entry.setdefault("agent", spec.get("agent", ""))
                 entry.setdefault("source_plugin", spec.get("source_plugin"))
+                # O script é o que liga a métrica ao arquivo — sem ele não dá
+                # para dizer se a rotina chama modelo nem para casar esta linha
+                # com o agendamento na tela.
+                entry.setdefault("name", spec.get("name", ""))
+                entry.setdefault("script", spec.get("script", ""))
             continue
         data[make_id] = {
             "agent": spec.get("agent", ""),
+            "name": spec.get("name", ""),
+            "script": spec.get("script", ""),
             "runs": 0,
             "successes": 0,
             "success_rate": 0,
@@ -56,13 +82,34 @@ def get_routines():
             "source_plugin": spec.get("source_plugin"),
         }
 
-    # Calculate totals
+    # Motor de cada rotina: Python determinístico ou chamada de modelo. É a
+    # diferença entre uma rotina que custa CPU e uma que custa dinheiro a cada
+    # execução, e é o que decide se ela pode rodar de 15 em 15 minutos.
+    try:
+        from routines_registry import motor_do_script
+
+        for val in data.values():
+            if isinstance(val, dict):
+                val["engine"] = motor_do_script(val.get("script") or "")
+    except Exception:  # noqa: BLE001 — sem o rótulo a página ainda serve
+        pass
+
+    # Totais somados das chaves que existem de verdade.
+    #
+    # Estava lendo `val["cost"]` e `val["tokens"]`, que o runner nunca gravou —
+    # ele grava `total_cost_usd` e `total_input_tokens`/`total_output_tokens`.
+    # O painel exibia custo zero e zero token com US$ 27 e milhões de tokens no
+    # arquivo. Um número errado com cara de número certo é pior que campo vazio:
+    # não dá para desconfiar dele.
     totals = {"total_runs": 0, "total_cost": 0.0, "total_tokens": 0}
-    for key, val in data.items():
-        if isinstance(val, dict):
-            totals["total_runs"] += val.get("runs", 0)
-            totals["total_cost"] += val.get("cost", 0.0)
-            totals["total_tokens"] += val.get("tokens", 0)
+    for val in data.values():
+        if not isinstance(val, dict):
+            continue
+        totals["total_runs"] += val.get("runs", 0) or 0
+        totals["total_cost"] += val.get("total_cost_usd", 0.0) or 0.0
+        totals["total_tokens"] += ((val.get("total_input_tokens", 0) or 0)
+                                   + (val.get("total_output_tokens", 0) or 0))
+    totals["total_cost"] = round(totals["total_cost"], 4)
 
     return jsonify({"metrics": data, "totals": totals})
 

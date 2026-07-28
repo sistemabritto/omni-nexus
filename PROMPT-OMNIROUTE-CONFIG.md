@@ -43,9 +43,12 @@ Access Token (scope admin): {{ADMIN_TOKEN}}
   `"stream": false` em testes que fazem parse do JSON.
 - Rotas de lifecycle (`/api/services/*`, `/api/mcp/*`, `/api/plugins/*`)
   são loopback-only — não tente por token remoto.
-- O PATCH `/api/providers` só aceita os campos: `ids[]`, `isActive`. Outros
-  campos como `maxConcurrent`, `rateLimitProtection` precisam ser setados
-  pelo **dashboard UI** (não expostos via API remota).
+- O PATCH **em lote** `/api/providers` só aceita `ids[]` + `isActive` (e exige
+  `isActive` sempre, mesmo para mudar outra coisa). Mas o **`PUT
+  /api/providers/{id}` existe e funciona** — é por ele que se ajusta
+  `globalPriority`, `maxConcurrent`, `healthCheckInterval`, `group` e
+  `rateLimitOverrides` sem tocar no dashboard. Verificado em 2026-07-28
+  contra a 3.8.48; a afirmação anterior de que isso exigia a UI estava errada.
 - O refresh automático de quota (`autoRefreshProviderQuotaInterval`) controla
   quanto tempo o sistema espera entre checagens de rate limit dos providers.
 - O combo strategy `auto` é zero-config e usa LKGP (Last Known Good Provider):
@@ -107,10 +110,13 @@ specificityMatch(0.05), contextAffinity(0.05), connectionDensity(0.05).
 O modePack `quality-first` favorece taskFit(0.37) + stability(0.15) para
 produção de conteúdo, coding e análise — ideal para agentes autônomos.
 
-### 3.4 — max_concurrent por provider (DASHBOARD obrigatório)
+### 3.4 — max_concurrent por provider (via API, `PUT /api/providers/{id}`)
 
-O PATCH `/api/providers` NÃO aceita `maxConcurrent` remotamente. Acesse o
-dashboard e configure manualmente cada conexão no menu **Providers**:
+```bash
+PUT /api/providers/{id}  {"globalPriority": 1, "maxConcurrent": 3, "isActive": true}
+```
+
+Valores de referência por conexão:
 
 | Provider | max_concurrent | Motivo |
 |----------|:--------------:|--------|
@@ -233,36 +239,46 @@ Tudo saturado → Codex (gratuito, última barreira)
 - NÃO reinicie serviços nem chame rotas de lifecycle.
 - NÃO imprima keys/tokens completos no relatório.
 - Toda mudança deve ser reversível com um único PATCH/PUT (documente o valor anterior).
-- maxConcurrent e rateLimitProtection só pelo dashboard (não via API remota).
+- `rateLimitProtection` e `autoLearn` não estão na whitelist do PUT (400 /
+  "No valid fields to update") — esses dois seguem sendo só pelo dashboard.
+- `priority` é aceito e ecoado na resposta, mas **não persiste** na conexão:
+  o campo que ordena providers é `globalPriority`.
 ````
 
 ---
 
 ## Auditoria de 2026-07-28 — o catálogo mente, teste modelo a modelo
 
-Rodada real no gateway de produção (versão 3.8.48), com um achado que muda o
-roteiro acima: **`GET /v1/models` anuncia 230 modelos e `GET /api/models` lista
-79 como `available: true`, mas a maioria não responde.** Dos 17 candidatos
-testados um a um com uma chamada real, **5 funcionaram**:
+Rodada real no gateway de produção (3.8.48), com um achado que muda o roteiro
+acima: **`GET /v1/models` anuncia 230 modelos e a maioria não responde.** Dos
+34 candidatos testados um a um com uma chamada real, **19 funcionaram**.
 
-| Modelo | Latência | Conta |
-|---|---:|---|
-| `nvidia/deepseek-ai/deepseek-v4-flash` | 0,9s | nvidia |
-| `nvidia/nvidia/nemotron-3-super-120b-a12b` | 0,5s | nvidia |
-| `xai/grok-4.3` | 1,4s | xai |
-| `gemini/gemini-3-flash-preview` | 1,3s | gemini |
-| `nvidia/z-ai/glm-5.2` | 3,7s | nvidia |
+### O que responde (latência medida)
 
-O que os outros devolveram: **400** em todos os 26 modelos do Codex (`cx/*`),
-**403** em `nous/Hermes-4-405B` e `groq/*`, **410 Gone** nos `qwen3.5` (saíram
-do catálogo da NVIDIA sem sair da listagem), **404** em `devstral` e `kimi`,
-**503** em `gweb/*`, e **timeout de 40s** em `deepseek-v4-pro` e
-`gemini-3.1-pro-preview` — os dois "pro" da lista.
+| Conta | Modelos vivos | Latência |
+|---|---|---|
+| `cc` (Claude OAuth) | `claude-sonnet-5`, `claude-sonnet-4-6`, `claude-opus-4-8`, `claude-haiku-4-5-20251001` | 1,6–2,8s |
+| `cx` (Codex / ChatGPT Plus) | `gpt-5.5`, `-xhigh`, `-high`, `-medium`, `-low`, `gpt-5.6-terra-high`, `gpt-5.6-luna-high` | 1,0–12,3s |
+| `nvidia` | `deepseek-ai/deepseek-v4-flash`, `nvidia/nemotron-3-super-120b-a12b`, `z-ai/glm-5.2` | 0,5–3,7s |
+| `xai` | `grok-4.3` | 1,4s |
+| `gemini` | `gemini-3-flash-preview` | 1,3s |
+
+### O que não responde, e por quê
+
+| Sintoma | Onde | Causa |
+|---|---|---|
+| **400** | `cx/gpt-5.6-sol*`, `cx/gpt-5.3-codex-spark` | *"not supported when using Codex with a ChatGPT account"* — são modelos de API paga. A família `terra`/`luna` e toda a 5.5 funcionam |
+| **403** | `nous/*`, `groq/*` | bloqueio de **Cloudflare**, não credencial — e custa 15,7s por tentativa |
+| **410 Gone** | `nvidia/qwen/qwen3.5-*` | saíram do catálogo da NVIDIA sem sair da listagem |
+| **404** | `nvidia/…/devstral-2`, `moonshotai/kimi-k2.6` | idem |
+| **503** | `gweb/*` | instabilidade do Gemini Web |
+| **timeout 40s** | `deepseek-v4-pro`, `gemini-3.1-pro-preview` | os dois "pro" da lista |
 
 **A consequência prática:** montar combo a partir da listagem é montar uma
 cadeia que gasta retry em modelo morto. Teste cada membro com uma chamada de
-`max_tokens: 16` antes de colocá-lo na cadeia — leva 3 minutos e é a diferença
-entre uma cadeia que rotaciona e uma que trava.
+`max_tokens: 16` antes de colocá-lo na cadeia — leva minutos e é a diferença
+entre uma cadeia que rotaciona e uma que trava. Cuidado especial com o prefixo:
+o Claude Code é `cc/`, não `claude/` nem `tllm/` (esse dá 403).
 
 ### Estratégias do combo, medidas
 
@@ -271,31 +287,60 @@ O campo `strategy` aceita: `priority`, `weighted`, `round-robin`,
 `reset-aware`, `reset-window`, `headroom`, `strict-random`, `auto`, `lkgp`,
 `context-optimized`, `fusion`, `pipeline`.
 
-Com os 5 membros válidos, 6 chamadas cada:
+Com membros validados, 6 chamadas cada:
 
 | Estratégia | Comportamento observado |
 |---|---|
-| `least-used` | reveza entre 3 contas distintas — **triangulação real** |
+| **`least-used`** | reveza entre contas distintas — **triangulação real** |
 | `p2c` | distribui, mas em rajadas no mesmo modelo |
 | `headroom` | 100% no mais rápido; eficiente, sem distribuir |
-| `priority` | 100% num modelo só (segue a prioridade da **conexão**, não a ordem da lista) |
-| `auto` | distribui, mas **ignora os membros** e escolhe entre todos os 230 |
+| `priority` | 100% num só (segue a prioridade da **conexão**, não a ordem da lista) |
+| `auto` | distribui mas **ignora os membros** e escolhe entre os 230 |
 
 `auto` num combo populado é o pior dos dois mundos: você lista os modelos e ele
 não os usa. Para cadeia controlada, `least-used`.
+
+### A configuração que ficou em produção
+
+Combo `NEVE-Mastery`, `strategy: least-used`, 9 membros cobrindo 5 contas:
+
+```
+cc/claude-sonnet-5 · cx/gpt-5.6-terra-high · nvidia/deepseek-ai/deepseek-v4-flash
+xai/grok-4.3 · gemini/gemini-3-flash-preview · cc/claude-haiku-4-5-20251001
+cx/gpt-5.5-medium · nvidia/z-ai/glm-5.2 · nvidia/nvidia/nemotron-3-super-120b-a12b
+```
+
+Prioridade e paralelismo por conexão, todos via `PUT /api/providers/{id}`:
+
+| Conexão | globalPriority | maxConcurrent | Ativa |
+|---|:---:|:---:|:---:|
+| nvidia | 1 | 3 | sim |
+| claude / codex | 2 | 1 | sim |
+| xai / gemini | 3 | 2 | sim |
+| gemini-web | 6 | 2 | sim (503 hoje, reserva) |
+| perplexity-web | 7 | 1 | sim (fora do combo) |
+| nous-research / groq | 9 | 1 | **não** — 403 Cloudflare custa 15,7s por tentativa |
+| openrouter | 9 | 1 | **não** — sem crédito |
+
+Validação: 12 chamadas seguidas, **12× HTTP 200**, 1,1–2,9s, revezando entre
+`claude-sonnet-5`, `claude-haiku-4-5`, `gpt-5.6-terra-high` e `gpt-5.5-medium`.
 
 ### Pegadinhas da API confirmadas nesta rodada
 
 - Login de sessão: `POST /api/auth/login {"password": "..."}` devolve cookie
   `auth_token`. As rotas de gestão aceitam esse cookie — **não é preciso access
   token** para auditar.
-- `PATCH /api/providers` exige `isActive` **sempre** (mesmo para mudar outra
-  coisa) e ignora `priority`; `PATCH /api/providers/{id}` devolve **405**.
-  Prioridade e `maxConcurrent` continuam só pelo dashboard.
+- `PUT /api/providers/{id}` aceita e persiste: `globalPriority`,
+  `maxConcurrent`, `healthCheckInterval`, `group`, `rateLimitOverrides`
+  (`{rpm,tpm,tpd,minTime}`), `isActive`.
+- `priority` é aceito e **ecoado na resposta**, mas não persiste — quem ordena
+  providers é `globalPriority`. Conferir sempre com um GET depois do PUT.
+- `rateLimitProtection` e `autoLearn` devolvem 400 *"No valid fields to update"*
+  — não estão na whitelist.
 - `PUT /api/combos/{id}` aceita `models` como **string** `"provider/modelo"` e
   normaliza para objeto. Passar objeto dá `COMBO_002`.
 - `POST /api/resilience/reset {}` devolve quantos breakers reabriu — nesta
-  rodada foram **4** abertos silenciosamente.
+  rodada foram 4 na primeira passada e 3 na segunda, todos abertos em silêncio.
 
 ## Referências
 

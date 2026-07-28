@@ -97,6 +97,16 @@ _429_PATTERNS = [
     re.compile(r"billing.?limit", re.IGNORECASE),
     re.compile(r"plan.?limit", re.IGNORECASE),
     re.compile(r"maximum combo retry limit reached", re.IGNORECASE),
+    # Cota do Claude Code esgotada. O CLI devolve "You've hit your monthly
+    # spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message"
+    # — nenhum dos padrões acima casa com esse texto, e a rotina morria em vez
+    # de rotacionar para o próximo provider.
+    re.compile(r"spend limit", re.IGNORECASE),
+    re.compile(r"usage limit", re.IGNORECASE),
+    re.compile(r"(monthly|weekly) limit", re.IGNORECASE),
+    re.compile(r"cc_cli_limit_message", re.IGNORECASE),
+    re.compile(r"credit balance", re.IGNORECASE),
+    re.compile(r"out of credit", re.IGNORECASE),
 ]
 
 # Fatal errors that should NOT trigger fallback (auth / config issues)

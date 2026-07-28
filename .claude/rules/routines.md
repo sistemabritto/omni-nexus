@@ -10,6 +10,39 @@ was even silently failing every tick because `scheduler.py` looked for it under 
 path. That's fixed. What's below is now split into what's genuinely scheduled vs what
 still requires a manual skill invocation — no more promising automation that doesn't run.
 
+## Onde ver o que roda
+
+`/routines` no dashboard é a **fonte única**: lista o que o agendador
+registrou de fato (`schedule.get_jobs()`, não regex sobre o código-fonte), com
+a próxima execução real, o histórico de execução e o custo acumulado. Cada
+rotina traz o motor que a move:
+
+| Selo | O que significa | Consequência |
+|---|---|---|
+| 🐍 **Python** | código determinístico | custa CPU; pode rodar de 15 em 15 min |
+| 🤖 **Modelo** | chama uma LLM | custa dinheiro **toda** execução |
+
+Detectado em `dashboard/backend/routines_registry.py::motor_do_script`, que
+segue os imports locais um nível — o entrypoint de quatro linhas que chama o
+modelo lá dentro não engana. A regra ao criar rotina nova: **se a saída é
+determinística, escreva em Python.** Modelo só onde existe julgamento (escolher
+pauta, escrever texto, avaliar ICP). Narrar tabela que já é estruturada não é
+julgamento.
+
+## Desligadas em 27/07/2026 — a esteira AI News
+
+`AI News Daily Draft` e `AI News Weekly X Research` (`enabled: false` em
+`config/routines.yaml`). A diária era uma corrente de **quatro** chamadas de
+Claude em série (Sage → Quill → Raven → Mako) que produzia o mesmo artigo de
+blog que a Esteira de Conteúdo já produz com uma chamada, e melhor: pauta por
+volume de busca real, humanizer, CTA de funil, capa com rodízio de pose e gate
+único.
+
+Custou **US$ 11,92, 44% de todo o gasto em rotina**, com 27% a 75% de acerto, e
+estava 100% quebrada desde 24/07 — os 10 itens da fila em `failed`, falhando
+todo dia às 19:00. O que ela tinha de único, pauta em alta no X, a esteira
+principal já faz em `weekly_content_research.pautas_do_x()`.
+
 ## Core (`scheduler.py`, ships with the repo)
 
 | Time | Routine | Script |
@@ -21,6 +54,7 @@ still requires a manual skill invocation — no more promising automation that d
 | 04:00 | Uso Modelos DIA (cost telemetry) | `uso_modelos_dia.py` |
 | Every hour, 08h-20h BRT | Hourly Report | `hourly_report.py` |
 | Sunday 09:00 | Memory Lint | `memory_lint.py` |
+| A cada 15 min | Derivar Redes Pendentes | `derivar_redes_pendentes.py` — recupera o artigo agendado que o Ghost publicou sozinho e ninguém derivou (ver `esteira-de-conteudo.md` §0) |
 | Friday 08:00 | Weekly Review | `weekly_review.py` — reactivated; checks overdue items weekly |
 
 `run_adw()` resolves a script's real location with a 3-candidate fallback

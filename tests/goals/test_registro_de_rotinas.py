@@ -119,6 +119,10 @@ def cliente(monkeypatch, tmp_path):
         "backup": {"runs": 27, "successes": 27, "total_cost_usd": 0.0,
                    "total_input_tokens": 0, "total_output_tokens": 0,
                    "last_run": "2026-07-27T21:03:17"},
+        # Grava com underscore, ao contrário de todas as outras.
+        "uso_modelos_dia": {"runs": 198, "successes": 113, "total_cost_usd": 0.01,
+                            "total_input_tokens": 10, "total_output_tokens": 5,
+                            "last_run": "2026-07-27T07:03:47"},
     }
     arquivo = tmp_path / "metrics.json"
     arquivo.write_text(json.dumps(metrics), encoding="utf-8")
@@ -137,9 +141,9 @@ def cliente(monkeypatch, tmp_path):
 def test_totais_somam_as_chaves_que_existem(cliente):
     """Somava `cost`/`tokens`; o runner grava `total_cost_usd`/`total_*_tokens`."""
     dados = cliente.get("/api/routines").get_json()
-    assert dados["totals"]["total_cost"] == pytest.approx(4.05)
-    assert dados["totals"]["total_tokens"] == 1500
-    assert dados["totals"]["total_runs"] >= 52
+    assert dados["totals"]["total_cost"] == pytest.approx(4.06)
+    assert dados["totals"]["total_tokens"] == 1515
+    assert dados["totals"]["total_runs"] >= 250
 
 
 def test_nao_duplica_rotina_com_id_abreviado(cliente):
@@ -148,6 +152,18 @@ def test_nao_duplica_rotina_com_id_abreviado(cliente):
     assert metricas["good-morning"]["runs"] == 25
     assert "morning" not in metricas, \
         "a mesma rotina em duas linhas, uma com histórico e outra vazia"
+
+
+def test_nao_duplica_quem_grava_com_underscore(cliente):
+    """`uso_modelos_dia` foge do padrão kebab das outras rotinas.
+
+    Checar só a grafia com hífen deixava esse fantasma sozinho na tela depois
+    de todos os outros sumirem — e com 198 execuções do lado de uma linha
+    zerada, quem lê não tem como saber qual das duas é a real.
+    """
+    metricas = cliente.get("/api/routines").get_json()["metrics"]
+    assert metricas["uso_modelos_dia"]["runs"] == 198
+    assert "uso-modelos-dia" not in metricas
 
 
 def test_rotina_carrega_o_motor(cliente):

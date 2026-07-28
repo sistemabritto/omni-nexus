@@ -238,6 +238,65 @@ Tudo saturado → Codex (gratuito, última barreira)
 
 ---
 
+## Auditoria de 2026-07-28 — o catálogo mente, teste modelo a modelo
+
+Rodada real no gateway de produção (versão 3.8.48), com um achado que muda o
+roteiro acima: **`GET /v1/models` anuncia 230 modelos e `GET /api/models` lista
+79 como `available: true`, mas a maioria não responde.** Dos 17 candidatos
+testados um a um com uma chamada real, **5 funcionaram**:
+
+| Modelo | Latência | Conta |
+|---|---:|---|
+| `nvidia/deepseek-ai/deepseek-v4-flash` | 0,9s | nvidia |
+| `nvidia/nvidia/nemotron-3-super-120b-a12b` | 0,5s | nvidia |
+| `xai/grok-4.3` | 1,4s | xai |
+| `gemini/gemini-3-flash-preview` | 1,3s | gemini |
+| `nvidia/z-ai/glm-5.2` | 3,7s | nvidia |
+
+O que os outros devolveram: **400** em todos os 26 modelos do Codex (`cx/*`),
+**403** em `nous/Hermes-4-405B` e `groq/*`, **410 Gone** nos `qwen3.5` (saíram
+do catálogo da NVIDIA sem sair da listagem), **404** em `devstral` e `kimi`,
+**503** em `gweb/*`, e **timeout de 40s** em `deepseek-v4-pro` e
+`gemini-3.1-pro-preview` — os dois "pro" da lista.
+
+**A consequência prática:** montar combo a partir da listagem é montar uma
+cadeia que gasta retry em modelo morto. Teste cada membro com uma chamada de
+`max_tokens: 16` antes de colocá-lo na cadeia — leva 3 minutos e é a diferença
+entre uma cadeia que rotaciona e uma que trava.
+
+### Estratégias do combo, medidas
+
+O campo `strategy` aceita: `priority`, `weighted`, `round-robin`,
+`context-relay`, `fill-first`, `p2c`, `random`, `least-used`, `cost-optimized`,
+`reset-aware`, `reset-window`, `headroom`, `strict-random`, `auto`, `lkgp`,
+`context-optimized`, `fusion`, `pipeline`.
+
+Com os 5 membros válidos, 6 chamadas cada:
+
+| Estratégia | Comportamento observado |
+|---|---|
+| `least-used` | reveza entre 3 contas distintas — **triangulação real** |
+| `p2c` | distribui, mas em rajadas no mesmo modelo |
+| `headroom` | 100% no mais rápido; eficiente, sem distribuir |
+| `priority` | 100% num modelo só (segue a prioridade da **conexão**, não a ordem da lista) |
+| `auto` | distribui, mas **ignora os membros** e escolhe entre todos os 230 |
+
+`auto` num combo populado é o pior dos dois mundos: você lista os modelos e ele
+não os usa. Para cadeia controlada, `least-used`.
+
+### Pegadinhas da API confirmadas nesta rodada
+
+- Login de sessão: `POST /api/auth/login {"password": "..."}` devolve cookie
+  `auth_token`. As rotas de gestão aceitam esse cookie — **não é preciso access
+  token** para auditar.
+- `PATCH /api/providers` exige `isActive` **sempre** (mesmo para mudar outra
+  coisa) e ignora `priority`; `PATCH /api/providers/{id}` devolve **405**.
+  Prioridade e `maxConcurrent` continuam só pelo dashboard.
+- `PUT /api/combos/{id}` aceita `models` como **string** `"provider/modelo"` e
+  normaliza para objeto. Passar objeto dá `COMBO_002`.
+- `POST /api/resilience/reset {}` devolve quantos breakers reabriu — nesta
+  rodada foram **4** abertos silenciosamente.
+
 ## Referências
 
 - [OmniRoute Auto-Combo Docs](https://omni.workflowapi.com.br/docs/routing/AUTO-COMBO)

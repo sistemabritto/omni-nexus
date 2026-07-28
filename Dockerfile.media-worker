@@ -118,6 +118,7 @@ COPY dashboard/backend/sdk_client.py \
      dashboard/backend/media_manifest.py \
      dashboard/backend/media_workspace.py \
      dashboard/backend/media_state_machine.py \
+     dashboard/backend/media_audio.py \
      dashboard/backend/postiz_client.py \
      /workspace/dashboard/backend/
 

@@ -5,62 +5,88 @@ description: "Morning orientation that recaps recent work, checks agenda, emails
 
 # Good Morning
 
-This skill orients a new session by reading recent logs, recapping what happened, and helping the user decide what to work on.
+Orienta o começo do dia: o que está pendente, o que a agenda reserva, e uma
+recomendação de onde começar.
 
-## Step 1 — Read the workspace
+## Antes de tudo: o dossiê chegou?
 
-Read these files before saying anything:
+Esta skill roda de dois jeitos, e a diferença muda quase tudo:
 
-1. **CLAUDE.md** — the master context file. This tells you who the user is, what projects are active, and what skills are available.
-2. **Last 3 session logs** — find them in `workspace/daily-logs/`, sorted by date, most recent first. These are Claude's previous session notes.
-3. **All active project overviews** — for each project listed in CLAUDE.md, read its overview file. These contain the goal, why, and open problems for each project.
+| Como veio | O que fazer |
+|---|---|
+| Com `--dossie-pronto` nos argumentos | **Modo cron.** Os dados já estão no argumento. Siga a Trilha A. |
+| Sem argumento (alguém digitou "bom dia") | **Modo conversa.** Siga a Trilha B. |
 
-If any of these files don't exist yet (the user might be very new), that's fine — just work with what's there.
+A distinção existe porque a rotina das 07:00 já coletou tudo o que é consulta
+antes de te chamar (`ADWs/routines/good_morning.py` →
+`dashboard/backend/briefing_dados.py`). Refazer aquela coleta com ferramenta é
+pagar duas vezes pelo mesmo dado — e era o que fazia esta skill custar US$ 0,16
+por manhã.
 
-## Step 2 — Check agenda, emails and tasks
+---
 
-Before building the recap, gather live data silently (don't narrate each step):
+## Trilha A — modo cron (com dossiê)
 
-1. **Agenda do dia** — use `/gog-calendar` to list today's events. Note meetings, times, people, and free blocks.
-2. **Emails importantes** — use the Gmail MCP directly (`list_emails` then `get_email` for each relevant one) to check unread emails needing action or attention. Do NOT invoke `/gog-email-triage` as a sub-skill — it sends its own Telegram notification and would cause a duplicate.
-3. **Tarefas de hoje** — run `todoist today` to list today's and overdue tasks from Todoist.
+O argumento traz, já apurados: aprovações pendentes, rotinas que falharam nas
+últimas 24h, tarefas do Todoist, tickets abertos e a pauta da esteira para
+hoje.
 
-## Step 3 — Brief recap
+**Não** releia CLAUDE.md, logs de sessão, overviews de projeto nem o Todoist.
+Já está tudo no dossiê.
 
-Give the user a short morning briefing in **pt-BR**. Keep it tight — this is an orientation, not a report:
+Faça só o que falta, nesta ordem:
 
-- What was worked on recently (2–4 bullets from the session logs)
-- Anything left open or mid-flight
-- Today's agenda (meetings, times, people)
-- Emails needing attention (if any)
-- Today's priority tasks from Todoist
+1. **Agenda de hoje** — `/gog-calendar`. É a única fonte que o Python não
+   alcança: o acesso é por MCP, com o OAuth do Claude Code.
+2. **E-mails que pedem ação** — Gmail MCP (`list_emails`, e `get_email` só nos
+   que parecerem exigir resposta). Não invoque `/gog-email-triage`: ela manda a
+   própria notificação e o Felipe receberia duas.
+3. **Escreva o briefing** em pt-BR, curto, e termine com a linha de Telegram
+   descrita abaixo.
 
-Then immediately give your **recommendation** — one clear sentence on what seems most important to work on based on recency, open problems, agenda, and project momentum. Make a real call; don't hedge.
+Não pergunte nada ao final. Ninguém está lendo às 07:00 — a pergunta só
+aparece na Trilha B.
 
-If there are no previous logs (brand new user), skip the recap and go straight to Step 4.
+### Formato do briefing
 
-## Step 4 — Ask what they want to do
+Nesta ordem, porque é a ordem do que trava:
 
-After the recap, ask:
+1. **Travando agora** — aprovações pendentes e rotinas falhando. Se não houver
+   nenhuma, escreva uma linha dizendo isso; a ausência é informação.
+2. **Agenda** — compromissos, horário, com quem.
+3. **Pede resposta** — e-mails que exigem ação.
+4. **Pendências** — tarefas atrasadas primeiro, depois as de hoje, depois os
+   tickets.
+5. **Recomendação** — **uma** frase dizendo por onde começar, e por quê. Faça
+   uma escolha de verdade, sem hedge. É a única parte do briefing que não é
+   transcrição, e é para ela que você foi chamado.
 
-> "Want to jump into a project, or start something new?"
+Termine a saída com exatamente uma linha:
 
-### If they pick a project:
+```
+TELEGRAM_MSG: <briefing inteiro, formatado para leitura no celular>
+```
 
-Show each active project with its open problems as options. Pull from the "Open Problems" section of each project overview. Keep it scannable — one line per problem.
+O Python lê essa linha e envia uma vez. **Nunca** chame a ferramenta do
+Telegram você mesmo — resultaria em mensagem duplicada.
 
-Ask them to pick a project and problem. Once they choose, read whatever additional context is needed and get to work.
+---
 
-### If they want something new:
+## Trilha B — modo conversa (sem dossiê)
 
-Tell them to say "new project" and the new-project skill will walk them through it.
+Aqui há alguém do outro lado, e vale gastar contexto.
 
-## Step 5 — Save briefing
+1. Leia **CLAUDE.md**, os **3 últimos logs** de `workspace/daily-logs/` e o
+   overview dos projetos ativos. Se algum não existir, siga com o que houver.
+2. Colete agenda (`/gog-calendar`), e-mails (Gmail MCP) e tarefas
+   (`todoist today`).
+3. Dê o mesmo briefing da Trilha A, acrescentando 2-4 bullets do que estava em
+   andamento nas sessões recentes.
+4. Aí sim pergunte: *"Quer entrar num projeto ou começar algo novo?"* — se
+   escolher um projeto, liste os problemas abertos de cada um, uma linha por
+   problema, e trabalhe no que for escolhido.
 
-Read the template at `.claude/templates/html/morning-briefing.html`, fill all `{{PLACEHOLDER}}` values with the data gathered in Steps 2–3 (agenda, emails, tasks, recommendation), and save the completed HTML to `workspace/daily-logs/[C] YYYY-MM-DD-morning.html`.
+## Tom
 
-Create the `workspace/daily-logs/` directory if it does not exist.
-
-## Tone
-
-Keep the morning briefing conversational and brief. The user is starting their day — they don't need a wall of text. Punchy bullets, one clear recommendation, then move into action.
+Direto e curto, nos dois modos. É orientação de começo de dia, não relatório.
+Bullets secos, uma recomendação clara, e sai da frente.

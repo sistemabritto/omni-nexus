@@ -228,6 +228,12 @@ export default function Routines() {
     })
   }, [rotinas, filtro])
 
+  /** A que roda primeiro. Vira a linha de destaque no topo da lista. */
+  const proxima = useMemo(
+    () => visiveis.find((r) => r.proxima) || null,
+    [visiveis],
+  )
+
   const totais = useMemo(() => visiveis.reduce(
     (acc, r) => ({
       execucoes: acc.execucoes + r.execucoes,
@@ -336,6 +342,19 @@ export default function Routines() {
         )}
       </div>
 
+      {proxima && (
+        <div className="flex items-center gap-2.5 mb-4 text-sm">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FFA7] opacity-60" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FFA7]" />
+          </span>
+          <span className="text-[#667085] truncate">
+            Próxima: <strong className="text-[#e6edf3] font-medium">{proxima.nome}</strong>
+            {' '}{proximaEm(proxima.proxima)}
+          </span>
+        </div>
+      )}
+
       {carregando ? (
         <div className="space-y-2">
           {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
@@ -354,38 +373,50 @@ export default function Routines() {
           <div className="md:hidden space-y-3">
             {visiveis.map((r) => (
               <div key={r.id} className="bg-[#161b22] border border-[#21262d] rounded-xl p-4">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="min-w-0">
-                    <p className="text-[#e6edf3] font-medium text-sm truncate">{r.nome}</p>
-                    <p className="text-[11px] text-[#667085] font-mono truncate">{r.script || '—'}</p>
+                {/* Nome e motor na mesma linha: no telefone é a primeira coisa
+                    que o olho pega, e "isso gasta token?" é a pergunta. */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[#e6edf3] font-medium text-sm leading-snug">{r.nome}</p>
+                    <p className="text-[11px] text-[#667085] font-mono truncate mt-0.5">
+                      {r.script || '—'}
+                    </p>
                   </div>
                   <SeloMotor motor={r.motor} />
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#667085] mb-3">
-                  {r.agendamento && (
+
+                {r.agendamento && (
+                  <div className="flex items-baseline gap-2 mb-3 text-xs">
                     <span className="text-[#D0D5DD]">{r.agendamento}</span>
-                  )}
-                  {r.proxima && <span>· {proximaEm(r.proxima)}</span>}
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-                  <div>
-                    <p className="text-[#667085]">execuções</p>
-                    <p className="text-[#D0D5DD] tabular-nums">{r.execucoes}</p>
+                    {r.proxima && (
+                      <span className="text-[#00FFA7]/70">{proximaEm(r.proxima)}</span>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-[#667085]">sucesso</p>
-                    <p className="tabular-nums" style={{ color: SAUDE[r.saude].cor }}>
-                      {r.execucoes ? `${r.sucessoPct}%` : '—'}
-                    </p>
+                )}
+
+                {r.execucoes > 0 ? (
+                  <div className="mb-3">
+                    <div className="h-1.5 rounded-full bg-[#21262d] overflow-hidden mb-1.5">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${r.sucessoPct}%`, backgroundColor: SAUDE[r.saude].cor }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-[#667085] tabular-nums">
+                      <span>
+                        <span style={{ color: SAUDE[r.saude].cor }}>{r.sucessoPct}%</span>
+                        {' em '}{r.execucoes} execuções
+                      </span>
+                      <span>
+                        {r.custoTotal > 0 ? `US$ ${r.custoTotal.toFixed(2)}` : 'sem custo'}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[#667085]">custo</p>
-                    <p className="text-[#D0D5DD] tabular-nums">
-                      {r.custoTotal > 0 ? `US$ ${r.custoTotal.toFixed(2)}` : '—'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
+                ) : (
+                  <p className="text-[11px] text-[#3F3F46] mb-3">ainda não rodou</p>
+                )}
+
+                <div className="flex items-center justify-between pt-2 border-t border-[#21262d]/60">
                   <span className="text-[11px] text-[#667085]">
                     {r.ultimaExecucao ? `última ${tempoRelativo(r.ultimaExecucao)}` : 'nunca rodou'}
                   </span>
@@ -395,53 +426,103 @@ export default function Routines() {
             ))}
           </div>
 
-          {/* Desktop */}
+          {/* Desktop — grid fluido, não tabela.
+              A tabela tinha `min-w-[860px]` e nove colunas: cabia na conta,
+              não na tela. Em grid as colunas cedem espaço umas às outras e a
+              página deixa de rolar de lado. Nove viraram seis porque quatro
+              delas respondiam a mesma pergunta em pedaços: "quando" e
+              "próxima" são o agendamento; "execuções" e "sucesso" são a
+              confiabilidade. Juntas cabem numa coluna e leem melhor. */}
           <div className="hidden md:block bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[860px]">
-                <thead>
-                  <tr className="text-[#667085] text-[11px] uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
-                    <th className="text-left p-4 font-medium">Rotina</th>
-                    <th className="text-left p-4 font-medium">Motor</th>
-                    <th className="text-left p-4 font-medium">Quando</th>
-                    <th className="text-left p-4 font-medium">Próxima</th>
-                    <th className="text-right p-4 font-medium">Exec.</th>
-                    <th className="text-right p-4 font-medium">Sucesso</th>
-                    <th className="text-right p-4 font-medium">Custo</th>
-                    <th className="text-right p-4 font-medium">Última</th>
-                    <th className="text-right p-4 font-medium" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {visiveis.map((r) => (
-                    <tr key={r.id} className="border-t border-[#21262d]/60 hover:bg-white/[0.02] transition-colors">
-                      <td className="p-4">
-                        <p className="text-[#e6edf3] font-medium text-[13px]">{r.nome}</p>
-                        <p className="text-[11px] text-[#667085] font-mono">{r.script || '—'}</p>
-                      </td>
-                      <td className="p-4"><SeloMotor motor={r.motor} /></td>
-                      <td className="p-4 text-[#D0D5DD] text-[13px] whitespace-nowrap">
-                        {r.agendamento || <span className="text-[#3F3F46]">não agendada</span>}
-                      </td>
-                      <td className="p-4 text-[#667085] text-[13px] whitespace-nowrap">
-                        {proximaEm(r.proxima) || '—'}
-                      </td>
-                      <td className="p-4 text-right text-[#D0D5DD] tabular-nums text-[13px]">{r.execucoes}</td>
-                      <td className="p-4 text-right tabular-nums text-[13px]" style={{ color: SAUDE[r.saude].cor }}>
-                        {r.execucoes ? `${r.sucessoPct}%` : SAUDE.nova.rotulo}
-                      </td>
-                      <td className="p-4 text-right text-[#D0D5DD] tabular-nums text-[13px]">
-                        {r.custoTotal > 0 ? `US$ ${r.custoTotal.toFixed(2)}` : '—'}
-                      </td>
-                      <td className="p-4 text-right text-[#667085] text-[13px] whitespace-nowrap">
-                        {r.ultimaExecucao ? tempoRelativo(r.ultimaExecucao) : 'nunca'}
-                      </td>
-                      <td className="p-4 text-right"><BotaoRodar r={r} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-[minmax(200px,2.4fr)_minmax(140px,1.4fr)_minmax(120px,1.1fr)_minmax(88px,0.8fr)_minmax(74px,0.7fr)_84px]
+                            gap-x-3 px-4 py-3 bg-[#0d1117]/50 border-b border-[#21262d]
+                            text-[#667085] text-[11px] uppercase tracking-wider font-medium">
+              <span>Rotina</span>
+              <span>Agendamento</span>
+              <span>Confiabilidade</span>
+              <span className="text-right">Custo US$</span>
+              <span className="text-right">Última</span>
+              <span />
             </div>
+            {visiveis.map((r) => {
+              const porExecucao = r.execucoes > 0 ? r.custoTotal / r.execucoes : 0
+              return (
+                <div
+                  key={r.id}
+                  className="grid grid-cols-[minmax(200px,2.4fr)_minmax(140px,1.4fr)_minmax(120px,1.1fr)_minmax(88px,0.8fr)_minmax(74px,0.7fr)_84px]
+                             gap-x-3 items-center px-4 py-3 border-t border-[#21262d]/60
+                             hover:bg-white/[0.02] transition-colors"
+                >
+                  {/* Rotina — o selo do motor vem junto do nome, que é onde a
+                      pergunta "isso me custa dinheiro?" de fato aparece. */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="shrink-0" aria-hidden title={r.motor ? MOTOR[r.motor].ajuda : ''}>
+                        {r.motor ? MOTOR[r.motor].emoji : '·'}
+                      </span>
+                      <p className="text-[#e6edf3] font-medium text-[13px] truncate">{r.nome}</p>
+                    </div>
+                    <p className="text-[11px] text-[#667085] font-mono truncate pl-6">
+                      {r.script || '—'}
+                    </p>
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-[#D0D5DD] text-[13px] truncate">
+                      {r.agendamento || <span className="text-[#3F3F46]">não agendada</span>}
+                    </p>
+                    {r.proxima && (
+                      <p className="text-[11px] text-[#667085] truncate">{proximaEm(r.proxima)}</p>
+                    )}
+                  </div>
+
+                  {/* Barra em vez de só o número: 76% e 27% viram a mesma
+                      coisa quando se passa o olho numa coluna de percentuais. */}
+                  <div className="min-w-0">
+                    {r.execucoes > 0 ? (
+                      <>
+                        <div className="h-1.5 rounded-full bg-[#21262d] overflow-hidden mb-1">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{ width: `${r.sucessoPct}%`, backgroundColor: SAUDE[r.saude].cor }}
+                          />
+                        </div>
+                        <p className="text-[11px] text-[#667085] tabular-nums">
+                          <span style={{ color: SAUDE[r.saude].cor }}>{r.sucessoPct}%</span>
+                          {' · '}{r.execucoes}x
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-[11px] text-[#3F3F46]">sem histórico</p>
+                    )}
+                  </div>
+
+                  {/* Total e por execução. O total diz o que já foi gasto; o
+                      por execução diz o que a próxima vai custar, que é o
+                      número com que se decide mudar a frequência. */}
+                  <div className="text-right">
+                    {r.custoTotal > 0 ? (
+                      <>
+                        <p className="text-[#D0D5DD] tabular-nums text-[13px]">
+                          {r.custoTotal.toFixed(2)}
+                        </p>
+                        <p className="text-[11px] text-[#667085] tabular-nums">
+                          {porExecucao >= 0.01 ? `${porExecucao.toFixed(2)}/x` : '<0,01/x'}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-[#3F3F46] text-[13px]">—</p>
+                    )}
+                  </div>
+
+                  <p className="text-right text-[#667085] text-[12px] truncate">
+                    {r.ultimaExecucao ? tempoRelativo(r.ultimaExecucao) : 'nunca'}
+                  </p>
+
+                  <div className="flex justify-end"><BotaoRodar r={r} /></div>
+                </div>
+              )
+            })}
           </div>
         </>
       )}

@@ -54,6 +54,11 @@ SILENCIO_MINIMO_S = 0.4
 # corte come o ataque da primeira sílaba e a peça soa picotada.
 MARGEM_S = 0.2
 
+# Tamanho do bloco de denoise e a folga entre blocos — ver docstring de
+# `denoise`. 10 min mantém o pico de memória em torno de 500 MB.
+BLOCO_S = 600
+SOBREPOSICAO_S = 1.0
+
 
 class FalhaDeMidia(RuntimeError):
     """Uma etapa da cadeia falhou. A mensagem carrega o stderr do ffmpeg."""
@@ -111,22 +116,95 @@ def extrair_audio(video: Path, destino: Path, *, taxa: int = 48000, canais: int 
     return destino
 
 
+def _concatenar(partes: list[Path], destino: Path) -> Path:
+    lista = destino.with_suffix(".lista.txt")
+    lista.write_text("".join(f"file '{p}'\n" for p in partes), encoding="utf-8")
+    _rodar(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+            "-i", str(lista), "-c:a", "pcm_s16le", str(destino)], o_que="concatenação")
+    lista.unlink(missing_ok=True)
+    return destino
+
+
 def denoise(wav: Path, destino_dir: Path, *, progresso: Progresso | None = None) -> Path:
-    """Remove ruído de fundo com DeepFilterNet.
+    """Remove ruído de fundo com DeepFilterNet, em blocos.
 
     `-D` compensa o delay do modelo (STFT + lookahead). Sem essa flag o áudio
     volta deslocado alguns milissegundos e o remux entrega um vídeo fora de
     sincronia — defeito que nenhuma verificação automática pega, só o ouvido.
 
+    **Por que em blocos:** o deep-filter carrega o arquivo inteiro em float32,
+    o que para uma live de 3h28 (WAV de 2,3 GB) passa de 9 GB de RSS. Medido em
+    28/07/2026: o processo morreu com SIGKILL num container de 4 GB. Fatiar
+    mantém o consumo constante e independente da duração — uma live de 6h passa
+    a custar o mesmo que uma de 20 min, e o job deixa de depender de quanta RAM
+    sobrou na VPS naquele momento.
+
+    Os blocos se sobrepõem em 1 s e a sobreposição é aparada do início de cada
+    bloco tratado: o modelo precisa de contexto para não errar o começo, e uma
+    emenda sem essa folga produz um estalo audível a cada 10 minutos.
+
     Custo medido nesta imagem: ~0,5x tempo real. Uma live de 3h28 leva ~1h46.
     """
-    if progresso:
-        progresso("denoise", f"~{duracao_de(wav) * 0.51 / 60:.0f} min estimados")
     destino_dir.mkdir(parents=True, exist_ok=True)
-    _rodar(["deep-filter", "-D", "-o", str(destino_dir), str(wav)], o_que="denoise")
     saida = destino_dir / wav.name
-    if not saida.is_file():
-        raise FalhaDeMidia(f"denoise não gerou {saida}")
+    duracao = duracao_de(wav)
+    if progresso:
+        progresso("denoise", f"{duracao / 60:.0f} min de áudio, "
+                             f"~{duracao * 0.51 / 60:.0f} min estimados")
+
+    if duracao <= BLOCO_S * 1.5:
+        _rodar(["deep-filter", "-D", "-o", str(destino_dir), str(wav)], o_que="denoise")
+        if not saida.is_file():
+            raise FalhaDeMidia(f"denoise não gerou {saida}")
+        return saida
+
+    fatias_dir = destino_dir / "fatias"
+    limpas_dir = destino_dir / "limpas"
+    for d in (fatias_dir, limpas_dir):
+        d.mkdir(parents=True, exist_ok=True)
+
+    total = int(duracao // BLOCO_S) + 1
+    prontas: list[Path] = []
+    for i in range(total):
+        inicio = i * BLOCO_S
+        if inicio >= duracao:
+            break
+        recuo = SOBREPOSICAO_S if i else 0.0
+        fatia = fatias_dir / f"bloco{i:04d}.wav"
+        _rodar(["ffmpeg", "-y", "-v", "error", "-ss", f"{inicio - recuo:.3f}",
+                "-t", f"{BLOCO_S + recuo:.3f}", "-i", str(wav),
+                "-c:a", "pcm_s16le", str(fatia)], o_que=f"fatia {i}")
+
+        _rodar(["deep-filter", "-D", "-o", str(limpas_dir), str(fatia)],
+               o_que=f"denoise do bloco {i + 1}/{total}")
+        fatia.unlink(missing_ok=True)
+
+        limpa = limpas_dir / fatia.name
+        if not limpa.is_file():
+            raise FalhaDeMidia(f"denoise não gerou o bloco {i}")
+
+        # O aparo é calculado a partir da duração que o bloco REALMENTE tem, e
+        # não do recuo pedido. `-ss` no input arredonda para o pacote do muxer
+        # (~21 ms a 48 kHz), então aparar um valor fixo perde alguns
+        # milissegundos por emenda — 0,13 s em 5 blocos, medido, o que numa
+        # live de 3h28 viraria meio segundo de dessincronia acumulada no fim.
+        # `atrim` corta por amostra, e a conta abaixo se autocorrige.
+        desejada = min(float(BLOCO_S), duracao - inicio)
+        excesso = duracao_de(limpa) - desejada
+        if excesso > 0.001:
+            aparada = limpas_dir / f"ok{i:04d}.wav"
+            _rodar(["ffmpeg", "-y", "-v", "error", "-i", str(limpa),
+                    "-af", f"atrim=start={excesso:.6f}",
+                    "-c:a", "pcm_s16le", str(aparada)], o_que=f"aparo do bloco {i}")
+            limpa.unlink(missing_ok=True)
+            limpa = aparada
+        prontas.append(limpa)
+        if progresso:
+            progresso("denoise", f"bloco {i + 1} de {total}")
+
+    _concatenar(prontas, saida)
+    for p in prontas:
+        p.unlink(missing_ok=True)
     return saida
 
 

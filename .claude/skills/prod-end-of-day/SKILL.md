@@ -9,7 +9,29 @@ End-of-day routine that consolidates everything that happened during the day: ag
 
 **Always respond in English.**
 
-## Step 1 — Collect data for the day (silently)
+## Step 0 — Did a dossier arrive?
+
+| How it was invoked | What to do |
+|---|---|
+| With `--dossie-pronto` in the arguments | **Cron mode.** Skip Step 1 entirely. |
+| No arguments (someone typed "end of day") | **Conversation mode.** Run Step 1. |
+
+In cron mode the routine (`ADWs/routines/end_of_day.py` →
+`dashboard/backend/briefing_dados.py`) has already collected, before calling
+you: today's commits and working-tree diff, every routine that ran and how it
+ended, the memory/meeting files written today, open tasks, pending approvals
+and open tickets.
+
+Re-collecting that with tools is paying twice for the same data — one turn per
+source is exactly what made this routine the most expensive in the workspace
+(US$ 7.84 accumulated). In cron mode go straight to Step 2, and read a file
+from the dossier's list **only** when you need its content to judge whether it
+holds a learning.
+
+Also skip Step 1f in cron mode: there is no session conversation to review at
+21:00 — the dossier is the whole record of the day.
+
+## Step 1 — Collect data for the day (silently) — conversation mode only
 
 Read all available sources without narrating each step:
 

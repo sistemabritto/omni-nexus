@@ -90,12 +90,22 @@ python3 ADWs/routines/custom/ai_news_daily_draft.py
 | `workspace/marketing/ai-news/queue.json` | Fila editorial diaria |
 | `workspace/marketing/ai-news/drafts/` | Drafts, revisoes, imagens e aprovacoes |
 
-## Cronjobs
+## Cronjobs — DESLIGADOS em 27/07/2026
 
-- Segunda-feira 08:00: `AI News Weekly X Research`.
-- Todos os dias 19:00: `AI News Daily Draft`.
+`AI News Weekly X Research` (segunda 08:00) e `AI News Daily Draft` (diária
+19:00) estão `enabled: false` em `config/routines.yaml`.
 
-Registro do cron: ver `config/routines.yaml`.
+A diária era uma corrente de quatro chamadas de Claude em série (Sage → Quill →
+Raven → Mako) que entregava o mesmo artigo de blog que a **Esteira de Conteúdo**
+já entrega com uma chamada, e melhor: pauta por volume de busca real, humanizer,
+CTA de funil e capa com rodízio. Custou US$ 11,92 — 44% de todo o gasto em
+rotina — com 27% a 75% de acerto, e estava 100% quebrada desde 24/07 (os 10
+itens da fila em `failed`).
+
+**Esta skill continua válida para uso manual**: o levantamento de temas no X
+serve como pesquisa sob demanda. O que morreu foi o agendamento automático. Para
+pauta em alta que entra no calendário, o caminho é
+`weekly_content_research.pautas_do_x()` — ver `.claude/rules/esteira-de-conteudo.md`.
 
 ## Estrategia "post recompensa"
 

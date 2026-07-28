@@ -141,6 +141,39 @@ test('fallback_providers declarado vence a derivação automática', () => {
   assert.deepEqual([...new Set(labels)], ['anthropic', 'nvidia']);
 });
 
+// 2026-07-28 — na VPS, active_provider era "opencode", cujo cli_command não
+// fala o protocolo do Agent SDK. O attempt dele é filtrado, e como o
+// fallback_providers do opencode lista ["nvidia","anthropic","openrouter"]
+// (nvidia sequer existe no arquivo), o chat começava direto no Claude nativo
+// — a cota paga — com o gateway atrás dele na fila. O badge dizia
+// "anthropic/native" e parecia que o fallback não estava funcionando.
+test('anthropic é o último recurso, mesmo declarado no meio da lista', () => {
+  const config = makeConfig();
+  config.active = 'opencode';
+  config.providers.opencode = {
+    cli_command: 'opencode',
+    env_vars: { OPENAI_BASE_URL: 'https://omni.example/v1', OPENAI_API_KEY: 'k', OPENAI_MODEL: 'auto' },
+    active: 'opencode',
+    mode: 'code',
+    fallback_models: [],
+    fallback_providers: ['anthropic', 'omnirouter'],
+    model_tiers: {},
+  };
+  const chain = buildProviderFallbackChain(config)
+    .filter((a) => SDK_COMPATIBLE_CLI.has(a.cliCommand));
+  const labels = chain.map((c) => `${c.providerId}:${c.model || 'native'}`);
+  assert.deepEqual(labels, ['omnirouter:auto', 'anthropic:native'],
+    'o gateway vem antes da cota paga e finita');
+});
+
+test('anthropic aparece uma vez só, mesmo declarado e reanexado no fim', () => {
+  const config = makeConfig();
+  config.providers.nvidia.fallback_providers = ['anthropic', 'omnirouter', 'anthropic'];
+  const labels = buildProviderFallbackChain(config).map((c) => c.providerId);
+  assert.equal(labels.filter((p) => p === 'anthropic').length, 1);
+  assert.equal(labels[labels.length - 1], 'anthropic');
+});
+
 test('isRetryableProviderError reconhece o 503 do OmniRoute', () => {
   assert.ok(isRetryableProviderError(new Error('API Error: 503 Maximum combo retry limit reached')));
   assert.ok(isRetryableProviderError(new Error('429 Too Many Requests')));

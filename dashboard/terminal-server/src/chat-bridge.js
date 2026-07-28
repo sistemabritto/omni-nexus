@@ -176,8 +176,17 @@ function buildProviderFallbackChain(providerConfig) {
     }
   }
 
-  // Final fallback: anthropic (native claude)
+  // Final fallback: anthropic (native claude).
+  //
+  // Ele é o ÚLTIMO recurso, não um degrau do meio: é a cota paga e finita,
+  // enquanto os gateways roteiam para dezenas de modelos (o próprio Claude
+  // entre eles). Um `fallback_providers` que lista "anthropic" antes do
+  // gateway — configuração comum, porque o nativo é o padrão de fábrica —
+  // fazia o chat cair direto na cota mensal e ficar preso nela.
   if (activeId !== 'anthropic') {
+    for (let i = chain.length - 1; i >= 0; i--) {
+      if (chain[i].providerId === 'anthropic') chain.splice(i, 1);
+    }
     chain.push({
       providerId: 'anthropic',
       model: null,

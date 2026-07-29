@@ -275,6 +275,41 @@ def mover(pauta_id: int, novo_status: str, *, ghost_post_id: str | None = None,
             conn.close()
 
 
+def buscar(pauta_id: int, *, conn: sqlite3.Connection | None = None) -> dict | None:
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        linha = conn.execute("SELECT * FROM pautas WHERE id=?", (pauta_id,)).fetchone()
+        return dict(linha) if linha else None
+    finally:
+        if proprio:
+            conn.close()
+
+
+def editar_keyword(pauta_id: int, nova_keyword: str, *, conn: sqlite3.Connection | None = None) -> bool:
+    """Troca a keyword de uma pauta pelo editor humano.
+
+    Aprovação é sobre um assunto concreto, não sobre uma posição no
+    calendário: trocar a keyword de uma pauta `aprovada` devolve o status
+    para `proposta` (mesma regra de `gravar_ciclo` na regravação por
+    prioridade), pra alguém olhar de novo antes da rotina diária escrever.
+    """
+    proprio = conn is None
+    conn = conn or conectar()
+    try:
+        cur = conn.execute(
+            "UPDATE pautas SET keyword=?, atualizado_em=?,"
+            " status = CASE WHEN status='aprovada' THEN 'proposta' ELSE status END"
+            " WHERE id=?",
+            (nova_keyword, _agora(), pauta_id),
+        )
+        conn.commit()
+        return cur.rowcount == 1
+    finally:
+        if proprio:
+            conn.close()
+
+
 def aprovar_ciclo(ciclo: str, *, conn: sqlite3.Connection | None = None) -> int:
     """Libera todas as pautas propostas de um ciclo de uma vez.
 

@@ -213,6 +213,46 @@ def test_mover_pauta_inexistente_devolve_false(banco):
     assert banco.mover(9999, "publicada") is False
 
 
+# ── edição humana (tela /pautas) ──────────────────────────────────────────
+
+def test_buscar_devolve_a_pauta(banco):
+    banco.gravar_ciclo([_pauta(1, date(2026, 7, 27), "bot para whatsapp")])
+    pid = banco.listar()[0]["id"]
+    achada = banco.buscar(pid)
+    assert achada is not None
+    assert achada["keyword"] == "bot para whatsapp"
+
+
+def test_buscar_pauta_inexistente_devolve_none(banco):
+    assert banco.buscar(9999) is None
+
+
+def test_editar_keyword_de_proposta_mantem_status(banco):
+    banco.gravar_ciclo([_pauta(1, date(2026, 7, 27), "bot para whatsapp")])
+    pid = banco.listar()[0]["id"]
+    assert banco.editar_keyword(pid, "chatbot de atendimento") is True
+    depois = banco.listar()[0]
+    assert depois["keyword"] == "chatbot de atendimento"
+    assert depois["status"] == "proposta"
+
+
+def test_editar_keyword_de_aprovada_pede_aprovacao_de_novo(banco):
+    """Mesma regra do research (regravar keyword derruba aprovação), agora
+    pelo caminho do humano editando na tela em vez do research reconsultando."""
+    banco.gravar_ciclo([_pauta(1, date(2026, 7, 27), "bot para whatsapp")])
+    pid = banco.listar()[0]["id"]
+    banco.mover(pid, "aprovada")
+
+    banco.editar_keyword(pid, "chatbot de atendimento")
+    depois = banco.listar()[0]
+    assert depois["keyword"] == "chatbot de atendimento"
+    assert depois["status"] == "proposta"
+
+
+def test_editar_keyword_pauta_inexistente_devolve_false(banco):
+    assert banco.editar_keyword(9999, "novo assunto") is False
+
+
 # ── vencimento ───────────────────────────────────────────────────────────
 
 def test_pauta_atrasada_e_descartada(banco):

@@ -264,8 +264,13 @@ def update_media_job(job_id):
                 "allowed_from_current": allowed_targets(job.status),
             }), 409
         job.status = target_status
-        if target_status in ("ready_for_review", "failed", "cancelled"):
-            # Worker relinquishes the lock once its portion of the pipeline ends.
+        if target_status in ("ready_for_review", "failed", "cancelled", "retryable_failure"):
+            # Worker relinquishes the lock once its portion of the pipeline ends —
+            # retryable_failure precisa soltar também: `/run`'s atomic claim exige
+            # locked_at IS NULL, então sem isso um job em retryable_failure fica
+            # travado pra sempre e o polling do worker nunca consegue reclamá-lo de
+            # volta (confirmado em produção: job ficou preso em retryable_failure
+            # com o worker rodando e reivindicando outros jobs normalmente).
             job.locked_at = None
             job.locked_by = None
 

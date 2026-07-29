@@ -284,6 +284,30 @@ def test_create_draft_uploads_once_and_creates_post_once(admin_client, tmp_path,
         assert instance.create_draft.call_count == 1
 
 
+def test_patch_to_retryable_failure_releases_lock(admin_client):
+    """O worker faz PATCH status=retryable_failure quando uma etapa falha.
+    Sem soltar o lock, /run nunca reclama o job de volta (WHERE locked_at IS
+    NULL) e o retry automático fica travado pra sempre — bug confirmado em
+    produção com um job de corte_bruto preso depois de uma falha real."""
+    created = _create_job(admin_client).get_json()
+    job_id = created["id"]
+    admin_client.post(f"/api/media/jobs/{job_id}/run")
+
+    resp = admin_client.patch(f"/api/media/jobs/{job_id}", json={
+        "status": "retryable_failure", "last_error": "algo falhou",
+    })
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["status"] == "retryable_failure"
+    assert data["locked_at"] is None
+    assert data["locked_by"] is None
+
+    # E o /run consegue reclamar de novo, exatamente o que estava quebrado.
+    resp2 = admin_client.post(f"/api/media/jobs/{job_id}/run")
+    assert resp2.status_code == 200
+    assert resp2.get_json()["status"] == "preparing"
+
+
 def test_create_draft_failure_sets_retryable_and_preserves_uploaded_media_id(admin_client, monkeypatch):
     created = _create_job(admin_client).get_json()
     job_id = created["id"]

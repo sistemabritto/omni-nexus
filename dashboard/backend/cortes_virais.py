@@ -105,10 +105,24 @@ def _extrair_json_array(bruto: str) -> list[dict]:
     try:
         return json.loads(trecho)
     except json.JSONDecodeError:
-        try:
-            return ast.literal_eval(trecho)
-        except (ValueError, SyntaxError) as exc:
-            raise ValueError(f"resposta do modelo não é JSON nem literal Python válido: {trecho[:200]!r}") from exc
+        pass
+    try:
+        return ast.literal_eval(trecho)
+    except (ValueError, SyntaxError):
+        pass
+    # Achado ao vivo em 29/07/2026: o modelo às vezes devolve o array com um
+    # nível extra de escape, como se estivesse escrevendo o corpo de uma
+    # string JSON (\" em vez de ", \n literal em vez de quebra de linha real)
+    # — sintoma de o próprio modelo ter serializado o array duas vezes antes
+    # de responder. `[`/`]`/`{`/`}` não são afetados por esse escape, então a
+    # fatia já está correta; só o conteúdo interno precisa de um desescape.
+    # Embrulhar em aspas e deixar o parser JSON desescapar resolve isso sem
+    # regex frágil.
+    try:
+        desescapado = json.loads('"' + trecho + '"')
+        return json.loads(desescapado)
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise ValueError(f"resposta do modelo não é JSON nem literal Python válido: {trecho[:200]!r}") from exc
 
 
 DURACAO_MIN_S = 20.0

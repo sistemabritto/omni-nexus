@@ -69,10 +69,18 @@ def _extrair_json_array(bruto: str) -> list[dict]:
     try:
         return json.loads(trecho)
     except json.JSONDecodeError:
-        try:
-            return ast.literal_eval(trecho)
-        except (ValueError, SyntaxError) as exc:
-            raise ValueError(f"resposta do modelo não é JSON nem literal Python válido: {trecho[:200]!r}") from exc
+        pass
+    try:
+        return ast.literal_eval(trecho)
+    except (ValueError, SyntaxError):
+        pass
+    # mesmo achado ao vivo de cortes_virais.py (29/07/2026): array com um
+    # nível extra de escape, como se fosse o corpo de uma string JSON.
+    try:
+        desescapado = json.loads('"' + trecho + '"')
+        return json.loads(desescapado)
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise ValueError(f"resposta do modelo não é JSON nem literal Python válido: {trecho[:200]!r}") from exc
 
 
 def propor_cortes(segmentos: list[Segmento], *, cwd: Path, timeout_seconds: int = 600) -> list[dict]:

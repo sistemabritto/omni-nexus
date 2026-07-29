@@ -121,6 +121,7 @@ COPY dashboard/backend/sdk_client.py \
      dashboard/backend/media_audio.py \
      dashboard/backend/transcricao.py \
      dashboard/backend/corte_editorial.py \
+     dashboard/backend/cortes_virais.py \
      dashboard/backend/postiz_client.py \
      /workspace/dashboard/backend/
 

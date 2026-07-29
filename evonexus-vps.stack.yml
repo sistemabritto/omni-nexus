@@ -223,6 +223,13 @@ services:
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_AUTHENTICATION=${SMTP_AUTHENTICATION}
       - SMTP_ENABLE_STARTTLS_AUTO=${SMTP_ENABLE_STARTTLS_AUTO}
+      ## Status Diário (WhatsApp) — daily_status_report.py. EVOLUTION_GO_SEND_TOKEN
+      ## é o token da instância "sistema-britto" (quem envia); WHATSAPP_PHONE é o
+      ## número conectado na instância "felipe" (quem recebe) — os dois puxados de
+      ## GET /instance/all na Evolution Go, não digitados de cabeça.
+      - EVOLUTION_GO_URL=${EVOLUTION_GO_URL}
+      - EVOLUTION_GO_SEND_TOKEN=${EVOLUTION_GO_SEND_TOKEN}
+      - WHATSAPP_PHONE=${WHATSAPP_PHONE}
 
     deploy:
       placement:

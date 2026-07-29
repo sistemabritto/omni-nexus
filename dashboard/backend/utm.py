@@ -39,12 +39,19 @@ MEIO = {"blog": "content", "youtube": "video"}
 MEIO_PADRAO = "social"
 
 
-def _slug(texto: str, limite: int = 60) -> str:
+def _slug(texto: str, limite: int = 100) -> str:
     """Identificador estável para a campanha, a partir do título do artigo.
 
     Sem acento e sem pontuação porque o valor viaja na query string e é
     agrupado como texto puro pelo analytics: "automação" e "automacao"
     virariam duas campanhas diferentes para o mesmo artigo.
+
+    O limite era 60 e **truncava o slug no meio** (29/07/2026): o artigo
+    "como-fazer-automacao-de-whatsapp-em-2026-e-vender-mais-sem-aumentar-a-equipe"
+    virava campanha "...-vender-mais-sem-a". Como o Ghost gera o slug do post a
+    partir do mesmo título sem esse corte, campanha e artigo deixavam de bater
+    e cruzar "qual post converteu" exigia adivinhação por prefixo. 100 cobre os
+    títulos que a esteira produz com folga.
     """
     import unicodedata
 

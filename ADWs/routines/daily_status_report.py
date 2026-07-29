@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -22,6 +23,21 @@ sys.path.insert(0, str(WORKSPACE / "dashboard" / "backend"))
 
 DB_PATH = WORKSPACE / "dashboard" / "data" / "evonexus.db"
 BRT_OFFSET = timedelta(hours=-3)
+
+
+def load_env() -> None:
+    """O processo do scheduler não carrega .env sozinho — sem isto,
+    WHATSAPP_PHONE e EVOLUTION_GO_URL/KEY nunca chegam a os.environ, e o
+    envio falha mesmo com os valores certos no arquivo. Mesmo padrão de
+    daily_growth_metrics.py."""
+    env = WORKSPACE / ".env"
+    if not env.is_file():
+        return
+    for line in env.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
 def _now_utc() -> datetime:
@@ -42,7 +58,6 @@ def _get_db():
 
 def generate_report() -> str:
     """Gera report diário como string formatada."""
-    import os
     conn = _get_db()
     now_brt = _now_brt()
     today_utc = (now_brt - BRT_OFFSET).strftime("%Y-%m-%d") + "T00:00:00.000000Z"
@@ -131,6 +146,7 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Apenas imprime, não envia")
     args = parser.parse_args()
 
+    load_env()
     phone = args.phone or os.environ.get("WHATSAPP_PHONE", "")
 
     report = generate_report()
@@ -160,5 +176,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    import os
     sys.exit(main())

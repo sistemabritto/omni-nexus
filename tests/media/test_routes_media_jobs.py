@@ -103,6 +103,33 @@ def test_create_job_defaults_job_type_to_social_clip(admin_client):
     assert data["job_type"] == "social_clip"
 
 
+def test_create_aplicar_corte_editorial_exige_cortes_nao_vazio(admin_client):
+    resp = admin_client.post("/api/media/jobs", json={
+        "title": "Aplicar corte", "job_type": "aplicar_corte_editorial",
+        "source_path": "/opt/media-in/live.mp4",
+    })
+    assert resp.status_code == 400
+
+
+def test_create_aplicar_corte_editorial_exige_inicio_e_fim_em_cada_corte(admin_client):
+    resp = admin_client.post("/api/media/jobs", json={
+        "title": "Aplicar corte", "job_type": "aplicar_corte_editorial",
+        "source_path": "/opt/media-in/live.mp4", "cortes": [{"inicio": 10}],
+    })
+    assert resp.status_code == 400
+
+
+def test_create_aplicar_corte_editorial_guarda_cortes_no_result(admin_client):
+    resp = admin_client.post("/api/media/jobs", json={
+        "title": "Aplicar corte", "job_type": "aplicar_corte_editorial",
+        "source_path": "/opt/media-in/live.mp4",
+        "cortes": [{"inicio": 10.0, "fim": 20.0, "motivo": "repetição"}],
+    })
+    assert resp.status_code == 201
+    data = resp.get_json()
+    assert data["result"]["cortes"] == [{"inicio": 10.0, "fim": 20.0, "motivo": "repetição"}]
+
+
 def test_create_job_schedule_mode_requires_future_date(admin_client):
     past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     resp = _create_job(admin_client, publication_mode="schedule", scheduled_at=past)

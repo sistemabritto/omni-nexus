@@ -36,7 +36,7 @@ _WORKER_PATCHABLE_FIELDS = (
     "title", "brief", "caption", "progress_message", "result_json",
 )
 
-MEDIA_JOB_TYPES = frozenset({"social_clip", "corte_bruto", "corte_editorial"})
+MEDIA_JOB_TYPES = frozenset({"social_clip", "corte_bruto", "corte_editorial", "aplicar_corte_editorial"})
 
 
 def _require(action: str):
@@ -142,7 +142,7 @@ def create_media_job():
     if job_type not in MEDIA_JOB_TYPES:
         return jsonify({"error": f"job_type inválido: {job_type!r}. Aceita: {sorted(MEDIA_JOB_TYPES)}"}), 400
 
-    if job_type in ("corte_bruto", "corte_editorial"):
+    if job_type in ("corte_bruto", "corte_editorial", "aplicar_corte_editorial"):
         # Fase 1A/1B: não passam por OpenCode/Postiz, então platform/width/
         # height/duration_seconds não descrevem uma saída de rede — são
         # preenchidos com o formato conhecido do material de origem e
@@ -154,6 +154,14 @@ def create_media_job():
             return jsonify({"error": "Campos obrigatórios ausentes: ['title']"}), 400
         if not (data.get("source_path") or "").strip():
             return jsonify({"error": f"{job_type} exige source_path (vídeo já acessível ao worker)."}), 400
+        if job_type == "aplicar_corte_editorial":
+            cortes = data.get("cortes")
+            if not isinstance(cortes, list) or not cortes:
+                return jsonify({"error": "aplicar_corte_editorial exige 'cortes': lista não vazia de {inicio, fim} já aprovados."}), 400
+            for c in cortes:
+                if not isinstance(c, dict) or "inicio" not in c or "fim" not in c:
+                    return jsonify({"error": "cada corte precisa de 'inicio' e 'fim' (segundos)."}), 400
+            data["result_json"] = json.dumps({"cortes": cortes}, ensure_ascii=False)
         data.setdefault("platform", "youtube")
         data.setdefault("width", 1280)
         data.setdefault("height", 720)
@@ -202,6 +210,7 @@ def create_media_job():
         created_by=getattr(current_user, "username", "system"),
         job_type=job_type,
         source_path=data.get("source_path"),
+        result_json=data.get("result_json"),
         title=data["title"],
         brief=data.get("brief"),
         platform=platform,

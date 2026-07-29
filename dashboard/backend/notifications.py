@@ -306,7 +306,12 @@ def send_whatsapp(text: str, phone: str) -> bool:
             f"{url}/send/text",
             data=payload,
             method="POST",
-            headers={"apikey": key, "Content-Type": "application/json"},
+            # O gateway devolve 403 pro User-Agent padrão do urllib
+            # ("Python-urllib/3.x") — confirmado 28/07/2026, mesma requisição
+            # com um UA de browser/curl passa. Mesma família de bloqueio do
+            # Cloudflare já vista na frente do Evo CRM.
+            headers={"apikey": key, "Content-Type": "application/json",
+                     "User-Agent": "curl/8.5.0"},
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
             return resp.status in (200, 201)

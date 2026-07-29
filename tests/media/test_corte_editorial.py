@@ -53,6 +53,16 @@ def test_propor_cortes_vazio_quando_modelo_diz_nao_cortar_nada():
     assert cortes == []
 
 
+def test_propor_cortes_aceita_aspas_simples_estilo_dict_python():
+    """Mesmo achado ao vivo de cortes_virais.py (29/07/2026): o modelo às
+    vezes devolve aspas simples em vez de JSON estrito."""
+    resposta = "[{'inicio': 10, 'fim': 20, 'motivo': 'ok'}]"
+    with patch.object(corte_editorial, "invoke_with_fallback",
+                       return_value={"status": "success", "output": resposta}):
+        cortes = propor_cortes(_segmentos(), cwd=Path("/tmp"))
+    assert cortes == [{"inicio": 10.0, "fim": 20.0, "motivo": "ok"}]
+
+
 def test_propor_cortes_levanta_erro_se_status_nao_e_sucesso():
     with patch.object(corte_editorial, "invoke_with_fallback",
                        return_value={"status": "busy", "error": "sem provider"}):

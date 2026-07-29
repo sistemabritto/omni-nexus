@@ -11,6 +11,7 @@ julgamento — regra do workspace):
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 import subprocess
@@ -88,12 +89,26 @@ def formatar_para_selecao(palavras: list[Palavra]) -> str:
 
 
 def _extrair_json_array(bruto: str) -> list[dict]:
+    """Extrai o array de cortes da resposta do modelo. Achado ao vivo em
+    29/07/2026: o modelo às vezes devolve sintaxe de dict Python (aspas
+    simples) em vez de JSON estrito — `json.loads` rejeita com "Expecting
+    property name enclosed in double quotes". `ast.literal_eval` aceita as
+    duas sintaxes (JSON válido é um subconjunto de literais Python) sem
+    executar código arbitrário — é avaliação de literal, não `eval`.
+    """
     bruto = re.sub(r"^```(?:json)?\s*|\s*```$", "", bruto.strip())
     inicio = bruto.find("[")
     fim = bruto.rfind("]")
     if inicio == -1 or fim == -1 or fim < inicio:
         raise ValueError(f"resposta do modelo sem array JSON reconhecível: {bruto[:200]!r}")
-    return json.loads(bruto[inicio:fim + 1])
+    trecho = bruto[inicio:fim + 1]
+    try:
+        return json.loads(trecho)
+    except json.JSONDecodeError:
+        try:
+            return ast.literal_eval(trecho)
+        except (ValueError, SyntaxError) as exc:
+            raise ValueError(f"resposta do modelo não é JSON nem literal Python válido: {trecho[:200]!r}") from exc
 
 
 DURACAO_MIN_S = 20.0

@@ -38,6 +38,11 @@ from typing import Iterator
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
 PROVIDERS_CONFIG = WORKSPACE / "config" / "providers.json"
 
+# argv + envp compartilham o ARG_MAX do kernel (~2MB em Linux, mas o ambiente
+# do processo já consome parte disso). Acima deste tamanho o prompt vai por
+# stdin em vez de argv — ver `_invoke_cli`. 100KB dá margem confortável.
+PROMPT_ARG_SAFE_BYTES = 100_000
+
 
 def _usable_secret(value: str | None) -> bool:
     if not value:
@@ -499,6 +504,22 @@ def _invoke_cli(
             cmd.extend(["--agent", agent])
         cmd.extend(["--", prompt])
 
+    # argv + envp compartilham o teto do kernel (ARG_MAX, ~2MB em Linux). Um
+    # prompt que embute uma transcrição de vídeo inteira (ex.: cortes_virais
+    # num vídeo de 3h+) passa fácil de centenas de KB e estoura isso como
+    # "Argument list too long" — confirmado ao vivo em 29/07/2026 contra a
+    # NVIDIA API_KEY/env já ocupando parte da cota. Acima do limite seguro,
+    # tira o prompt do argv e manda por stdin (claude/opencode leem stdin
+    # quando o prompt/mensagem posicional não é passado). Prompts normais
+    # (a maioria — heartbeats, rotinas) ficam exatamente como antes.
+    stdin_input = None
+    if len(prompt.encode("utf-8")) > PROMPT_ARG_SAFE_BYTES:
+        stdin_input = prompt
+        if cli_command == "opencode":
+            cmd = [c for c in cmd if c != prompt]
+        else:
+            cmd = cmd[:-2]  # tira "--" e o prompt — claude/openclaude leem stdin sem eles
+
     run_env = _build_agent_run_env(env_overrides)
 
     # Acquire a per-model inflight lock so concurrent calls cannot pick the same
@@ -519,7 +540,8 @@ def _invoke_cli(
             "skip_advance_model": True,
         }
     try:
-        return _invoke_cli_run(cmd, run_env, timeout_seconds, cwd or WORKSPACE, output_mode=output_mode)
+        return _invoke_cli_run(cmd, run_env, timeout_seconds, cwd or WORKSPACE,
+                                output_mode=output_mode, stdin_input=stdin_input)
     finally:
         lk.release()
 
@@ -589,9 +611,16 @@ def _parse_opencode_ndjson(output: str) -> dict:
 
 
 def _invoke_cli_run(cmd: list, run_env: dict, timeout_seconds: int, workspace: Path,
-                     output_mode: str = "envelope") -> dict:
+                     output_mode: str = "envelope", stdin_input: str | None = None) -> dict:
     """Inner run — assume the per-model inflight lock is already held.
     Holds the subprocess, parses tokens, applies backoff on 429, returns dict.
+
+    `stdin_input`: when the prompt is passed via stdin instead of argv (see
+    PROMPT_ARG_SAFE_BYTES in `_invoke_cli` — a prompt embedding a full video
+    transcript can be hundreds of KB, and argv+envp share the kernel's
+    ARG_MAX; a huge prompt as a literal CLI arg fails with "Argument list too
+    long" — confirmed live 2026-07-29 against a real 3h02 transcript via
+    opencode, `[Errno 7] Argument list too long: '/usr/local/bin/opencode'`).
     """
     import subprocess as _sp
     start_time = time.time()
@@ -603,10 +632,14 @@ def _invoke_cli_run(cmd: list, run_env: dict, timeout_seconds: int, workspace: P
     try:
         proc = _sp.Popen(
             cmd, stdout=_sp.PIPE, stderr=_sp.PIPE,
+            stdin=_sp.PIPE if stdin_input is not None else None,
             text=True, cwd=str(workspace), start_new_session=True, env=run_env,
         )
         try:
-            stdout, stderr = proc.communicate(timeout=timeout_seconds)
+            if stdin_input is not None:
+                stdout, stderr = proc.communicate(input=stdin_input, timeout=timeout_seconds)
+            else:
+                stdout, stderr = proc.communicate(timeout=timeout_seconds)
             output = stdout or ""
             if proc.returncode != 0:
                 status = "fail"

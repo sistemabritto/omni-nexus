@@ -67,9 +67,23 @@ def propor_cortes(segmentos: list[Segmento], *, cwd: Path, timeout_seconds: int 
     esteira de vídeo) para marcar trechos a cortar. Devolve lista de
     {inicio, fim, motivo}, validada e ordenada — nunca confia cegamente no
     que o modelo devolveu.
+
+    `force_provider="opencode"` é obrigatório aqui: Dockerfile.media-worker só
+    instala o binário `opencode` (ver comentário no Dockerfile) — não instala
+    `openclaude` nem `claude`. Sem o pin, `invoke_with_fallback` segue a cadeia
+    de `config/providers.json` (que na VPS tem `active_provider=omnirouter`,
+    cli_command `openclaude`), e todo attempt falha com "binary not found in
+    PATH" até esgotar a cadeia em `anthropic:claude` — confirmado ao vivo em
+    29/07/2026 num job real de 3h02 que queimou 3 transcrições Groq inteiras
+    (19 blocos cada) reprocessando o mesmo erro a cada auto-retry antes de
+    achar a causa. Este bug afeta `propor_cortes_virais` (cortes_virais.py)
+    igualmente, mesmo mecanismo.
     """
     prompt = PROMPT_CORTE.format(transcricao=formatar_transcricao(segmentos))
-    resultado = invoke_with_fallback(prompt=prompt, timeout_seconds=timeout_seconds, agent="", cwd=cwd)
+    resultado = invoke_with_fallback(
+        prompt=prompt, timeout_seconds=timeout_seconds, agent="", cwd=cwd,
+        force_provider="opencode",
+    )
     if resultado.get("status") != "success":
         raise RuntimeError(f"proposta de corte falhou (status={resultado.get('status')}): {resultado.get('error')}")
 

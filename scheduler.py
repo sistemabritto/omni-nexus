@@ -158,6 +158,10 @@ def setup_schedule():
     # ontem produziu, sem contar a publicação de hoje que ainda nem saiu.
     schedule.every().day.at("05:30").do(
         run_adw, "Métricas de Crescimento", "daily_growth_metrics.py")
+    # Fase 4 (Facebook/Meta Ads). Zero campanha ativa em 29/07/2026 — a
+    # rotina existe pra já estar medindo no dia em que uma entrar no ar.
+    schedule.every().day.at("05:35").do(
+        run_adw, "Facebook Ads Pulse", "facebook_ads_pulse.py")
 
     # A cada 15 minutos: artigo publicado que ainda não virou post de rede.
     #

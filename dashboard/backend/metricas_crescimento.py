@@ -65,6 +65,11 @@ VISITAS_FUNIL = "visitas_funil"
 # única métrica que responde "qual artigo converteu", e não apenas "quantos
 # cliques houve". É a pergunta que justifica publicar 21 artigos por semana.
 CLIQUES_POR_ARTIGO = "cliques_por_artigo"
+# Fase 4 (Facebook/Meta Ads). `origem` é o nome da campanha — sem isso não
+# dá para cruzar gasto com o UTM que a campanha carrega no funil.
+ADS_GASTO = "ads_gasto"
+ADS_IMPRESSOES = "ads_impressoes"
+ADS_CLIQUES = "ads_cliques"
 
 
 def conectar() -> sqlite3.Connection:

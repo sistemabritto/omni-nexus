@@ -9,6 +9,7 @@ somar minutos) fica em `transcricao.py` e nas funções determinísticas daqui.
 
 from __future__ import annotations
 
+import ast
 import html
 import json
 import re
@@ -54,12 +55,24 @@ def formatar_transcricao(segmentos: list[Segmento]) -> str:
 
 
 def _extrair_json_array(bruto: str) -> list[dict]:
+    """Extrai o array de cortes da resposta do modelo. Mesmo achado de
+    `cortes_virais.py::_extrair_json_array` (29/07/2026): o modelo às vezes
+    devolve sintaxe de dict Python (aspas simples) em vez de JSON estrito.
+    `ast.literal_eval` aceita as duas sintaxes sem executar código arbitrário.
+    """
     bruto = re.sub(r"^```(?:json)?\s*|\s*```$", "", bruto.strip())
     inicio = bruto.find("[")
     fim = bruto.rfind("]")
     if inicio == -1 or fim == -1 or fim < inicio:
         raise ValueError(f"resposta do modelo sem array JSON reconhecível: {bruto[:200]!r}")
-    return json.loads(bruto[inicio:fim + 1])
+    trecho = bruto[inicio:fim + 1]
+    try:
+        return json.loads(trecho)
+    except json.JSONDecodeError:
+        try:
+            return ast.literal_eval(trecho)
+        except (ValueError, SyntaxError) as exc:
+            raise ValueError(f"resposta do modelo não é JSON nem literal Python válido: {trecho[:200]!r}") from exc
 
 
 def propor_cortes(segmentos: list[Segmento], *, cwd: Path, timeout_seconds: int = 600) -> list[dict]:

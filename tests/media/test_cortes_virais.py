@@ -159,6 +159,17 @@ def test_propor_cortes_lista_vazia_e_valida():
         assert propor_cortes_virais([_palavra(0, 10, "x")], cwd=Path(".")) == []
 
 
+def test_propor_cortes_aceita_aspas_simples_estilo_dict_python():
+    """Achado ao vivo em 29/07/2026: o modelo às vezes devolve sintaxe de
+    dict Python (aspas simples) em vez de JSON estrito — json.loads rejeita
+    com "Expecting property name enclosed in double quotes"."""
+    payload = "[{'inicio': 0, 'fim': 40, 'titulo': 'corte legal'}]"
+    with patch("cortes_virais.invoke_with_fallback", return_value=_resultado_modelo(payload)):
+        cortes = propor_cortes_virais([_palavra(0.0, 200.0, "x")], cwd=Path("."))
+    assert len(cortes) == 1
+    assert cortes[0]["titulo"] == "corte legal"
+
+
 # ── renderização (ffmpeg mockado) ──────────────────────────────────────────
 
 def test_renderizar_monta_filtro_com_crop_zoom_e_legenda(tmp_path):

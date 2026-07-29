@@ -44,6 +44,13 @@ ALVO_LRA = 11.0
 # Baixar 3 dB antes zera os avisos; o loudnorm devolve o nível depois.
 PRE_GAIN_DB = -3.0
 
+# Realce de voz (ver `realcar`). Calibrado pra fala, não pra música — os três
+# números resolvem sintomas distintos e nenhum sozinho resolve os outros dois.
+REALCE_HIGHPASS_HZ = 90        # ronco de sala e proximidade do mic, abaixo do grave da voz
+REALCE_COMP_THRESHOLD_DB = -18  # onde o compressor começa a nivelar
+REALCE_COMP_RATIO = 3.0
+REALCE_PRESENCA_GANHO_DB = 3.5  # realce de agudo pra inteligibilidade de consoante
+
 # Silêncio: mais baixo que -30 dB por pelo menos 0,4 s. Calibrado contra a
 # gravação real — -35 e -40 dB cortam menos (14,5% e 13,4% contra 17,1%), e
 # exigir 0,8 s de silêncio derruba o corte para 7,8%, deixando na peça as
@@ -221,6 +228,49 @@ def denoise(wav: Path, destino_dir: Path, *, progresso: Progresso | None = None)
     for p in prontas:
         p.unlink(missing_ok=True)
     return saida
+
+
+def realcar(wav: Path, destino: Path, *, progresso: Progresso | None = None) -> Path:
+    """Realce de voz — a etapa que faltava entre denoise e normalização.
+
+    O DeepFilterNet tira ruído de fundo, mas não resolve os outros dois
+    motivos de áudio "abafado, difícil de entender": ronco de sala grave
+    demais pra ouvido perceber como ruído (então o denoiser não mexe nele) e
+    fala que varia de volume porque quem falou se afastou ou se aproximou do
+    mic — o loudnorm nivela o programa inteiro, não frase a frase.
+
+    Três filtros, cada um resolvendo um sintoma específico:
+
+    - `highpass` corta abaixo de 90 Hz. É ronco de ambiente e proximidade de
+      mic, não voz — a fundamental da fala fica acima disso mesmo em voz
+      grave. Sem isso o grave "suja" o resto do espectro e a mixagem soa
+      encaixotada mesmo depois do denoise.
+    - `acompressor` nivela frase a frase (ratio 3:1 a partir de -18dB, ataque
+      rápido e release de 80ms pra não bombear na respiração). É isto que
+      resolve trecho que "some" quando a pessoa fala mais baixo — o loudnorm
+      sozinho só corrige a média do programa inteiro, não a variação dentro
+      dele.
+    - `treble` dá um realce suave de 3.5dB a partir de 3.5kHz. É a faixa das
+      consoantes (S, T, F) que carregam inteligibilidade; reforçá-la é o que
+      faz "difícil de entender" virar "dá pra entender sem esforço" sem
+      deixar o áudio com timbre de rádio AM.
+
+    Roda ANTES do `normalizar`: a normalização final precisa medir o material
+    já com a dinâmica corrigida, senão o loudnorm mira um LUFS que a
+    compressão desta etapa muda depois — dois passes de nivelamento brigando.
+    """
+    if progresso:
+        progresso("realce", "highpass + compressor + presença")
+    filtro = (
+        f"highpass=f={REALCE_HIGHPASS_HZ},"
+        f"acompressor=threshold={REALCE_COMP_THRESHOLD_DB}dB:ratio={REALCE_COMP_RATIO}"
+        f":attack=5:release=80:makeup=2,"
+        f"treble=g={REALCE_PRESENCA_GANHO_DB}:f=3500:width_type=h:width=2000"
+    )
+    _rodar(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af", filtro,
+            "-ar", "48000", "-c:a", "pcm_s16le", str(destino)],
+           o_que="realce de voz", timeout=7200)
+    return destino
 
 
 def _medir_loudness(wav: Path) -> dict:
@@ -424,8 +474,11 @@ def primeiro_corte(video: Path, saida: Path, *, trabalho: Path,
     limpo = denoise(bruto, trabalho / "df", progresso=progresso)
     bruto.unlink(missing_ok=True)
 
-    normalizado = normalizar(limpo, trabalho / "final.wav", progresso=progresso)
+    realcado = realcar(limpo, trabalho / "realcado.wav", progresso=progresso)
     limpo.unlink(missing_ok=True)
+
+    normalizado = normalizar(realcado, trabalho / "final.wav", progresso=progresso)
+    realcado.unlink(missing_ok=True)
 
     tratado = remuxar(video, normalizado, trabalho / "tratado.mp4", progresso=progresso)
     normalizado.unlink(missing_ok=True)

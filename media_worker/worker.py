@@ -34,8 +34,9 @@ from media_validation import validate_mp4, extract_metadata, ValidationError  # 
 from media_manifest import load_and_validate_manifest, ManifestValidationError  # noqa: E402
 from media_workspace import job_dir, media_workspace_root, sha256_file  # noqa: E402
 from media_audio import primeiro_corte, aplicar_corte_editorial, FalhaDeMidia  # noqa: E402
-from transcricao import extrair_audio_16k, transcrever  # noqa: E402
+from transcricao import extrair_audio_16k, transcrever, transcrever_palavras  # noqa: E402
 from corte_editorial import propor_cortes, gerar_pagina_revisao  # noqa: E402
+from cortes_virais import propor_cortes_virais, renderizar_corte_viral  # noqa: E402
 
 POLL_SECONDS = float(os.environ.get("MEDIA_WORKER_POLL_SECONDS", "10"))
 JOB_TIMEOUT_SECONDS = int(os.environ.get("MEDIA_JOB_TIMEOUT_SECONDS", "3600"))
@@ -91,6 +92,8 @@ def process_job(job: dict) -> None:
         process_corte_editorial_job(job)
     elif job_type == "aplicar_corte_editorial":
         process_aplicar_corte_editorial_job(job)
+    elif job_type == "cortes_virais":
+        process_cortes_virais_job(job)
     else:
         process_social_clip_job(job)
 
@@ -351,6 +354,122 @@ def process_aplicar_corte_editorial_job(job: dict) -> None:
         result_json=json.dumps(resultado, ensure_ascii=False), progress_message="concluído", **meta.to_dict(),
     )
     print(f"[media-worker] aplicar_corte_editorial job {job_id} ready_for_review (sha256={checksum[:12]}...)", flush=True)
+
+
+def process_cortes_virais_job(job: dict) -> None:
+    """Fase 1C: transcreve por palavra, o modelo escolhe até N trechos que
+    funcionam como corte curto independente (julgamento — via modelo), e
+    cada um é renderizado em 9:16 com legenda karaokê e zoom (determinístico,
+    ffmpeg puro). Cria um ticket de revisão em vez de publicar sozinho —
+    mesma regra de gate do resto da esteira: o worker produz candidatos,
+    nunca decide o que vai ao ar.
+    """
+    job_id = job["id"]
+    base = job_dir(job_id)
+    print(f"[media-worker] processing cortes_virais job {job_id}", flush=True)
+
+    source = _resolve_source_video(job, base)
+    if source is None:
+        _fail_job(
+            job_id,
+            f"Vídeo de origem não encontrado (source_path={job.get('source_path')!r}, "
+            f"nem input/source.* em {base / 'input'})",
+            terminal=True,
+        )
+        return
+
+    inicio = time.monotonic()
+
+    def progresso(etapa: str, detalhe: str = "") -> None:
+        minutos = (time.monotonic() - inicio) / 60
+        msg = f"[{minutos:.1f} min] {etapa} {detalhe}".rstrip()
+        print(f"[media-worker] {job_id}: {msg}", flush=True)
+        try:
+            _patch(job_id, progress_message=msg)
+        except Exception:
+            pass
+
+    _patch(job_id, status="generating")
+    trabalho = base / "work"
+    trabalho.mkdir(parents=True, exist_ok=True)
+
+    try:
+        audio_16k = extrair_audio_16k(source, trabalho / "audio16k.wav")
+        palavras = transcrever_palavras(audio_16k, trabalho=trabalho / "transcricao", progresso=progresso)
+        audio_16k.unlink(missing_ok=True)
+    except FalhaDeMidia as exc:
+        _fail_job(job_id, f"Transcrição por palavra falhou: {exc}")
+        return
+
+    if not palavras:
+        _fail_job(job_id, "transcrição não devolveu nenhuma palavra", terminal=True)
+        return
+
+    progresso("propondo_cortes_virais", f"{len(palavras)} palavras transcritas")
+    max_cortes = int(job.get("platform_settings", {}).get("max_cortes", 6)) if isinstance(job.get("platform_settings"), dict) else 6
+    try:
+        cortes = propor_cortes_virais(palavras, cwd=base, max_cortes=max_cortes)
+    except Exception as exc:
+        _fail_job(job_id, f"Proposta de cortes virais falhou: {exc}")
+        return
+
+    if not cortes:
+        _patch(
+            job_id, status="ready_for_review", progress_message="concluído",
+            result_json=json.dumps({"cortes": []}, ensure_ascii=False),
+        )
+        print(f"[media-worker] cortes_virais job {job_id}: nenhum trecho se qualificou", flush=True)
+        return
+
+    _patch(job_id, status="rendering")
+    output_dir = base / "output" / "virais"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    resultados = []
+    for i, corte in enumerate(cortes):
+        progresso("renderizando", f"corte {i + 1} de {len(cortes)}")
+        destino = output_dir / f"corte{i:02d}.mp4"
+        trabalho_corte = trabalho / f"corte{i:02d}"
+        try:
+            info = renderizar_corte_viral(source, corte, palavras, destino, trabalho=trabalho_corte, progresso=progresso)
+        except FalhaDeMidia as exc:
+            print(f"[media-worker] {job_id}: corte {i} falhou, pulando: {exc}", flush=True)
+            continue
+
+        caminho_relativo = f"media/jobs/{job_id}/output/virais/corte{i:02d}.mp4"
+        try:
+            share = evo.post("/api/shares", {"path": caminho_relativo, "expires_in": None})
+            info["share_url"] = share.get("url", "")
+        except Exception as exc:
+            print(f"[media-worker] {job_id}: falha ao criar share do corte {i}: {exc}", flush=True)
+            info["share_url"] = ""
+        info["arquivo"] = caminho_relativo
+        resultados.append(info)
+
+    _patch(job_id, status="validating")
+
+    if not resultados:
+        _fail_job(job_id, "modelo propôs cortes mas nenhum renderizou com sucesso")
+        return
+
+    linhas_ticket = "\n".join(
+        f"- {r['titulo']} ({r['duracao_s']:.0f}s): {r.get('share_url') or '(share falhou)'}"
+        for r in resultados
+    )
+    try:
+        evo.post("/api/tickets", {
+            "title": f"Aprovar cortes virais — {job.get('title') or job_id}",
+            "description": f"{len(resultados)} corte(s) renderizados:\n\n{linhas_ticket}\n\njob_id: {job_id}",
+            "priority": "medium",
+        })
+    except Exception as exc:
+        print(f"[media-worker] {job_id}: falha ao criar ticket: {exc}", flush=True)
+
+    _patch(
+        job_id, status="ready_for_review", progress_message="concluído",
+        result_json=json.dumps({"cortes": resultados}, ensure_ascii=False),
+    )
+    print(f"[media-worker] cortes_virais job {job_id} ready_for_review ({len(resultados)} corte(s) renderizados)", flush=True)
 
 
 def process_social_clip_job(job: dict) -> None:

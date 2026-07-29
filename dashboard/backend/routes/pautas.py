@@ -20,6 +20,7 @@ from flask_login import current_user
 from models import has_permission, audit
 
 import pauta_fila
+import feedback_audio
 
 bp = Blueprint("pautas", __name__)
 
@@ -103,6 +104,44 @@ def mover_pauta(pauta_id: int):
         return jsonify({"error": "pauta não encontrada"}), 404
     audit(current_user, "update", "pautas", f"pauta {pauta_id} -> {novo}")
     return jsonify({"id": pauta_id, "status": novo})
+
+
+@bp.route("/api/pautas/<int:pauta_id>/keyword", methods=["PATCH"])
+def editar_keyword(pauta_id: int):
+    """Troca a keyword — devolve pra 'proposta' se estava 'aprovada' (ver pauta_fila.editar_keyword)."""
+    denied = _require("manage")
+    if denied:
+        return denied
+    dados = request.get_json(silent=True) or {}
+    nova = (dados.get("keyword") or "").strip()
+    if not nova:
+        return jsonify({"error": "keyword obrigatória"}), 400
+    ok = pauta_fila.editar_keyword(pauta_id, nova)
+    if not ok:
+        return jsonify({"error": "pauta não encontrada"}), 404
+    audit(current_user, "update", "pautas", f"pauta {pauta_id} keyword -> {nova}")
+    return jsonify({"id": pauta_id, "keyword": nova})
+
+
+@bp.route("/api/pautas/<int:pauta_id>/feedback-audio", methods=["POST"])
+def feedback_audio_pauta(pauta_id: int):
+    """Grava feedback falado como `motivo` da pauta, sem mudar o status dela."""
+    denied = _require("manage")
+    if denied:
+        return denied
+    arquivo = request.files.get("audio")
+    if not arquivo:
+        return jsonify({"error": "audio obrigatório (multipart, campo 'audio')"}), 400
+    pauta = pauta_fila.buscar(pauta_id)
+    if not pauta:
+        return jsonify({"error": "pauta não encontrada"}), 404
+    try:
+        texto = feedback_audio.transcrever_audio(arquivo.stream, arquivo.filename or "audio.webm")
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 502
+    pauta_fila.mover(pauta_id, pauta["status"], motivo=texto)
+    audit(current_user, "update", "pautas", f"pauta {pauta_id} feedback em áudio")
+    return jsonify({"id": pauta_id, "motivo": texto})
 
 
 @bp.route("/api/pautas/ciclo/<ciclo>/aprovar", methods=["POST"])

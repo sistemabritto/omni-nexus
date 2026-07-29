@@ -185,6 +185,7 @@ const translations = {
       goals: 'Goals',
       kanban: 'Kanban',
       media: 'Media',
+      pautas: 'Content Queue',
       approvals: 'Approvals',
       tasks: 'Tasks',
       triggers: 'Triggers',

@@ -26,6 +26,15 @@ problemas técnicos mencionados na fala (queda de conexão, "deixa eu recomeçar
 parte", pausas para resolver algo fora do assunto), ou blocos que claramente não \
 agregam a quem for assistir depois.
 
+ABERTURA: se os primeiros minutos forem só uma pessoa falando sozinha esperando \
+os outros participantes chegarem ou testando áudio/câmera (sem ainda apresentar o \
+tema, sem gancho, sem ninguém reagindo), isso é candidato a corte mesmo sendo o \
+INÍCIO do vídeo — não existe exceção "não corto o começo". Ache o primeiro momento \
+em que o conteúdo de fato começa (apresentação do tema, entrada de outro \
+participante, ou primeira ideia desenvolvida) e marque tudo antes disso, DESDE \
+QUE não seja só alguém organizando o pensamento por poucos segundos — um minuto de \
+preâmbulo é normal, cinco minutos de monólogo de espera não é.
+
 O que NÃO marcar: conteúdo só porque é longo, opiniões, humor, ou qualquer trecho em \
 que você não tenha certeza — na dúvida, não corta. Cortar demais é pior que cortar de menos.
 

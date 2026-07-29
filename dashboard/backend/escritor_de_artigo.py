@@ -117,7 +117,16 @@ def montar_prompt(pauta: dict, noticia: str = "") -> str:
         "- Sem <html>, <head>, <body>, sem cerca de código.\n\n"
 
         f"CTA OBRIGATÓRIO no último parágrafo, apontando para {funil_url} "
-        f"({funil_desc}). Um só, específico, ligado ao que o artigo acabou de ensinar.\n\n"
+        f"({funil_desc}). Um só, específico, ligado ao que o artigo acabou de ensinar.\n"
+        # O texto do link é o que o leitor lê antes de decidir clicar, e é o que
+        # o Google usa pra entender o destino. "Clique aqui" desperdiça os dois:
+        # não diz o que tem do outro lado e não descreve a página. Saía assim
+        # nos posts de 28-29/07/2026 até esta instrução existir.
+        "- O texto do link (âncora) diz O QUE a pessoa encontra do outro lado, "
+        "em 2 a 5 palavras. Ex.: 'ver como montamos o fluxo', 'a call que produz "
+        "o PRD'.\n"
+        "- PROIBIDO como texto de link: 'clique aqui', 'saiba mais', 'confira', "
+        "'acesse', 'veja mais', ou o link cru exposto.\n\n"
 
         "MARCA:\n"
         "- Tom direto, de quem construiu. Nunca de quem vende.\n"
@@ -132,6 +141,58 @@ def montar_prompt(pauta: dict, noticia: str = "") -> str:
 
         f"GUIA ANTI-ESCRITA-DE-IA (obrigatório, não é sugestão):\n{_briefing_humanizer()}"
     )
+
+
+# Texto de link que não diz nada sobre o destino. Ordenado do mais específico
+# para o mais genérico: "clique aqui e veja X" precisa casar antes de "clique
+# aqui", senão sobra o resto da frase pendurado.
+ANCORAS_VAZIAS = re.compile(
+    r"^\s*(?:"
+    r"clique\s+aqui(?:\s+e\s+\w+.*)?|aqui|"
+    r"saiba\s+mais|veja\s+mais|leia\s+mais|confira(?:\s+aqui)?|"
+    r"acesse(?:\s+aqui)?|acesso|link|este\s+link|neste\s+link|"
+    r"ver\s+mais|clique|"
+    r"https?://\S+"
+    r")\s*[.!:]?\s*$",
+    re.IGNORECASE,
+)
+
+# O que entra no lugar, por funil. Diz o que a pessoa encontra do outro lado,
+# que é o trabalho que "clique aqui" não faz.
+ANCORA_POR_FUNIL = {
+    "whatsapp": "ver como montamos o atendimento",
+    "socialjobs": "ver a operação de conteúdo por dentro",
+    "sistema": "a call de 1h que produz o PRD",
+}
+
+
+def ancora_util(html: str, keyword: str = "") -> str:
+    """Troca texto de link genérico por um que descreve o destino.
+
+    "Clique aqui" desperdiça as duas funções do texto de um link: dizer ao
+    leitor o que tem do outro lado, e dizer ao buscador do que trata a página
+    de destino. Saiu assim nos posts de 28 e 29/07/2026 ("Clique aqui",
+    "clique aqui e veja as estruturas que usamos") mesmo com a instrução no
+    prompt, que é o padrão já conhecido: instrução negativa não vence hábito
+    de treino, precisa de rede embaixo (mesma razão de `sem_travessao`).
+
+    Só mexe em link de funil próprio. Âncora ruim em link externo é problema
+    do site de destino, não nosso, e reescrever citação alheia seria pior.
+    """
+    if not html:
+        return html
+
+    substituto = ANCORA_POR_FUNIL.get(funil_de(keyword) if keyword else "", "ver como a gente faz")
+
+    def _troca(m: re.Match) -> str:
+        abertura, texto = m.group(1), m.group(2)
+        if "sistemabritto.com.br" not in abertura:
+            return m.group(0)
+        if not ANCORAS_VAZIAS.match(texto.strip()):
+            return m.group(0)
+        return f"{abertura}{substituto}</a>"
+
+    return re.sub(r"(<a\b[^>]*>)(.*?)</a>", _troca, html, flags=re.IGNORECASE | re.DOTALL)
 
 
 def sem_travessao(texto: str) -> str:
@@ -210,6 +271,10 @@ def escrever(pauta: dict, *, noticia: str = "") -> tuple[dict, str]:
 
     html = sem_travessao(html)
     titulo = sem_travessao(titulo)
+    # Antes de marcar a UTM: o guard olha o texto do link, e a marcação mexe
+    # só no href. Rodar depois também funcionaria, mas rodar aqui mantém o
+    # bloco de "limpeza de texto" junto e a marcação de origem separada.
+    html = ancora_util(html, pauta.get("keyword", ""))
 
     funil_url, _ = _funil_para(pauta["keyword"])
     if funil_url not in html:

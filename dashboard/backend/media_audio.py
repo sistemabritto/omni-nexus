@@ -61,13 +61,18 @@ BLOCO_S = 600
 SOBREPOSICAO_S = 1.0
 
 # Quantos trechos entram na mesma expressão `select` do corte. Medido em
-# 28/07/2026 na live real (3h28, ~2800 trechos): uma expressão só com todos os
+# 28/07/2026 na live real (3h28, ~3150 trechos): uma expressão só com todos os
 # `between()` encadeados derruba o ffmpeg com "Error initializing complex
-# filters. Cannot allocate memory" — o parser de expressão do libavfilter não
-# escala para milhares de termos, é limite do parser, não do container (o
-# processo tinha memória de sobra). Cortar em lotes menores e concatenar por
-# demuxer (sem reencode) evita o limite mantendo poucos processos ffmpeg.
-LOTE_TRECHOS = 150
+# filters. Cannot allocate memory" — não é o container (sobrava memória), é o
+# parser de expressão do libavfilter, e o limite é curto e EXATO: reproduzido
+# isolando o mesmo arquivo, 100 termos passa, 101 falha, sempre, direto na
+# inicialização do filtro (antes de decodificar um frame sequer) — é um teto
+# fixo do parser, não um limite de memória que varia. O primeiro valor testado
+# aqui, 150, já estava acima do teto e o lote 1 falhava igual ao arquivo
+# inteiro. 80 dá margem confortável abaixo dos 100 confirmados. Cortar em
+# lotes e concatenar por demuxer (sem reencode) evita o limite mantendo poucos
+# processos ffmpeg.
+LOTE_TRECHOS = 80
 
 
 class FalhaDeMidia(RuntimeError):

@@ -275,30 +275,35 @@ def send_approval_request(approval_id: int, title: str, body: str,
     return int(message_id) if message_id is not None else None
 
 
-def send_whatsapp(text: str, phone: str, instance: str | None = None) -> bool:
+def send_whatsapp(text: str, phone: str) -> bool:
     """Send a WhatsApp message via Evolution Go API.
 
-    Reads EVOLUTION_GO_URL and EVOLUTION_GO_KEY from environment (.env).
-    `instance` is the Evolution Go WhatsApp instance to send FROM — defaults
-    to EVOLUTION_GO_INSTANCE if set, else "sistema-britto" (Sistema Britto's
-    own connected number, already registered in EvoCRM/evolution_go). This
-    used to be hardcoded to "nature" — a different instance entirely — so
-    every message silently went out from the wrong number. Returns True if
-    sent, False on any failure.
+    Reads EVOLUTION_GO_URL and EVOLUTION_GO_SEND_TOKEN from environment
+    (.env). EVOLUTION_GO_KEY (the admin/global key) does NOT work here —
+    confirmado em 28/07/2026: `POST /send/text` com a chave admin devolve
+    401 "not authorized"; ela só serve para endpoints administrativos como
+    `/instance/all`. `/send/text` exige o token da instância específica que
+    vai enviar, passado como `apikey`, e não recebe instância no path nem no
+    payload — quem seleciona a instância é o próprio token.
+
+    EVOLUTION_GO_SEND_TOKEN precisa ser o token de uma instância com
+    `connected: true` (conferir em `GET /instance/all` com a chave admin).
+    A antiga rota `/message/sendText/{instance}` nunca existiu nesta API —
+    respondia 404 silenciosamente, então o report diário falhava desde que
+    foi ligado. Returns True if sent, False on any failure.
     """
     import json
     import urllib.request
     import urllib.error
 
     url = os.environ.get("EVOLUTION_GO_URL", "").rstrip("/")
-    key = os.environ.get("EVOLUTION_GO_KEY", "")
+    key = os.environ.get("EVOLUTION_GO_SEND_TOKEN", "")
     if not url or not key:
         return False
-    instance = instance or os.environ.get("EVOLUTION_GO_INSTANCE") or "sistema-britto"
     try:
         payload = json.dumps({"number": phone, "text": text}).encode("utf-8")
         req = urllib.request.Request(
-            f"{url}/message/sendText/{instance}",
+            f"{url}/send/text",
             data=payload,
             method="POST",
             headers={"apikey": key, "Content-Type": "application/json"},

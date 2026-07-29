@@ -34,6 +34,8 @@ from media_validation import validate_mp4, extract_metadata, ValidationError  # 
 from media_manifest import load_and_validate_manifest, ManifestValidationError  # noqa: E402
 from media_workspace import job_dir, media_workspace_root, sha256_file  # noqa: E402
 from media_audio import primeiro_corte, FalhaDeMidia  # noqa: E402
+from transcricao import extrair_audio_16k, transcrever  # noqa: E402
+from corte_editorial import propor_cortes, gerar_pagina_revisao  # noqa: E402
 
 POLL_SECONDS = float(os.environ.get("MEDIA_WORKER_POLL_SECONDS", "10"))
 JOB_TIMEOUT_SECONDS = int(os.environ.get("MEDIA_JOB_TIMEOUT_SECONDS", "3600"))
@@ -85,6 +87,8 @@ def process_job(job: dict) -> None:
     job_type = job.get("job_type") or "social_clip"
     if job_type == "corte_bruto":
         process_corte_bruto_job(job)
+    elif job_type == "corte_editorial":
+        process_corte_editorial_job(job)
     else:
         process_social_clip_job(job)
 
@@ -175,6 +179,105 @@ def process_corte_bruto_job(job: dict) -> None:
         result_json=json.dumps(resultado, ensure_ascii=False), progress_message="concluído", **meta.to_dict(),
     )
     print(f"[media-worker] corte_bruto job {job_id} ready_for_review (sha256={checksum[:12]}...)", flush=True)
+
+
+def process_corte_editorial_job(job: dict) -> None:
+    """Fase 1B da esteira de vídeo: transcreve o vídeo já cortado (1A),
+    propõe trechos adicionais a cortar (julgamento — via modelo, nunca
+    Python puro) e publica uma página de revisão em /shares. Não corta nada
+    sozinho: o corte real só acontece depois que um humano aprova a lista
+    (ver .claude/rules/esteira-de-conteudo.md — mesma regra de gate da
+    esteira de conteúdo).
+    """
+    job_id = job["id"]
+    base = job_dir(job_id)
+    print(f"[media-worker] processing corte_editorial job {job_id}", flush=True)
+
+    source = _resolve_source_video(job, base)
+    if source is None:
+        _fail_job(
+            job_id,
+            f"Vídeo de origem não encontrado (source_path={job.get('source_path')!r}, "
+            f"nem input/source.* em {base / 'input'})",
+            terminal=True,
+        )
+        return
+
+    inicio = time.monotonic()
+
+    def progresso(etapa: str, detalhe: str = "") -> None:
+        minutos = (time.monotonic() - inicio) / 60
+        msg = f"[{minutos:.1f} min] {etapa} {detalhe}".rstrip()
+        print(f"[media-worker] {job_id}: {msg}", flush=True)
+        try:
+            _patch(job_id, progress_message=msg)
+        except Exception:
+            pass
+
+    _patch(job_id, status="generating")
+    trabalho = base / "work"
+    trabalho.mkdir(parents=True, exist_ok=True)
+
+    try:
+        audio_16k = extrair_audio_16k(source, trabalho / "audio16k.wav")
+        segmentos = transcrever(audio_16k, trabalho=trabalho / "transcricao", progresso=progresso)
+        audio_16k.unlink(missing_ok=True)
+    except FalhaDeMidia as exc:
+        _fail_job(job_id, f"Transcrição falhou: {exc}")
+        return
+
+    progresso("propondo_cortes", f"{len(segmentos)} blocos transcritos")
+    try:
+        cortes = propor_cortes(segmentos, cwd=base)
+    except Exception as exc:
+        _fail_job(job_id, f"Proposta de corte falhou: {exc}")
+        return
+
+    duracao_total = segmentos[-1].fim if segmentos else 0.0
+    pagina = gerar_pagina_revisao(titulo=job.get("title") or job_id, cortes=cortes, duracao_original_s=duracao_total)
+    output_dir = base / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    pagina_path = output_dir / "revisao.html"
+    pagina_path.write_text(pagina, encoding="utf-8")
+
+    # Caminho relativo à raiz do repo (REPO_ROOT em routes/shares.py) — é o
+    # que /api/shares exige, e media/ é uma das duas raízes que ele aceita
+    # (ver o comentário de MEDIA_WORKSPACE_DIR em routes/shares.py).
+    caminho_relativo = f"media/jobs/{job_id}/output/revisao.html"
+    try:
+        share = evo.post("/api/shares", {"path": caminho_relativo, "expires_in": None})
+        link = share.get("url", "")
+    except Exception as exc:
+        print(f"[media-worker] {job_id}: falha ao criar share: {exc}", flush=True)
+        link = ""
+
+    try:
+        evo.post("/api/tickets", {
+            "title": f"Aprovar corte editorial — {job.get('title') or job_id}",
+            "description": (
+                f"{len(cortes)} trecho(s) propostos pra corte, "
+                f"revisão: {link or '(share falhou, ver logs do worker)'}\n\n"
+                f"job_id: {job_id}"
+            ),
+            "priority": "medium",
+        })
+    except Exception as exc:
+        print(f"[media-worker] {job_id}: falha ao criar ticket: {exc}", flush=True)
+
+    # generating só permite ir pra rendering na máquina de estados — não há
+    # "render" de fato aqui (o output é uma página, não vídeo), é só o
+    # registro formal exigido pra chegar em ready_for_review (mesma nota do
+    # corte_bruto, acima).
+    _patch(job_id, status="rendering")
+    _patch(job_id, status="validating")
+    _patch(
+        job_id, status="ready_for_review", progress_message="concluído",
+        result_json=json.dumps({
+            "cortes": cortes, "duracao_original_s": round(duracao_total, 2),
+            "pagina_revisao": caminho_relativo, "share_url": link,
+        }, ensure_ascii=False),
+    )
+    print(f"[media-worker] corte_editorial job {job_id} ready_for_review ({len(cortes)} cortes propostos)", flush=True)
 
 
 def process_social_clip_job(job: dict) -> None:

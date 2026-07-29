@@ -36,7 +36,7 @@ _WORKER_PATCHABLE_FIELDS = (
     "title", "brief", "caption", "progress_message", "result_json",
 )
 
-MEDIA_JOB_TYPES = frozenset({"social_clip", "corte_bruto"})
+MEDIA_JOB_TYPES = frozenset({"social_clip", "corte_bruto", "corte_editorial"})
 
 
 def _require(action: str):
@@ -142,15 +142,18 @@ def create_media_job():
     if job_type not in MEDIA_JOB_TYPES:
         return jsonify({"error": f"job_type inválido: {job_type!r}. Aceita: {sorted(MEDIA_JOB_TYPES)}"}), 400
 
-    if job_type == "corte_bruto":
-        # Fase 1A: não passa por OpenCode/Postiz, então platform/width/height/
-        # duration_seconds não descrevem uma saída de rede — são preenchidos
-        # com o formato conhecido do material de origem e sobrescritos pelos
-        # campos render_* reais quando o worker termina (ver worker.py).
+    if job_type in ("corte_bruto", "corte_editorial"):
+        # Fase 1A/1B: não passam por OpenCode/Postiz, então platform/width/
+        # height/duration_seconds não descrevem uma saída de rede — são
+        # preenchidos com o formato conhecido do material de origem e
+        # sobrescritos pelos campos render_* reais quando o worker termina
+        # (ver worker.py). corte_editorial não produz vídeo (só a proposta de
+        # corte + página de revisão), mas usa os mesmos placeholders por
+        # simplicidade — nenhum dos dois é lido de fato pra este tipo.
         if not (data.get("title") or "").strip():
             return jsonify({"error": "Campos obrigatórios ausentes: ['title']"}), 400
         if not (data.get("source_path") or "").strip():
-            return jsonify({"error": "corte_bruto exige source_path (vídeo de origem já acessível ao worker)."}), 400
+            return jsonify({"error": f"{job_type} exige source_path (vídeo já acessível ao worker)."}), 400
         data.setdefault("platform", "youtube")
         data.setdefault("width", 1280)
         data.setdefault("height", 720)

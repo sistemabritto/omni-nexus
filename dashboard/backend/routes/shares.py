@@ -1,6 +1,7 @@
 """Share links — create, list, revoke, and public view endpoints for workspace files."""
 
 import mimetypes
+import os
 import secrets
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -17,6 +18,13 @@ bp = Blueprint("shares", __name__)
 # Resolve REPO_ROOT relative to this file: backend/routes/ → workspace root (3 levels up)
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKSPACE_DIR = REPO_ROOT / "workspace"
+# Esteira de vídeo (Fase 1B): a página de revisão do corte editorial nasce no
+# workspace do MediaJob (media_workspace_root(), volume separado do
+# workspace/ geral), não em workspace/reports/. Sem esta segunda raiz
+# permitida, todo artefato de vídeo pra aprovação humana ficaria sem como
+# virar link — teria que copiar arquivo de 1+GB entre volumes só pra servir
+# uma página de texto.
+MEDIA_WORKSPACE_DIR = Path(os.environ.get("MEDIA_WORKSPACE") or (REPO_ROOT / "media")).resolve()
 
 _EXPIRY_MAP = {
     "1h": timedelta(hours=1),
@@ -50,13 +58,15 @@ def _resolve_path_safe(path_str: str) -> Path | None:
 
     full = (REPO_ROOT / path_str).resolve()
 
-    # Must stay inside WORKSPACE_DIR
-    try:
-        full.relative_to(WORKSPACE_DIR.resolve())
-    except ValueError:
-        return None
-
-    return full
+    # Must stay inside WORKSPACE_DIR or MEDIA_WORKSPACE_DIR — nunca fora dos
+    # dois, e nunca aceitar caminho absoluto vindo do cliente (checado acima).
+    for raiz in (WORKSPACE_DIR.resolve(), MEDIA_WORKSPACE_DIR):
+        try:
+            full.relative_to(raiz)
+            return full
+        except ValueError:
+            continue
+    return None
 
 
 def _content_type_for(path: Path) -> str:

@@ -31,7 +31,9 @@ sys.path.insert(0, str(REPO_ROOT / "dashboard" / "backend"))
 def app(tmp_path):
     import flask
     from flask_login import LoginManager
+    import importlib
     import models as _models
+    importlib.reload(_models)
 
     _app = flask.Flask(__name__)
     _app.config.update(
@@ -47,7 +49,13 @@ def app(tmp_path):
     with _app.app_context():
         _models.db.create_all()
 
+    # Route modules bind `from models import db` at import time — se outro
+    # teste (em qualquer ordem de coleção) importou routes.shares antes deste
+    # reload, o blueprint ficaria preso ao `db` antigo e todo acesso via este
+    # `_app` quebraria com "Flask app not registered with this SQLAlchemy
+    # instance". Mesmo padrão de tests/media/conftest.py.
     import routes.shares as _shares
+    importlib.reload(_shares)
     _app.register_blueprint(_shares.bp)
 
     yield _app

@@ -106,9 +106,21 @@ def propor_cortes_virais(palavras: list[Palavra], *, cwd: Path, max_cortes: int 
     independente. Devolve lista de {inicio, fim, titulo, motivo}, validada
     (duração dentro da faixa, dentro do vídeo, sem sobreposição) — nunca
     confia cegamente no que o modelo devolveu.
+
+    `force_provider="opencode"` é obrigatório: ver o mesmo comentário em
+    `corte_editorial.py::propor_cortes` — Dockerfile.media-worker só instala
+    o binário `opencode`, e sem o pin a chamada segue a cadeia global de
+    `config/providers.json` (openclaude/claude), que não existe neste
+    container e falha sempre. Achado ao vivo em 29/07/2026 no primeiro job
+    real desta função, depois de 3 auto-retries reprocessando as mesmas 19
+    transcrições Groq (job 69cb16f5, marcado `failed` manualmente pra parar
+    o loop antes deste fix).
     """
     prompt = PROMPT_VIRAL.format(max_cortes=max_cortes, transcricao=formatar_para_selecao(palavras))
-    resultado = invoke_with_fallback(prompt=prompt, timeout_seconds=timeout_seconds, agent="", cwd=cwd)
+    resultado = invoke_with_fallback(
+        prompt=prompt, timeout_seconds=timeout_seconds, agent="", cwd=cwd,
+        force_provider="opencode",
+    )
     if resultado.get("status") != "success":
         raise RuntimeError(f"proposta de corte viral falhou (status={resultado.get('status')}): {resultado.get('error')}")
 

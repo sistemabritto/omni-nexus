@@ -697,6 +697,18 @@ class FallbackEngine:
             chain = [p for p in chain if p["provider_id"] == force_provider]
             if not chain and force_provider == "nvidia":
                 chain = [DEFAULT_PROVIDER_CHAIN[0]]
+            # force_provider caía silenciosamente numa cadeia vazia sempre
+            # que o provider pedido não fizesse parte da cadeia do
+            # active_provider corrente — ex.: active_provider=omnirouter na
+            # VPS não lista "opencode" no seu fallback_providers, então
+            # media_worker (que só tem o binário opencode instalado, ver
+            # Dockerfile.media-worker) recebia "No attempts made" mesmo
+            # forçando opencode explicitamente. Fallback: monta a entry
+            # diretamente de config/providers.json quando ela existe lá,
+            # independente de estar na cadeia ativa. Achado ao vivo em
+            # 29/07/2026 depurando cortes_virais.py/corte_editorial.py.
+            if not chain and force_provider in config.get("providers", {}):
+                chain = [_build_provider_entry(force_provider, config["providers"])]
 
         for provider_entry in chain:
             provider_id = provider_entry["provider_id"]

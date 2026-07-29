@@ -159,6 +159,19 @@ def test_propor_cortes_lista_vazia_e_valida():
         assert propor_cortes_virais([_palavra(0, 10, "x")], cwd=Path(".")) == []
 
 
+def test_propor_cortes_aceita_array_com_escape_extra_estilo_string_json():
+    """Achado ao vivo em 29/07/2026, job real contra o vídeo de 3h02: o
+    modelo devolveu o array com um nível extra de escape, como se tivesse
+    serializado a resposta duas vezes (\\" em vez de ", \\n em vez de quebra
+    de linha real). json.loads rejeitava com "Expecting ',' delimiter"."""
+    payload = '[{\\"inicio\\": 325, \\"fim\\": 356, \\"titulo\\": \\"Quem monetiza com IA\\", \\"motivo\\": \\"teste com acento é ção\\"}]'
+    with patch("cortes_virais.invoke_with_fallback", return_value=_resultado_modelo(payload)):
+        cortes = propor_cortes_virais([_palavra(0.0, 400.0, "x")], cwd=Path("."))
+    assert len(cortes) == 1
+    assert cortes[0]["titulo"] == "Quem monetiza com IA"
+    assert cortes[0]["motivo"] == "teste com acento é ção"
+
+
 def test_propor_cortes_aceita_aspas_simples_estilo_dict_python():
     """Achado ao vivo em 29/07/2026: o modelo às vezes devolve sintaxe de
     dict Python (aspas simples) em vez de JSON estrito — json.loads rejeita

@@ -33,7 +33,7 @@ from media_render import render_composition, run_doctor, RenderError  # noqa: E4
 from media_validation import validate_mp4, extract_metadata, ValidationError  # noqa: E402
 from media_manifest import load_and_validate_manifest, ManifestValidationError  # noqa: E402
 from media_workspace import job_dir, media_workspace_root, sha256_file  # noqa: E402
-from media_audio import primeiro_corte, FalhaDeMidia  # noqa: E402
+from media_audio import primeiro_corte, aplicar_corte_editorial, FalhaDeMidia  # noqa: E402
 from transcricao import extrair_audio_16k, transcrever  # noqa: E402
 from corte_editorial import propor_cortes, gerar_pagina_revisao  # noqa: E402
 
@@ -89,6 +89,8 @@ def process_job(job: dict) -> None:
         process_corte_bruto_job(job)
     elif job_type == "corte_editorial":
         process_corte_editorial_job(job)
+    elif job_type == "aplicar_corte_editorial":
+        process_aplicar_corte_editorial_job(job)
     else:
         process_social_clip_job(job)
 
@@ -278,6 +280,77 @@ def process_corte_editorial_job(job: dict) -> None:
         }, ensure_ascii=False),
     )
     print(f"[media-worker] corte_editorial job {job_id} ready_for_review ({len(cortes)} cortes propostos)", flush=True)
+
+
+def process_aplicar_corte_editorial_job(job: dict) -> None:
+    """Executa o corte que já foi aprovado por um humano — a lista de
+    trechos vem de `job["result"]["cortes"]`, gravada na criação do job
+    (ver routes/media_jobs.py). Nunca decide o que cortar aqui, só aplica.
+    """
+    job_id = job["id"]
+    base = job_dir(job_id)
+    print(f"[media-worker] processing aplicar_corte_editorial job {job_id}", flush=True)
+
+    source = _resolve_source_video(job, base)
+    if source is None:
+        _fail_job(
+            job_id,
+            f"Vídeo de origem não encontrado (source_path={job.get('source_path')!r})",
+            terminal=True,
+        )
+        return
+
+    cortes = ((job.get("result") or {}).get("cortes")) or []
+    if not cortes:
+        _fail_job(job_id, "job sem 'cortes' aprovados em result_json", terminal=True)
+        return
+
+    try:
+        origem_meta = extract_metadata(source)
+    except ValidationError as exc:
+        _fail_job(job_id, f"Vídeo de origem inválido: {exc}", terminal=True)
+        return
+
+    inicio = time.monotonic()
+
+    def progresso(etapa: str, detalhe: str = "") -> None:
+        minutos = (time.monotonic() - inicio) / 60
+        msg = f"[{minutos:.1f} min] {etapa} {detalhe}".rstrip()
+        print(f"[media-worker] {job_id}: {msg}", flush=True)
+        try:
+            _patch(job_id, progress_message=msg)
+        except Exception:
+            pass
+
+    _patch(job_id, status="generating")
+    output_path = base / "output" / "final.mp4"
+    (base / "output").mkdir(parents=True, exist_ok=True)
+    try:
+        resultado = aplicar_corte_editorial(source, cortes, output_path, progresso=progresso)
+    except FalhaDeMidia as exc:
+        _fail_job(job_id, f"Corte editorial falhou: {exc}")
+        return
+
+    _patch(job_id, status="rendering")
+    _patch(job_id, status="validating")
+    try:
+        meta = validate_mp4(
+            output_path,
+            expected_width=origem_meta.width, expected_height=origem_meta.height,
+            expected_duration_seconds=float(resultado["duracao_final_s"]),
+            expected_fps=round(origem_meta.fps),
+            max_size_bytes=MAX_FILE_SIZE_BYTES, workspace_root=media_workspace_root(),
+        )
+    except ValidationError as exc:
+        _fail_job(job_id, f"Validação falhou: {exc}")
+        return
+
+    checksum = sha256_file(output_path)
+    _patch(
+        job_id, status="ready_for_review", render_path=str(output_path), render_sha256=checksum,
+        result_json=json.dumps(resultado, ensure_ascii=False), progress_message="concluído", **meta.to_dict(),
+    )
+    print(f"[media-worker] aplicar_corte_editorial job {job_id} ready_for_review (sha256={checksum[:12]}...)", flush=True)
 
 
 def process_social_clip_job(job: dict) -> None:

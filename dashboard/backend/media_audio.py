@@ -321,6 +321,27 @@ def trechos_com_fala(silencios: Iterable[Trecho], duracao: float, *,
     return trechos
 
 
+def trechos_a_manter(remover: Iterable[Trecho], duracao: float) -> list[Trecho]:
+    """Inverte uma lista de trechos A REMOVER (não de silêncio) no que
+    sobra — usada pela Fase 1B (corte editorial): o modelo marca o que
+    cortar, isto devolve o que fica. Sem margem de segurança (diferente de
+    `trechos_com_fala`): os timestamps aqui já vêm de uma decisão editorial
+    explícita, não de detecção automática de silêncio, então não há ataque
+    de sílaba a proteger.
+    """
+    trechos: list[Trecho] = []
+    cursor = 0.0
+    for t in sorted(remover, key=lambda x: x.inicio):
+        inicio = max(0.0, min(t.inicio, duracao))
+        fim = max(0.0, min(t.fim, duracao))
+        if inicio > cursor:
+            trechos.append(Trecho(cursor, inicio))
+        cursor = max(cursor, fim)
+    if duracao > cursor:
+        trechos.append(Trecho(cursor, duracao))
+    return trechos
+
+
 def _cortar_lote(midia: Path, trechos: list[Trecho], destino: Path) -> Path:
     """Um único corte por `select`/`aselect`, para um lote de até
     `LOTE_TRECHOS` trechos. O filtro vai por `-filter_complex_script`, não
@@ -423,4 +444,37 @@ def primeiro_corte(video: Path, saida: Path, *, trabalho: Path,
         if duracao_original else None,
         "silencios": len(silencios),
         "trechos": len(trechos),
+    }
+
+
+def aplicar_corte_editorial(video: Path, cortes_aprovados: list[dict], saida: Path, *,
+                            progresso: Progresso | None = None) -> dict:
+    """Fase 1B, depois da aprovação humana: remove os trechos que o modelo
+    propôs e o humano aprovou (na página de revisão via /shares) — nunca
+    os que o modelo só sugeriu. `cortes_aprovados` é a lista já filtrada
+    pelo humano, no formato [{"inicio": float, "fim": float}, ...].
+
+    Não recalcula nada além disso: quem decidiu o que cortar foi o gate,
+    não este código.
+    """
+    if progresso:
+        progresso("aplicando_corte_editorial", f"{len(cortes_aprovados)} trecho(s) aprovado(s)")
+
+    duracao_original = duracao_de(video)
+    remover = [Trecho(float(c["inicio"]), float(c["fim"])) for c in cortes_aprovados]
+    manter = trechos_a_manter(remover, duracao_original)
+
+    if not manter:
+        raise FalhaDeMidia("corte editorial aprovado removeria o vídeo inteiro — nada a manter")
+
+    cortar(video, manter, saida, progresso=progresso)
+    duracao_final = duracao_de(saida)
+
+    return {
+        "duracao_original_s": round(duracao_original, 2),
+        "duracao_final_s": round(duracao_final, 2),
+        "cortado_s": round(duracao_original - duracao_final, 2),
+        "cortado_pct": round(100 * (1 - duracao_final / duracao_original), 1)
+        if duracao_original else None,
+        "cortes_aplicados": len(remover),
     }

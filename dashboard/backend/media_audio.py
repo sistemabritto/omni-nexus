@@ -392,6 +392,9 @@ def trechos_a_manter(remover: Iterable[Trecho], duracao: float) -> list[Trecho]:
     return trechos
 
 
+MARGEM_JANELA_S = 5.0
+
+
 def _cortar_lote(midia: Path, trechos: list[Trecho], destino: Path) -> Path:
     """Um único corte por `select`/`aselect`, para um lote de até
     `LOTE_TRECHOS` trechos. O filtro vai por `-filter_complex_script`, não
@@ -401,7 +404,20 @@ def _cortar_lote(midia: Path, trechos: list[Trecho], destino: Path) -> Path:
     `select` + `setpts` no vídeo e `aselect` + `asetpts` no áudio precisam andar
     juntos; mexer em um só entrega uma peça com áudio e imagem em tempos
     diferentes, que é pior que não cortar.
+
+    `-ss`/`-t` como opção de ENTRADA (antes de `-i`) limita a janela decodificada
+    à faixa que este lote realmente cobre — sem isso, `select` decodifica o
+    arquivo INTEIRO em todo lote só pra manter os ~80 trechos daquele lote e
+    descartar o resto, então um vídeo de 3h+ era decodificado por completo
+    uma vez PARA CADA lote (medido ao vivo em 30/07/2026: 39 lotes, ~6min
+    cada, ~4h só nesta etapa). `-copyts` preserva os timestamps absolutos do
+    arquivo original depois do seek, então as expressões `between(t,...)` do
+    filtro continuam batendo com os mesmos tempos usados em todo o resto do
+    pipeline, sem precisar recalcular nada relativo à janela.
     """
+    janela_inicio = max(0.0, trechos[0].inicio - MARGEM_JANELA_S)
+    janela_fim = trechos[-1].fim + MARGEM_JANELA_S
+
     expr = "+".join(f"between(t,{t.inicio:.3f},{t.fim:.3f})" for t in trechos)
     script = destino.with_suffix(".filtro.txt")
     script.write_text(
@@ -409,7 +425,9 @@ def _cortar_lote(midia: Path, trechos: list[Trecho], destino: Path) -> Path:
         f"[0:a]aselect='{expr}',asetpts=N/SR/TB[a]",
         encoding="utf-8",
     )
-    _rodar(["ffmpeg", "-y", "-v", "error", "-i", str(midia),
+    _rodar(["ffmpeg", "-y", "-v", "error",
+            "-ss", f"{janela_inicio:.3f}", "-t", f"{janela_fim - janela_inicio:.3f}", "-copyts",
+            "-i", str(midia),
             "-filter_complex_script", str(script), "-map", "[v]", "-map", "[a]",
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
             "-c:a", "aac", "-b:a", "160k", str(destino)], o_que="corte de lote")

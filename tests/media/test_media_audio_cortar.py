@@ -33,6 +33,38 @@ def test_cortar_lote_unico_nao_concatena(tmp_path):
     assert mock_rodar.call_args.kwargs["o_que"] == "corte de lote"
 
 
+def test_cortar_lote_limita_janela_de_decodificacao(tmp_path):
+    """Achado ao vivo em 30/07/2026: sem -ss/-t, `select` decodifica o
+    arquivo INTEIRO em todo lote só pra manter os trechos daquele lote — um
+    vídeo de 3h+ era decodificado por completo uma vez POR LOTE (39 lotes,
+    ~6min cada, ~4h só nesta etapa). -ss/-t como opção de entrada evita isso;
+    -copyts preserva os timestamps absolutos que o filtro `between()` usa."""
+    destino = tmp_path / "saida.mp4"
+    trechos = [Trecho(400.0, 410.0), Trecho(450.0, 460.0), Trecho(500.0, 512.0)]
+    with patch.object(media_audio, "_rodar", return_value="") as mock_rodar:
+        cortar(tmp_path / "in.mp4", trechos, destino)
+
+    cmd = mock_rodar.call_args.args[0]
+    assert "-copyts" in cmd
+    assert cmd[cmd.index("-ss") + 1] == f"{400.0 - media_audio.MARGEM_JANELA_S:.3f}"
+    duracao_esperada = (512.0 + media_audio.MARGEM_JANELA_S) - (400.0 - media_audio.MARGEM_JANELA_S)
+    assert cmd[cmd.index("-t") + 1] == f"{duracao_esperada:.3f}"
+    # -ss/-t/-copyts precisam vir ANTES de -i (opção de entrada, seek rápido)
+    # — depois de -i seriam opção de saída e reencodariam o arquivo inteiro
+    # de novo em vez de evitar a decodificação.
+    assert cmd.index("-ss") < cmd.index("-i")
+
+
+def test_cortar_lote_nao_deixa_janela_negativa_no_primeiro_trecho(tmp_path):
+    """Trecho colado no início do vídeo (inicio < MARGEM_JANELA_S) não pode
+    gerar -ss negativo."""
+    destino = tmp_path / "saida.mp4"
+    with patch.object(media_audio, "_rodar", return_value="") as mock_rodar:
+        cortar(tmp_path / "in.mp4", [Trecho(1.0, 5.0)], destino)
+    cmd = mock_rodar.call_args.args[0]
+    assert float(cmd[cmd.index("-ss") + 1]) == 0.0
+
+
 def test_cortar_muitos_trechos_faz_lotes_e_concatena(tmp_path, monkeypatch):
     monkeypatch.setattr(media_audio, "LOTE_TRECHOS", 150)
     destino = tmp_path / "saida.mp4"

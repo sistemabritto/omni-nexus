@@ -113,14 +113,6 @@ def run_adw(name: str, script: str, args: str = ""):
         print(f"  {now} ✗ {name} error: {e}", flush=True)
 
 
-def _hourly_report_safe():
-    """Wrapper that only runs hourly report during business hours (08h-20h BRT)."""
-    from datetime import datetime, timezone, timedelta
-    brt = datetime.now(timezone.utc) + timedelta(hours=-3)
-    if 8 <= brt.hour < 20:
-        run_adw("Hourly Report", "hourly_report.py")
-
-
 def setup_schedule():
     """Configure core routines. Custom routines loaded from config/routines.yaml."""
     import schedule
@@ -136,9 +128,12 @@ def setup_schedule():
     schedule.every().friday.at("08:00").do(run_adw, "Weekly Review", "weekly_review.py")
     schedule.every().sunday.at("09:00").do(run_adw, "Memory Lint", "memory_lint.py")
     schedule.every().day.at("21:00").do(run_adw, "Daily Backup", "backup.py")
-    # Exercise every NVIDIA model so the active chain has fresh live traffic
-    # evidence in /costs. Runs late at night to stay out of the way of heartbeats.
-    schedule.every().day.at("04:00").do(run_adw, "Uso Modelos DIA", "uso_modelos_dia.py")
+    # REMOVIDO: "Uso Modelos DIA" (uso_modelos_dia.py) — fazia 12 chamadas/dia
+    # a modelos NVIDIA só para pingar com prompt artificial, sem produzir
+    # lead, conteúdo ou decisão. Custo e quota desperdiçados. A Saúde dos
+    # modelos agora é observada por falha real (provider_fallback já loga
+    # 429/timeout por tarefa) e reportada pelo Growth Pulse, não por sondagem
+    # cega.
 
     # ── Esteira de conteúdo ──
     #
@@ -181,8 +176,13 @@ def setup_schedule():
     schedule.every().sunday.at("09:00").do(
         run_adw, "Revisão do Funil", "weekly_funnel_review.py")
 
-    # Hourly activity report during business hours (08h-20h BRT)
-    schedule.every().hour.do(_hourly_report_safe)
+    # Growth & Presence Pulse — 2x/dia (08:30 e 18:30 BRT).
+    # Substitui o hourly_report antigo que mandava 12 msg/dia com baixa
+    # densidade e falhava por não ter DB/Telegram no scheduler.
+    # Pulse completo de manhã e fim de tarde; alerta crítico a cada 6h.
+    schedule.every().day.at("08:30").do(run_adw, "Growth Pulse", "growth_pulse.py")
+    schedule.every().day.at("18:30").do(run_adw, "Growth Pulse", "growth_pulse.py")
+    schedule.every(6).hours.do(run_adw, "Growth Pulse Alert", "growth_pulse.py", "--alert")
 
     # ── Custom routines (from config/routines.yaml if exists) ──
     _load_custom_routines(schedule)

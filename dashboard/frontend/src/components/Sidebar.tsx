@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
 import {
-  LayoutDashboard, Bot, Clock, Zap, Layout, Calendar,
+  LayoutDashboard, Bot, Clock, Zap, Layout,
   Brain, Plug, DollarSign, FolderOpen, Cpu,
-  Monitor, Users, ScrollText, LogOut, Menu, X, Shield, BookOpen, Library, Database,
+  Users, ScrollText, LogOut, Menu, X, Shield, BookOpen, Library, Database,
   ArrowUpCircle, ChevronDown, Webhook, HardDriveDownload, Settings, Share2, Heart, Target, Activity, Package,
   Puzzle, Terminal, Columns3, FolderKanban, CheckCircle2, Video, Newspaper,
 } from 'lucide-react'
@@ -91,11 +91,9 @@ const navGroups: NavGroup[] = [
     collapsible: true,
     items: [
       { to: '/settings', labelKey: 'settings', icon: Settings, resource: 'config' },
-      { to: '/systems', labelKey: 'systems', icon: Monitor, resource: 'systems' },
       { to: '/providers', labelKey: 'providers', icon: Cpu, resource: 'config' },
       { to: '/integrations', labelKey: 'integrations', icon: Plug, resource: 'integrations' },
       { to: '/mcp-servers', labelKey: 'mcpServers', icon: Terminal, resource: 'config' },
-      { to: '/scheduler', labelKey: 'scheduler', icon: Calendar, resource: 'scheduler' },
       { to: '/backups', labelKey: 'backups', icon: HardDriveDownload, resource: 'config' },
       { to: '/plugins', labelKey: 'plugins', icon: Package, resource: null },
     ],

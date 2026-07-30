@@ -212,6 +212,49 @@ def test_refacao_do_blog_respeita_o_teto(monkeypatch):
     assert r["ok"] is False and "teto" in r["erro"]
 
 
+def test_refazer_artigo_com_critica_de_capa_gera_e_sobe_imagem(monkeypatch, tmp_path):
+    """Achado ao vivo em 30/07/2026: refazer_artigo tinha um NameError real
+    (`Path` nunca importado no escopo da função) que só estourava quando a
+    crítica pedia mexer na capa — os testes anteriores só cobriam o teto de
+    refações, nunca chegavam nesse branch. Os dois pedidos de ajuste do
+    Felipe naquele dia caíram nesse erro, silenciosamente (thread em
+    background, ver routes/approvals.py::_agendar_refacao), e o gate nunca
+    reabriu."""
+    import ghost_social_bridge as br
+    import ghost_publisher as gp_mod
+
+    # refazer_artigo importa tudo isso localmente de ghost_publisher (`from
+    # ghost_publisher import buscar, ...` dentro da própria função) — o mock
+    # tem que estar no módulo de origem, não em ghost_social_bridge, senão o
+    # import local dentro da função ignora o monkeypatch.
+    monkeypatch.setattr(gp_mod, "buscar", lambda post_id: dict(DRAFT))
+    monkeypatch.setattr(gp_mod, "resumo_para_aprovacao", lambda post: "resumo")
+    monkeypatch.setattr(gp_mod, "_e_sobre_imagem", lambda feedback: True)
+    monkeypatch.setattr(gp_mod, "_e_sobre_texto", lambda feedback: False)
+    monkeypatch.setattr(gp_mod, "atualizar", lambda post_id, **kw: None)
+    monkeypatch.setattr(gp_mod, "subir_imagem", lambda path: ("https://blog/img.png", None))
+    monkeypatch.setattr(gp_mod, "briefing_de_capa", lambda post, feedback, registro=None: {
+        "headline": "h", "hook": "j", "expressao": "e", "badge": "b",
+    })
+
+    import thumbnail_maker as tm
+    monkeypatch.setattr(tm, "variacao_de", lambda n: {
+        "registro": "neutro", "pose": {"arquivo": "pose.jpg"},
+    })
+    monkeypatch.setattr(tm, "montar_prompt", lambda *a, **k: "prompt")
+
+    def _gerar_fake(prompt, destino, referencia=None):
+        destino.write_bytes(b"fake-png")
+        return None
+    monkeypatch.setattr(tm, "gerar", _gerar_fake)
+
+    import sdk_client
+    monkeypatch.setattr(sdk_client.evo, "post", lambda path, payload=None: {"id": 1})
+
+    r = br.refazer_artigo({"publish_ref": "abc123"}, "essa foto ficou estranha, refaz", "tkt")
+    assert r["ok"] is True
+
+
 def test_blog_entra_na_refacao_automatica():
     """Antes o blog era excluído de propósito; o Felipe apontou que isso deixa
     o fluxo incompleto — criticar e não acontecer nada é pior que não ter o

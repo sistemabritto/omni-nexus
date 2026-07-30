@@ -88,5 +88,10 @@ jobs:
           # antiga entre builds e "@latest" nunca puxaria versão nova.
           build-args: |
             CACHEBUST=${{ github.run_id }}
-          cache-from: type=gha,scope=${{ matrix.image }}
-          cache-to: type=gha,scope=${{ matrix.image }},mode=max
+          # cache-from/cache-to REMOVIDOS temporariamente em 30/07/2026: o
+          # scope compartilhado ficou poluído pela race condition entre este
+          # workflow e o extinto docker-image.yml (dois builds concorrentes
+          # escrevendo no mesmo cache remoto) — o bundle do frontend parava
+          # de mudar mesmo com o código-fonte alterado e commitado. Restaurar
+          # depois que um build limpo confirmar cache novo e são.
+          no-cache: true

@@ -15,6 +15,21 @@ from routes.auth_routes import require_permission
 
 bp = Blueprint("shares", __name__)
 
+
+def _public_base_url() -> str:
+    """URL pública pra montar o link de share. `request.host_url` reflete o
+    Host da requisição — quando quem chama é o media_worker (via sdk_client,
+    hostname interno do service mesh), o link vira
+    "http://evonexus-dashboard:8080/share/...", que não abre em lugar nenhum
+    fora da rede Swarm. Achado ao vivo em 29/07/2026: o ticket de aprovação
+    dos cortes virais saiu com esse link. NEXUS_PUBLIC_URL já estava
+    documentado em .env.example pra esse exato cenário, só nunca tinha sido
+    lido pelo código.
+    """
+    return (os.environ.get("NEXUS_PUBLIC_URL") or os.environ.get("NGROK_URL")
+            or request.host_url).rstrip("/")
+
+
 # Resolve REPO_ROOT relative to this file: backend/routes/ → workspace root (3 levels up)
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKSPACE_DIR = REPO_ROOT / "workspace"
@@ -122,7 +137,7 @@ def create_share():
 
     audit(current_user, "share_create", "shares", detail=f"path={path} expiry={expires_in}")
 
-    base_url = request.host_url.rstrip("/")
+    base_url = _public_base_url()
     return jsonify({
         "token": token,
         "path": path,
@@ -168,7 +183,7 @@ def get_active_share_by_path():
                 expires = expires.replace(tzinfo=timezone.utc)
             if now > expires:
                 continue
-        base_url = request.host_url.rstrip("/")
+        base_url = _public_base_url()
         return jsonify({
             **share.to_dict(),
             "url": f"{base_url}/share/{share.token}",

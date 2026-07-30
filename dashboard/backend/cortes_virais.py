@@ -5,8 +5,14 @@ julgamento — regra do workspace):
 
 - Escolher QUAIS trechos valem virar corte é julgamento editorial: pede
   modelo (`propor_cortes_virais`).
-- Recortar, enquadrar em 9:16, dar zoom e legendar é execução determinística:
-  ffmpeg puro (`renderizar_corte_viral`), sem chamada de modelo.
+- Recortar, enquadrar em 9:16, dar zoom, sobrepor avatar e legendar é
+  execução determinística: ffmpeg puro (`renderizar_corte_viral`), sem
+  chamada de modelo. Ainda não passa por HyperFrames (o compositor usado no
+  resto do `social-media-production`) — o motivo de ficar em ffmpeg direto é
+  que aqui não há julgamento de layout a fazer (posição do avatar, crop,
+  zoom são fixos), e adicionar uma chamada de modelo pra decidir composição
+  reintroduziria a mesma cadeia de falhas de parsing já debugada em
+  `propor_cortes_virais`/`propor_cortes` pra um passo que não precisa disso.
 """
 
 from __future__ import annotations
@@ -42,11 +48,16 @@ curtos verticais (Reels/Shorts/TikTok) — o formato que mais gera alcance e eng
 
 Escolha até {max_cortes} trechos que funcionam SOZINHOS, sem o contexto do resto da live: \
 uma ideia completa, uma afirmação forte, uma virada, uma explicação que resolve algo \
-sozinha, um momento de humor ou tensão. Cada corte precisa ter início e fim que fazem \
-sentido tirados do resto — não corte no meio de uma frase nem no meio de um raciocínio.
+sozinha, um momento de humor ou tensão, OU uma demonstração prática de ferramenta/tela \
+(revelar um dashboard, mostrar um resultado, executar algo ao vivo) — esse tipo de trecho \
+tem valor mesmo quando parte da fala em volta é preparação, porque a demonstração em si \
+já entrega prova visual. Cada corte precisa ter início e fim que fazem sentido tirados do \
+resto — não corte no meio de uma frase nem no meio de um raciocínio.
 
-Duração de cada corte: entre 20 e 90 segundos. Prefira o mais curto que ainda entrega a \
-ideia inteira — corte curto e direto viraliza mais que corte longo e completo.
+Duração de cada corte: entre 20 e {duracao_max} segundos. Prefira o mais curto que ainda \
+entrega a ideia inteira — corte curto e direto viraliza mais que corte longo e completo. \
+Demonstração de ferramenta pode usar a faixa mais longa se o valor está em ver o processo \
+acontecer, não só o resultado.
 
 NÃO escolha: trechos que dependem de algo dito antes pra fazer sentido, conversa de \
 transição, agradecimentos, ou qualquer trecho em que você não tenha certeza que funciona \
@@ -126,10 +137,13 @@ def _extrair_json_array(bruto: str) -> list[dict]:
 
 
 DURACAO_MIN_S = 20.0
-DURACAO_MAX_S = 90.0
+# 90s -> 150s em 29/07/2026: feedback real ("faltou mostrar as ferramentas") —
+# demonstração de tela/ferramenta às vezes precisa de mais tempo que uma
+# afirmação isolada pra entregar o "ver acontecendo" que dá valor ao corte.
+DURACAO_MAX_S = 150.0
 
 
-def propor_cortes_virais(palavras: list[Palavra], *, cwd: Path, max_cortes: int = 6,
+def propor_cortes_virais(palavras: list[Palavra], *, cwd: Path, max_cortes: int = 10,
                          timeout_seconds: int = 600) -> list[dict]:
     """Chama o modelo pra escolher trechos que funcionam como corte curto
     independente. Devolve lista de {inicio, fim, titulo, motivo}, validada
@@ -145,7 +159,8 @@ def propor_cortes_virais(palavras: list[Palavra], *, cwd: Path, max_cortes: int 
     transcrições Groq (job 69cb16f5, marcado `failed` manualmente pra parar
     o loop antes deste fix).
     """
-    prompt = PROMPT_VIRAL.format(max_cortes=max_cortes, transcricao=formatar_para_selecao(palavras))
+    prompt = PROMPT_VIRAL.format(max_cortes=max_cortes, duracao_max=int(DURACAO_MAX_S),
+                                  transcricao=formatar_para_selecao(palavras))
     resultado = invoke_with_fallback(
         prompt=prompt, timeout_seconds=timeout_seconds, agent="", cwd=cwd,
         force_provider="opencode",
@@ -196,6 +211,21 @@ ALTURA_SAIDA = 1920
 # Zoom lento e contínuo — "dá zoom" no pedido do Felipe, sem ser agressivo a
 # ponto de cansar em 20-90s de corte. 1.0 -> 1.12 ao longo do trecho inteiro.
 ZOOM_FINAL = 1.12
+
+# Avatar circular sobre o vídeo — feedback real do Felipe em 29/07/2026: "sou
+# eu que to falando e não apareço" (o material fonte é call com tela
+# compartilhada, câmera nunca aparece no quadro). Foto pré-selecionada por
+# ser plano frontal de rosto (as outras em faces/front/ são corpo inteiro ou
+# arte de marca, não servem pra avatar circular).
+#
+# Fica em /workspace/config/ (volume evonexus_evonexus_config), não embutida
+# na imagem: workspace/social/** é gitignored por design (mesmo padrão de
+# config/heartbeats.yaml — pessoal da instância, não vai pro repo público) e
+# o CI não teria o arquivo pra copiar no build. Precisa ser colocada na VPS
+# manualmente uma vez (mesmo procedimento de config/.env, ver routines.md).
+AVATAR_FOTO_PADRAO = Path("/workspace/config/assets/faces/front/fsbritto-front-selfie-headset-notebook-2026-06-14.jpg")
+AVATAR_DIAMETRO = 220
+AVATAR_MARGEM = 40
 
 
 @dataclass
@@ -281,17 +311,49 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return destino
 
 
-def renderizar_corte_viral(video: Path, corte: dict, palavras_todas: list[Palavra],
-                           saida: Path, *, trabalho: Path,
-                           progresso: Progresso | None = None) -> dict:
-    """Recorta o trecho, enquadra em 9:16 (crop centralizado — sem detecção
-    de rosto, ver limitação no docstring do módulo), aplica zoom lento e
-    queima a legenda palavra-a-palavra.
+def preparar_avatar_circular(foto_origem: Path, destino: Path, *,
+                              diametro: int = AVATAR_DIAMETRO) -> Path:
+    """Gera uma vez (cacheado por `destino`) um PNG circular com alpha a
+    partir de uma foto retangular — sem Pillow, o media-worker não tem
+    biblioteca de imagem instalada (ver media_worker/requirements.txt), só
+    ffmpeg. `geq` desenha o canal alpha como um disco: fora do raio vira
+    transparente, dentro mantém o pixel original.
+    """
+    if destino.is_file():
+        return destino
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    raio = diametro / 2
+    filtro = (
+        f"scale={diametro}:{diametro}:force_original_aspect_ratio=increase,"
+        f"crop={diametro}:{diametro},format=rgba,"
+        f"geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':"
+        f"a='if(lte(pow(X-{raio},2)+pow(Y-{raio},2),pow({raio},2)),255,0)'"
+    )
+    _rodar(
+        ["ffmpeg", "-y", "-v", "error", "-i", str(foto_origem), "-vf", filtro,
+         "-frames:v", "1", str(destino)],
+        o_que="preparo do avatar circular", timeout=60,
+    )
+    if not destino.is_file():
+        raise FalhaDeMidia(f"avatar circular não gerou {destino}")
+    return destino
 
-    Crop centralizado é a limitação real desta V1: se o assunto principal do
-    quadro (rosto, tela compartilhada) não estiver no centro do frame 16:9
-    original, o corte vertical pode cortá-lo fora. Rastrear o assunto
-    exigiria detecção de rosto/objeto, fora do escopo desta primeira versão.
+
+def renderizar_corte_viral(video: Path, corte: dict, palavras_todas: list[Palavra],
+                           saida: Path, *, trabalho: Path, avatar_foto: Path = AVATAR_FOTO_PADRAO,
+                           progresso: Progresso | None = None) -> dict:
+    """Recorta o trecho, enquadra em 9:16, aplica zoom lento, sobrepõe um
+    avatar circular e queima a legenda palavra-a-palavra.
+
+    Enquadramento (mudou em 29/07/2026 — feedback real: "cropado, não mostra
+    nada direito"): a V1 fazia crop central rígido, cortando fora a maior
+    parte de uma tela compartilhada 16:9 pra caber na faixa estreita 9:16.
+    Trocado por "cover + contain": um fundo desfocado cobre o quadro 1080x1920
+    inteiro (sem faixa preta), e o frame ORIGINAL completo (sem cortar nada)
+    fica por cima, ajustado pela largura. Perde nitidez nas bordas (é blur de
+    fundo, não é pra ler), mas nenhum pixel do conteúdo real desaparece —
+    ainda não é rastreamento de assunto por visão computacional (isso seguiria
+    sendo trabalho futuro), mas resolve o sintoma relatado sem esse custo.
     """
     inicio, fim = corte["inicio"], corte["fim"]
     duracao = fim - inicio
@@ -299,29 +361,70 @@ def renderizar_corte_viral(video: Path, corte: dict, palavras_todas: list[Palavr
 
     palavras_trecho = [p for p in palavras_todas if p.fim > inicio and p.inicio < fim]
     ass = montar_legenda_ass(palavras_trecho, offset=inicio, destino=trabalho / "legenda.ass")
+    avatar = preparar_avatar_circular(avatar_foto, trabalho / "avatar.png")
 
     if progresso:
         progresso("corte viral", f"renderizando {duracao:.0f}s — {corte.get('titulo', '')[:40]}")
+
+    # Duas passadas, não uma: medido ao vivo em 29/07/2026 — `zoompan`
+    # reavalia a cadeia inteira de filtros anteriores A CADA frame de saída
+    # (comportamento conhecido do ffmpeg, não bug nosso). Com blur+overlay
+    # antes dele, isso multiplicou o custo a ponto de nem 8s de clipe
+    # terminarem em 10 minutos. Compor primeiro (crop/blur/avatar) num
+    # arquivo intermediário, e só então rodar zoom+legenda EM CIMA do
+    # composto já pronto, paga o custo de cada filtro uma vez só.
+    #
+    # gblur no frame inteiro (1080x1920) também é caro por si — blur não
+    # precisa de resolução alta pra parecer bom como fundo (é desfoque,
+    # ninguém lê detalhe nele): escala pra um recorte pequeno, borra barato
+    # ali, escala de volta. O upscale sozinho já suaviza.
+    #
+    # A ordem importa mais do que parece: escalar o frame 1280x720 inteiro
+    # pra cobrir 1080x1920 ANTES de cortar (scale=-2:1920 vira 3413x1920) e
+    # só então fazer crop desperdiça a maior parte desse upscale gigante —
+    # medido ao vivo em 29/07/2026, essa ordem sozinha travava 7+ minutos de
+    # CPU sem terminar 8s de clipe, mesmo já sem o zoompan no meio. Cortar a
+    # faixa vertical NO TAMANHO ORIGINAL primeiro (barato, mesma lógica do
+    # crop cru que já era rápido) e só então escalar resolve isso.
+    escala_blur = LARGURA_SAIDA // 5
+    intermediario = trabalho / "composto.mp4"
+    filtro_composicao = (
+        f"[0:v]crop=ih*{LARGURA_SAIDA}/{ALTURA_SAIDA}:ih:(iw-ih*{LARGURA_SAIDA}/{ALTURA_SAIDA})/2:0,"
+        f"scale={escala_blur}:-2,gblur=sigma=8,scale={LARGURA_SAIDA}:{ALTURA_SAIDA}[bg];"
+        f"[0:v]scale={LARGURA_SAIDA}:-2[fg];"
+        f"[bg][fg]overlay=0:(H-h)/2[base];"
+        f"[base][1:v]overlay=W-w-{AVATAR_MARGEM}:{AVATAR_MARGEM}[out]"
+    )
+    _rodar(
+        ["ffmpeg", "-y", "-v", "error", "-ss", f"{inicio:.3f}", "-t", f"{duracao:.3f}",
+         "-i", str(video), "-loop", "1", "-i", str(avatar),
+         "-filter_complex", filtro_composicao, "-map", "[out]", "-map", "0:a",
+         "-shortest",  # avatar.png com -loop 1 é infinito por padrão — sem
+                       # isso o encode nunca termina sozinho (medido ao vivo
+                       # em 29/07/2026: 14+ min de CPU, arquivo crescendo sem
+                       # parar, até matar o processo manualmente).
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+         "-c:a", "aac", "-b:a", "160k", str(intermediario)],
+        o_que="composição do corte viral (fundo + avatar)", timeout=1800,
+    )
+    if not intermediario.is_file():
+        raise FalhaDeMidia(f"composição do corte viral não gerou {intermediario}")
 
     # zoompan reinicia o zoom por chamada; `d` = frames por frame de saída (1
     # = 1:1, sem slow-motion), `fps` precisa bater com o de saída pra 'on'
     # (número do frame) render o zoom no ritmo certo pro `duracao` do trecho.
     fps = 24
     total_frames = max(1, round(duracao * fps))
-    filtro = (
-        f"crop=ih*9/16:ih:(iw-ih*9/16)/2:0,"
-        f"scale={LARGURA_SAIDA}:{ALTURA_SAIDA},"
+    filtro_zoom_legenda = (
         f"zoompan=z='min(1+({ZOOM_FINAL}-1)*on/{total_frames},{ZOOM_FINAL})'"
         f":d=1:s={LARGURA_SAIDA}x{ALTURA_SAIDA}:fps={fps},"
         f"subtitles={_escapar_caminho_ffmpeg(ass)}"
     )
-
     _rodar(
-        ["ffmpeg", "-y", "-v", "error", "-ss", f"{inicio:.3f}", "-t", f"{duracao:.3f}",
-         "-i", str(video), "-vf", filtro,
+        ["ffmpeg", "-y", "-v", "error", "-i", str(intermediario), "-vf", filtro_zoom_legenda,
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
          "-c:a", "aac", "-b:a", "160k", str(saida)],
-        o_que="renderização do corte viral", timeout=1800,
+        o_que="zoom e legenda do corte viral", timeout=1800,
     )
 
     if not saida.is_file():

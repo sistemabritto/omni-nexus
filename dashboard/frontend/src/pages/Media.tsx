@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   Video, Plus, RefreshCw, Play, X, CheckCircle2, XCircle, AlertCircle,
-  Clock, Loader2, Upload, CalendarClock, FileText, Film,
+  Clock, Loader2, Upload, CalendarClock, FileText, Film, Copy, Check,
 } from 'lucide-react'
 import { api } from '../lib/api'
 
@@ -24,7 +24,7 @@ interface MediaJob {
   // livre) em vez de render_path — ver MediaJob.to_dict no backend.
   job_type?: string
   result?: {
-    cortes?: Array<{ inicio: number; fim: number; titulo?: string; motivo?: string; duracao_s?: number; share_url?: string }>
+    cortes?: Array<{ inicio: number; fim: number; titulo?: string; motivo?: string; duracao_s?: number; share_url?: string; largura?: number; altura?: number; ticket_id?: string }>
     pagina_revisao?: string
     share_url?: string
   } | null
@@ -112,6 +112,14 @@ export default function Media() {
   const [creating, setCreating] = useState(false)
 
   const [selected, setSelected] = useState<MediaJob | null>(null)
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
+
+  const copiarLink = useCallback((url: string) => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedUrl(url)
+      setTimeout(() => setCopiedUrl((cur) => (cur === url ? null : cur)), 2000)
+    })
+  }, [])
   const [logs, setLogs] = useState<{ logs: Record<string, string>; last_error: string | null } | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [busy, setBusy] = useState(false)
@@ -408,7 +416,19 @@ export default function Media() {
 
             <div className="flex items-center gap-2 mb-4">
               <StatusBadge status={selected.status} />
-              <span className="text-xs text-[#8b949e]">{selected.platform} · {selected.format} · {selected.width}x{selected.height} · {selected.fps}fps</span>
+              {/* width/height/format do job são placeholder fixo (1280x720
+                  landscape) pra cortes_virais — a esteira de vídeo não usa
+                  esses campos pra esse job_type (ver comentário em
+                  routes/media_jobs.py). O formato real de cada corte vive em
+                  result.cortes[i].largura/altura — todos iguais entre si,
+                  então basta o primeiro. */}
+              {selected.job_type === 'cortes_virais' && selected.result?.cortes?.[0] ? (
+                <span className="text-xs text-[#8b949e]">
+                  {selected.platform} · vertical · {selected.result.cortes[0].largura}x{selected.result.cortes[0].altura}
+                </span>
+              ) : (
+                <span className="text-xs text-[#8b949e]">{selected.platform} · {selected.format} · {selected.width}x{selected.height} · {selected.fps}fps</span>
+              )}
             </div>
 
             {selected.render_path && ['ready_for_review', 'approved', 'uploading', 'creating_draft', 'draft_created', 'scheduling', 'scheduled', 'published'].includes(selected.status) && (
@@ -433,7 +453,14 @@ export default function Media() {
                   <div key={i} className="rounded-lg overflow-hidden border border-[#21262d] bg-black">
                     <div className="px-3 py-2 bg-[#0d1117] text-xs text-[#e6edf3] flex items-center justify-between">
                       <span className="font-medium">{corte.titulo || `Corte ${i + 1}`}</span>
-                      {corte.duracao_s != null && <span className="text-[#8b949e]">{Math.round(corte.duracao_s)}s</span>}
+                      <div className="flex items-center gap-2">
+                        {corte.duracao_s != null && <span className="text-[#8b949e]">{Math.round(corte.duracao_s)}s</span>}
+                        {corte.ticket_id && (
+                          <a href={`/tickets/${corte.ticket_id}`} className="text-[#58a6ff] hover:underline">
+                            aprovar →
+                          </a>
+                        )}
+                      </div>
                     </div>
                     {corte.share_url ? (
                       <video
@@ -446,7 +473,26 @@ export default function Media() {
                     ) : (
                       <div className="px-3 py-4 text-xs text-[#8b949e]">Share indisponível pra este corte.</div>
                     )}
-                    {corte.motivo && <div className="px-3 py-2 text-xs text-[#8b949e]">{corte.motivo}</div>}
+                    {corte.share_url && (
+                      <div className="px-3 py-2 flex items-center gap-2 border-t border-[#21262d]">
+                        <a
+                          href={corte.share_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 text-xs text-[#58a6ff] hover:underline truncate"
+                        >
+                          {corte.share_url}
+                        </a>
+                        <button
+                          onClick={() => copiarLink(corte.share_url!)}
+                          title="Copiar link"
+                          className="p-1 rounded text-[#8b949e] hover:text-[#e6edf3] hover:bg-white/5 flex-shrink-0"
+                        >
+                          {copiedUrl === corte.share_url ? <Check size={13} className="text-[#00FFA7]" /> : <Copy size={13} />}
+                        </button>
+                      </div>
+                    )}
+                    {corte.motivo && <div className="px-3 py-2 text-xs text-[#8b949e] border-t border-[#21262d]">{corte.motivo}</div>}
                   </div>
                 ))}
               </div>

@@ -456,6 +456,16 @@ def _build_agent_run_env(env_overrides: dict | None = None) -> dict:
     # Impede o CLI de se auto-migrar pro instalador nativo no meio da run
     # (mata o processo com exit 1).
     run_env["DISABLE_AUTOUPDATER"] = "1"
+    # claude/openclaude recusam `--dangerously-skip-permissions` rodando como
+    # root sem isso ("cannot be used with root/sudo privileges for security
+    # reasons") — e todo container desta esteira (telegram, media-worker,
+    # dashboard) roda como root. Achado ao vivo em 30/07/2026 investigando o
+    # bot do Telegram: force_provider="anthropic" falhava sempre com esse
+    # erro, porque IS_SANDBOX nunca era setado em lugar nenhum (nem no
+    # Dockerfile, nem aqui) — bug pré-existente nesta função central, afeta
+    # qualquer caller de invoke_with_fallback que force ou caia em
+    # cli_command claude/openclaude, não só o bot.
+    run_env.setdefault("IS_SANDBOX", "1")
     return run_env
 
 

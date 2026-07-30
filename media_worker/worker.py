@@ -631,18 +631,24 @@ def process_cortes_virais_job(job: dict) -> None:
         _fail_job(job_id, "modelo propôs cortes mas nenhum renderizou com sucesso")
         return
 
-    linhas_ticket = "\n".join(
-        f"- {r['titulo']} ({r['duracao_s']:.0f}s): {r.get('share_url') or '(share falhou)'}"
-        for r in resultados
-    )
-    try:
-        evo.post("/api/tickets", {
-            "title": f"Aprovar cortes virais — {job.get('title') or job_id}",
-            "description": f"{len(resultados)} corte(s) renderizados:\n\n{linhas_ticket}\n\njob_id: {job_id}",
-            "priority": "medium",
-        })
-    except Exception as exc:
-        print(f"[media-worker] {job_id}: falha ao criar ticket: {exc}", flush=True)
+    # Um ticket POR CORTE, não um agregado — feedback real em 30/07/2026:
+    # "o bloco de aprovação tá agrupando todos, queria poder rejeitar/
+    # ajustar/aprovar corte por corte". Agrupar tudo num ticket só forçava
+    # aprovar/rejeitar o lote inteiro de uma vez.
+    for i, r in enumerate(resultados):
+        try:
+            ticket = evo.post("/api/tickets", {
+                "title": f"Aprovar corte viral {i + 1}/{len(resultados)} — {r['titulo']}",
+                "description": (
+                    f"{r['duracao_s']:.0f}s — {r.get('motivo', '')}\n\n"
+                    f"Link: {r.get('share_url') or '(share falhou)'}\n\n"
+                    f"job_id: {job_id}"
+                ),
+                "priority": "medium",
+            })
+            resultados[i]["ticket_id"] = (ticket or {}).get("id")
+        except Exception as exc:
+            print(f"[media-worker] {job_id}: falha ao criar ticket do corte {i + 1}: {exc}", flush=True)
 
     _patch(
         job_id, status="ready_for_review", progress_message="concluído",

@@ -406,7 +406,7 @@ def process_cortes_virais_job(job: dict) -> None:
         return
 
     progresso("propondo_cortes_virais", f"{len(palavras)} palavras transcritas")
-    max_cortes = int(job.get("platform_settings", {}).get("max_cortes", 6)) if isinstance(job.get("platform_settings"), dict) else 6
+    max_cortes = int(job.get("platform_settings", {}).get("max_cortes", 10)) if isinstance(job.get("platform_settings"), dict) else 10
     try:
         cortes = propor_cortes_virais(palavras, cwd=base, max_cortes=max_cortes)
     except Exception as exc:

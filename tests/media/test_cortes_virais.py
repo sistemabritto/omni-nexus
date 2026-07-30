@@ -185,24 +185,73 @@ def test_propor_cortes_aceita_aspas_simples_estilo_dict_python():
 
 # ── renderização (ffmpeg mockado) ──────────────────────────────────────────
 
-def test_renderizar_monta_filtro_com_crop_zoom_e_legenda(tmp_path):
+def test_renderizar_faz_duas_passadas_composicao_depois_zoom_legenda(tmp_path):
+    """Duas chamadas de ffmpeg, não uma — achado ao vivo em 29/07/2026:
+    zoompan reavalia toda a cadeia de filtros anteriores por frame, e com
+    blur+overlay antes dele isso nunca terminava. Compor (blur+avatar) e só
+    depois aplicar zoom+legenda no resultado paga cada filtro uma vez só."""
     video = tmp_path / "in.mp4"
     saida = tmp_path / "out.mp4"
     corte = {"inicio": 5.0, "fim": 35.0, "titulo": "teste"}
     palavras = [_palavra(6.0, 6.5, "oi")]
+    (tmp_path / "avatar.png").touch()  # cache hit — pula o ffmpeg de preparo do avatar
 
-    with patch.object(cortes_virais, "_rodar", return_value="") as mock_rodar:
-        saida.touch()  # _rodar é mockado, então o arquivo não é criado de verdade
+    def _simula_ffmpeg(cmd, **kwargs):
+        Path(cmd[-1]).touch()  # _rodar mockado — simula o arquivo de saída daquela chamada
+        return ""
+
+    with patch.object(cortes_virais, "_rodar", side_effect=_simula_ffmpeg) as mock_rodar:
         resultado = renderizar_corte_viral(video, corte, palavras, saida, trabalho=tmp_path)
 
-    cmd = mock_rodar.call_args.args[0]
-    filtro = cmd[cmd.index("-vf") + 1]
-    assert "crop=" in filtro
-    assert "zoompan=" in filtro
-    assert "subtitles=" in filtro
+    assert mock_rodar.call_count == 2
+    composicao, zoom_legenda = (c.args[0] for c in mock_rodar.call_args_list)
+
+    filtro_composicao = composicao[composicao.index("-filter_complex") + 1]
+    assert "gblur=" in filtro_composicao  # fundo desfocado, não crop cru
+    assert "overlay=" in filtro_composicao  # frame completo + avatar sobrepostos
+    assert "zoompan=" not in filtro_composicao  # zoompan NÃO entra nesta passada
+    assert "-loop" in composicao and "1" in composicao  # avatar (imagem estática) repete por todo o clipe
+    assert "-shortest" in composicao  # senão o -loop 1 do avatar nunca termina o encode sozinho
+    assert "-map" in composicao and "[out]" in composicao
+
+    filtro_zoom = zoom_legenda[zoom_legenda.index("-vf") + 1]
+    assert "zoompan=" in filtro_zoom
+    assert "subtitles=" in filtro_zoom
+    assert "gblur=" not in filtro_zoom  # blur já foi feito na primeira passada
+
     assert resultado["largura"] == 1080
     assert resultado["altura"] == 1920
     assert resultado["duracao_s"] == 30.0
+
+
+def test_preparar_avatar_circular_cacheia_por_destino(tmp_path):
+    origem = tmp_path / "foto.jpg"
+    destino = tmp_path / "avatar.png"
+    destino.touch()  # já existe — não deve chamar ffmpeg
+
+    with patch.object(cortes_virais, "_rodar") as mock_rodar:
+        resultado = cortes_virais.preparar_avatar_circular(origem, destino)
+
+    mock_rodar.assert_not_called()
+    assert resultado == destino
+
+
+def test_preparar_avatar_circular_gera_quando_nao_existe(tmp_path):
+    origem = tmp_path / "foto.jpg"
+    destino = tmp_path / "sub" / "avatar.png"
+
+    def _simula_ffmpeg(cmd, **kwargs):
+        destino.touch()  # _rodar mockado — simula o arquivo que o ffmpeg real geraria
+        return ""
+
+    with patch.object(cortes_virais, "_rodar", side_effect=_simula_ffmpeg) as mock_rodar:
+        resultado = cortes_virais.preparar_avatar_circular(origem, destino, diametro=200)
+
+    cmd = mock_rodar.call_args.args[0]
+    filtro = cmd[cmd.index("-vf") + 1]
+    assert "geq=" in filtro
+    assert "crop=200:200" in filtro
+    assert resultado == destino
 
 
 def test_renderizar_falha_se_ffmpeg_nao_gerar_arquivo(tmp_path):

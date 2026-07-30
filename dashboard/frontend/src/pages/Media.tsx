@@ -17,6 +17,17 @@ interface MediaJob {
   id: string
   project_id: number | null
   campaign_id: string | null
+  // job_type distingue o fluxo do worker — 'social_clip' (default, um vídeo
+  // só em render_path) vs a esteira de vídeo ('corte_bruto'/'corte_editorial'/
+  // 'aplicar_corte_editorial'/'cortes_virais'/'resumo_tematico'/
+  // 'aplicar_resumo_tematico'), que grava o resultado em `result` (JSON
+  // livre) em vez de render_path — ver MediaJob.to_dict no backend.
+  job_type?: string
+  result?: {
+    cortes?: Array<{ inicio: number; fim: number; titulo?: string; motivo?: string; duracao_s?: number; share_url?: string }>
+    pagina_revisao?: string
+    share_url?: string
+  } | null
   title: string
   brief: string | null
   platform: string
@@ -254,7 +265,11 @@ export default function Media() {
                 </td>
                 <td className="px-4 py-2.5 text-[#8b949e]">{job.platform}</td>
                 <td className="px-4 py-2.5"><StatusBadge status={job.status} /></td>
-                <td className="px-4 py-2.5 text-[#8b949e]">{job.render_duration_seconds ?? job.duration_seconds}s</td>
+                <td className="px-4 py-2.5 text-[#8b949e]">
+                  {job.job_type === 'cortes_virais' && job.result?.cortes
+                    ? `${job.result.cortes.length} corte(s)`
+                    : `${job.render_duration_seconds ?? job.duration_seconds}s`}
+                </td>
                 <td className="px-4 py-2.5 text-[#8b949e]">{fmtBytes(job.render_size_bytes)}</td>
                 <td className="px-4 py-2.5 text-[#8b949e]">{job.attempt_count}</td>
                 <td className="px-4 py-2.5 text-[#8b949e] text-xs">
@@ -406,6 +421,51 @@ export default function Media() {
                 >
                   <Film size={24} />
                 </video>
+              </div>
+            )}
+
+            {/* cortes_virais grava N vídeos em result.cortes (nunca um
+                render_path só) — sem isso o job termina mas nenhum corte
+                aparece visível/reproduzível aqui, mesmo pronto. */}
+            {selected.job_type === 'cortes_virais' && selected.result?.cortes && selected.result.cortes.length > 0 && (
+              <div className="mb-4 space-y-3">
+                {selected.result.cortes.map((corte, i) => (
+                  <div key={i} className="rounded-lg overflow-hidden border border-[#21262d] bg-black">
+                    <div className="px-3 py-2 bg-[#0d1117] text-xs text-[#e6edf3] flex items-center justify-between">
+                      <span className="font-medium">{corte.titulo || `Corte ${i + 1}`}</span>
+                      {corte.duracao_s != null && <span className="text-[#8b949e]">{Math.round(corte.duracao_s)}s</span>}
+                    </div>
+                    {corte.share_url ? (
+                      <video
+                        controls
+                        className="w-full max-h-[480px] bg-black"
+                        src={corte.share_url.replace('/share/', '/api/shares/') + '/view'}
+                      >
+                        <Film size={24} />
+                      </video>
+                    ) : (
+                      <div className="px-3 py-4 text-xs text-[#8b949e]">Share indisponível pra este corte.</div>
+                    )}
+                    {corte.motivo && <div className="px-3 py-2 text-xs text-[#8b949e]">{corte.motivo}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* corte_editorial e resumo_tematico produzem uma página de
+                revisão (não um vídeo), publicada via /shares — link direto
+                em vez de nada aparecer no painel. */}
+            {(selected.job_type === 'corte_editorial' || selected.job_type === 'resumo_tematico')
+              && selected.result?.pagina_revisao && (
+              <div className="mb-4 rounded-lg border border-[#21262d] bg-[#0d1117] px-3 py-3 text-xs">
+                <a
+                  href={selected.result.share_url || '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#58a6ff] hover:underline"
+                >
+                  Abrir página de revisão →
+                </a>
               </div>
             )}
 

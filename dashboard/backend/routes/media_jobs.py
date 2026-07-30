@@ -36,7 +36,10 @@ _WORKER_PATCHABLE_FIELDS = (
     "title", "brief", "caption", "progress_message", "result_json",
 )
 
-MEDIA_JOB_TYPES = frozenset({"social_clip", "corte_bruto", "corte_editorial", "aplicar_corte_editorial", "cortes_virais"})
+MEDIA_JOB_TYPES = frozenset({
+    "social_clip", "corte_bruto", "corte_editorial", "aplicar_corte_editorial",
+    "cortes_virais", "resumo_tematico", "aplicar_resumo_tematico",
+})
 
 
 def _require(action: str):
@@ -142,7 +145,8 @@ def create_media_job():
     if job_type not in MEDIA_JOB_TYPES:
         return jsonify({"error": f"job_type inválido: {job_type!r}. Aceita: {sorted(MEDIA_JOB_TYPES)}"}), 400
 
-    if job_type in ("corte_bruto", "corte_editorial", "aplicar_corte_editorial", "cortes_virais"):
+    if job_type in ("corte_bruto", "corte_editorial", "aplicar_corte_editorial", "cortes_virais",
+                    "resumo_tematico", "aplicar_resumo_tematico"):
         # Fase 1A/1B/1C: não passam por OpenCode/Postiz, então platform/width/
         # height/duration_seconds não descrevem uma saída de rede — são
         # preenchidos com o formato conhecido do material de origem e
@@ -164,6 +168,21 @@ def create_media_job():
                 if not isinstance(c, dict) or "inicio" not in c or "fim" not in c:
                     return jsonify({"error": "cada corte precisa de 'inicio' e 'fim' (segundos)."}), 400
             data["result_json"] = json.dumps({"cortes": cortes}, ensure_ascii=False)
+        if job_type == "resumo_tematico":
+            if not (data.get("tema") or "").strip():
+                return jsonify({"error": "resumo_tematico exige 'tema' (o que o resumo deve reunir)."}), 400
+            # Sem coluna própria pro tema — reaproveita `brief` (texto livre já
+            # existente no schema) em vez de migrar o banco pra um campo usado
+            # por um job_type só.
+            data["brief"] = data["tema"]
+        if job_type == "aplicar_resumo_tematico":
+            trechos = data.get("trechos")
+            if not isinstance(trechos, list) or not trechos:
+                return jsonify({"error": "aplicar_resumo_tematico exige 'trechos': lista não vazia de {inicio, fim} já aprovados."}), 400
+            for t in trechos:
+                if not isinstance(t, dict) or "inicio" not in t or "fim" not in t:
+                    return jsonify({"error": "cada trecho precisa de 'inicio' e 'fim' (segundos)."}), 400
+            data["result_json"] = json.dumps({"trechos": trechos}, ensure_ascii=False)
         data.setdefault("platform", "youtube")
         data.setdefault("width", 1280)
         data.setdefault("height", 720)

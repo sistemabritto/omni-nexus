@@ -37,6 +37,7 @@ from media_audio import primeiro_corte, aplicar_corte_editorial, FalhaDeMidia  #
 from transcricao import extrair_audio_16k, transcrever, transcrever_palavras  # noqa: E402
 from corte_editorial import propor_cortes, gerar_pagina_revisao  # noqa: E402
 from cortes_virais import propor_cortes_virais, renderizar_corte_viral  # noqa: E402
+from resumo_tematico import propor_resumo_tematico, montar_resumo_tematico  # noqa: E402
 
 POLL_SECONDS = float(os.environ.get("MEDIA_WORKER_POLL_SECONDS", "10"))
 JOB_TIMEOUT_SECONDS = int(os.environ.get("MEDIA_JOB_TIMEOUT_SECONDS", "3600"))
@@ -94,6 +95,10 @@ def process_job(job: dict) -> None:
         process_aplicar_corte_editorial_job(job)
     elif job_type == "cortes_virais":
         process_cortes_virais_job(job)
+    elif job_type == "resumo_tematico":
+        process_resumo_tematico_job(job)
+    elif job_type == "aplicar_resumo_tematico":
+        process_aplicar_resumo_tematico_job(job)
     else:
         process_social_clip_job(job)
 
@@ -354,6 +359,180 @@ def process_aplicar_corte_editorial_job(job: dict) -> None:
         result_json=json.dumps(resultado, ensure_ascii=False), progress_message="concluído", **meta.to_dict(),
     )
     print(f"[media-worker] aplicar_corte_editorial job {job_id} ready_for_review (sha256={checksum[:12]}...)", flush=True)
+
+
+def process_resumo_tematico_job(job: dict) -> None:
+    """Fase 1D: transcreve por palavra, o modelo escolhe todos os trechos
+    sobre o tema pedido (julgamento — via modelo) e publica uma página de
+    revisão em /shares. Não corta nada sozinho — mesma regra de gate das
+    Fases 1B/1C (ver .claude/rules/esteira-de-video.md).
+    """
+    job_id = job["id"]
+    base = job_dir(job_id)
+    print(f"[media-worker] processing resumo_tematico job {job_id}", flush=True)
+
+    source = _resolve_source_video(job, base)
+    if source is None:
+        _fail_job(
+            job_id,
+            f"Vídeo de origem não encontrado (source_path={job.get('source_path')!r}, "
+            f"nem input/source.* em {base / 'input'})",
+            terminal=True,
+        )
+        return
+
+    tema = (job.get("brief") or "").strip()
+    if not tema:
+        _fail_job(job_id, "job sem 'tema' (brief vazio)", terminal=True)
+        return
+
+    inicio = time.monotonic()
+
+    def progresso(etapa: str, detalhe: str = "") -> None:
+        minutos = (time.monotonic() - inicio) / 60
+        msg = f"[{minutos:.1f} min] {etapa} {detalhe}".rstrip()
+        print(f"[media-worker] {job_id}: {msg}", flush=True)
+        try:
+            _patch(job_id, progress_message=msg)
+        except Exception:
+            pass
+
+    _patch(job_id, status="generating")
+    trabalho = base / "work"
+    trabalho.mkdir(parents=True, exist_ok=True)
+
+    try:
+        audio_16k = extrair_audio_16k(source, trabalho / "audio16k.wav")
+        palavras = transcrever_palavras(audio_16k, trabalho=trabalho, progresso=progresso)
+        audio_16k.unlink(missing_ok=True)
+    except FalhaDeMidia as exc:
+        _fail_job(job_id, f"Transcrição falhou: {exc}")
+        return
+
+    progresso("propondo_resumo", f"{len(palavras)} palavras transcritas, tema={tema!r}")
+    try:
+        trechos = propor_resumo_tematico(palavras, tema, cwd=base)
+    except Exception as exc:
+        _fail_job(job_id, f"Proposta de resumo temático falhou: {exc}")
+        return
+
+    duracao_total = palavras[-1].fim if palavras else 0.0
+    # Reaproveita a página de revisão da Fase 1B — mesmo formato de tabela
+    # (início/fim/duração/motivo), só troca "assunto" por "motivo" na chave
+    # esperada em vez de duplicar o HTML.
+    cortes_para_pagina = [
+        {"inicio": t["inicio"], "fim": t["fim"], "motivo": t.get("assunto", "")} for t in trechos
+    ]
+    pagina = gerar_pagina_revisao(titulo=job.get("title") or job_id, cortes=cortes_para_pagina, duracao_original_s=duracao_total)
+    output_dir = base / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    pagina_path = output_dir / "revisao.html"
+    pagina_path.write_text(pagina, encoding="utf-8")
+
+    caminho_relativo = f"media/jobs/{job_id}/output/revisao.html"
+    try:
+        share = evo.post("/api/shares", {"path": caminho_relativo, "expires_in": None})
+        link = share.get("url", "")
+    except Exception as exc:
+        print(f"[media-worker] {job_id}: falha ao criar share: {exc}", flush=True)
+        link = ""
+
+    try:
+        evo.post("/api/tickets", {
+            "title": f"Aprovar resumo temático — {job.get('title') or job_id}",
+            "description": (
+                f"Tema: {tema}\n"
+                f"{len(trechos)} trecho(s) propostos, "
+                f"{sum(t['fim'] - t['inicio'] for t in trechos) / 60:.1f} min de resumo, "
+                f"revisão: {link or '(share falhou, ver logs do worker)'}\n\n"
+                f"job_id: {job_id}"
+            ),
+            "priority": "medium",
+        })
+    except Exception as exc:
+        print(f"[media-worker] {job_id}: falha ao criar ticket: {exc}", flush=True)
+
+    _patch(job_id, status="rendering")
+    _patch(job_id, status="validating")
+    _patch(
+        job_id, status="ready_for_review", progress_message="concluído",
+        result_json=json.dumps({
+            "trechos": trechos, "tema": tema, "duracao_original_s": round(duracao_total, 2),
+            "pagina_revisao": caminho_relativo, "share_url": link,
+        }, ensure_ascii=False),
+    )
+    print(f"[media-worker] resumo_tematico job {job_id} ready_for_review ({len(trechos)} trechos propostos)", flush=True)
+
+
+def process_aplicar_resumo_tematico_job(job: dict) -> None:
+    """Executa o resumo que já foi aprovado por um humano — a lista de
+    trechos a MANTER vem de `job["result"]["trechos"]` (ver
+    routes/media_jobs.py). Nunca decide o que entra, só corta e concatena.
+    """
+    job_id = job["id"]
+    base = job_dir(job_id)
+    print(f"[media-worker] processing aplicar_resumo_tematico job {job_id}", flush=True)
+
+    source = _resolve_source_video(job, base)
+    if source is None:
+        _fail_job(
+            job_id,
+            f"Vídeo de origem não encontrado (source_path={job.get('source_path')!r})",
+            terminal=True,
+        )
+        return
+
+    trechos = ((job.get("result") or {}).get("trechos")) or []
+    if not trechos:
+        _fail_job(job_id, "job sem 'trechos' aprovados em result_json", terminal=True)
+        return
+
+    try:
+        origem_meta = extract_metadata(source)
+    except ValidationError as exc:
+        _fail_job(job_id, f"Vídeo de origem inválido: {exc}", terminal=True)
+        return
+
+    inicio = time.monotonic()
+
+    def progresso(etapa: str, detalhe: str = "") -> None:
+        minutos = (time.monotonic() - inicio) / 60
+        msg = f"[{minutos:.1f} min] {etapa} {detalhe}".rstrip()
+        print(f"[media-worker] {job_id}: {msg}", flush=True)
+        try:
+            _patch(job_id, progress_message=msg)
+        except Exception:
+            pass
+
+    _patch(job_id, status="generating")
+    output_path = base / "output" / "final.mp4"
+    (base / "output").mkdir(parents=True, exist_ok=True)
+    try:
+        resultado = montar_resumo_tematico(source, trechos, output_path, progresso=progresso)
+    except FalhaDeMidia as exc:
+        _fail_job(job_id, f"Montagem do resumo temático falhou: {exc}")
+        return
+
+    _patch(job_id, status="rendering")
+    _patch(job_id, status="validating")
+    try:
+        meta = validate_mp4(
+            output_path,
+            expected_width=origem_meta.width, expected_height=origem_meta.height,
+            expected_duration_seconds=float(resultado["duracao_final_s"]),
+            expected_fps=round(origem_meta.fps),
+            max_size_bytes=MAX_FILE_SIZE_BYTES, workspace_root=media_workspace_root(),
+        )
+    except ValidationError as exc:
+        _fail_job(job_id, f"Validação falhou: {exc}")
+        return
+
+    checksum = sha256_file(output_path)
+    _patch(
+        job_id, status="ready_for_review", render_path=str(output_path), render_sha256=checksum,
+        result_json=json.dumps(resultado, ensure_ascii=False), progress_message="concluído", **meta.to_dict(),
+    )
+    print(f"[media-worker] aplicar_resumo_tematico job {job_id} ready_for_review (sha256={checksum[:12]}...)", flush=True)
 
 
 def process_cortes_virais_job(job: dict) -> None:

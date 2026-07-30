@@ -83,6 +83,17 @@ def test_legenda_ass_tem_tag_karaoke_por_palavra(tmp_path):
     assert r"{\k60}funciona" in conteudo
 
 
+def test_legenda_ass_respeita_safe_zone_das_redes(tmp_path):
+    """Feedback real em 30/07/2026: legenda conflitando com a UI nativa do
+    TikTok/Reels/Shorts (legenda do próprio app, ícones de ação, @usuário) —
+    MarginV baixo demais. LEGENDA_MARGIN_V precisa deixar folga real."""
+    palavras = [_palavra(0.0, 0.5, "oi")]
+    destino = montar_legenda_ass(palavras, offset=0.0, destino=tmp_path / "l.ass")
+    conteudo = destino.read_text()
+    assert f",{cortes_virais.LEGENDA_MARGIN_V},1" in conteudo
+    assert cortes_virais.LEGENDA_MARGIN_V >= 500  # >~26% da altura, fora da faixa de UI nativa
+
+
 def test_legenda_ass_escapa_caracteres_de_controle(tmp_path):
     palavras = [_palavra(0.0, 0.5, "{teste}"), _palavra(0.5, 1.0, "a\\b")]
     destino = montar_legenda_ass(palavras, offset=0.0, destino=tmp_path / "l.ass")
@@ -209,6 +220,8 @@ def test_renderizar_faz_duas_passadas_composicao_depois_zoom_legenda(tmp_path):
     filtro_composicao = composicao[composicao.index("-filter_complex") + 1]
     assert "gblur=" in filtro_composicao  # fundo desfocado, não crop cru
     assert "overlay=" in filtro_composicao  # frame completo + avatar sobrepostos
+    assert "overlay=(W-w)/2:" in filtro_composicao  # avatar centralizado no topo, não no canto
+    assert f"text='{cortes_virais.ARROBA_MARCA}'" in filtro_composicao  # @sistemabritto embaixo do avatar
     assert "zoompan=" not in filtro_composicao  # zoompan NÃO entra nesta passada
     assert "-loop" in composicao and "1" in composicao  # avatar (imagem estática) repete por todo o clipe
     assert "-shortest" in composicao  # senão o -loop 1 do avatar nunca termina o encode sozinho
@@ -216,6 +229,7 @@ def test_renderizar_faz_duas_passadas_composicao_depois_zoom_legenda(tmp_path):
 
     filtro_zoom = zoom_legenda[zoom_legenda.index("-vf") + 1]
     assert "zoompan=" in filtro_zoom
+    assert "sin(2*PI*on/" in filtro_zoom  # pulso periódico de zoom, não só rampa monotônica
     assert "subtitles=" in filtro_zoom
     assert "gblur=" not in filtro_zoom  # blur já foi feito na primeira passada
 
@@ -251,6 +265,9 @@ def test_preparar_avatar_circular_gera_quando_nao_existe(tmp_path):
     filtro = cmd[cmd.index("-vf") + 1]
     assert "geq=" in filtro
     assert "crop=200:200" in filtro
+    # viés pro topo, não centrado — feedback real em 30/07/2026 ("avatar tá
+    # cropado quando não deveria"): crop centrado cortava testa do rosto.
+    assert "crop=200:200:(iw-200)/2:(ih-200)*" in filtro
     assert resultado == destino
 
 

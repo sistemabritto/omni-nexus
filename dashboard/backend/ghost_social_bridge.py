@@ -622,6 +622,7 @@ def refazer_artigo(outcome_anterior: dict, feedback: str, ticket_id: str,
     não pediu é regressão disfarçada de melhoria.
     """
     import tempfile
+    from pathlib import Path
 
     from ghost_publisher import (_e_sobre_imagem, _e_sobre_texto, atualizar,
                                  briefing_de_capa, buscar, revisar_texto, subir_imagem)

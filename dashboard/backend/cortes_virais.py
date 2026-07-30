@@ -208,9 +208,14 @@ def propor_cortes_virais(palavras: list[Palavra], *, cwd: Path, max_cortes: int 
 LARGURA_SAIDA = 1080
 ALTURA_SAIDA = 1920
 
-# Zoom lento e contínuo — "dá zoom" no pedido do Felipe, sem ser agressivo a
-# ponto de cansar em 20-90s de corte. 1.0 -> 1.12 ao longo do trecho inteiro.
+# Zoom — feedback real do Felipe em 30/07/2026: a rampa monotônica única
+# "ficou sem uns zoom in em alguns pontos". Trocado por rampa lenta de base
+# (1.0 -> ZOOM_FINAL, mesma ideia de antes) SOMADA a um pulso periódico
+# (seno) que dá uns "zoom in" leves e rítmicos ao longo do clipe, sem
+# precisar de análise de conteúdo pra saber ONDE enfatizar.
 ZOOM_FINAL = 1.12
+ZOOM_PULSO_AMPLITUDE = 0.035
+ZOOM_PULSO_PERIODO_S = 3.5  # um pulso a cada ~3.5s
 
 # Avatar circular sobre o vídeo — feedback real do Felipe em 29/07/2026: "sou
 # eu que to falando e não apareço" (o material fonte é call com tela
@@ -224,8 +229,22 @@ ZOOM_FINAL = 1.12
 # o CI não teria o arquivo pra copiar no build. Precisa ser colocada na VPS
 # manualmente uma vez (mesmo procedimento de config/.env, ver routines.md).
 AVATAR_FOTO_PADRAO = Path("/workspace/config/assets/faces/front/fsbritto-front-selfie-headset-notebook-2026-06-14.jpg")
-AVATAR_DIAMETRO = 220
+# 220 -> 320 e canto -> topo-centro: feedback real em 30/07/2026 ("mto de
+# cantinho", "poderia enfatizar"). Rosto do avatar também estava cropado
+# torto — crop circular era centrado geometricamente na foto inteira
+# (rosto+ombros), cortando testa/queixo; viés pro terço superior da foto
+# (onde o rosto de verdade fica num selfie) resolve sem detecção de rosto.
+AVATAR_DIAMETRO = 320
 AVATAR_MARGEM = 40
+AVATAR_VIES_VERTICAL = 0.20  # fração do excesso vertical cortada ANTES do rosto (não centrado)
+ARROBA_MARCA = "@sistemabritto"
+
+# Legenda saindo da safe zone das redes — feedback real em 30/07/2026.
+# MarginV é a distância da BASE do texto até a borda inferior do canvas
+# (1920px de altura); 340 (17.7%) ficava por baixo do que TikTok/Reels/
+# Shorts reservam pra legenda nativa, ícones de ação e nome de usuário do
+# próprio app. 520 (27%) limpa essa faixa com folga.
+LEGENDA_MARGIN_V = 520
 
 
 @dataclass
@@ -281,7 +300,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial Black,84,&H00FFFFFF,&H0000D4FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,6,0,2,60,60,340,1
+Style: Default,Arial Black,84,&H00FFFFFF,&H0000D4FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,6,0,2,60,60,{LEGENDA_MARGIN_V},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -325,7 +344,14 @@ def preparar_avatar_circular(foto_origem: Path, destino: Path, *,
     raio = diametro / 2
     filtro = (
         f"scale={diametro}:{diametro}:force_original_aspect_ratio=increase,"
-        f"crop={diametro}:{diametro},format=rgba,"
+        # crop com viés pro topo, não centralizado: a foto (960x1280, retrato)
+        # sobra na altura depois do scale-to-cover, e crop centrado corta
+        # metade do excesso de cada lado — cortando testa em cima e sobrando
+        # ombro/mesa embaixo. AVATAR_VIES_VERTICAL move o corte pra manter
+        # mais do topo (rosto) e cortar mais do fundo. Achado ao vivo em
+        # 30/07/2026: "avatar tá cropado quando não deveria".
+        f"crop={diametro}:{diametro}:(iw-{diametro})/2:(ih-{diametro})*{AVATAR_VIES_VERTICAL},"
+        f"format=rgba,"
         f"geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':"
         f"a='if(lte(pow(X-{raio},2)+pow(Y-{raio},2),pow({raio},2)),255,0)'"
     )
@@ -388,12 +414,19 @@ def renderizar_corte_viral(video: Path, corte: dict, palavras_todas: list[Palavr
     # crop cru que já era rápido) e só então escalar resolve isso.
     escala_blur = LARGURA_SAIDA // 5
     intermediario = trabalho / "composto.mp4"
+    # Avatar canto -> topo-centro, maior, com "@sistemabritto" embaixo dele —
+    # feedback real em 30/07/2026 ("mto de cantinho", "poderia enfatizar").
+    fonte_bold = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+    y_texto = AVATAR_MARGEM + AVATAR_DIAMETRO + 20
     filtro_composicao = (
         f"[0:v]crop=ih*{LARGURA_SAIDA}/{ALTURA_SAIDA}:ih:(iw-ih*{LARGURA_SAIDA}/{ALTURA_SAIDA})/2:0,"
         f"scale={escala_blur}:-2,gblur=sigma=8,scale={LARGURA_SAIDA}:{ALTURA_SAIDA}[bg];"
         f"[0:v]scale={LARGURA_SAIDA}:-2[fg];"
         f"[bg][fg]overlay=0:(H-h)/2[base];"
-        f"[base][1:v]overlay=W-w-{AVATAR_MARGEM}:{AVATAR_MARGEM}[out]"
+        f"[base][1:v]overlay=(W-w)/2:{AVATAR_MARGEM}[comavatar];"
+        f"[comavatar]drawtext=fontfile={fonte_bold}:text='{ARROBA_MARCA}':"
+        f"fontsize=38:fontcolor=white:borderw=3:bordercolor=black@0.8:"
+        f"x=(w-text_w)/2:y={y_texto}[out]"
     )
     _rodar(
         ["ffmpeg", "-y", "-v", "error", "-ss", f"{inicio:.3f}", "-t", f"{duracao:.3f}",
@@ -415,8 +448,18 @@ def renderizar_corte_viral(video: Path, corte: dict, palavras_todas: list[Palavr
     # (número do frame) render o zoom no ritmo certo pro `duracao` do trecho.
     fps = 24
     total_frames = max(1, round(duracao * fps))
+    # Rampa lenta de base + pulso periódico (seno normalizado 0..1, só soma —
+    # nunca reduz abaixo da rampa) por cima: dá uns "zoom in" leves e
+    # rítmicos ao longo do clipe em vez de um zoom só, monotônico do início
+    # ao fim. Feedback real em 30/07/2026.
+    periodo_frames = max(1, round(ZOOM_PULSO_PERIODO_S * fps))
+    zoom_max = ZOOM_FINAL + ZOOM_PULSO_AMPLITUDE
+    z_expr = (
+        f"min(1+({ZOOM_FINAL}-1)*on/{total_frames}"
+        f"+{ZOOM_PULSO_AMPLITUDE}*(sin(2*PI*on/{periodo_frames})+1)/2,{zoom_max})"
+    )
     filtro_zoom_legenda = (
-        f"zoompan=z='min(1+({ZOOM_FINAL}-1)*on/{total_frames},{ZOOM_FINAL})'"
+        f"zoompan=z='{z_expr}'"
         f":d=1:s={LARGURA_SAIDA}x{ALTURA_SAIDA}:fps={fps},"
         f"subtitles={_escapar_caminho_ffmpeg(ass)}"
     )

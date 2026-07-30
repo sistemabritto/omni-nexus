@@ -195,6 +195,7 @@ services:
     volumes:
       - evonexus_config:/workspace/config
       - evonexus_workspace:/workspace/workspace
+      - evonexus_dashboard_data:/workspace/dashboard/data
       - evonexus_memory:/workspace/memory
       - evonexus_adw_logs:/workspace/ADWs/logs
       - evonexus_claude_workspace:/workspace/.claude
@@ -230,6 +231,12 @@ services:
       - EVOLUTION_GO_URL=${EVOLUTION_GO_URL}
       - EVOLUTION_GO_SEND_TOKEN=${EVOLUTION_GO_SEND_TOKEN}
       - WHATSAPP_PHONE=${WHATSAPP_PHONE}
+      ## Telegram — credenciais para o scheduler enviar relatórios e alertas
+      ## via notifications.py. Antes estas vars só existiam no serviço
+      ## telegram_provider_bot; o scheduler não as tinha e o Hourly Report
+      ## falhava silenciosamente.
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
 
     deploy:
       placement:

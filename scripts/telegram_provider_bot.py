@@ -444,7 +444,13 @@ def decide_approval_via_api(approval_id: int, decision: str, from_id: str,
         return {"ok": True, "toast": f"Decisão registrada: {label}", "body": body}
     except urllib.error.HTTPError as exc:
         if exc.code == 409:
-            return {"ok": False, "toast": "Já decidido antes — nada mudou."}
+            # `already_decided` distingue "o gate já fechou" de "deu erro". Quem
+            # responde a um card já decidido quase nunca está criticando o gate:
+            # está usando o reply como atalho para falar com o orquestrador. Sem
+            # essa flag, a ponte de ajuste engolia a mensagem — ver o incidente
+            # de 30/07/2026 em `_devolver_ao_orquestrador`.
+            return {"ok": False, "already_decided": True,
+                    "toast": "Já decidido antes — nada mudou."}
         body = exc.read().decode("utf-8", "ignore")
         return {"ok": False, "toast": f"Erro ao decidir (HTTP {exc.code})", "detail": body[:200]}
     except Exception as exc:  # noqa: BLE001
@@ -1104,22 +1110,52 @@ def main() -> int:
                             "reply_to_message_id": message.get("message_id")})
                         continue
 
-                    if from_id in approval_approvers():
-                        resp = decide_approval_via_api(int(m_apr.group(1)), "revise", from_id,
-                                                       feedback=critica)
-                        # Repete a transcrição de volta: numa crítica ditada, o
-                        # humano precisa ver o que o sistema entendeu antes de
-                        # o agente refazer em cima disso.
-                        eco = f"\n\nEntendi: “{critica[:300]}”" if audio_id else ""
-                        aviso = ("✏️ Ajuste registrado — o agente vai refazer com essa crítica, "
-                                 "e ela passa a valer para as próximas gerações." + eco
-                                 if resp.get("ok") else f"Não consegui registrar: {resp['toast']}")
-                    else:
-                        aviso = "não autorizado"
+                    if from_id not in approval_approvers():
+                        api(token, "sendMessage", {"chat_id": chat_id, "text": "não autorizado",
+                                                   "reply_to_message_id": message.get("message_id")})
+                        log(f"approval-revise chat={chat_id} approval={m_apr.group(1)} "
+                            f"audio={bool(audio_id)} ok=False motivo=nao-autorizado")
+                        continue
+
+                    resp = decide_approval_via_api(int(m_apr.group(1)), "revise", from_id,
+                                                   feedback=critica)
+
+                    # Card já decidido não é beco sem saída. Em 30/07/2026 um
+                    # áudio pedindo para publicar um arquivo como artefato foi
+                    # respondido em cima do card da aprovação 77 — já aprovada
+                    # minutos antes. A ponte devolveu 409, o bot respondeu "Já
+                    # decidido antes" e o pedido morreu ali: nunca chegou ao
+                    # orquestrador. Reply é atalho de citação no celular, não
+                    # declaração de intenção sobre o gate. Quando o gate já
+                    # fechou, a única leitura útil da mensagem é "pedido novo".
+                    if resp.get("already_decided"):
+                        api(token, "sendMessage", {
+                            "chat_id": chat_id,
+                            "text": "Essa aprovação já estava fechada, então tratei sua "
+                                    "mensagem como pedido novo. Trabalhando nisso.",
+                            "reply_to_message_id": message.get("message_id")})
+                        prompt = build_prompt(chat_id, critica, speaker=sender_name)
+                        _executor.submit(
+                            run_orchestrated_reply, token, chat_id, prompt,
+                            memory_user_text=(f"[audio transcrito] {critica}" if audio_id
+                                              else critica),
+                            speaker=sender_name,
+                        )
+                        log(f"approval-revise chat={chat_id} approval={m_apr.group(1)} "
+                            f"audio={bool(audio_id)} ok=False -> devolvido ao orquestrador")
+                        continue
+
+                    # Repete a transcrição de volta: numa crítica ditada, o
+                    # humano precisa ver o que o sistema entendeu antes de
+                    # o agente refazer em cima disso.
+                    eco = f"\n\nEntendi: “{critica[:300]}”" if audio_id else ""
+                    aviso = ("✏️ Ajuste registrado — o agente vai refazer com essa crítica, "
+                             "e ela passa a valer para as próximas gerações." + eco
+                             if resp.get("ok") else f"Não consegui registrar: {resp['toast']}")
                     api(token, "sendMessage", {"chat_id": chat_id, "text": aviso,
                                                "reply_to_message_id": message.get("message_id")})
                     log(f"approval-revise chat={chat_id} approval={m_apr.group(1)} "
-                        f"audio={bool(audio_id)} ok={resp.get('ok') if from_id in approval_approvers() else False}")
+                        f"audio={bool(audio_id)} ok={resp.get('ok')}")
                     continue
                 m_tkt = re.search(r"#tkt:([0-9a-fA-F-]+)", reply_src)
                 if m_tkt:

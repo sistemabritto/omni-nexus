@@ -239,18 +239,18 @@ def _read_providers_config() -> dict:
 #
 # Felipe-specified order (validated 2026-06-16, returning 200 on /chat/completions).
 NVIDIA_MODEL_CHAIN = [
-    "stepfun-ai/step-3.7-flash",            # 1  — StepFun 3.7 Flash
+    "z-ai/glm-5.2",                         # 1  — Z.AI GLM 5.2 (flagship, strong)
     "deepseek-ai/deepseek-v4-flash",        # 2  — DeepSeek V4 Flash
-    "z-ai/glm-5.1",                         # 3  — Z.AI GLM 5.1 (flagship)
-    "moonshotai/kimi-k2.6",                 # 4  — Moonshot Kimi K2.6
-    "nvidia/nemotron-3-ultra-550b-a55b",    # 5  — NVIDIA Nemotron 3 Ultra 550B
-    "nvidia/nemotron-3-super-120b-a12b",    # 6  — NVIDIA Nemotron 3 Super 120B
-    "qwen/qwen3.5-122b-a10b",               # 7  — Qwen 3.5 122B A10B
-    "qwen/qwen3.5-397b-a17b",               # 8  — Qwen 3.5 397B A17B (big MoE)
-    "openai/gpt-oss-120b",                  # 9  — OpenAI GPT-OSS 120B
-    "microsoft/phi-4-multimodal-instruct",  # 10 — Microsoft Phi-4 Multimodal
-    "stepfun-ai/step-3.5-flash",            # 11 — StepFun 3.5 Flash
-    "minimaxai/minimax-m3",                 # 12 — MiniMax M3
+    "qwen/qwen3.5-122b-a10b",               # 3  — Qwen 3.5 122B A10B
+    "stepfun-ai/step-3.7-flash",            # 4  — StepFun 3.7 Flash
+    "minimaxai/minimax-m3",                 # 5  — MiniMax M3
+    "moonshotai/kimi-k2.6",                 # 6  — Moonshot Kimi K2.6
+    "nvidia/nemotron-3-ultra-550b-a55b",    # 7  — NVIDIA Nemotron 3 Ultra 550B
+    "nvidia/nemotron-3-super-120b-a12b",    # 8  — NVIDIA Nemotron 3 Super 120B
+    "qwen/qwen3.5-397b-a17b",               # 9  — Qwen 3.5 397B A17B (big MoE)
+    "openai/gpt-oss-120b",                  # 10 — OpenAI GPT-OSS 120B
+    "microsoft/phi-4-multimodal-instruct",  # 11 — Microsoft Phi-4 Multimodal
+    "stepfun-ai/step-3.5-flash",            # 12 — StepFun 3.5 Flash
 ]
 
 # Provider chain: NVIDIA (12 models) → OpenRouter (owl-alpha + nex-n2-pro free) → Claude

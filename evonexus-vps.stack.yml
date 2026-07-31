@@ -291,8 +291,8 @@ services:
           - node.role == manager
       resources:
         limits:
-          cpus: "1"
-          memory: "1024M"
+          cpus: "2"
+          memory: "2048M"
       labels:
         - traefik.enable=true
         - traefik.docker.network=network_public

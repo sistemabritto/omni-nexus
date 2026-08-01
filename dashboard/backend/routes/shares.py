@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-from flask import Blueprint, jsonify, request, Response, after_this_request
+from flask import Blueprint, jsonify, request, Response, after_this_request, send_file
 from flask_login import login_required, current_user
 
 from models import db, FileShare, audit, has_workspace_folder_access
@@ -288,9 +288,7 @@ def view_share(token: str):
 
     # Video: serve binary with correct MIME type
     if suffix in _VIDEO_EXTS:
-        mime, _ = mimetypes.guess_type(full.name)
-        content = full.read_bytes()
-        return Response(content, mimetype=mime or "video/mp4")
+        return send_file(full, mimetype="video/mp4", conditional=True)
 
     # Audio: serve binary with correct MIME type
     if suffix in _AUDIO_EXTS:

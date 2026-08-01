@@ -135,6 +135,13 @@ COPY opencode.json    ./
 # /workspace (mascarado como "Unexpected server error" genérico no NDJSON).
 RUN mkdir -p /root/.config/opencode && cp opencode.json /root/.config/opencode/opencode.json
 
+# Plugins do OpenCode: claude-mem (memória persistente), autolearn (auto-aprendizado).
+# autogoal já vem no opencode core. autolearn precisa de store em ~/.autolearn.
+# claude-mem requer --legacy-peer-deps por conflito de tree-sitter.
+RUN npm install -g claude-mem --legacy-peer-deps 2>/dev/null || true; \
+    npm install -g opencode-autolearn 2>/dev/null || true; \
+    mkdir -p /root/.autolearn /root/.config/opencode/plugins
+
 # Pre-compiled terminal-server node_modules from stage 2
 COPY --from=terminal-build /terminal/node_modules dashboard/terminal-server/node_modules
 

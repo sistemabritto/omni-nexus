@@ -1,29 +1,56 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "opencode-autogoal",
+    "opencode-autolearn",
+    "claude-mem"
+  ],
+  "command": {
+    "goal": {
+      "description": "Set, view, pause, resume, or clear a task goal.",
+      "agent": "build",
+      "template": "Process the /goal command with arguments: $ARGUMENTS"
+    }
+  },
+  "agent": {
+    "build": {
+      "steps": 15
+    },
+    "autolearn-reviewer": {
+      "description": "Reviews past conversations for self-improvement opportunities",
+      "hidden": true,
+      "steps": 20,
+      "prompt": "Load the autolearn-reviewer skill and follow its instructions to review the attached conversation for learning opportunities. Take immediate action: record observations, update memory, create or patch skills.",
+      "permission": {
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "write": "allow",
+        "edit": "deny",
+        "webfetch": "deny",
+        "task": "deny",
+        "skill": "allow",
+        "external_directory": "allow"
+      }
+    }
+  },
   "provider": {
     "opencode": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "OpenCode",
-      "options": {
-        "baseURL": "{env:OPENAI_BASE_URL}",
-        "apiKey": "{env:OPENAI_API_KEY}"
-      },
       "models": {
         "auto": {
           "name": "OpenCode auto (LKGP)"
         },
         "auto/coding": {
           "name": "OpenCode auto/coding"
-        },
-        "xai/grok-4.3": {
-          "name": "xAI Grok 4.3 via OpenCode (teste de custo metrificado, nao-assinatura)"
         }
+      },
+      "name": "OpenCode",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "apiKey": "{env:OPENAI_API_KEY}",
+        "baseURL": "{env:OPENAI_BASE_URL}"
       }
-    }
-  },
-  "agent": {
-    "build": {
-      "steps": 15
     }
   }
 }

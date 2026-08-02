@@ -11,14 +11,21 @@ heartbeats:
   - manual
   enabled: false
   goal_id: null
-  required_secrets: []
-  decision_prompt: 'You are Atlas, the project agent. Review GitHub for stale PRs
-    and issues older than 3 days with no activity. Decide: should you act now (comment,
-    triage, escalate) or is there nothing urgent? Respond with a JSON object: {"action":
-    "work"|"skip", "reason": "<1 sentence>", "tasks": [<list of issue ids to touch,
-    if action=work]}.
-
-    '
+  required_secrets:
+  - EVO_CRM_TOKEN
+  decision_prompt: 'You are Atlas, the project agent. Linear/GitHub triage is retired
+    — Felipe manages the sales pipeline via Evo CRM (int-evo-crm skill, pipelines/stages/items)
+    and delivery work via the Nexus REST API. IMPORTANT: to read tickets and goal_tasks,
+    use the Nexus REST API at http://evonexus-dashboard:8080 with header "Authorization:
+    Bearer $DASHBOARD_API_TOKEN" (e.g. GET /api/tickets, GET /api/goals). Do NOT use
+    localhost:8080 and do NOT query any local sqlite .db file — the real data lives
+    in the dashboard container, only reachable via that API. Check Evo CRM pipelines
+    for items stuck in an early stage (e.g. "Novo Lead") for more than 3 days with
+    no stage change or follow-up. Check Nexus tickets with status open/in_progress
+    assigned to you (atlas-project) and overdue goal_tasks. Decide: should you act
+    now (follow up on a stuck lead, comment/triage a ticket, escalate) or is there
+    nothing urgent? Respond with JSON: {"action": "work"|"skip", "reason": "<1 sentence>",
+    "tasks": [<list of pipeline item ids or ticket ids to touch, if action=work>]}.'
 - id: zara-2h
   agent: zara-cs
   interval_seconds: 7200
@@ -33,10 +40,13 @@ heartbeats:
   goal_id: null
   required_secrets: []
   decision_prompt: 'You are Zara, the customer success agent. Check the support queue
-    for tickets with status "open" or "pending" assigned to you. Pick the highest-priority
-    ticket (by urgency label, then oldest created_at). Decide: should you work on
-    it now or is the queue empty/nothing actionable? Respond with JSON: {"action":
-    "work"|"skip", "reason": "<1 sentence>", "ticket_id": "<id or null>"}.
+    via the Nexus REST API: GET http://evonexus-dashboard:8080/api/tickets with header
+    "Authorization: Bearer $DASHBOARD_API_TOKEN" (do NOT use localhost:8080 or local
+    sqlite files). Look for tickets with status "open" or "pending" assigned to you.
+    Pick the highest-priority ticket (by urgency label, then oldest created_at). Decide:
+    should you work on it now or is the queue empty/nothing actionable? Respond with
+    JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "ticket_id": "<id or
+    null>"}.
 
     '
 - id: flux-6h
@@ -52,27 +62,44 @@ heartbeats:
   goal_id: null
   required_secrets:
   - ABACATEPAY_API_KEY
-  decision_prompt: 'You are Flux, the finance agent. Check AbacatePay for pending
-    payments or subscriptions that need attention in the last 6 hours. Decide: is
-    there something urgent requiring action or escalation via Telegram? Respond with
-    JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "alerts": [<list of
-    critical items, if any>]}.
-
-    '
+  - EVO_CRM_TOKEN
+  decision_prompt: 'You are Flux, the finance agent. Check AbacatePay (list_checkouts,
+    list_transparent via the custom-int-abacatepay skill) for failed or pending PIX/boleto
+    payments in the last 6 hours. Check Evo CRM (int-evo-crm skill) for billing/CRM
+    items that need action. If you need Nexus tickets or goals, use the Nexus REST
+    API at http://evonexus-dashboard:8080 with header "Authorization: Bearer $DASHBOARD_API_TOKEN"
+    (e.g. GET /api/tickets) — do NOT use localhost:8080 or local sqlite files. Decide:
+    is there something urgent requiring action or escalation to Felipe via Telegram?
+    Respond with JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "alerts":
+    [<list of critical items, if any>]}.'
 - id: integrations-health
   agent: system
-  interval_seconds: 3600
+  interval_seconds: 900
   max_turns: 0
   timeout_seconds: 60
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
   - manual
-  enabled: false
+  enabled: true
   goal_id: null
   required_secrets: []
   decision_prompt: ''
   handler: plugin_integration_health.tick
+- id: confirmar-publicacoes
+  agent: system
+  interval_seconds: 1200
+  max_turns: 0
+  timeout_seconds: 120
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - manual
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  decision_prompt: ''
+  handler: publicacoes.tick
 - id: nexus-orchestrator
   agent: system
   interval_seconds: 300

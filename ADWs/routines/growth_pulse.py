@@ -90,6 +90,20 @@ def _load_metrics() -> dict:
     return {}
 
 
+def _load_env() -> None:
+    """Load the shared config env when the scheduler has no process env."""
+    env_path = WORKSPACE / "config" / ".env"
+    if not env_path.is_file():
+        env_path = WORKSPACE / ".env"
+    if not env_path.is_file():
+        return
+    for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 def _cost_today(metrics: dict) -> float:
     """Sum cost of all entries from today."""
     if not metrics:
@@ -228,6 +242,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Print only, don't send")
     parser.add_argument("--alert", action="store_true", help="Only send if critical")
     args = parser.parse_args()
+
+    _load_env()
 
     text, has_critical = generate_pulse()
 

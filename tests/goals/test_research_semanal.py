@@ -39,7 +39,12 @@ def _kw(termo: str, vol: int = 1000) -> dict:
 # ── rodízio de funis ─────────────────────────────────────────────────────
 
 def test_whatsapp_nao_leva_a_semana_inteira():
-    """O caso real: 21 candidatas de WhatsApp e 6 dos outros funis."""
+    """O caso real: 21 candidatas de WhatsApp e 6 dos outros funis.
+
+    Com a cota por funil (ceil(alvo/3) sobre os funis presentes), o WhatsApp
+    fica limitado à fatia igualitária — 7 de 21 — e os slots vagos voltam para
+    pautas_do_x no main(), que é a fonte de diversidade de verdade.
+    """
     keywords = ([_kw(f"bot para whatsapp {i}", 9000 - i) for i in range(21)]
                 + [_kw(f"agendar post instagram {i}", 300) for i in range(3)]
                 + [_kw(f"automatizar processos da empresa {i}", 200) for i in range(3)])
@@ -49,10 +54,9 @@ def test_whatsapp_nao_leva_a_semana_inteira():
     por_funil = {}
     for k in escolhidas:
         por_funil[funil_de(k["kw"])] = por_funil.get(funil_de(k["kw"]), 0) + 1
-    assert len(escolhidas) == 21
     assert por_funil["socialjobs"] == 3
     assert por_funil["sistema"] == 3
-    assert por_funil["whatsapp"] == 15
+    assert por_funil["whatsapp"] == 7  # cota: antes era 15, saturando a semana
 
 
 def test_cada_dia_nasce_com_um_assunto_de_cada_funil():
@@ -73,10 +77,20 @@ def test_cada_dia_nasce_com_um_assunto_de_cada_funil():
 
 
 def test_funil_esgotado_nao_segura_os_outros():
-    """Faltar pauta de um funil não pode deixar slot vazio na semana."""
+    """Faltar pauta de um funil limita o outro à cota — o resto vem do X.
+
+    Antes o WhatsApp engolia o slot vazio de socialjobs e a semana nascia
+    monótona. Agora o WhatsApp fica na cota (ceil(21/2) com dois funis
+    presentes = 11) e o que sobrar é responsabilidade do pautas_do_x no
+    main(), não do rodízio.
+    """
     keywords = ([_kw(f"bot para whatsapp {i}") for i in range(20)]
                 + [_kw("agendar post instagram")])
-    assert len(research.alternar_funis(keywords, 21)) == 21
+    escolhidas = research.alternar_funis(keywords, 21)
+    por_funil = {f: sum(1 for k in escolhidas if funil_de(k["kw"]) == f)
+                 for f in ("whatsapp", "socialjobs", "sistema")}
+    assert por_funil["whatsapp"] == 11  # cota com dois funis presentes
+    assert por_funil["socialjobs"] == 1
 
 
 def test_ordem_de_retorno_esperado_e_preservada_dentro_do_funil():

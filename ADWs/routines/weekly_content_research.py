@@ -447,7 +447,10 @@ def alternar_funis(keywords: list[dict], alvo: int) -> list[dict]:
         filas.setdefault(funil_de(kw["kw"]), []).append(kw)
 
     ordem = [f for f in FUNIS if filas.get(f)]
-    cota = max(1, math.ceil(alvo / len(FUNIS))) if FUNIS else alvo
+    # Cota por funil sobre os funis PRESENTES: com os três na fila, cada um leva
+    # no máximo ceil(alvo/3); com só dois, ceil(alvo/2). Um funil único não é
+    # cortado — não há o que equilibrar, e o corte aí só mutilaria a semana.
+    cota = max(1, math.ceil(alvo / max(1, len(ordem)))) if ordem else alvo
     usados = {f: 0 for f in ordem}
     saida: list[dict] = []
 

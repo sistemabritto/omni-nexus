@@ -24,8 +24,11 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+_AQUI = Path(__file__).resolve()
+# Roda de ADWs/routines/ (repo) ou de /tmp (sondagem no container).
+REPO = _AQUI.parents[2] if _AQUI.parent.name == "routines" and _AQUI.parent.parent.name == "ADWs" else Path("/workspace")
 sys.path.insert(0, str(REPO / "dashboard" / "backend"))
+sys.path.insert(0, str(REPO))
 
 
 def log(msg: str) -> None:
@@ -42,9 +45,26 @@ def load_env() -> None:
                     os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
+def _modulo_backup():
+    """Carrega o backup.py da raiz por caminho absoluto.
+
+    `import backup` é ambíguo: de ADWs/routines/ sys.path[0] é o dir do script
+    e pega o wrapper (que não tem BACKUPS_DIR); de /tmp com REPO no path pega
+    o módulo real. Carregar pelo arquivo elimina a dúvida.
+    """
+    import importlib.util
+    caminho = REPO / "backup.py"
+    if not caminho.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("_backup_real", caminho)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _mais_recente_local() -> datetime | None:
-    import backup as b
-    if not b.BACKUPS_DIR.exists():
+    b = _modulo_backup()
+    if b is None or not b.BACKUPS_DIR.exists():
         return None
     zips = sorted(b.BACKUPS_DIR.glob("evonexus-backup-*.zip"), reverse=True)
     if not zips:
@@ -53,7 +73,9 @@ def _mais_recente_local() -> datetime | None:
 
 
 def _mais_recente_s3() -> datetime | None:
-    import backup as b
+    b = _modulo_backup()
+    if b is None:
+        return None
     try:
         boto3 = b._require_boto3()
         bucket, prefix = b._get_s3_config()

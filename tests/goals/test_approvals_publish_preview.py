@@ -22,7 +22,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "dashboard" / "backend"))
 
-from routes.approvals import _render_publish_preview  # noqa: E402
+from routes.approvals import _formatar_publicacao, _render_publish_preview  # noqa: E402
 
 
 CONTEUDO = "Texto exato que vai ao ar, sem truncar."
@@ -156,3 +156,20 @@ def test_base_publica_prefere_env_ao_host_interno():
                 os.environ.pop(k, None)
             else:
                 os.environ[k] = v
+
+
+# ── horário da publicação no card ───────────────────────────────────────────
+
+def test_formatar_publicacao_iso_utc_vira_brt():
+    """`2026-08-02T15:00:00Z` é 12:00 de Brasília (UTC-3 fixo)."""
+    assert _formatar_publicacao("2026-08-02T15:00:00Z") == "02/08 12:00"
+
+
+def test_formatar_publicacao_com_offset_vira_brt():
+    assert _formatar_publicacao("2026-08-02T18:30:00+00:00") == "02/08 15:30"
+
+
+def test_formatar_publicacao_vazio_ou_invalido():
+    assert _formatar_publicacao(None) == ""
+    assert _formatar_publicacao("") == ""
+    assert _formatar_publicacao("nem-iso") == ""

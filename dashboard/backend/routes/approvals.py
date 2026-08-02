@@ -18,6 +18,10 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+# Brasil não tem horário de verão desde 2019; fuso fixo UTC-3 é correto e evita
+# depender de zoneinfo/IANA dentro do container.
+BRT = timezone(timedelta(hours=-3))
+
 from flask import Blueprint, jsonify, request, g
 from flask_login import current_user
 
@@ -612,6 +616,26 @@ def _cortar_para_telegram(texto: str, limite: int = 1200) -> str:
             + "\n\n[…] texto completo no painel.")
 
 
+def _formatar_publicacao(publish_at: str | None) -> str:
+    """`2026-08-02T15:00:00Z` → `02/08 12:00 BRT`.
+
+    O gate aceita `publish_at` em ISO UTC (com `Z` ou com offset). A hora de
+    publicação é exatamente o que o humano precisa saber para não aprovar um
+    card que só vai ao ar amanhã, ou perder um que sai daqui a vinte minutos.
+    """
+    if not publish_at:
+        return ""
+    try:
+        bruto = publish_at.strip().replace("Z", "+00:00")
+        quando = datetime.fromisoformat(bruto)
+        if quando.tzinfo is None:
+            quando = quando.replace(tzinfo=timezone.utc)
+        local = quando.astimezone(BRT)
+        return local.strftime("%d/%m %H:%M")
+    except ValueError:
+        return ""
+
+
 def _base_publica() -> str:
     """Endereço público do Nexus, para o link da aprovação no Telegram.
 
@@ -911,9 +935,16 @@ def create_approval():
     ]
     telegram_body = _cortar_para_telegram("\n".join(p for p in body_parts if p).strip())
 
+    # Horário da publicação (blog post e cada derivada) logo no card, para dar
+    # controle sem abrir o painel: aprovar um card que só sai amanhã às 21h é
+    # decidir cego sobre o calendário.
+    preview = _render_publish_preview(gate_type, payload) or {}
+    quando = _formatar_publicacao(preview.get("publish_at"))
+    if quando:
+        telegram_body = f"{telegram_body}\n\n🕐 Publicação: <b>{quando} BRT</b>"
+
     # Com imagem, o Telegram recebe a foto em vez do endereço dela: aprovar uma
     # publicação com imagem lendo a URL não é aprovar nada.
-    preview = _render_publish_preview(gate_type, payload) or {}
     links = []
     if preview.get("source_url"):
         links.append(f"📄 Artigo: {preview['source_url']}")

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import subprocess
@@ -430,7 +431,14 @@ def alternar_funis(keywords: list[dict], alvo: int) -> list[dict]:
     pautas saem intercaladas e os dias são fatiados em blocos de três, cada dia
     nasce com um assunto de cada funil.
 
-    Funil que esgota não segura os outros — o alvo continua sendo preenchido.
+    **Cota por funil** (`ceil(alvo / nº de funis)`): sem teto o WhatsApp
+    continuava estourando a semana mesmo intercalado — o rodízio só ordena,
+    não limita, e um ciclo como o de 03/08/2026 nasceu com 7 de 8 pautas sobre
+    WhatsApp. Com a cota, o WhatsApp fica limitado à sua fatia igualitária e o
+    que sobrar de slot vago volta para `pautas_do_x` no main(), que é a fonte
+    que devolve diversidade de verdade. Funil que esgota não segura os outros:
+    se nenhum funil tiver mais keywords, a lista simplesmente fica curta e o X
+    cobre.
     """
     from escritor_de_artigo import FUNIS, funil_de
 
@@ -439,17 +447,31 @@ def alternar_funis(keywords: list[dict], alvo: int) -> list[dict]:
         filas.setdefault(funil_de(kw["kw"]), []).append(kw)
 
     ordem = [f for f in FUNIS if filas.get(f)]
+    cota = max(1, math.ceil(alvo / len(FUNIS))) if FUNIS else alvo
+    usados = {f: 0 for f in ordem}
     saida: list[dict] = []
+
+    # Primeira passada: round-robin com teto por funil. Cada um entra com no
+    # máximo `cota` pautas, na ordem de retorno esperado.
     while len(saida) < alvo and any(filas.values()):
+        progrediu = False
         for f in ordem:
-            if filas[f]:
+            if filas[f] and usados[f] < cota:
                 saida.append(filas[f].pop(0))
+                usados[f] += 1
+                progrediu = True
                 if len(saida) >= alvo:
                     break
+        if not progrediu:
+            break
+
+    # Segunda passada: algum funil esgotou abaixo da cota? NÃO é preenchido
+    # pelo que sobrou de outro — aí o WhatsApp voltaria a estourar. O slot
+    # vago volta para o main(), que chama pautas_do_x para fechar a semana.
     if keywords:
         distribuicao = ", ".join(f"{f}:{sum(1 for k in saida if funil_de(k['kw']) == f)}"
                                  for f in ordem)
-        log(f"rodízio de funis — {distribuicao}")
+        log(f"rodízio de funis — {distribuicao} (cota {cota})")
     return saida
 
 

@@ -136,6 +136,20 @@ plugins/open-seo/*
 !plugins/open-seo/README.md
 !plugins/open-seo/LICENSE
 
+# Exceção: claude-mem, opencode-autolearn, opencode-autogoal são plugins de
+# integração autorais (não baixados da marketplace). Versiona apenas o plugin.yaml.
+!plugins/claude-mem/
+plugins/claude-mem/*
+!plugins/claude-mem/plugin.yaml
+
+!plugins/opencode-autolearn/
+plugins/opencode-autolearn/*
+!plugins/opencode-autolearn/plugin.yaml
+
+!plugins/opencode-autogoal/
+plugins/opencode-autogoal/*
+!plugins/opencode-autogoal/plugin.yaml
+
 # Plugin-installed files in .claude/ — plugins copy agents/skills/rules/commands
 # with `plugin-{slug}-` prefix. These are per-machine artifacts and must not land
 # in platform PRs. The `_plugins-index.md` marker file in rules/ is regenerated

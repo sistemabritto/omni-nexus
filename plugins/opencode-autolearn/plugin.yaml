@@ -1,0 +1,24 @@
+id: opencode-autolearn
+name: OpenCode AutoLearn
+version: 1.0.0
+description: >
+  Motor de auto-aprendizado para OpenCode. Monitora conversas, captura
+  correcoes e preferencias, cria skills automaticamente e escalona regras
+  comportamentais. Inclui agente autolearn-reviewer para revisao pos-sessao.
+author: Eric Ma (ericmjl) — integracao OmniNexus por Sistema Britto
+license: MIT
+homepage: https://github.com/ericmjl/opencode-autolearn
+
+min_evonexus_version: 0.30.0
+tier: essential
+
+capabilities:
+  - skills
+  - agent
+
+env_vars_needed: []
+
+conflicts: {}
+dependencies: {}
+
+source_url: https://github.com/ericmjl/opencode-autolearn.git

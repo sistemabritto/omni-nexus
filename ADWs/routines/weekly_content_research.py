@@ -39,6 +39,8 @@ sys.path.insert(0, str(REPO / "dashboard" / "backend"))
 OUT_DIR = REPO / "workspace" / "social" / "research"
 XAI_URL = "https://api.x.ai/v1/responses"
 XAI_MODEL = os.environ.get("XAI_MODEL", "grok-4.20-non-reasoning")
+PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions"
+PERPLEXITY_MODEL = os.environ.get("PERPLEXITY_MODEL", "sonar-pro")
 
 # Projeto BR no OpenSEO (mercado 2076/pt). Trocar aqui se o projeto for recriado.
 OPENSEO_PROJECT = os.environ.get("OPENSEO_PROJECT_ID", "894ccc15-bc71-48e3-adcb-c05789b5d4fd")
@@ -69,9 +71,6 @@ def pesquisar_noticias(inicio: date, fim: date) -> str:
     import requests
 
     key = os.environ.get("XAI_API_KEY", "").strip()
-    if not key:
-        log("XAI_API_KEY ausente — etapa de notícia pulada.")
-        return ""
 
     prompt = f"""Pesquise (web + X) o que aconteceu em INTELIGÊNCIA ARTIFICIAL entre {inicio:%d/%m/%Y} e {fim:%d/%m/%Y}.
 Responda em português do Brasil.
@@ -89,23 +88,46 @@ Liste até 10 fatos da semana que sirvam de gancho para pauta de blog. Para cada
 REGRA ABSOLUTA: se não encontrou na busca, NÃO inclua. Não complete com conhecimento prévio.
 Prefiro 3 fatos verificados a 10 inventados. Priorize saturação baixa em português."""
 
-    r = requests.post(
-        XAI_URL,
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-        json={"model": XAI_MODEL, "input": [{"role": "user", "content": prompt}],
-              "tools": [{"type": "web_search"}, {"type": "x_search"}]},
-        timeout=900,
-    )
-    if r.status_code != 200:
-        log(f"x.ai respondeu {r.status_code}: {r.text[:200]}")
-        return ""
-    data = r.json()
     txt = ""
-    for item in data.get("output", []):
-        if item.get("type") == "message":
-            for c in item.get("content", []):
-                if c.get("type") == "output_text":
-                    txt += c.get("text", "")
+    if key:
+        try:
+            r = requests.post(
+                XAI_URL,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                json={"model": XAI_MODEL, "input": [{"role": "user", "content": prompt}],
+                      "tools": [{"type": "web_search"}, {"type": "x_search"}]},
+                timeout=900,
+            )
+            if r.status_code == 200:
+                for item in r.json().get("output", []):
+                    if item.get("type") == "message":
+                        for c in item.get("content", []):
+                            if c.get("type") == "output_text":
+                                txt += c.get("text", "")
+            else:
+                log(f"x.ai respondeu {r.status_code}; tentando Perplexity.")
+        except Exception as exc:  # noqa: BLE001
+            log(f"x.ai falhou ({exc}); tentando Perplexity.")
+
+    if not txt.strip():
+        perplexity_key = os.environ.get("PERPLEXITY_API_KEY", "").strip()
+        if not perplexity_key:
+            log("XAI_API_KEY/ PERPLEXITY_API_KEY ausentes — etapa de notícia pulada.")
+            return ""
+        try:
+            r = requests.post(
+                PERPLEXITY_URL,
+                headers={"Authorization": f"Bearer {perplexity_key}", "Content-Type": "application/json"},
+                json={"model": PERPLEXITY_MODEL,
+                      "messages": [{"role": "user", "content": prompt}]},
+                timeout=900,
+            )
+            if r.status_code == 200:
+                txt = r.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+            else:
+                log(f"Perplexity respondeu {r.status_code}: {r.text[:200]}")
+        except Exception as exc:  # noqa: BLE001
+            log(f"Perplexity falhou: {exc}")
     fatos = len(re.findall(r"(?im)^\s*\*{0,2}\d+\.", txt))
     log(f"notícia: {fatos} fato(s) com fonte, {len(txt)} chars")
     return txt

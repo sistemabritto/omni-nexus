@@ -167,26 +167,41 @@ def resumo_para_aprovacao(post: dict) -> str:
 
 
 def _pedir_ao_modelo(prompt: str, timeout: int = 300) -> str:
-    """Chamada ao x.ai. Devolve string vazia em qualquer falha."""
+    """Chama xAI e usa Perplexity como fallback quando xAI estiver indisponível."""
     chave = (os.environ.get("XAI_API_KEY") or "").strip()
-    if not chave:
+    if chave:
+        try:
+            r = requests.post(
+                (os.environ.get("XAI_BASE_URL") or "https://api.x.ai/v1").rstrip("/") + "/responses",
+                headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"},
+                json={"model": os.environ.get("XAI_MODEL", "grok-4.20-non-reasoning"),
+                      "input": [{"role": "user", "content": prompt}]},
+                timeout=timeout)
+            if r.status_code == 200:
+                texto = ""
+                for item in r.json().get("output", []):
+                    if item.get("type") == "message":
+                        for parte in item.get("content", []):
+                            if parte.get("type") == "output_text":
+                                texto += parte.get("text", "")
+                if texto.strip():
+                    return texto.strip()
+        except Exception:  # noqa: BLE001
+            pass
+
+    perplexity_key = os.environ.get("PERPLEXITY_API_KEY", "").strip()
+    if not perplexity_key:
         return ""
     try:
         r = requests.post(
-            (os.environ.get("XAI_BASE_URL") or "https://api.x.ai/v1").rstrip("/") + "/responses",
-            headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"},
-            json={"model": os.environ.get("XAI_MODEL", "grok-4.20-non-reasoning"),
-                  "input": [{"role": "user", "content": prompt}]},
+            "https://api.perplexity.ai/chat/completions",
+            headers={"Authorization": f"Bearer {perplexity_key}", "Content-Type": "application/json"},
+            json={"model": os.environ.get("PERPLEXITY_MODEL", "sonar-pro"),
+                  "messages": [{"role": "user", "content": prompt}]},
             timeout=timeout)
         if r.status_code != 200:
             return ""
-        texto = ""
-        for item in r.json().get("output", []):
-            if item.get("type") == "message":
-                for parte in item.get("content", []):
-                    if parte.get("type") == "output_text":
-                        texto += parte.get("text", "")
-        return texto.strip()
+        return (r.json().get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
     except Exception:  # noqa: BLE001
         return ""
 

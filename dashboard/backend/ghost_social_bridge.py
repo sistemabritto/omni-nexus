@@ -442,8 +442,8 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
     post = buscar_post(post_id)
     if not post:
         return {"ok": False, "erro": f"post {post_id} não encontrado no Ghost"}
-    if post.get("status") != "published":
-        return {"ok": True, "ignorado": f"post está '{post.get('status')}', não 'published'"}
+    if post.get("status") not in ("published", "scheduled"):
+        return {"ok": True, "ignorado": f"post está '{post.get('status')}', não 'published'/'scheduled'"}
 
     quando = datetime.now(timezone.utc) + timedelta(hours=em_horas)
     resultado: dict = {"ok": True, "post": post.get("title"), "redes": {}, "pulados": {}}
@@ -827,7 +827,7 @@ def posts_publicados_recentes(horas: float = JANELA_VARREDURA_HORAS,
         return []
     r = requests.get(
         f"{url}/ghost/api/admin/posts/"
-        f"?filter=status:published&order=published_at%20desc&limit={limite}"
+        f"?filter=status:[published,scheduled]&order=published_at%20desc&limit={limite}"
         f"&fields=id,title,status,published_at,url",
         headers={"Authorization": f"Ghost {ghost_jwt(key)}", "User-Agent": UA_NAVEGADOR},
         timeout=45)

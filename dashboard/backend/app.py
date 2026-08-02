@@ -1086,6 +1086,13 @@ with app.app_context():
     except Exception as _tj_exc:
         print(f"WARNING: ticket janitor init failed: {_tj_exc}")
 
+    # Start data retention janitor (purge heartbeat_runs/audit_log fora da retenção)
+    try:
+        from data_retention import start_janitor_thread as _start_data_retention
+        _start_data_retention()
+    except Exception as _dr_exc:
+        print(f"WARNING: data retention janitor init failed: {_dr_exc}")
+
     # Start Knowledge pool GC + health check threads
     try:
         from knowledge.connection_pool import start_gc_thread

@@ -12,9 +12,11 @@ from __future__ import annotations
 
 import logging
 import os
+import sqlite3
 import threading
 import time
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -22,15 +24,19 @@ RETENCAO_HEARTBEATS_DIAS = int(os.environ.get("RETENCAO_HEARTBEATS_DIAS", "90"))
 RETENCAO_AUDIT_DIAS = int(os.environ.get("RETENCAO_AUDIT_DIAS", "180"))
 INTERVALO_SEG = 6 * 3600
 
+DB_PATH = Path(__file__).resolve().parents[2] / "dashboard" / "data" / "evonexus.db"
+
 
 def _agora_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
-def limpar(conn) -> tuple[int, int]:
-    """Apaga heartbeat_runs e audit_log fora da retenção. Devolve (runs, audit)."""
-    from models import db
+def limpar(conn: sqlite3.Connection) -> tuple[int, int]:
+    """Apaga heartbeat_runs e audit_log fora da retenção. Devolve (runs, audit).
 
+    Usa sqlite direto (como heartbeat_dispatcher), não db.engine: o janitor
+    roda em thread sem app context do Flask, e o scheduler não monta o volume.
+    """
     corte_hb = (datetime.now(timezone.utc) - timedelta(days=RETENCAO_HEARTBEATS_DIAS)).strftime(
         "%Y-%m-%dT%H:%M:%S.%fZ"
     )
@@ -51,16 +57,17 @@ def limpar(conn) -> tuple[int, int]:
         ).rowcount
     except Exception as exc:  # noqa: BLE001 — coluna pode ter outro nome
         log.warning("audit_log purge falhou (não-bloqueante): %s", exc)
-    db.session.commit()
+    conn.commit()
     return runs, audit
 
 
 def run_once() -> tuple[int, int] | None:
-    from models import db
-
     try:
-        with db.engine.connect() as conn:
+        conn = sqlite3.connect(str(DB_PATH), timeout=30)
+        try:
             return limpar(conn)
+        finally:
+            conn.close()
     except Exception as exc:  # noqa: BLE001
         log.warning("data_retention falhou: %s", exc)
         return None

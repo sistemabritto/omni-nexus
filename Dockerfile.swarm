@@ -49,6 +49,19 @@ RUN npm install -g @gitlawb/openclaude@0.23.0
 # pela mesma razão do openclaude acima.
 RUN npm install -g opencode-ai@1.17.18
 
+# Plugins do OpenCode (mesma lista da imagem do dashboard — Dockerfile.swarm.dashboard):
+# claude-mem (memória persistente entre sessões), autolearn (auto-aprendizado),
+# autogoal já vem no opencode core. O runtime (scheduler/telegram) não tinha
+# nenhum instalado: o opencode.json declarava o array `plugin` mas o código
+# não existia, então o load falhava em silêncio.
+RUN npm install -g claude-mem --legacy-peer-deps 2>/dev/null || true; \
+    git clone --depth 1 https://github.com/ericmjl/opencode-autolearn.git /tmp/autolearn 2>/dev/null || true; \
+    cd /tmp/autolearn && npm install 2>/dev/null || true; \
+    npm link 2>/dev/null || true; \
+    mkdir -p /root/.autolearn /root/.config/opencode/plugins; \
+    cp -r /tmp/autolearn/plugin/* /root/.config/opencode/plugins/ 2>/dev/null || true; \
+    rm -rf /tmp/autolearn
+
 # sharp — optional peer dep the CLI's own Read tool needs to process image
 # files (photos, reference images, screenshots). Without it, Read on any
 # image fails every time with "image support is not installed".

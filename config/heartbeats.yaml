@@ -74,7 +74,7 @@ heartbeats:
     [<list of critical items, if any>]}.'
 - id: integrations-health
   agent: system
-  interval_seconds: 900
+  interval_seconds: 1800
   max_turns: 0
   timeout_seconds: 60
   lock_timeout_seconds: 1800
@@ -88,7 +88,7 @@ heartbeats:
   handler: plugin_integration_health.tick
 - id: confirmar-publicacoes
   agent: system
-  interval_seconds: 1200
+  interval_seconds: 1800
   max_turns: 0
   timeout_seconds: 120
   lock_timeout_seconds: 1800
@@ -102,7 +102,7 @@ heartbeats:
   handler: publicacoes.tick
 - id: nexus-orchestrator
   agent: system
-  interval_seconds: 300
+  interval_seconds: 900
   max_turns: 0
   timeout_seconds: 120
   lock_timeout_seconds: 600

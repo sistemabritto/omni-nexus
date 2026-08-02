@@ -147,6 +147,11 @@ def setup_schedule():
     # publicação (09:00 BRT) para o humano aprovar sem correr.
     schedule.every().sunday.at("08:00").do(
         run_adw, "Research Semanal de Pauta", "weekly_content_research.py")
+    # 07:45, antes do research: cruza cliques por artigo + visitas de funil com
+    # a fila de pautas e deixa auditoria_temas.json pronto para a próxima
+    # esteira. É o dado que impede o ciclo seguinte de saturar um nicho.
+    schedule.every().sunday.at("07:45").do(
+        run_adw, "Auditoria de Temas", "auditoria_temas.py")
     schedule.every().day.at("06:00").do(
         run_adw, "Esteira de Conteúdo", "daily_content_pipeline.py")
     # 05:30, antes da esteira: o número do dia reflete o que o conteúdo de

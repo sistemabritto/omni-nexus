@@ -107,8 +107,22 @@ def run_adw(name: str, script: str, args: str = ""):
         )
         status = "✓" if result.returncode == 0 else "✗"
         print(f"  {now} {status} {name}", flush=True)
-    except subprocess.TimeoutExpired:
+        # O erro da rotina não pode sumir. Sem isto, uma esteira que falha às
+        # 06:00 loga só "✗ Esteira de Conteúdo" e ninguém descobre por quê —
+        # foi exatamente o que aconteceu em 02/08 (a rotina falhou e o motivo
+        # ficou invisível até rodar na mão). O erro vai para o stderr do
+        # scheduler, que o Swarm agrega e o Growth Pulse enxerga.
+        if result.returncode != 0 and (result.stderr or result.stdout):
+            trecho = (result.stderr or result.stdout).strip()[-2000:]
+            for linha in trecho.splitlines()[-6:]:
+                print(f"    └ {name}: {linha[:400]}", flush=True)
+    except subprocess.TimeoutExpired as exc:
         print(f"  {now} ✗ {name} timeout (15min)", flush=True)
+        saida = (exc.stdout or "") + (exc.stderr or "")
+        if saida:
+            trecho = saida.strip()[-2000:]
+            for linha in trecho.splitlines()[-6:]:
+                print(f"    └ {name}: {linha[:400]}", flush=True)
     except Exception as e:
         print(f"  {now} ✗ {name} error: {e}", flush=True)
 
@@ -128,6 +142,10 @@ def setup_schedule():
     schedule.every().friday.at("08:00").do(run_adw, "Weekly Review", "weekly_review.py")
     schedule.every().sunday.at("09:00").do(run_adw, "Memory Lint", "memory_lint.py")
     schedule.every().day.at("21:00").do(run_adw, "Daily Backup", "backup.py")
+    # 20:00, uma hora antes do backup: avisa se o artefato mais recente (local
+    # ou S3) está com mais de 48h — o backup "✓" silencioso enganou por dias
+    # entre 24/07 e 28/07, e este watchdog é o que torna a falha audível.
+    schedule.every().day.at("20:00").do(run_adw, "Backup Watchdog", "backup_watchdog.py")
     # REMOVIDO: "Uso Modelos DIA" (uso_modelos_dia.py) — fazia 12 chamadas/dia
     # a modelos NVIDIA só para pingar com prompt artificial, sem produzir
     # lead, conteúdo ou decisão. Custo e quota desperdiçados. A Saúde dos

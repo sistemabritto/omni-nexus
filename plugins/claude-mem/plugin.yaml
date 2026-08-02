@@ -1,0 +1,24 @@
+id: claude-mem
+name: Claude-Mem
+version: 13.12.4
+description: >
+  Memoria persistente entre sessoes para qualquer agente OpenCode. Captura
+  observacoes durante as sessoes, comprime com IA e injeta contexto relevante
+  em futuras sessoes. Funciona com Claude Code, OpenCode, Codex, Gemini e mais.
+author: thedotmack — integracao OmniNexus por Sistema Britto
+license: MIT
+homepage: https://github.com/thedotmack/claude-mem
+
+min_evonexus_version: 0.30.0
+tier: essential
+
+capabilities:
+  - memory
+  - skills
+
+env_vars_needed: []
+
+conflicts: {}
+dependencies: {}
+
+source_url: https://github.com/thedotmack/claude-mem.git

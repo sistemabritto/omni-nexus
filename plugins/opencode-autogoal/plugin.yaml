@@ -1,0 +1,24 @@
+id: opencode-autogoal
+name: OpenCode AutoGoal
+version: 0.6.0
+description: >
+  Plugin de goal-continuation para OpenCode com verificacao deterministica.
+  Mantem um goal ativo entre turnos, pausa/resume, e verifica se a condicao
+  foi atendida. Comando /goal para controle interativo.
+author: VerbalChainsaw (Neurotype Labs) — integracao OmniNexus por Sistema Britto
+license: MIT
+homepage: https://github.com/VerbalChainsaw/opencode-autogoal
+
+min_evonexus_version: 0.30.0
+tier: essential
+
+capabilities:
+  - command
+  - agent
+
+env_vars_needed: []
+
+conflicts: {}
+dependencies: {}
+
+source_url: https://github.com/VerbalChainsaw/opencode-autogoal.git

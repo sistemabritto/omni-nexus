@@ -136,11 +136,16 @@ def pauta_do_dia() -> list[dict]:
     matinal esconde as três de hoje no meio do resto.
     """
     saida = []
-    # Dois estados, porque às 07:00 a esteira das 06:00 já rodou: o que ela
-    # escreveu está em `escrita` esperando o gate, e o que ainda não virou
-    # artigo segue em `aprovada`. Pedir só o padrão da API mostraria a metade
-    # que já não exige nada de ninguém.
-    for status in ("escrita", "aprovada"):
+    # Três estados, porque às 07:00 a esteira das 06:00 já rodou: o que ela
+    # escreveu está em `escrita` esperando o gate, o que ainda não virou artigo
+    # segue em `aprovada`, e o que ninguém liberou está em `proposta`. Pedir só
+    # o padrão da API mostraria a fatia que já não exige nada de ninguém.
+    #
+    # `proposta` entrou em 03/08/2026: sem ela o briefing dizia "pauta de hoje:
+    # nada" com 11 pautas paradas esperando aprovação, que é exatamente o
+    # estado em que o dia sai em branco. O único lugar que podia avisar estava
+    # olhando para o lado errado.
+    for status in ("escrita", "aprovada", "proposta"):
         try:
             r = _evo().get("/api/pautas/hoje", {"status": status}) or {}
         except Exception:  # noqa: BLE001

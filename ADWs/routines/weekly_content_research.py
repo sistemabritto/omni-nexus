@@ -651,6 +651,62 @@ def abrir_aprovacao(pautas: list[dict], noticias: str, arquivo: Path, dry_run: b
         log(f"não consegui criar o ticket ({exc}); as pautas estão em {arquivo}")
 
 
+def abrir_gate_no_telegram(pautas: list[dict], ciclo: str | None, dry_run: bool) -> None:
+    """O card que pede a aprovação da semana — sem ele o ciclo trava calado.
+
+    Até 03/08/2026 esta rotina gravava 21 pautas em `proposta` e terminava em
+    silêncio: a única forma de liberá-las era alguém lembrar de abrir a tela
+    `/pautas` e clicar. O ticket que `abrir_aprovacao` cria vai para o inbox do
+    @pixel, não para o Felipe. Resultado: 01/08 e 03/08 amanheceram com a fila
+    cheia, a esteira das 06:00 não achou nada `aprovada`, e nenhum artigo saiu
+    — sem erro em lugar nenhum, porque não havia erro. Havia um gate que nunca
+    pedia nada.
+
+    Um card por ciclo (`idempotency_key = pauta:{ciclo}`), então rodar o
+    research duas vezes na mesma semana não abre um segundo.
+    """
+    if not ciclo:
+        log("sem ciclo — gate do Telegram não aberto (as pautas seguem na fila)")
+        return
+    if dry_run:
+        log(f"dry-run — gate do Telegram não aberto (ciclo {ciclo})")
+        return
+    try:
+        from escritor_de_artigo import funil_de
+    except Exception:  # noqa: BLE001 — o funil é contexto, não requisito
+        funil_de = None  # type: ignore[assignment]
+
+    itens = []
+    for p in pautas:
+        item = {"keyword": p["keyword"], "data_alvo": p["data"], "volume": p.get("volume")}
+        if funil_de:
+            try:
+                item["funil"] = funil_de(p["keyword"])
+            except Exception:  # noqa: BLE001
+                pass
+        itens.append(item)
+
+    try:
+        from sdk_client import evo
+
+        evo.post("/api/approvals", {
+            "gate_type": "pauta_ciclo",
+            "agent": "pixel-social-media",
+            "payload": {
+                "ciclo": ciclo,
+                "title": f"Pautas da semana de {ciclo}",
+                "body": (f"O research fechou {len(pautas)} pautas para a semana. "
+                         f"Aprovar libera a fila e a esteira das 06:00 passa a escrever; "
+                         f"sem isso o dia sai em branco.\n"
+                         f"Para trocar alguma antes de liberar, o editor está em /pautas."),
+                "pautas": itens,
+            },
+        })
+        log(f"gate aberto no Telegram para o ciclo {ciclo}")
+    except Exception as exc:  # noqa: BLE001 — a fila e o markdown já estão salvos
+        log(f"não consegui abrir o gate do ciclo ({exc}); aprove em /pautas")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="não cria ticket de aprovação")
@@ -724,6 +780,7 @@ def main() -> int:
 
     ciclo = gravar_na_fila(pautas, args.dry_run)
     abrir_aprovacao(pautas, noticias, arquivo, args.dry_run, ciclo)
+    abrir_gate_no_telegram(pautas, ciclo, args.dry_run)
     log("fim — nada publicado; aguarda revisão e aprovação humana.")
     return 0
 

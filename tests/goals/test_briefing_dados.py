@@ -79,15 +79,20 @@ def test_pauta_do_dia_usa_o_endpoint_que_filtra(evo):
     assert rotas and all(r == "/api/pautas/hoje" for r in rotas)
 
 
-def test_pauta_do_dia_cobre_escrita_e_aprovada(evo):
+def test_pauta_do_dia_cobre_escrita_aprovada_e_proposta(evo):
     """Às 07:00 a esteira das 06:00 já rodou.
 
-    O que ela escreveu está em `escrita` esperando o gate; pedir só o padrão
-    da API mostraria a metade que já não exige nada de ninguém.
+    O que ela escreveu está em `escrita` esperando o gate; pedir só o padrão da
+    API mostraria a fatia que já não exige nada de ninguém.
+
+    `proposta` entrou em 03/08/2026: sem ela o briefing dizia "pauta de hoje:
+    nada" com 11 pautas paradas esperando aprovação — exatamente o estado em
+    que o dia sai em branco, e o único lugar que podia avisar estava olhando
+    para o lado errado.
     """
     bd.pauta_do_dia()
     status = [c[1].get("status") for c in evo.chamadas]
-    assert status == ["escrita", "aprovada"]
+    assert status == ["escrita", "aprovada", "proposta"]
 
 
 def test_api_fora_do_ar_nao_derruba_o_briefing(monkeypatch):

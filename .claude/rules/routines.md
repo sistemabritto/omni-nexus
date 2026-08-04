@@ -70,6 +70,29 @@ sempre; o `flush=True` em `run_adw` é redundante mas fica.
 | A cada 15 min | Derivar Redes Pendentes | `derivar_redes_pendentes.py` — recupera o artigo agendado que o Ghost publicou sozinho e ninguém derivou (ver `esteira-de-conteudo.md` §0) |
 | Friday 08:00 | Weekly Review | `weekly_review.py` — reactivated; checks overdue items weekly |
 
+## Janela perdida — o redeploy que apaga a semana
+
+`schedule` agenda sempre a **próxima** ocorrência a partir do instante em que o
+job é registrado. Um processo que sobe domingo às 12:15 registra o research
+semanal (domingo 08:00) para o domingo **seguinte** — a semana inteira se perde
+sem erro, sem log, sem nada.
+
+Aconteceu em 02/08/2026: um redeploy pôs o scheduler de pé às 12:15 e o
+`weekly_content_research` das 08:00 nunca rodou. A segunda amanheceu com um
+ciclo de 11 pautas em vez das 21 da semana, três delas keywords duplicadas, e a
+esteira ficou sem material novo.
+
+`scheduler.recuperar_janelas_perdidas()` roda no boot, logo depois de
+`setup_schedule()`, e é **deliberadamente estreito**: só job **semanal**, só se
+a janela de **hoje** já passou, e só se ele **não rodou hoje**. Diário perdido
+espera algumas horas pela próxima janela; semanal espera sete dias — só o
+segundo justifica executar fora de hora.
+
+A marca de "rodou hoje" fica em `ADWs/logs/ultima-execucao/<script>.txt` e é
+gravada **só quando a rotina sai com código 0**: execução que falhou tem de ser
+retentada pelo catch-up do próximo boot, não considerada feita. Testes:
+`tests/goals/test_gate_de_pauta.py`.
+
 `run_adw()` resolves a script's real location with a 3-candidate fallback
 (`ADWs/routines/custom/<name>` → `ADWs/routines/<name>` → top-level `scripts/<name>`) so
 a script doesn't need to be relocated just to be scheduled — see `scheduler.py::run_adw`.

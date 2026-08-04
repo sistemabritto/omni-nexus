@@ -421,14 +421,14 @@ with app.app_context():
 
     # --- goal-ticket-unification: pending_approvals table (shared publish + decomposition gate) ---
     # gate_type/mission_id/project_id cover ai-hierarchy-suggestions too
-    # (project_suggestion, goal_suggestion) — a fresh install gets the final
-    # shape directly; the rebuild block right below upgrades a DB that already
-    # has this table from before those two gate_types existed (SQLite can't
-    # ALTER a CHECK constraint in place).
+    # (project_suggestion, goal_suggestion) and the content pipeline's weekly
+    # pauta_ciclo gate — a fresh install gets the final shape directly; the
+    # rebuild block right below upgrades a DB created before any of those
+    # gate_types existed (SQLite can't ALTER a CHECK constraint in place).
     _cur.executescript("""
         CREATE TABLE IF NOT EXISTS pending_approvals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            gate_type TEXT NOT NULL CHECK(gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion')),
+            gate_type TEXT NOT NULL CHECK(gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion','pauta_ciclo')),
             ticket_id TEXT REFERENCES tickets(id) ON DELETE CASCADE,
             goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
             mission_id INTEGER REFERENCES missions(id) ON DELETE CASCADE,
@@ -454,21 +454,37 @@ with app.app_context():
     _conn.commit()
     # --- End pending_approvals migration ---
 
-    # --- ai-hierarchy-suggestions: upgrade a pre-existing pending_approvals
-    # (created before project_suggestion/goal_suggestion existed) in place.
-    # SQLite has no ALTER-a-CHECK-constraint — rebuild the table, copy rows,
-    # swap. Detected by sniffing the live CHECK text rather than a version
+    # --- Upgrade a pending_approvals created before the current gate_type set
+    # existed. SQLite has no ALTER-a-CHECK-constraint — rebuild the table, copy
+    # rows, swap. Detected by sniffing the live CHECK text rather than a version
     # flag, so this is safe to run unconditionally on every boot.
+    #
+    # The column list is read from the OLD table instead of being hardcoded.
+    # The hardcoded version of this block omitted mission_id/project_id (they
+    # didn't exist when it was written), so adding a gate_type later would have
+    # silently dropped every ai-hierarchy approval's parent link on the way
+    # through. Copying the intersection of old and new columns makes the next
+    # gate_type a one-line change instead of a data-loss trap.
     _cur.execute(
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='pending_approvals'"
     )
     _pa_row = _cur.fetchone()
-    if _pa_row and "project_suggestion" not in (_pa_row[0] or ""):
-        _cur.executescript("""
+    if _pa_row and "pauta_ciclo" not in (_pa_row[0] or ""):
+        _cur.execute("PRAGMA table_info(pending_approvals)")
+        _pa_old_cols = {r[1] for r in _cur.fetchall()}
+        _pa_new_cols = [
+            "id", "gate_type", "ticket_id", "goal_id", "mission_id", "project_id",
+            "agent", "attempt", "idempotency_key", "status", "payload",
+            "telegram_chat_id", "telegram_message_id", "approver_from_id",
+            "reject_reason", "decided_by", "created_at", "nudged_at", "decided_at",
+            "expires_at",
+        ]
+        _pa_copy = ", ".join(c for c in _pa_new_cols if c in _pa_old_cols)
+        _cur.executescript(f"""
             ALTER TABLE pending_approvals RENAME TO pending_approvals_old;
             CREATE TABLE pending_approvals (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                gate_type TEXT NOT NULL CHECK(gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion')),
+                gate_type TEXT NOT NULL CHECK(gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion','pauta_ciclo')),
                 ticket_id TEXT REFERENCES tickets(id) ON DELETE CASCADE,
                 goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
                 mission_id INTEGER REFERENCES missions(id) ON DELETE CASCADE,
@@ -489,18 +505,8 @@ with app.app_context():
                 decided_at TEXT,
                 expires_at TEXT NOT NULL
             );
-            INSERT INTO pending_approvals (
-                id, gate_type, ticket_id, goal_id, agent, attempt, idempotency_key,
-                status, payload, telegram_chat_id, telegram_message_id,
-                approver_from_id, reject_reason, decided_by, created_at, nudged_at,
-                decided_at, expires_at
-            )
-            SELECT
-                id, gate_type, ticket_id, goal_id, agent, attempt, idempotency_key,
-                status, payload, telegram_chat_id, telegram_message_id,
-                approver_from_id, reject_reason, decided_by, created_at, nudged_at,
-                decided_at, expires_at
-            FROM pending_approvals_old;
+            INSERT INTO pending_approvals ({_pa_copy})
+            SELECT {_pa_copy} FROM pending_approvals_old;
             DROP TABLE pending_approvals_old;
             CREATE INDEX IF NOT EXISTS idx_pending_approvals_status ON pending_approvals(status, expires_at);
         """)

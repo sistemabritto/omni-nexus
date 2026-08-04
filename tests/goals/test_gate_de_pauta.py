@@ -25,7 +25,7 @@ Run:
 from __future__ import annotations
 
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 import pytest
@@ -197,6 +197,19 @@ class _JobFalso:
         self.job_func = func
 
 
+# Horários de referência que não dependem da hora em que a suíte roda.
+#
+# A primeira versão destes testes montava a janela passada com
+# `(datetime.now() - timedelta(hours=2)).time()`. Depois da meia-noite isso
+# devolve um horário de ONTEM que, lido como hora do dia de hoje, está no
+# FUTURO — e o teste falhava sozinho entre 00:00 e 02:00. Custou uma
+# investigação de "regressão" que não existia: o código estava certo o tempo
+# todo. Teste que depende do relógio de parede só falha quando ninguém está
+# olhando.
+JA_PASSOU = time(0, 0)      # meia-noite: anterior a qualquer instante do dia
+AINDA_VEM = time(23, 59)    # último minuto: posterior a qualquer instante útil
+
+
 def _job(unit, start_day, at_time, args, erro=None):
     return _JobFalso(unit, start_day, at_time, args, erro)
 
@@ -216,8 +229,7 @@ def test_roda_semanal_que_perdeu_a_janela_de_hoje(scheduler_isolado, monkeypatch
 
     agora = datetime.now()
     dia = list(scheduler_isolado.DIAS_DA_SEMANA)[agora.weekday()]
-    passado = (agora - timedelta(hours=2)).time()
-    job = _job("weeks", dia, passado, ("Research Semanal", "weekly_content_research.py"))
+    job = _job("weeks", dia, JA_PASSOU, ("Research Semanal", "weekly_content_research.py"))
     monkeypatch.setattr(_schedule, "get_jobs", lambda: [job])
 
     scheduler_isolado.recuperar_janelas_perdidas()
@@ -228,11 +240,8 @@ def test_nao_roda_o_que_ainda_vai_acontecer(scheduler_isolado, monkeypatch):
     import schedule as _schedule
 
     agora = datetime.now()
-    if agora.hour == 23 and agora.minute == 59:
-        pytest.skip("sem horário futuro no mesmo dia para exercitar o caso")
     dia = list(scheduler_isolado.DIAS_DA_SEMANA)[agora.weekday()]
-    futuro = agora.replace(hour=23, minute=59).time()
-    job = _job("weeks", dia, futuro, ("Research Semanal", "weekly_content_research.py"))
+    job = _job("weeks", dia, AINDA_VEM, ("Research Semanal", "weekly_content_research.py"))
     monkeypatch.setattr(_schedule, "get_jobs", lambda: [job])
 
     scheduler_isolado.recuperar_janelas_perdidas()
@@ -245,7 +254,7 @@ def test_nao_repete_o_que_ja_rodou_hoje(scheduler_isolado, monkeypatch):
 
     agora = datetime.now()
     dia = list(scheduler_isolado.DIAS_DA_SEMANA)[agora.weekday()]
-    job = _job("weeks", dia, (agora - timedelta(hours=2)).time(),
+    job = _job("weeks", dia, JA_PASSOU,
                ("Research Semanal", "weekly_content_research.py"))
     monkeypatch.setattr(_schedule, "get_jobs", lambda: [job])
 
@@ -259,8 +268,7 @@ def test_diario_nao_entra_no_catch_up(scheduler_isolado, monkeypatch):
     segundo justifica rodar fora de hora no boot."""
     import schedule as _schedule
 
-    job = _job("days", None, (datetime.now() - timedelta(hours=2)).time(),
-               ("Good Morning", "good_morning.py"))
+    job = _job("days", None, JA_PASSOU, ("Good Morning", "good_morning.py"))
     monkeypatch.setattr(_schedule, "get_jobs", lambda: [job])
 
     scheduler_isolado.recuperar_janelas_perdidas()
@@ -272,7 +280,7 @@ def test_semanal_de_outro_dia_da_semana_nao_roda(scheduler_isolado, monkeypatch)
 
     agora = datetime.now()
     outro = list(scheduler_isolado.DIAS_DA_SEMANA)[(agora.weekday() + 3) % 7]
-    job = _job("weeks", outro, (agora - timedelta(hours=2)).time(),
+    job = _job("weeks", outro, JA_PASSOU,
                ("Memory Lint", "memory_lint.py"))
     monkeypatch.setattr(_schedule, "get_jobs", lambda: [job])
 
@@ -287,7 +295,7 @@ def test_falha_no_catch_up_nao_derruba_o_boot(scheduler_isolado, monkeypatch):
 
     agora = datetime.now()
     dia = list(scheduler_isolado.DIAS_DA_SEMANA)[agora.weekday()]
-    job = _job("weeks", dia, (agora - timedelta(hours=2)).time(),
+    job = _job("weeks", dia, JA_PASSOU,
                ("Explode", "explode.py"), erro=RuntimeError("boom"))
     monkeypatch.setattr(_schedule, "get_jobs", lambda: [job])
 

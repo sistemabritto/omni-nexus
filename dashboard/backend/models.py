@@ -836,6 +836,9 @@ class Ticket(db.Model):
     locked_at = db.Column(db.String(30), nullable=True)
     locked_by = db.Column(db.String(100), nullable=True)
     lock_timeout_seconds = db.Column(db.Integer, nullable=True)
+    # Segredo entregue a quem vence o checkout; o release o exige de volta.
+    # Nunca sai em to_dict() — é devolvido uma única vez, pelo próprio checkout.
+    lock_token = db.Column(db.String(64), nullable=True)
     created_by = db.Column(db.String(100), nullable=False, default="davidson")
     source_agent = db.Column(db.String(100), nullable=True)
     source_session_id = db.Column(db.String(36), nullable=True)

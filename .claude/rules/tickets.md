@@ -17,19 +17,61 @@ Persistent topics with state, assignable to agents, with atomic checkout. Primar
 | `lock_timeout_seconds` | Default 1800 — janitor releases after this |
 
 Comments: `ticket_comments` (author = `human:x` or `agent:y`).
-Activity log: `ticket_activity` (events: created, status_changed, checkout, release, assigned, comment_added, deleted).
+Activity log: `ticket_activity` (events: created, status_changed, checkout, release, force_release, assigned, comment_added, deleted).
 
 ## Atomic Checkout
 
 ```sql
 UPDATE tickets
-SET locked_at = now(), locked_by = ?, lock_timeout_seconds = ?
+SET locked_at = now(), locked_by = ?, lock_timeout_seconds = ?, lock_token = ?
 WHERE id = ? AND locked_at IS NULL
 ```
 
 Row count = 1 → got the lock. Row count = 0 → already locked (409 Conflict returned).
 
 Guarantees: exactly one process acts on a ticket at a time. Verified by concurrency test (10 parallel requests → 1 wins, 9 get 409).
+
+### `lock_token` — quem prova a posse do lock
+
+O checkout devolve **`lock_token`** no corpo da resposta, **uma única vez**. Ele
+nunca aparece em `to_dict()`, nem na listagem, nem no 409 — expor o segredo
+desfaria o ponto dele. **Guarde-o e mande de volta no release.**
+
+```
+POST /api/tickets/{id}/release   {"lock_token": "<o que o checkout devolveu>"}
+```
+
+Existe porque a autorização do release saía do **corpo da requisição**: ele
+comparava `ticket.locked_by` com um `agent` que o próprio chamador mandava — e o
+409 do checkout devolve `locked_by`, então nem era preciso adivinhar. Qualquer um
+com `tickets:execute` soltava o lock de qualquer agente, e a garantia de
+"exatamente um processo age sobre um ticket por vez" não valia.
+
+**Identidade por agente não resolve isso, e a tentativa de usá-la falhou:** uma
+primeira correção exigia `workspace:manage` para soltar em nome de outro. Não
+barrava ninguém — `app.py::_try_api_token_auth` resolve TODO portador do
+`DASHBOARD_API_TOKEN` para o mesmo usuário de serviço, que é **admin**, e admin
+tem `workspace:manage`. O gate aprovava exatamente quem devia barrar.
+
+**Forçar** (quebrar o lock de um agente travado) continua possível e continua
+necessário, mas só por **humano em sessão de navegador com papel admin**:
+chamada autenticada por API token é recusada com 403 mesmo sendo admin
+(`g.auth_via_api_token`, a mesma porta estreita de
+`approvals.py::decide_approval_via_dashboard`). A quebra entra no
+`ticket_activity` como **`force_release`**, evento próprio, com
+`previously_locked_by` — nunca confundida com um release normal.
+
+Detalhes que valem lembrar:
+- Release de ticket já livre é **no-op 200** (`already_free`), não erro: o
+  janitor pode ter chegado antes e o agente não tem como saber.
+- O token é limpo junto com o lock. Reusar um token velho no checkout seguinte
+  daria a quem guardou o segredo antigo o poder de soltar o novo dono.
+- `lock_timeout_seconds` é validado na faixa **60..86400**. Antes ia cru para
+  `int()`: lixo dava 500 em vez de 400, e negativo fazia o janitor recuperar o
+  lock no primeiro tick, anulando o checkout recém-dado.
+
+Quem solta por **SQL direto** (`ticket_janitor`, `heartbeat_runner`,
+`knowledge/classify_worker`) não passa por aqui e não precisa do token.
 
 ## Auto-Release (Janitor)
 
@@ -78,7 +120,7 @@ POST   /api/tickets                  # create
 PATCH  /api/tickets/{id}             # update fields
 DELETE /api/tickets/{id}             # delete (logs activity)
 POST   /api/tickets/{id}/checkout    # atomic lock
-POST   /api/tickets/{id}/release     # release lock (403 if wrong agent)
+POST   /api/tickets/{id}/release     # release lock (exige lock_token; ver acima)
 POST   /api/tickets/{id}/comments    # add comment, parse mentions
 POST   /api/tickets/bulk             # close/reopen/delete/reassign/relink_goal
 GET    /api/tickets/export.csv       # CSV export

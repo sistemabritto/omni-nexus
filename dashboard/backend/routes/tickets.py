@@ -7,13 +7,14 @@ import io
 import json
 import os
 import re
+import secrets
 import shutil
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, g, jsonify, request
 from flask_login import current_user
 
 # Trigger a summary job after this many turns (fixed in v1, Q9)
@@ -461,16 +462,34 @@ def checkout_ticket(ticket_id: str):
 
     data = request.get_json() or {}
     agent = data.get("agent") or current_user.username
-    lock_timeout = int(data.get("lock_timeout_seconds", 1800))
+
+    # lock_timeout_seconds ia direto do corpo para dentro de int(): lixo dava
+    # 500 em vez de 400, negativo fazia o janitor recuperar o lock no primeiro
+    # tick (anulando o checkout) e um valor enorme criava lock que ele nunca
+    # recupera. Faixa: 60s a 24h.
+    raw_timeout = data.get("lock_timeout_seconds", 1800)
+    try:
+        lock_timeout = int(raw_timeout)
+    except (TypeError, ValueError):
+        return jsonify({"error": "lock_timeout_seconds must be an integer",
+                        "code": "bad_lock_timeout"}), 400
+    if not (60 <= lock_timeout <= 86400):
+        return jsonify({"error": "lock_timeout_seconds must be between 60 and 86400",
+                        "code": "bad_lock_timeout"}), 400
+
     now = _now()
+    # Segredo que prova a posse deste checkout. Devolvido uma única vez, aqui;
+    # nunca aparece em to_dict() nem no 409 abaixo.
+    lock_token = secrets.token_urlsafe(32)
 
     result = db.session.execute(
         db.text(
             "UPDATE tickets SET locked_at = :now, locked_by = :agent, "
-            "lock_timeout_seconds = :timeout, updated_at = :now "
+            "lock_timeout_seconds = :timeout, lock_token = :token, updated_at = :now "
             "WHERE id = :id AND locked_at IS NULL"
         ),
-        {"id": ticket_id, "agent": agent, "timeout": lock_timeout, "now": now},
+        {"id": ticket_id, "agent": agent, "timeout": lock_timeout,
+         "token": lock_token, "now": now},
     )
     db.session.commit()
 
@@ -488,7 +507,13 @@ def checkout_ticket(ticket_id: str):
     db.session.commit()
 
     audit(current_user, "execute", "tickets", f"checkout ticket {ticket_id} by {agent}")
-    return jsonify({"success": True, "ticket_id": ticket_id, "locked_by": agent, "locked_at": now})
+    return jsonify({
+        "success": True,
+        "ticket_id": ticket_id,
+        "locked_by": agent,
+        "locked_at": now,
+        "lock_token": lock_token,
+    })
 
 
 # --------------- Release ---------------
@@ -501,47 +526,65 @@ def release_ticket(ticket_id: str):
 
     data = request.get_json() or {}
     agent = data.get("agent") or current_user.username
+    provided_token = (data.get("lock_token") or "").strip()
 
     ticket = Ticket.query.get_or_404(ticket_id)
-    if ticket.locked_by != agent:
-        return jsonify({
-            "error": "not_locked_by_you",
-            "locked_by": ticket.locked_by,
-        }), 403
+    if ticket.locked_at is None:
+        return jsonify({"success": True, "ticket_id": ticket_id, "already_free": True})
 
-    # Os dois lados da comparação acima vêm do chamador: `agent` sai do corpo e
-    # `locked_by` é devolvido no 409 do checkout, então nem era preciso
-    # adivinhar. Qualquer um com tickets:execute soltava o lock de qualquer
-    # agente mandando {"agent": "zara-cs"}, e a garantia de "exatamente um
-    # processo age sobre um ticket por vez" caía.
+    # A autorização é pelo TOKEN, não pelo `agent` do corpo. Antes comparava
+    # ticket.locked_by com um valor que o próprio chamador mandava — e o 409 do
+    # checkout devolve locked_by, então nem precisava adivinhar. Qualquer um com
+    # tickets:execute soltava o lock de qualquer agente, e a garantia de
+    # "exatamente um processo age sobre um ticket por vez" caía.
     #
-    # Não dá para tirar a identidade do token: todos os agentes compartilham
-    # DASHBOARD_API_TOKEN. Então soltar em nome de outro continua possível — é
-    # preciso, quando um agente trava —, mas vira caminho de força explícito:
-    # exige workspace:manage e fica no ticket_activity marcado como quebra,
-    # com quem a fez. Nunca mais por acidente, nunca mais sem rastro.
-    forcado = agent != current_user.username
-    if forcado and not has_permission(current_user.role, "workspace", "manage"):
-        return jsonify({
-            "error": "forced_release_requires_manage",
-            "message": f"soltar o lock de '{agent}' é uma quebra; exige workspace:manage",
-            "locked_by": ticket.locked_by,
-        }), 403
+    # Identidade por agente não existe para resolver isso: todos compartilham
+    # DASHBOARD_API_TOKEN e `app.py::_try_api_token_auth` resolve todos para o
+    # mesmo usuário de serviço. Quem prova posse é quem tem o segredo.
+    token_ok = bool(provided_token) and bool(ticket.lock_token) and \
+        secrets.compare_digest(provided_token, ticket.lock_token)
+
+    forcado = False
+    if not token_ok:
+        # Quebrar o lock de outro continua possível — é preciso, quando um
+        # agente trava —, mas só por um humano de verdade, num navegador, com
+        # papel admin. Mesma porta estreita de
+        # `approvals.py::decide_approval_via_dashboard`, e pela mesma razão: o
+        # usuário de serviço do DASHBOARD_API_TOKEN É admin, então checar
+        # `workspace:manage` sozinho aprovaria TODO agente que usa o EvoClient
+        # e reabriria exatamente o buraco que o token de lock fecha.
+        if getattr(g, "auth_via_api_token", False):
+            return jsonify({
+                "error": "invalid_lock_token",
+                "hint": "chamador via API precisa mandar o lock_token devolvido "
+                        "pelo checkout; forçar exige sessão de navegador admin",
+                "locked_by": ticket.locked_by,
+            }), 403
+        if not current_user.is_authenticated or current_user.role != "admin":
+            return jsonify({
+                "error": "invalid_lock_token",
+                "hint": "envie o lock_token devolvido pelo checkout",
+                "locked_by": ticket.locked_by,
+            }), 403
+        forcado = True
 
     now = _now()
+    detentor_anterior = ticket.locked_by
     ticket.locked_at = None
     ticket.locked_by = None
+    ticket.lock_token = None
     ticket.updated_at = now
     if forcado:
-        _log_activity(ticket_id, current_user.username, "release",
-                      {"forced": True, "on_behalf_of": agent})
+        _log_activity(ticket_id, current_user.username, "force_release",
+                      {"previously_locked_by": detentor_anterior})
     else:
         _log_activity(ticket_id, agent, "release")
     db.session.commit()
 
+    verbo = "force-release" if forcado else "release"
     audit(current_user, "execute", "tickets",
-          f"{'FORCED release' if forcado else 'release'} ticket {ticket_id} by {agent}")
-    return jsonify({"success": True, "ticket_id": ticket_id})
+          f"{verbo} ticket {ticket_id} (era de {detentor_anterior})")
+    return jsonify({"success": True, "ticket_id": ticket_id, "forced": forcado})
 
 
 # --------------- Comments ---------------

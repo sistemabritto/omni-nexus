@@ -9,6 +9,7 @@ sub-goal tickets) is wired in Step 7 — see the TODO markers below.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -984,18 +985,48 @@ def create_approval():
         ).scalar() or 0
         idempotency_key = f"goalsug:{project_id}:{attempt}"
     else:  # pauta_ciclo
-        # A chave é o ciclo, sem contador de tentativa. Os outros gates
-        # reabrem de propósito a cada retentativa; este NÃO pode: o research
-        # roda semanalmente e um catch-up depois de redeploy reexecuta o mesmo
-        # ciclo. Com `attempt` na chave, cada reexecução abriria um card novo
-        # das mesmas 21 pautas, e o `INSERT OR IGNORE` abaixo deixa de proteger.
-        # Card repetido não é só ruído: ensina a ignorar o canal que sustenta o
-        # human-in-the-loop.
+        # A chave é o ciclo MAIS um resumo do que está sendo proposto — nunca um
+        # contador de tentativa. As duas metades resolvem casos opostos:
+        #
+        # - o ciclo sozinho protegeria contra o card duplicado, porque o
+        #   research roda semanalmente e o catch-up de boot reexecuta o mesmo
+        #   ciclo; com `attempt` na chave, cada reexecução abriria um card novo
+        #   das mesmas 21 pautas, e card repetido ensina a ignorar o canal que
+        #   sustenta o human-in-the-loop;
+        # - mas o ciclo sozinho também travaria o caso legítimo: rodar o
+        #   research de novo com pautas DIFERENTES (o que acontece a cada ajuste
+        #   de seed ou de filtro) deixava o `INSERT OR IGNORE` engolir o card
+        #   novo em silêncio, e o humano ficava com um card apontando para
+        #   pautas que já não existem na fila.
+        #
+        # Com o resumo do conteúdo na chave: mesmas pautas -> mesma chave ->
+        # ignorado; pautas diferentes -> chave nova -> card novo, e o anterior
+        # expira logo abaixo.
         ciclo = (payload.get("ciclo") or "").strip()
         if not ciclo:
             return jsonify({"error": "payload.ciclo is required for gate_type=pauta_ciclo"}), 400
+        assinatura = hashlib.sha256(
+            json.dumps(
+                [(p.get("keyword"), p.get("data_alvo"))
+                 for p in (payload.get("pautas") or []) if isinstance(p, dict)],
+                ensure_ascii=False, sort_keys=True,
+            ).encode("utf-8")
+        ).hexdigest()[:12]
         attempt = 0
-        idempotency_key = f"pauta:{ciclo}"
+        idempotency_key = f"pauta:{ciclo}:{assinatura}"
+
+        # O card anterior do mesmo ciclo vira lixo no instante em que este
+        # nasce: ele lista pautas que a regravação já substituiu. Deixá-lo
+        # `pending` daria ao humano dois cards vivos do mesmo ciclo, e aprovar o
+        # velho liberaria uma fila que não existe mais.
+        db.session.execute(
+            db.text(
+                "UPDATE pending_approvals SET status='expired' "
+                "WHERE gate_type='pauta_ciclo' AND status='pending' "
+                "AND idempotency_key LIKE :prefixo AND idempotency_key != :atual"
+            ),
+            {"prefixo": f"pauta:{ciclo}:%", "atual": idempotency_key},
+        )
 
     now = _now()
     expires_at = (datetime.now(timezone.utc) + timedelta(hours=8)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")

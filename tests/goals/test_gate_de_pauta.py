@@ -88,17 +88,45 @@ def test_outros_gates_nao_mudaram():
 
 # ── 2. um gate por ciclo ─────────────────────────────────────────────────
 
-def test_chave_de_idempotencia_e_o_ciclo_sem_tentativa():
+def test_chave_de_idempotencia_nunca_usa_contador_de_tentativa():
     """Os outros gates reabrem a cada retentativa; este NÃO pode.
 
     O research roda semanalmente e o catch-up de boot reexecuta o mesmo ciclo.
     Com `attempt` na chave, cada reexecução abriria um card novo das mesmas 21
     pautas — e card repetido ensina a ignorar o canal que sustenta o
-    human-in-the-loop.
+    human-in-the-loop. Quem diferencia é o conteúdo, não a contagem: ver
+    test_chave_carrega_a_assinatura_do_conteudo.
     """
     fonte = (ROOT / "dashboard" / "backend" / "routes" / "approvals.py").read_text(encoding="utf-8")
-    assert 'idempotency_key = f"pauta:{ciclo}"' in fonte
     assert 'idempotency_key = f"pauta:{ciclo}:{attempt}"' not in fonte
+    trecho = fonte.split("else:  # pauta_ciclo")[1].split("now = _now()")[0]
+    assert "attempt = 0" in trecho
+
+
+def test_chave_carrega_a_assinatura_do_conteudo():
+    """O ciclo sozinho na chave travava o caso legítimo.
+
+    Rodar o research de novo com pautas DIFERENTES — o que acontece a cada
+    ajuste de seed ou de filtro — fazia o `INSERT OR IGNORE` engolir o card novo
+    em silêncio, e o humano ficava com um card apontando para pautas que já não
+    existiam na fila. Aconteceu de verdade em 04/08/2026, ao regravar o ciclo
+    2026-08-03.
+    """
+    fonte = (ROOT / "dashboard" / "backend" / "routes" / "approvals.py").read_text(encoding="utf-8")
+    assert 'idempotency_key = f"pauta:{ciclo}:{assinatura}"' in fonte
+    # A assinatura é do CONTEÚDO (keyword + dia), não um contador: mesma fila
+    # reproposta tem de dar a mesma chave.
+    assert 'p.get("keyword"), p.get("data_alvo")' in fonte
+    assert "hashlib.sha256" in fonte
+
+
+def test_card_anterior_do_mesmo_ciclo_expira():
+    """Dois cards vivos do mesmo ciclo dariam ao humano a chance de aprovar o
+    velho — liberando uma fila que já foi substituída."""
+    fonte = (ROOT / "dashboard" / "backend" / "routes" / "approvals.py").read_text(encoding="utf-8")
+    trecho = fonte.split("else:  # pauta_ciclo")[1].split("now = _now()")[0]
+    assert "UPDATE pending_approvals SET status='expired'" in trecho
+    assert "idempotency_key != :atual" in trecho, "não pode expirar o card que acabou de nascer"
 
 
 def test_gate_type_aceito_em_todo_lugar_que_valida():

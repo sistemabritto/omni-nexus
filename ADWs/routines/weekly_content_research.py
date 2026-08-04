@@ -490,11 +490,23 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
 
     Volume vem como 0 de propósito: fingir um número que ninguém mediu seria
     pior que admitir que esta pauta veio de outra fonte.
+
+    Cai no Perplexity quando o xAI não responde, pelo mesmo motivo e com o
+    mesmo padrão de `pesquisar_noticias`. Em 04/08/2026 se descobriu que
+    `XAI_API_KEY` não existia no `.env` da VPS: a notícia da semana sobrevivia
+    pelo fallback dela, mas ESTA função morria calada — e é ela que fecha os 21
+    slots quando o SEO não dá conta. O sintoma foi o ciclo de 03/08 nascer com 8
+    pautas em vez de 21, preenchido na mão com duplicatas, e dois dias sem
+    artigo. Reserva que falha em silêncio não é reserva.
     """
     import requests
 
+    if quantas <= 0:
+        return []
     chave = (os.environ.get("XAI_API_KEY") or "").strip()
-    if not chave or quantas <= 0:
+    chave_perplexity = (os.environ.get("PERPLEXITY_API_KEY") or "").strip()
+    if not chave and not chave_perplexity:
+        log("XAI_API_KEY/PERPLEXITY_API_KEY ausentes — sem reserva para fechar a semana.")
         return []
 
     evitar = "\n".join(f"- {k}" for k in ja_escolhidas[:40])
@@ -514,26 +526,45 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
           'alguém digitaria>", "porque": "<o gancho, até 12 palavras>"}]}'
     )
 
-    try:
-        r = requests.post(
-            XAI_URL,
-            headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"},
-            json={"model": XAI_MODEL, "input": [{"role": "user", "content": prompt}],
-                  "tools": [{"type": "web_search"}, {"type": "x_search"}]},
-            timeout=600)
-    except Exception as exc:  # noqa: BLE001 — a semana segue com o que o SEO deu
-        log(f"X indisponível para completar a pauta: {exc}")
-        return []
-    if r.status_code != 200:
-        log(f"x.ai respondeu {r.status_code} ao buscar trending")
-        return []
-
     texto = ""
-    for item in r.json().get("output", []):
-        if item.get("type") == "message":
-            for c in item.get("content", []):
-                if c.get("type") == "output_text":
-                    texto += c.get("text", "")
+    if chave:
+        try:
+            r = requests.post(
+                XAI_URL,
+                headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"},
+                json={"model": XAI_MODEL, "input": [{"role": "user", "content": prompt}],
+                      "tools": [{"type": "web_search"}, {"type": "x_search"}]},
+                timeout=600)
+            if r.status_code == 200:
+                for item in r.json().get("output", []):
+                    if item.get("type") == "message":
+                        for c in item.get("content", []):
+                            if c.get("type") == "output_text":
+                                texto += c.get("text", "")
+            else:
+                log(f"x.ai respondeu {r.status_code} ao buscar trending; tentando Perplexity.")
+        except Exception as exc:  # noqa: BLE001
+            log(f"X indisponível para completar a pauta ({exc}); tentando Perplexity.")
+
+    if not texto.strip() and chave_perplexity:
+        try:
+            r = requests.post(
+                PERPLEXITY_URL,
+                headers={"Authorization": f"Bearer {chave_perplexity}",
+                         "Content-Type": "application/json"},
+                json={"model": PERPLEXITY_MODEL,
+                      "messages": [{"role": "user", "content": prompt}]},
+                timeout=600)
+            if r.status_code == 200:
+                texto = r.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+            else:
+                log(f"Perplexity respondeu {r.status_code} ao buscar trending: {r.text[:160]}")
+        except Exception as exc:  # noqa: BLE001 — a semana segue com o que o SEO deu
+            log(f"Perplexity indisponível para completar a pauta: {exc}")
+
+    if not texto.strip():
+        log("nenhuma fonte de trending respondeu — a semana fica com o que o SEO deu.")
+        return []
 
     try:
         dados = json.loads(re.sub(r"^```(?:json)?\s*|\s*```$", "", texto.strip()))

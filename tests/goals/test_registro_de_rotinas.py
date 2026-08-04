@@ -63,7 +63,11 @@ def test_a_rotina_do_agendado_aparece():
     jobs = agendamento_real(forcar=True)
     achada = [j for j in jobs if j["script"] == "derivar_redes_pendentes.py"]
     assert achada, "a rotina existe no scheduler.py e tem de aparecer na tela"
-    assert achada[0]["unit"] == "minutes" and achada[0]["interval"] == 15
+    # O intervalo exato é decisão de custo (foi de 15 para 30 min em
+    # 2026-08-02); o que o varredor não pode é deixar de rodar em minutos, ou o
+    # artigo agendado volta a passar o dia órfão de posts de rede.
+    assert achada[0]["unit"] == "minutes"
+    assert achada[0]["interval"] <= 30
 
 
 @pytest.mark.parametrize("job,esperado", [

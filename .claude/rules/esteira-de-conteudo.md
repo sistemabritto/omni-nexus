@@ -164,6 +164,33 @@ que o Felipe apontou ao revisar o site em 27/07/2026. Instrução negativa no
 prompt sozinha não resolve: o modelo reincide, porque encaixar aposto com
 travessão é hábito de treino. Testes: `tests/goals/test_sem_travessao.py`.
 
+**O limite de caractere da rede é medido em BYTES, e nunca se mira nele.**
+`ghost_social_bridge.medida()` conta `len(texto.encode("utf-8"))` e
+`teto_de(rede)` desconta 5% do limite nominal (X: 266 de 280; Threads: 475 de
+500). As duas coisas existem pelo mesmo incidente: entre 28/07 e 02/08/2026,
+**dez derivações do X e uma do Threads foram aprovadas no Telegram e nunca
+saíram** — o Postiz devolveu `400 {"provider":"x","message":"post is too long,
+please fix it"}`, a aprovação parou em `approved` sem virar `published`, e o
+único registro foi um comentário no ticket. O humano aprovava e o post não
+existia.
+
+O corte não estava errado; estava certo demais. `garantir_link` calculava a
+sobra para o texto final medir exatamente 280, então todo post do X saía entre
+270 e 280, colado no teto — e aí qualquer divergência entre a nossa régua e a
+do validador que está no caminho derruba o post inteiro. Os dados das 20
+derivações registradas mostram onde a régua deles está:
+
+| Rede | publicou até | recusou a partir de |
+|---|---|---|
+| X | 272 bytes | 276 bytes |
+| Threads | 501 bytes | 502 bytes |
+
+O par que só bytes explica: um post de **271 caracteres foi recusado** e um de
+**272 passou** — o primeiro tinha quatro acentos (276 bytes), o segundo nenhum.
+Contar caractere é otimista com português exatamente na hora em que a margem
+importa. Testes: `test_ghost_social_bridge.py` (seção "o limite é medido em
+bytes") e `test_publicacao_com_imagem_e_link.py`.
+
 Artigo nasce **sempre `draft`** no Ghost (`criar_rascunho`). Quem decide se vai ao
 ar é o gate no Telegram — criar já publicado tiraria do humano exatamente a
 decisão que o fluxo inteiro existe para preservar.

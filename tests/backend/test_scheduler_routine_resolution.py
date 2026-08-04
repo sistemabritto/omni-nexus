@@ -49,7 +49,9 @@ def test_finds_script_directly_in_routines_dir(scheduler_module):
     common, already-working case must keep working unmodified."""
     with patch("subprocess.run", return_value=_mock_subprocess_run()) as mock_run:
         scheduler_module.run_adw("AI News Daily Draft", "custom/ai_news_daily_draft.py")
-    cmd = mock_run.call_args[0][0]
+    # run_adw passou a montar cmd como LISTA (sem shell=True): o caminho é um
+    # elemento, não um trecho de string de shell. Junta para afirmar sobre ele.
+    cmd = " ".join(mock_run.call_args[0][0])
     assert "ADWs/routines/custom/ai_news_daily_draft.py" in cmd
 
 
@@ -59,7 +61,9 @@ def test_falls_back_to_routines_dir_root_for_daily_status_report(scheduler_modul
     moving it would break its own ROOT-relative DB path resolution."""
     with patch("subprocess.run", return_value=_mock_subprocess_run()) as mock_run:
         scheduler_module.run_adw("Status Diário (WhatsApp)", "custom/daily_status_report.py")
-    cmd = mock_run.call_args[0][0]
+    # run_adw passou a montar cmd como LISTA (sem shell=True): o caminho é um
+    # elemento, não um trecho de string de shell. Junta para afirmar sobre ele.
+    cmd = " ".join(mock_run.call_args[0][0])
     assert "ADWs/routines/daily_status_report.py" in cmd
     assert "custom/daily_status_report.py" not in cmd
 
@@ -70,7 +74,9 @@ def test_falls_back_to_top_level_scripts_for_publish_scheduled(scheduler_module)
     at all. This was the highest-impact silent no-op found in this audit."""
     with patch("subprocess.run", return_value=_mock_subprocess_run()) as mock_run:
         scheduler_module.run_adw("Publicar Posts Sociais (X)", "custom/publish_scheduled.py")
-    cmd = mock_run.call_args[0][0]
+    # run_adw passou a montar cmd como LISTA (sem shell=True): o caminho é um
+    # elemento, não um trecho de string de shell. Junta para afirmar sobre ele.
+    cmd = " ".join(mock_run.call_args[0][0])
     assert "scripts/publish_scheduled.py" in cmd
 
 

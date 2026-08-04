@@ -70,6 +70,23 @@ sempre; o `flush=True` em `run_adw` é redundante mas fica.
 | A cada 15 min | Derivar Redes Pendentes | `derivar_redes_pendentes.py` — recupera o artigo agendado que o Ghost publicou sozinho e ninguém derivou (ver `esteira-de-conteudo.md` §0) |
 | Friday 08:00 | Weekly Review | `weekly_review.py` — reactivated; checks overdue items weekly |
 
+## Falha de rotina alerta, não só loga
+
+`run_adw` manda **alerta no Telegram** (`_alert_routine_failure`) em três casos:
+script não encontrado, saída com código != 0, e timeout de 15 min. O stderr
+continua indo para o log desde `2502025`, mas log é passivo — alguém precisa ir
+olhar. Foi assim que `publish_scheduled.py` passou semanas falhando a cada tick
+sem ninguém saber, e assim que a esteira falhou em 02/08/2026 sem o motivo
+aparecer até rodar na mão.
+
+O alerta é best-effort por definição: se o Telegram não estiver configurado ou o
+import falhar, o `print` do chamador já aconteceu. Nunca derruba a rotina.
+
+O comando também deixou de ser string com `shell=True` — é
+`shlex.split(PYTHON) + [str(script_path)]`. Sem interpolação de `args` numa
+string de shell, e caminho com espaço deixa de ser problema. `PYTHON` pode ser
+`"uv run python"` (várias palavras), daí o `shlex.split` e não uma lista fixa.
+
 ## Janela perdida — o redeploy que apaga a semana
 
 `schedule` agenda sempre a **próxima** ocorrência a partir do instante em que o

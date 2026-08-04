@@ -8,6 +8,7 @@ Usage: runs automatically with make dashboard-app
 import subprocess
 import os
 import sys
+import shlex
 import signal
 import threading
 import time
@@ -142,6 +143,31 @@ def recuperar_janelas_perdidas() -> None:
             print(f"  [catch-up] {name} falhou: {exc}", flush=True)
 
 
+def _alert_routine_failure(name: str, detail: str) -> None:
+    """Avisa que uma rotina falhou, pelo mesmo canal que o resto do sistema usa.
+
+    O stderr da rotina já vai para o log desde 2502025, mas log é passivo:
+    alguém precisa ir olhar. Foi assim que `publish_scheduled.py` passou semanas
+    falhando a cada tick sem ninguém saber, e assim que a esteira falhou em
+    02/08 sem que o motivo aparecesse até rodar na mão.
+
+    Best-effort por definição: se o Telegram não estiver configurado ou o import
+    falhar, o print do chamador já aconteceu.
+    """
+    try:
+        sys.path.insert(0, str(WORKSPACE / "dashboard" / "backend"))
+        from notifications import _esc, send_telegram_alert
+
+        send_telegram_alert(
+            f"⚠️ <b>Rotina falhou</b>\n\n"
+            f"🔧 <b>{_esc(name)}</b>\n\n"
+            f"📝 <pre>{_esc(detail)}</pre>"
+        )
+    except Exception as exc:  # noqa: BLE001 — alerta nunca derruba a rotina
+        print(f"  (não foi possível alertar sobre {name}: {type(exc).__name__}: {exc})",
+              flush=True)
+
+
 def run_adw(name: str, script: str, args: str = ""):
     """Execute a routine as subprocess.
 
@@ -161,16 +187,27 @@ def run_adw(name: str, script: str, args: str = ""):
     candidates = [ROUTINES_DIR / script, ROUTINES_DIR / basename, WORKSPACE / "scripts" / basename]
     script_path = next((p for p in candidates if p.exists()), None)
     if script_path is None:
-        print(f"  {now} ✗ {name} — script not found: {script}")
+        print(f"  {now} ✗ {name} — script not found: {script}", flush=True)
+        # Um print aqui foi exatamente o que deixou `publish_scheduled.py` falhar
+        # a cada tick por semanas sem ninguém notar (ver .claude/rules/routines.md).
+        # A correção da época acrescentou os candidatos de path acima; o modo de
+        # falha silenciosa em si continuava intacto até aqui.
+        _alert_routine_failure(
+            name,
+            f"script não encontrado: {script}\nprocurado em:\n  "
+            + "\n  ".join(str(p) for p in candidates),
+        )
         return
 
     try:
-        cmd = f"{PYTHON} {script_path}"
+        # Lista em vez de shell=True: sem interpolação de `args` numa string de
+        # shell, e caminho com espaço deixa de ser problema. PYTHON pode ser
+        # "uv run python" (várias palavras), daí o shlex.split.
+        cmd = shlex.split(PYTHON) + [str(script_path)]
         if args:
-            cmd += f" {args}"
+            cmd += shlex.split(args)
         result = subprocess.run(
             cmd,
-            shell=True,
             cwd=str(WORKSPACE),
             timeout=900,
             capture_output=True,
@@ -189,8 +226,13 @@ def run_adw(name: str, script: str, args: str = ""):
             trecho = (result.stderr or result.stdout).strip()[-2000:]
             for linha in trecho.splitlines()[-6:]:
                 print(f"    └ {name}: {linha[:400]}", flush=True)
+        if result.returncode != 0:
+            saida = (result.stderr or result.stdout or "").strip()
+            _alert_routine_failure(
+                name, f"exit {result.returncode}\n\n{(saida or '(sem saída)')[-800:]}")
     except subprocess.TimeoutExpired as exc:
         print(f"  {now} ✗ {name} timeout (15min)", flush=True)
+        _alert_routine_failure(name, "timeout após 15 minutos")
         saida = (exc.stdout or "") + (exc.stderr or "")
         if saida:
             trecho = saida.strip()[-2000:]

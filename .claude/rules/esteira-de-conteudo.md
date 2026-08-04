@@ -11,12 +11,50 @@ listadas aqui em vez de reimplementar — cada uma delas existe porque a versão
 
 ```
 domingo   weekly_content_research  → 21 pautas na fila (status: proposta)
+                                   → abre o gate do ciclo no Telegram
 humano    aprova o ciclo em lote   → aprovada
 06:00     daily_content_pipeline   → escreve, cria draft, gera capa, abre o gate
 humano    aprova o artigo          → publica no Ghost (publicada)
 automático                         → deriva X/LinkedIn/Threads, um gate cada
-15 em 15 derivar_redes_pendentes   → recupera o artigo agendado que ficou órfão
+30 em 30 derivar_redes_pendentes   → recupera o artigo agendado que ficou órfão
 ```
+
+---
+
+## -1. Todo gate tem de PEDIR, não só travar
+
+A esteira tem três gates humanos: o ciclo de pautas, o artigo e cada rede. Os
+dois últimos sempre mandaram card no Telegram. O primeiro, até 03/08/2026, não
+mandava nada: `weekly_content_research` gravava as 21 pautas em `proposta`,
+criava um ticket no inbox do **@pixel** (não do Felipe) e terminava em silêncio.
+A única forma de liberar era alguém lembrar de abrir `/pautas` e clicar.
+
+O resultado é o modo de falha mais caro que existe, porque não parece falha:
+**01/08 e 03/08/2026 amanheceram com a fila cheia e a esteira não produziu
+artigo nenhum.** A rotina das 06:00 rodou, não achou nada `aprovada`, saiu com
+código 0. Nenhum erro, nenhum alerta — só dois dias sem conteúdo.
+
+Piorava porque o único lugar que podia avisar olhava para o lado errado:
+`briefing_dados.pauta_do_dia()` consultava só `escrita` e `aprovada`, então o
+Good Morning dizia **"Pauta da esteira para hoje: _nada_"** com 11 pautas
+paradas esperando decisão. Hoje consulta `proposta` também.
+
+**A regra, para qualquer gate novo:** um gate que só bloqueia não é gate, é
+travamento silencioso. Se o fluxo para esperando um humano, alguma coisa tem de
+chegar ao humano — e no inbox de um agente não conta.
+
+`gate_type='pauta_ciclo'` (`routes/approvals.py`) é como isso ficou. Dois
+detalhes que não podem mudar:
+
+- **A chave de idempotência é `pauta:{ciclo}`, sem `attempt`.** Os outros gates
+  reabrem de propósito a cada retentativa; este não pode, porque o catch-up de
+  boot (ver `routines.md`) reexecuta o research do mesmo ciclo. Com `attempt` na
+  chave, cada reexecução abriria um card novo das mesmas 21 pautas.
+- **Rejeitar não descarta pauta.** O ciclo volta a ser editável em `/pautas`;
+  quem descarta é `vencer`, pela data. Um "não" no card não pode apagar o
+  trabalho da rodada.
+
+Testes: `tests/goals/test_gate_de_pauta.py`.
 
 ---
 

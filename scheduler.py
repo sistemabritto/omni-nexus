@@ -11,7 +11,7 @@ import sys
 import signal
 import threading
 import time
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 WORKSPACE = Path(__file__).parent
@@ -71,6 +71,77 @@ def release_lock():
     PID_FILE.unlink(missing_ok=True)
 
 
+# ── janela perdida ───────────────────────────────────────────────────────
+#
+# `schedule` agenda sempre a PRÓXIMA ocorrência a partir do instante em que o
+# job é registrado. Um processo que sobe domingo às 12:15 registra o research
+# semanal (domingo 08:00) para o domingo SEGUINTE — a semana inteira se perde
+# em silêncio, sem erro, sem log.
+#
+# Aconteceu em 02/08/2026: um redeploy pôs o scheduler de pé às 12:15 e o
+# `weekly_content_research` das 08:00 nunca rodou. A segunda-feira amanheceu
+# com um ciclo de 11 pautas (montado à mão dias antes) em vez das 21 da semana,
+# com três keywords duplicadas, e a esteira ficou sem material novo.
+#
+# O catch-up é deliberadamente estreito: só job SEMANAL, só se a janela de HOJE
+# já passou, e só se ele não rodou hoje. Diário perdido espera algumas horas
+# pela próxima janela; semanal perdido espera sete dias.
+
+MARCAS_DIR = WORKSPACE / "ADWs" / "logs" / "ultima-execucao"
+DIAS_DA_SEMANA = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+                  "friday": 4, "saturday": 5, "sunday": 6}
+
+
+def _marca(script: str) -> Path:
+    return MARCAS_DIR / f"{Path(script).name}.txt"
+
+
+def _marcar_execucao(script: str) -> None:
+    """Registra que a rotina rodou hoje. Só o sucesso conta — uma execução que
+    falhou tem de ser retentada pelo catch-up do próximo boot, não considerada
+    feita."""
+    try:
+        MARCAS_DIR.mkdir(parents=True, exist_ok=True)
+        _marca(script).write_text(date.today().isoformat(), encoding="utf-8")
+    except OSError:
+        pass  # marca é otimização de catch-up, nunca requisito da rotina
+
+
+def _rodou_hoje(script: str) -> bool:
+    try:
+        return _marca(script).read_text(encoding="utf-8").strip() == date.today().isoformat()
+    except OSError:
+        return False
+
+
+def recuperar_janelas_perdidas() -> None:
+    """Roda agora o job semanal cuja janela de hoje passou sem ele."""
+    import schedule
+
+    agora = datetime.now()
+    for job in schedule.get_jobs():
+        if job.unit != "weeks" or not job.start_day or not job.at_time:
+            continue
+        if DIAS_DA_SEMANA.get(str(job.start_day).lower()) != agora.weekday():
+            continue
+        alvo = agora.replace(hour=job.at_time.hour, minute=job.at_time.minute,
+                             second=0, microsecond=0)
+        if agora <= alvo:
+            continue  # a janela ainda vem; o próprio schedule dá conta
+        args = getattr(job.job_func, "args", ()) or ()
+        if len(args) < 2:
+            continue
+        name, script = args[0], args[1]
+        if _rodou_hoje(script):
+            continue
+        print(f"  [catch-up] {name} perdeu a janela das {alvo:%H:%M} — rodando agora",
+              flush=True)
+        try:
+            job.job_func()
+        except Exception as exc:  # noqa: BLE001 — catch-up nunca derruba o boot
+            print(f"  [catch-up] {name} falhou: {exc}", flush=True)
+
+
 def run_adw(name: str, script: str, args: str = ""):
     """Execute a routine as subprocess.
 
@@ -107,6 +178,8 @@ def run_adw(name: str, script: str, args: str = ""):
         )
         status = "✓" if result.returncode == 0 else "✗"
         print(f"  {now} {status} {name}", flush=True)
+        if result.returncode == 0:
+            _marcar_execucao(script)
         # O erro da rotina não pode sumir. Sem isto, uma esteira que falha às
         # 06:00 loga só "✗ Esteira de Conteúdo" e ninguém descobre por quê —
         # foi exatamente o que aconteceu em 02/08 (a rotina falhou e o motivo
@@ -413,6 +486,7 @@ def main():
     total = len(schedule.get_jobs())
     print(f"  {total} routines scheduled")
     print(f"  Press Ctrl+C to stop\n")
+    recuperar_janelas_perdidas()
 
     def shutdown(sig, frame):
         release_lock()

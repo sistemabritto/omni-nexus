@@ -892,7 +892,7 @@ class PendingApproval(db.Model):
     __tablename__ = "pending_approvals"
     __table_args__ = (
         db.CheckConstraint(
-            "gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion')",
+            "gate_type IN ('publish','decomposition','project_suggestion','goal_suggestion','pauta_ciclo')",
             name="ck_approval_gate_type",
         ),
         db.CheckConstraint(

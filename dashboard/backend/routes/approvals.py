@@ -541,6 +541,44 @@ def _apply_decision(approval_id: int, decision: str, decided_by: str, reason: st
                     pass
         # reject: zero goals created — nothing else to do.
 
+    elif row.gate_type == "pauta_ciclo":
+        # A semana de pauta da esteira de conteúdo. Aprovar move o ciclo de
+        # `proposta` para `aprovada`, que é o que a rotina diária das 06:00
+        # consome — antes disso ela acorda, não encontra nada e o dia sai em
+        # branco.
+        #
+        # Este gate existe porque a aprovação do ciclo só vivia no botão da
+        # tela /pautas: o research gravava 21 pautas e terminava em silêncio,
+        # sem avisar ninguém. Em 01/08 e 03/08/2026 a esteira não produziu
+        # artigo nenhum por isso, e o briefing matinal ainda dizia "pauta de
+        # hoje: nada" porque só olhava os status `escrita` e `aprovada`.
+        if new_status == "approved":
+            try:
+                payload = json.loads(row.payload or "{}")
+            except (ValueError, TypeError):
+                payload = {}
+            ciclo = (payload.get("ciclo") or "").strip()
+            try:
+                import pauta_fila
+
+                liberadas = pauta_fila.aprovar_ciclo(ciclo) if ciclo else 0
+            except Exception as exc:  # noqa: BLE001
+                from notifications import send_telegram_alert
+                send_telegram_alert(
+                    f"⚠️ Aprovação do ciclo de pautas #{approval_id} ({ciclo}) foi registrada como "
+                    f"aprovada, mas liberar a fila falhou: {exc}. Nenhuma pauta saiu de `proposta` e "
+                    f"a aprovação já foi consumida — libere pelo painel em /pautas."
+                )
+                raise
+            if not liberadas:
+                from notifications import send_telegram_alert
+                send_telegram_alert(
+                    f"⚠️ Ciclo de pautas {ciclo or '(sem ciclo no payload)'} aprovado, mas nenhuma "
+                    f"pauta estava em `proposta` para liberar — confira em /pautas."
+                )
+        # reject: o ciclo segue em `proposta`, editável na tela. Rejeitar aqui
+        # não descarta pauta: quem descarta é `vencer`, pela data.
+
     return jsonify({"status": "ok", "approval_id": approval_id, "decision": new_status}), 200
 
 
@@ -581,6 +619,8 @@ def _render_structured_items(gate_type: str, payload: dict) -> str:
     whatever free text the agent wrote in payload["body"]. Closes the gap
     where the structured list only reliably lives in the DB, not in what the
     human actually sees on Telegram (Telegram audit finding #2)."""
+    if gate_type == "pauta_ciclo":
+        return _render_pautas(payload)
     key = {"decomposition": "tickets", "project_suggestion": "projects", "goal_suggestion": "goals"}.get(gate_type)
     if not key:
         return ""
@@ -594,6 +634,43 @@ def _render_structured_items(gate_type: str, payload: dict) -> str:
     lines.extend(f"• {t}" for t in titled[:10])
     if len(titled) > 10:
         lines.append(f"… e mais {len(titled) - 10}")
+    return "\n".join(lines)
+
+
+def _render_pautas(payload: dict) -> str:
+    """As pautas da semana agrupadas por dia, com volume e funil.
+
+    Agrupado por dia porque é assim que a decisão é tomada: o calendário fatia
+    a fila em blocos de três e o que se aprova é a semana, não uma lista solta
+    de 21 keywords. Volume e funil entram porque são os dois critérios que
+    fazem alguém trocar uma pauta antes de liberar — sem eles o card pede um
+    "sim" sobre o que ninguém consegue avaliar pelo celular.
+    """
+    pautas = payload.get("pautas")
+    if not isinstance(pautas, list) or not pautas:
+        return ""
+    por_dia: dict[str, list[dict]] = {}
+    for p in pautas:
+        if isinstance(p, dict) and p.get("keyword"):
+            por_dia.setdefault(p.get("data_alvo") or "sem data", []).append(p)
+    if not por_dia:
+        return ""
+
+    lines = [f"\n{len(pautas)} pautas propostas:"]
+    for dia in sorted(por_dia):
+        try:
+            rotulo = datetime.strptime(dia, "%Y-%m-%d").strftime("%d/%m")
+        except ValueError:
+            rotulo = dia
+        lines.append(f"\n<b>{rotulo}</b>")
+        for p in por_dia[dia]:
+            extras = []
+            if p.get("volume"):
+                extras.append(f"{p['volume']}/mês")
+            if p.get("funil"):
+                extras.append(f"/{p['funil']}")
+            sufixo = f" ({' · '.join(extras)})" if extras else ""
+            lines.append(f"• {p['keyword']}{sufixo}")
     return "\n".join(lines)
 
 
@@ -858,7 +935,8 @@ def create_approval():
 
     data = request.get_json(silent=True) or {}
     gate_type = data.get("gate_type")
-    valid_gate_types = ("publish", "decomposition", "project_suggestion", "goal_suggestion")
+    valid_gate_types = ("publish", "decomposition", "project_suggestion", "goal_suggestion",
+                        "pauta_ciclo")
     if gate_type not in valid_gate_types:
         return jsonify({"error": f"gate_type must be one of {valid_gate_types}"}), 400
 
@@ -895,7 +973,7 @@ def create_approval():
             {"m": mission_id},
         ).scalar() or 0
         idempotency_key = f"projsug:{mission_id}:{attempt}"
-    else:  # goal_suggestion
+    elif gate_type == "goal_suggestion":
         if not project_id:
             return jsonify({"error": "project_id is required for gate_type=goal_suggestion"}), 400
         attempt = db.session.execute(
@@ -905,6 +983,19 @@ def create_approval():
             {"p": project_id},
         ).scalar() or 0
         idempotency_key = f"goalsug:{project_id}:{attempt}"
+    else:  # pauta_ciclo
+        # A chave é o ciclo, sem contador de tentativa. Os outros gates
+        # reabrem de propósito a cada retentativa; este NÃO pode: o research
+        # roda semanalmente e um catch-up depois de redeploy reexecuta o mesmo
+        # ciclo. Com `attempt` na chave, cada reexecução abriria um card novo
+        # das mesmas 21 pautas, e o `INSERT OR IGNORE` abaixo deixa de proteger.
+        # Card repetido não é só ruído: ensina a ignorar o canal que sustenta o
+        # human-in-the-loop.
+        ciclo = (payload.get("ciclo") or "").strip()
+        if not ciclo:
+            return jsonify({"error": "payload.ciclo is required for gate_type=pauta_ciclo"}), 400
+        attempt = 0
+        idempotency_key = f"pauta:{ciclo}"
 
     now = _now()
     expires_at = (datetime.now(timezone.utc) + timedelta(hours=8)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")

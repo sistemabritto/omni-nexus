@@ -46,6 +46,62 @@ REDES = ("x", "linkedin", "threads")
 
 LIMITES = {"x": 280, "linkedin": 3000, "threads": 500, "instagram": 2200}
 
+# Margem que separa o limite nominal da plataforma do teto que a esteira mira.
+#
+# Entre 28/07 e 02/08/2026, DEZ derivações do X (e uma do Threads) foram
+# aprovadas no Telegram e nunca saíram: o Postiz devolveu
+# `400 {"provider":"x","message":"post is too long, please fix it"}` e a
+# aprovação parou em `approved`, sem virar `published`. O humano aprovava e o
+# post simplesmente não existia.
+#
+# A causa não é o corte estar errado — é ele estar CERTO DEMAIS. `garantir_link`
+# calculava a sobra para o texto final medir exatamente `LIMITES[rede]`, então
+# todo post do X saía entre 270 e 280 caracteres, colado no teto. Aí a régua do
+# validador que está no caminho diverge da nossa por alguns caracteres e o post
+# inteiro cai.
+#
+# Os dados das 20 derivações registradas mostram onde a régua deles está, e é em
+# BYTES, não em caracteres (ver `medida`):
+#
+#     X        publicou com até 272 bytes · recusou a partir de 276
+#     Threads  publicou com até 501 bytes · recusou a partir de 502
+#
+# Note o par que só bytes explica: um post de 271 caracteres foi recusado e um
+# de 272 passou — o primeiro tinha quatro acentos (276 bytes), o segundo nenhum.
+# Contar `len()` em caracteres é otimista com texto em português exatamente na
+# hora em que a margem importa.
+#
+# 5% de folga põe o teto do X em 266 bytes e o do Threads em 475, ambos dentro
+# da faixa comprovadamente aceita. O preço é uma dúzia de caracteres a menos por
+# post; o preço de não ter a folga é o post não existir.
+MARGEM_DE_SEGURANCA = 0.05
+
+
+def medida(texto: str) -> int:
+    """Tamanho do texto na régua que decide de fato: bytes UTF-8.
+
+    `len()` conta "ç" como 1 e o validador do Postiz conta como 2. A diferença
+    é invisível em post curto e decide a publicação em post colado no limite,
+    que é justamente o que a esteira produz.
+    """
+    return len((texto or "").encode("utf-8"))
+
+
+def teto_de(rede: str) -> int:
+    """Orçamento em bytes para a rede, já com a margem descontada."""
+    return int(LIMITES.get(rede, 280) * (1 - MARGEM_DE_SEGURANCA))
+
+
+def _fatiar(texto: str, limite: int) -> str:
+    """Maior prefixo de `texto` que cabe em `limite` bytes.
+
+    `decode(errors="ignore")` descarta o caractere multibyte que a fatia
+    partiu ao meio — cortar bytes crus num "ã" produziria lixo no post.
+    """
+    if medida(texto) <= limite:
+        return texto
+    return texto.encode("utf-8")[:limite].decode("utf-8", "ignore")
+
 # Redes em que o link do artigo tem de estar no corpo do post. No LinkedIn ele
 # vai no primeiro comentário e no Threads não vai link nenhum (post recompensa)
 # — nessas duas um link no corpo é erro, não esquecimento.
@@ -215,6 +271,11 @@ def limpar(texto: str, limite: int) -> str:
     O modelo às vezes devolve "**Texto final para Threads:** ..." apesar da
     instrução, e cortar cru no limite parte palavra no meio — o que num post
     publicado parece erro, não estilo.
+
+    `limite` é orçamento em BYTES (ver `medida`), e o retorno o respeita
+    inclusive contando a reticência que o corte acrescenta — ela custa 3 bytes,
+    e devolver um texto 2 bytes maior que o pedido é como o post do X chegava
+    ao Postiz estourado.
     """
     texto = (texto or "").strip().strip('"').strip()
     prev = None
@@ -227,14 +288,19 @@ def limpar(texto: str, limite: int) -> str:
     from escritor_de_artigo import sem_travessao
 
     texto = sem_travessao(texto)
-    if len(texto) <= limite:
+    if medida(texto) <= limite:
         return texto
-    corte = texto[:limite]
+    corte = _fatiar(texto, limite)
     fim = max(corte.rfind(". "), corte.rfind("! "), corte.rfind("? "), corte.rfind("\n"))
-    if fim > limite * 0.5:
+    # A fronteira de frase vale quando sobra post; na primeira metade do corte
+    # ela devolveria um fiapo do texto original.
+    if fim > len(corte) * 0.5:
         return corte[: fim + 1].strip()
     espaco = corte.rfind(" ")
-    return (corte[:espaco] if espaco > 0 else corte).rstrip(" ,;:-") + "…"
+    cortado = (corte[:espaco] if espaco > 0 else corte).rstrip(" ,;:-")
+    while cortado and medida(cortado + "…") > limite:
+        cortado = cortado[:-1].rstrip(" ,;:-")
+    return cortado + "…"
 
 
 def link_com_origem(link: str, rede: str, titulo: str = "") -> str:
@@ -280,7 +346,7 @@ def garantir_link(texto: str, link: str, rede: str, titulo: str = "") -> str:
     # limite de caracteres, e reservar sem contá-lo estouraria o post do X —
     # que é exatamente como o Postiz devolveu 400 "post is too long".
     marcado = link_com_origem(link, rede, titulo)
-    sobra = LIMITES.get(rede, 280) - CUSTO_DO_LINK.get(rede, len(marcado)) - 2  # 2 = "\n\n"
+    sobra = teto_de(rede) - CUSTO_DO_LINK.get(rede, medida(marcado)) - 2  # 2 = "\n\n"
     if sobra <= 0:
         return texto
     return f"{limpar(texto, sobra)}\n\n{marcado}"
@@ -324,7 +390,7 @@ def adaptar(post: dict, rede: str) -> str:
                             if c.get("type") == "output_text":
                                 txt += c.get("text", "")
                 if txt.strip():
-                    return garantir_link(limpar(txt, LIMITES[rede]), link, rede, titulo)
+                    return garantir_link(limpar(txt, teto_de(rede)), link, rede, titulo)
         except Exception:  # noqa: BLE001 — fallback abaixo cobre qualquer falha
             pass
 
@@ -334,7 +400,7 @@ def adaptar(post: dict, rede: str) -> str:
     # X e Threads recebem o link por `garantir_link` abaixo, que reserva o
     # espaço dele antes de cortar. Anexar aqui à mão duplicaria em uma rede e
     # esqueceria na outra — foi assim que o Threads foi ao ar sem link.
-    return garantir_link(limpar(base, LIMITES[rede]), link, rede, titulo)
+    return garantir_link(limpar(base, teto_de(rede)), link, rede, titulo)
 
 
 # ── aprovações ───────────────────────────────────────────────────────────

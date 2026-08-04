@@ -75,13 +75,49 @@ def test_corta_em_fim_de_frase_quando_sobra_texto_suficiente():
 def test_nunca_parte_palavra_no_meio():
     saida = bridge.limpar("palavra " * 40, 50)
     assert saida.rstrip("…").split()[-1] == "palavra"
-    assert len(saida) <= 51  # 50 + a reticência
+    assert bridge.medida(saida) <= 50  # a reticência cabe DENTRO do orçamento
 
 
 def test_respeita_limite_de_cada_rede():
     longo = "frase de teste. " * 300
-    for rede, limite in bridge.LIMITES.items():
-        assert len(bridge.limpar(longo, limite)) <= limite + 1, rede
+    for rede in bridge.LIMITES:
+        teto = bridge.teto_de(rede)
+        assert bridge.medida(bridge.limpar(longo, teto)) <= teto, rede
+
+
+# ── o limite é medido em bytes, não em caracteres ────────────────────────
+#
+# A regressão real (28/07 a 02/08/2026): dez posts do X e um do Threads foram
+# aprovados no Telegram e recusados pelo Postiz com
+# `400 {"provider":"x","message":"post is too long, please fix it"}` — a
+# aprovação parava em `approved` e o post nunca existia. Os textos mediam entre
+# 271 e 280 caracteres, todos dentro do limite nominal de 280. Em bytes, todos
+# passavam de 275.
+
+def test_texto_acentuado_respeita_o_orcamento_em_bytes():
+    """`len()` conta "ç" como 1; a régua que recusa o post conta como 2."""
+    acentuado = "coração é ação não vá até lá após três anos. " * 40
+    saida = bridge.limpar(acentuado, 200)
+    assert bridge.medida(saida) <= 200
+    assert len(saida) < 200, "texto acentuado tem de sobrar caracteres, não empatar"
+
+
+def test_corte_por_bytes_nao_parte_caractere_multibyte():
+    """Fatiar bytes crus no meio de um "ã" produziria lixo no post."""
+    saida = bridge.limpar("ação " * 60, 51)
+    assert bridge.medida(saida) <= 51
+    saida.encode("utf-8").decode("utf-8")  # levanta se houver byte órfão
+
+
+def test_post_do_x_nao_sai_colado_no_teto_da_plataforma():
+    """O bug não era o corte errado — era ele mirar exatamente em 280.
+
+    Sem margem, qualquer divergência entre a nossa régua e a do validador que
+    está no caminho derruba o post inteiro. Os dados de 20 derivações reais:
+    o X publicou com até 272 bytes e recusou a partir de 276.
+    """
+    assert bridge.teto_de("x") <= 272
+    assert bridge.teto_de("threads") <= 501
 
 
 # ── contrato de distribuição ─────────────────────────────────────────────

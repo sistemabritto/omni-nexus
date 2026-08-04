@@ -128,7 +128,16 @@ def test_o_link_sobrevive_ao_truncamento(rede):
     """
     longo = "palavra " * 200
     texto = bridge.garantir_link(longo.strip(), ARTIGO, rede)
-    assert len(texto) <= bridge.LIMITES[rede]
+    assert bridge.medida(texto) <= bridge.teto_de(rede)
+    assert ARTIGO in texto
+
+
+@pytest.mark.parametrize("rede", ["x", "threads"])
+def test_texto_acentuado_com_link_cabe_no_orcamento(rede):
+    """O caso que o Postiz recusava: post cheio de acento colado no teto."""
+    longo = "automação não é solução mágica até você medir. " * 30
+    texto = bridge.garantir_link(longo.strip(), ARTIGO, rede)
+    assert bridge.medida(texto) <= bridge.teto_de(rede)
     assert ARTIGO in texto
 
 

@@ -173,5 +173,5 @@ def test_utm_cabe_no_limite_do_x():
     import ghost_social_bridge as bridge
 
     texto = bridge.garantir_link("palavra " * 200, ARTIGO, "x", "Um Título Longo Para Testar")
-    assert len(texto) <= bridge.LIMITES["x"]
+    assert bridge.medida(texto) <= bridge.teto_de("x")
     assert "utm_source=x" in texto

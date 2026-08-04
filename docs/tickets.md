@@ -86,14 +86,30 @@ WHERE id = :id AND locked_at IS NULL
 
 Exactly one agent wins the lock. Everyone else gets HTTP 409 `already_locked` with the current holder's name. This is what makes tickets safe when multiple heartbeats point at the same queue — only one agent can actually work the ticket at a time.
 
+The winning response carries a **`lock_token`** — returned exactly once, here. It never appears in `to_dict()`, in the ticket list, or in the 409. Keep it; release requires it back.
+
+```json
+{"success": true, "ticket_id": "...", "locked_by": "hawk-debugger", "lock_token": "..."}
+```
+
+`lock_timeout_seconds` is validated in the 60..86400 range. Out-of-range or non-integer values return HTTP 400 `bad_lock_timeout` — a negative value used to make the janitor reclaim the lock on its very first tick, undoing the checkout that had just been granted.
+
 ### Release
 
 ```bash
 POST /api/tickets/{id}/release
-{"agent": "hawk-debugger"}
+{"lock_token": "<what checkout returned>"}
 ```
 
-Only the lock holder can release. The backend verifies `locked_by == agent` before clearing the lock.
+**Possession of the token is the authorization.** The old contract compared `locked_by` against an `agent` value read from the request body — both sides caller-supplied, and checkout hands `locked_by` back in its own 409, so anyone with `tickets:execute` could clear anyone's lock.
+
+Per-agent identity cannot fix this: every agent shares `DASHBOARD_API_TOKEN` and resolves to the same admin service user, so a permission check would approve all of them.
+
+Releasing an already-free ticket is a 200 no-op (`already_free`) — the janitor may have gotten there first, and the agent has no way to know.
+
+**Forcing** a release (breaking a stuck agent's lock) stays possible, but only for a human in a browser session with the admin role; API-token callers are refused even though that service user is admin. A forced release is logged as its own `force_release` activity event, carrying `previously_locked_by`.
+
+Callers that clear locks via direct SQL (`ticket_janitor`, `heartbeat_runner`, `knowledge/classify_worker`) don't go through this endpoint and need no token.
 
 ### Stale lock sweep
 

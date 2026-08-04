@@ -392,6 +392,18 @@ with app.app_context():
         _conn.commit()
     # --- End ticket approval columns ---
 
+    # --- core-backend-audit H3: lock_token proves ownership of a checkout ---
+    # release_ticket used to authorize on an `agent` value read from the request
+    # body, compared against locked_by — which checkout hands back in its own
+    # 409. Both sides were caller-supplied, so any tickets:execute caller could
+    # clear anyone's lock. Per-agent identity isn't available to fix it (every
+    # agent shares DASHBOARD_API_TOKEN and _try_api_token_auth resolves them all
+    # to the same admin service user), so the lock carries its own secret.
+    if "lock_token" not in _ticket_cols:
+        _cur.execute("ALTER TABLE tickets ADD COLUMN lock_token TEXT")
+        _conn.commit()
+    # --- End H3 lock_token migration ---
+
     # --- goal-ticket-unification: sub-goal columns on goals ---
     _goal_cols = {row[1] for row in _cur.execute("PRAGMA table_info(goals)").fetchall()}
     if "parent_goal_id" not in _goal_cols:

@@ -265,6 +265,30 @@ Ordem das etapas, e o que cada uma protege:
    em alta hoje não tem histórico de volume, e é justamente a pauta que a
    concorrência ainda não escreveu.
 
+   **A reserva tem três guardas, e cada um cobre uma falha que aconteceu:**
+
+   - **Fallback para o Perplexity.** `XAI_API_KEY` não existe no `.env` da VPS
+     (HTTP 401 na api.x.ai, verificado 04/08/2026). `pesquisar_noticias`
+     sobrevive porque ganhou fallback em `55e604c`; esta função não tinha, e
+     morria calada. O ciclo `2026-08-03` nasceu com **8 pautas em vez de 21**,
+     foi completado à mão com três keywords duplicadas, e 01/08 e 03/08
+     amanheceram sem artigo. Reserva que falha em silêncio não é reserva.
+   - **Teto de `PALAVRAS_MAX_NA_RESERVA = 7`.** Calibrado com os dois lados, não
+     chutado: a maior pauta boa de trending tem 7 palavras (`meta lanca agente
+     de ia no whatsapp` — as funcionais contam) e a menor descrição de evento
+     tem 8. Contar palavra é execução, resolve em Python.
+   - **O mesmo avaliador de ICP das pautas de SEO.** Ele rodava só sobre o funil
+     de keyword. Com o Grok isso passava batido; assim que a reserva caiu no
+     Perplexity vieram 13 descrições de sessão de evento com volume 0
+     (`innovation meeting br 2026 inteligencia artificial marketing digital
+     pequenas empresas`), e as 12 tiveram de ser descartadas à mão. Pauta sem
+     volume medido só se justifica se pelo menos o público estiver certo.
+
+   A reserva **pede com folga** (`quantas * 2`, teto de `+10`) porque o
+   avaliador corta no fim — pedir exato e perder metade no julgamento deixaria a
+   semana curta de novo, que é o problema que ela existe para resolver.
+   Testes: `tests/goals/test_reserva_de_pauta.py`.
+
 ### A fila (`dashboard/backend/pauta_fila.py`)
 
 `gravar_ciclo(pautas)` é o único caminho de escrita na fila. Ele:

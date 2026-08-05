@@ -238,6 +238,15 @@ SEEDS_POR_FUNIL = {
 # segunda rodada da mesma janela não paga nada.
 SEEDS_POR_RODADA = 8
 
+# Teto de palavras para keyword vinda da reserva de trending.
+#
+# Calibrado com os dois lados, não chutado. Pauta boa de trending chega a 7
+# palavras porque as funcionais contam ("meta lanca agente de ia no whatsapp");
+# as descrições de sessão de evento que o Perplexity devolveu em 04/08/2026
+# começam em 8 ("integracao ia multicanal email whatsapp redes sociais
+# atendimento") e vão até 11. Sete passa todas as boas e corta todas as ruins.
+PALAVRAS_MAX_NA_RESERVA = 7
+
 
 def seeds_da_semana(hoje: date) -> list[str]:
     """Seeds desta rodada: um recorte rotativo de cada funil.
@@ -509,6 +518,11 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
         log("XAI_API_KEY/PERPLEXITY_API_KEY ausentes — sem reserva para fechar a semana.")
         return []
 
+    # Pede com folga porque o avaliador de ICP corta no fim: pedir exatamente o
+    # que falta e perder metade no julgamento deixaria a semana curta de novo.
+    # O teto evita transformar um buraco grande num prompt gigante.
+    pedidas = min(quantas * 2, quantas + 10)
+
     evitar = "\n".join(f"- {k}" for k in ja_escolhidas[:40])
     prompt = (
         "Você acha pauta de blog vasculhando o que está sendo discutido AGORA no X "
@@ -517,9 +531,17 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
         "WhatsApp que qualifica e vende sozinho, conteúdo diário nas redes, e "
         "sistemas sob medida. O leitor é dono de negócio, não desenvolvedor nem "
         "estudante.\n\n"
-        f"Proponha {quantas} pautas sobre o que está em alta nesta semana e que um "
+        f"Proponha {pedidas} pautas sobre o que está em alta nesta semana e que um "
         "dono de empresa procuraria. Cada uma precisa de um gancho real e "
         "verificável — se não achou na busca, não invente.\n\n"
+        # O modelo devolvia nome de sessão de evento ("innovation meeting br "
+        # 2026 inteligencia artificial marketing digital pequenas empresas"),
+        # que ninguém digita em buscador. O termo é o que a PESSOA procura, não
+        # o título do que aconteceu.
+        "CADA KEYWORD PRECISA SER UM TERMO DE BUSCA REAL: no máximo 7 palavras, "
+        "sem nome de evento, sem data no meio, do jeito que alguém digitaria no "
+        "Google. Prefira a dor ('como reduzir custo de atendimento') ao "
+        "acontecimento ('congresso X anuncia Y').\n\n"
         + (f"CONTEXTO DA SEMANA:\n{noticias[:2000]}\n\n" if noticias else "")
         + (f"JÁ ESCOLHIDAS (não repita assunto):\n{evitar}\n\n" if evitar else "")
         + 'Responda APENAS um JSON: {"pautas": [{"keyword": "<termo de busca que '
@@ -575,15 +597,52 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
         except (json.JSONDecodeError, ValueError):
             dados = {}
 
-    achadas = []
-    for p in (dados.get("pautas") or [])[:quantas]:
+    achadas, longas = [], 0
+    for p in (dados.get("pautas") or [])[:pedidas]:
         termo = (p.get("keyword") or "").strip()
         if not termo or RUIDO.search(termo):
             continue
+        # Termo de busca tem tamanho de termo de busca. Instrução no prompt não
+        # basta — o modelo reincide, e foi assim que "innovation meeting br 2026
+        # inteligencia artificial marketing digital pequenas empresas" (11
+        # palavras) virou pauta. Contar palavra é execução, não julgamento:
+        # resolve em Python, sem gastar o avaliador.
+        if len(termo.split()) > PALAVRAS_MAX_NA_RESERVA:
+            longas += 1
+            continue
         achadas.append({"kw": termo, "vol": 0, "kd": None,
                         "origem": "x-trending", "porque": (p.get("porque") or "")[:80]})
+    if longas:
+        log(f"reserva: {longas} descartada(s) por não ser termo de busca (> "
+            f"{PALAVRAS_MAX_NA_RESERVA} palavras)")
     # Mesmo vindo de outra fonte, não pode repetir o que o blog já cobre.
-    return descartar_repetidas(achadas, ja_escolhidas + titulos_publicados())
+    achadas = descartar_repetidas(achadas, ja_escolhidas + titulos_publicados())
+
+    # A reserva passa pelo MESMO julgamento de público que as de SEO.
+    #
+    # O avaliador rodava só sobre o funil de keyword, e a reserva entrava sem
+    # ninguém olhar. Com o Grok isso passava batido; quando a reserva caiu no
+    # Perplexity (04/08/2026), o buraco ficou gritante — vieram 13 descrições
+    # de sessão de evento, todas com volume 0:
+    #
+    #   "innovation meeting br 2026 inteligencia artificial marketing digital…"
+    #   "forum ecommerce brasil 2026 tendencias de ia para lojas virtuais"
+    #   "uso de ia por pmes no brasil dados recentes 2025 2026"
+    #
+    # Ninguém digita isso no Google. As 12 foram descartadas na mão em 05/08.
+    # Pauta sem volume medido só se justifica se pelo menos o público estiver
+    # certo — é o mínimo que a reserva tem de provar para ocupar um slot.
+    try:
+        from avaliador_de_pauta import avaliar
+
+        antes = len(achadas)
+        achadas = avaliar(achadas)
+        if antes != len(achadas):
+            log(f"reserva: {antes} candidata(s) do trending -> {len(achadas)} alinhadas ao ICP")
+    except Exception as exc:  # noqa: BLE001 — fail-open, como no funil de SEO
+        log(f"avaliador indisponível para a reserva ({exc}); seguindo com o filtro por regex")
+
+    return achadas[:quantas]
 
 
 # ── 4. montar as 21 pautas ───────────────────────────────────────────────

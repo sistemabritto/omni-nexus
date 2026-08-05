@@ -638,6 +638,43 @@ def _render_structured_items(gate_type: str, payload: dict) -> str:
     return "\n".join(lines)
 
 
+def _recusar_se_estoura(payload: dict):
+    """400 quando o texto não cabe na rede — antes de virar card.
+
+    Mede em bytes UTF-8 e contra o teto com margem (`ghost_social_bridge`),
+    porque é essa a régua do validador que está no caminho: o Postiz recusa a
+    280 caracteres nominais um post que tem 276 bytes, e texto em português
+    estoura em bytes antes de estourar em caracteres.
+
+    Devolve None quando está tudo bem — só o alvo de rede é verificado, blog
+    não tem limite de tamanho.
+    """
+    outcome = payload.get("outcome") or {}
+    alvo = outcome.get("publish_target")
+    conteudo = outcome.get("publish_content") or ""
+    if not alvo or alvo == "blog" or not conteudo:
+        return None
+    try:
+        from ghost_social_bridge import LIMITES, medida, teto_de
+    except Exception:  # noqa: BLE001 — sem a régua, não é hora de inventar uma
+        return None
+    if alvo not in LIMITES:
+        return None
+    teto, tamanho = teto_de(alvo), medida(conteudo)
+    if tamanho <= teto:
+        return None
+    return jsonify({
+        "error": "publish_content_too_long",
+        "target": alvo,
+        "bytes": tamanho,
+        "max_bytes": teto,
+        "hint": (f"{alvo} aceita {teto} bytes UTF-8 (limite nominal {LIMITES[alvo]}, "
+                 f"com margem); este texto tem {tamanho}. Reescreva mais curto — "
+                 f"acento conta 2 bytes. O Postiz recusaria com 400 e o gate "
+                 f"gastaria uma aprovação à toa."),
+    }), 400
+
+
 def _render_pautas(payload: dict) -> str:
     """As pautas da semana agrupadas por dia, com volume e funil.
 
@@ -947,6 +984,25 @@ def create_approval():
     project_id = data.get("project_id")
     agent = data.get("agent")
     payload = data.get("payload") or {}
+
+    # Gate que o Postiz vai recusar não chega a virar card.
+    #
+    # A esteira do blog corta o texto antes de propor (ghost_social_bridge), mas
+    # ela não é o único caminho: agente que publica a partir de um ticket
+    # escreve direto e não passa por corte nenhum. Na madrugada de 05/08/2026
+    # isso produziu um laço — post de 984 bytes num limite de 266, Postiz
+    # devolve 400 "post is too long", o ticket volta a `in_progress`, o
+    # heartbeat retenta, abre gate novo (attempt+1), o humano aprova de
+    # madrugada, falha de novo. Quatro rodadas no mesmo post.
+    #
+    # Recusar aqui é fail-fast: o agente recebe o limite no erro e reescreve,
+    # em vez de gastar a atenção do humano num card impossível. Cortar
+    # automaticamente seria pior — comeria o fecho e o link, que foi como um
+    # post do Threads foi ao ar terminando em "Resultado?".
+    if gate_type == "publish":
+        erro_tamanho = _recusar_se_estoura(payload)
+        if erro_tamanho:
+            return erro_tamanho
 
     if gate_type == "decomposition":
         if not goal_id:

@@ -991,6 +991,25 @@ def _run_publish_action(approval_row, conn) -> dict:
             "detail": "publish_content vazio; o resumo result nunca é publicado como conteúdo.",
         }
 
+    # Segunda barreira do limite de tamanho — a primeira recusa o gate na
+    # criação (`routes/approvals._recusar_se_estoura`). Esta existe para os
+    # cards que já estavam abertos quando aquela entrou, e porque gastar uma
+    # chamada ao Postiz que sabemos que volta 400 só produz ruído no log e um
+    # ticket desbloqueado sem motivo claro.
+    if target != "blog":
+        try:
+            from ghost_social_bridge import LIMITES, medida, teto_de
+
+            if target in LIMITES and medida(content) > teto_de(target):
+                return {
+                    "published": False,
+                    "detail": (f"texto de {medida(content)} bytes não cabe em {target} "
+                               f"({teto_de(target)} bytes com margem); o Postiz recusaria "
+                               f"com 400. Reescreva mais curto."),
+                }
+        except ImportError:
+            pass  # sem a régua, segue e deixa o Postiz decidir
+
     # Blog sai pelo Ghost, não pelo Postiz. O que se publica aqui é o artigo
     # identificado por publish_ref — nunca o texto do card, que é resumo para o
     # humano ler. Confundir os dois publicaria o resumo como se fosse o artigo.

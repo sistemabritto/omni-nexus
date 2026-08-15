@@ -459,10 +459,13 @@ class PluginInstaller:
         Captures the raw tarball bytes SHA-256 *before* the temp file is
         unlinked, satisfying the Wave 2.5 cache key requirement.
 
-        Only `github:` and `https://` sources are accepted here — local
-        filesystem paths are rejected upstream by
-        :meth:`resolve_source`. Uploaded archives take a different entry
-        point (``extract_uploaded_archive``) and do not call this.
+        Only `github:` and `https://` sources are accepted here — arbitrary
+        local filesystem paths are rejected upstream by :meth:`resolve_source`.
+        The single exception is a path that already lives inside
+        ``STAGING_DIR``: that directory is only ever written by
+        ``extract_uploaded_archive`` on the upload endpoint, so re-resolving
+        an existing staging path from ``/preview`` or ``/install`` is safe
+        (the caller reuses the exact ``source_path`` the upload returned).
 
         This is the single-resolve entry-point — ``preview()`` and
         ``install_plugin()`` must both use this instead of calling
@@ -471,6 +474,16 @@ class PluginInstaller:
         s = source.strip()
 
         if not s.startswith("github:") and not s.startswith("https://"):
+            # Uploaded archives are staged under STAGING_DIR (see
+            # extract_uploaded_archive). Accept an existing directory inside
+            # it so the upload→preview→install flow works; every other local
+            # path still falls through to resolve_source() and is rejected.
+            try:
+                local = Path(s).resolve()
+                if local.is_dir() and local.is_relative_to(STAGING_DIR.resolve()):
+                    return local, ""
+            except (OSError, ValueError):
+                pass
             # Delegate error reporting to resolve_source for a single
             # consistent rejection message.
             self.resolve_source(s, auth_token=auth_token)

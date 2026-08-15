@@ -120,6 +120,12 @@ def _upsert_env_vars(
     - Writes atomically via tmp-file + rename.
     - Never logs values — only key names.
     """
+    # If env_path is a symlink (e.g. /workspace/.env -> /workspace/config/.env),
+    # resolve it BEFORE writing: os.replace() on the symlink itself would swap
+    # the link for a regular file and the values would land in the container's
+    # ephemeral layer instead of the persistent volume.
+    env_path = env_path.resolve()
+
     existing_lines: list[str] = []
     if env_path.exists():
         existing_lines = env_path.read_text(encoding="utf-8").splitlines(keepends=True)

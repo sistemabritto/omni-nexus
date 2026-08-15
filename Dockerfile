@@ -3,7 +3,7 @@ FROM node:22-slim AS base
 # System deps
 RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-venv \
-    curl git jq screen \
+    curl git jq screen ffmpeg yt-dlp \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv

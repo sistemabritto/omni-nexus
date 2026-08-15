@@ -43,7 +43,7 @@ FROM python:3.12-slim AS runtime
 # System deps: curl for healthcheck + Node.js 22 for terminal-server binary.
 # We use NodeSource so the final image is clean (no build toolchain).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates git gnupg openssl \
+        curl ca-certificates git gnupg openssl ffmpeg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean \
@@ -52,6 +52,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # uv (Python package manager used by Evo Nexus)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
+
+# Agent Reach oficial: instala o CLI e o yt-dlp no ambiente isolado do uv.
+# Instagram continua dependente de OpenCLI + sessao Chrome autorizada; esta
+# camada garante YouTube, diagnostico e roteamento sem copiar um fork local.
+RUN uv tool install --force \
+        'https://github.com/Panniantong/agent-reach/archive/main.zip'
+
+# yt-dlp global (o venv da tool nao expoe o binario no PATH) + config com
+# retries/backoff contra rate limit 429 do YouTube/Instagram (legendas em
+# rajada, downloads com fragmentos e multi-arquivo).
+RUN uv tool install yt-dlp \
+    && mkdir -p /root/.config/yt-dlp \
+    && printf '%s\n' \
+        '--js-runtimes node' \
+        '--retries 5' \
+        '--fragment-retries 10' \
+        '--retry-sleep extractor:linear=1::5' \
+        '--retry-sleep fragment:exp=1:20' \
+        '--sleep-requests 1' \
+        '--sleep-interval 2' \
+        '--max-sleep-interval 10' \
+        '--no-overwrites' \
+        > /root/.config/yt-dlp/config
 
 # Cache-buster: docker-publish-britto.yml builds with cache-from/cache-to
 # type=gha, so without this the block below stays cached forever across CI

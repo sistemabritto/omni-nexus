@@ -1,0 +1,21 @@
+id: reach
+name: Reach
+version: 0.1.0
+description: >
+  Integracao do Agent Reach oficial de Panniantong para leitura de YouTube e
+  Instagram via backends suportados, com transcricao e analise multimodal.
+author: Sistema Britto
+license: MIT
+homepage: https://github.com/EvolutionAPI/evo-nexus
+
+min_evonexus_version: 0.33.0
+tier: essential
+
+capabilities:
+  - agents
+  - skills
+
+env_vars_needed: []
+
+conflicts: {}
+dependencies: {}

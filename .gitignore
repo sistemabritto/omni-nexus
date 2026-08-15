@@ -136,6 +136,11 @@ plugins/open-seo/*
 !plugins/open-seo/README.md
 !plugins/open-seo/LICENSE
 
+# Reach is a first-party plugin; keep its manifest, skill and runtime scripts
+# versioned so VPS images and remote plugin packages use the same implementation.
+!plugins/reach/
+!plugins/reach/**
+
 # Exceção: claude-mem, opencode-autolearn, opencode-autogoal são plugins de
 # integração autorais (não baixados da marketplace). Versiona apenas o plugin.yaml.
 !plugins/claude-mem/

@@ -81,6 +81,36 @@ else
   echo -e "  ${GREEN}✓${RESET} uv installed"
 fi
 
+# Agent Reach oficial: o CLI e o yt-dlp ficam isolados no ambiente do usuario.
+# O diagnostico e somente leitura; Instagram exige OpenCLI e Chrome autorizado.
+echo -e "  Installing/checking Agent Reach..."
+su - "$SERVICE_USER" -c "export PATH=\$HOME/.local/bin:\$PATH && uv tool install --force 'https://github.com/Panniantong/agent-reach/archive/main.zip' >/dev/null 2>&1 && agent-reach install --env=auto >/dev/null 2>&1" || \
+  echo -e "  ${YELLOW}!${RESET} Agent Reach could not be installed; run it manually as $SERVICE_USER"
+if su - "$SERVICE_USER" -c "export PATH=\$HOME/.local/bin:\$PATH && command -v agent-reach" &>/dev/null; then
+  echo -e "  ${GREEN}✓${RESET} Agent Reach CLI ready"
+fi
+
+# Reach video analysis needs these host binaries. Do not reinstall them when
+# the VPS already provides them (for example through a managed image).
+echo -e "  Checking Reach video dependencies..."
+if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1 || ! command -v yt-dlp >/dev/null 2>&1; then
+  if command -v apt-get >/dev/null 2>&1; then
+    apt-get update -qq
+    apt-get install -y -qq ffmpeg yt-dlp
+  else
+    echo -e "  ${YELLOW}!${RESET} Install ffmpeg, ffprobe, and yt-dlp before using Reach"
+  fi
+fi
+if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1 && command -v yt-dlp >/dev/null 2>&1; then
+  echo -e "  ${GREEN}✓${RESET} Reach video dependencies ready"
+fi
+
+# Install the official Reach CLI in the service user's isolated uv tool
+# directory. The systemd PATH below already includes this directory.
+echo -e "  Installing Agent Reach CLI..."
+su - "$SERVICE_USER" -c "export PATH=\$HOME/.local/bin:\$PATH && uv tool install --force 'https://github.com/Panniantong/agent-reach/archive/main.zip'" >/dev/null
+echo -e "  ${GREEN}✓${RESET} Agent Reach CLI installed"
+
 # ── Step 4: Install Claude Code for the user ──
 
 if su - "$SERVICE_USER" -c "export PATH=\$HOME/.local/bin:\$PATH && command -v claude" &>/dev/null; then

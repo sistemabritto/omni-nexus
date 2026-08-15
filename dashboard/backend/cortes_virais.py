@@ -466,7 +466,7 @@ def renderizar_corte_viral(video: Path, corte: dict, palavras_todas: list[Palavr
     _rodar(
         ["ffmpeg", "-y", "-v", "error", "-i", str(intermediario), "-vf", filtro_zoom_legenda,
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-         "-c:a", "aac", "-b:a", "160k", str(saida)],
+         "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(saida)],
         o_que="zoom e legenda do corte viral", timeout=1800,
     )
 

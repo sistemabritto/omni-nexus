@@ -314,9 +314,16 @@ def remuxar(video: Path, wav: Path, destino: Path, *,
     """Devolve o áudio tratado ao vídeo, sem reencodar a imagem."""
     if progresso:
         progresso("remux", "copiando vídeo, reencodando só o áudio")
+    # movflags +faststart move o moov atom pro início do arquivo — sem isso o
+    # navegador (e qualquer player via HTTP) precisa baixar o arquivo quase
+    # inteiro antes de conseguir decodificar o primeiro frame, mesmo com
+    # Range/streaming funcionando no servidor. Confirmado em produção
+    # 15/08/2026: vídeo de 654MB sem faststart demorava dezenas de segundos
+    # pra sequer mostrar o primeiro frame no share público.
     _rodar(["ffmpeg", "-y", "-v", "error", "-i", str(video), "-i", str(wav),
             "-map", "0:v", "-map", "1:a", "-c:v", "copy",
-            "-c:a", "aac", "-b:a", "160k", "-shortest", str(destino)],
+            "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart",
+            "-shortest", str(destino)],
            o_que="remux")
     return destino
 

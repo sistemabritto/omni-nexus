@@ -7,10 +7,12 @@
 ##   * Cert resolver: letsencryptresolver
 ##   * Public hosts: nexus.workflowapi.com.br (EvoNexus)
 ##                   omni.workflowapi.com.br  (OmniRoute)
+##                   openreply.workflowapi.com.br (OpenReply)
 ##
 ## Segredos ficam FORA do repo: os valores reais (DASHBOARD_API_TOKEN,
-## OMNIROUTE_*, SMTP_*) são preenchidos como variáveis de ambiente
-## da stack no Portainer. Os placeholders abaixo marcam onde entram.
+## OMNIROUTE_*, SMTP_*, POSTGRES_PASSWORD, NEXTAUTH_SECRET, etc) são preenchidos
+## como variáveis de ambiente da stack no Portainer. Os placeholders abaixo
+## marcam onde entram.
 ##   DASHBOARD_API_TOKEN        → openssl rand -base64 32
 ##   APPROVAL_BRIDGE_TOKEN      → openssl rand -base64 32 (SÓ em
 ##     evonexus_dashboard + evonexus_telegram — NUNCA em evonexus_scheduler,
@@ -20,10 +22,57 @@
 ##   OMNIROUTE_JWT_SECRET       → openssl rand -base64 48
 ##   OMNIROUTE_API_KEY_SECRET   → openssl rand -hex 32
 ##   OMNIROUTE_STORAGE_KEY      → openssl rand -hex 32
+##   POSTGRES_PASSWORD          → openssl rand -base64 32
+##   NEXTAUTH_SECRET            → openssl rand -base64 32
+##   CRON_SECRET                → openssl rand -base64 32
+##   ENCRYPTION_KEY             → openssl rand -hex 32 (64 hex chars)
+##   WEBHOOK_VERIFY_TOKEN       → openssl rand -base64 32
+##   RESEND_API_KEY             → re_... (Resend) ou use EMAIL_SERVER
+##   EMAIL_FROM                 → OpenReply <login@seu-dominio.com>
+##   INSTAGRAM_APP_ID           → do Instagram Login no Meta app
+##   INSTAGRAM_APP_SECRET       → do Instagram Login no Meta app
+##   FACEBOOK_APP_SECRET        → do Meta app (Basic settings)
 ## ============================================================================
 version: "3.7"
 
 services:
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=openreply
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      network_public:
+        aliases:
+          - postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    image: redis:alpine
+    networks:
+      - network_public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 256M
 
   evonexus_dashboard:
     image: excarplex/evo-nexus-dashboard:latest
@@ -115,7 +164,6 @@ services:
         - traefik.http.routers.evonexus_dashboard.entrypoints=websecure
         - traefik.http.routers.evonexus_dashboard.priority=1
         - traefik.http.routers.evonexus_dashboard.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.evonexus_dashboard.service=evonexus_dashboard
         - traefik.http.services.evonexus_dashboard.loadbalancer.server.port=8080
         - traefik.http.services.evonexus_dashboard.loadbalancer.passHostHeader=true
 
@@ -124,11 +172,9 @@ services:
         - traefik.http.routers.evonexus_terminal.entrypoints=websecure
         - traefik.http.routers.evonexus_terminal.priority=10
         - traefik.http.routers.evonexus_terminal.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.evonexus_terminal.service=evonexus_terminal
-        - traefik.http.routers.evonexus_terminal.middlewares=evonexus_terminal_strip
-        - traefik.http.middlewares.evonexus_terminal_strip.stripprefix.prefixes=/terminal
         - traefik.http.services.evonexus_terminal.loadbalancer.server.port=32352
         - traefik.http.services.evonexus_terminal.loadbalancer.passHostHeader=true
+        - traefik.http.middlewares.evonexus_terminal_strip.stripprefix.prefixes=/terminal
 
   evonexus_telegram:
     image: excarplex/evo-nexus-runtime:latest
@@ -247,18 +293,6 @@ services:
           cpus: "1"
           memory: "1024M"
 
-  redis:
-    image: redis:alpine
-    networks:
-      - network_public
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          memory: 256M
-
   ## OmniRoute — gateway de IA (237+ providers, fallback automático,
   ## compressão de tokens). O provider "omnirouter" do EvoNexus aponta
   ## para http://omniroute:20128/v1 (DNS interno via alias).
@@ -320,9 +354,91 @@ services:
         - traefik.http.routers.omniroute.rule=Host(`omni.workflowapi.com.br`)
         - traefik.http.routers.omniroute.entrypoints=websecure
         - traefik.http.routers.omniroute.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.omniroute.service=omniroute
         - traefik.http.services.omniroute.loadbalancer.server.port=20128
         - traefik.http.services.omniroute.loadbalancer.passHostHeader=true
+
+  ## OpenReply — Instagram Comment-to-DM Automation (agent "Link")
+  ## Web app on Vercel-style domain, worker consumes BullMQ queue
+  openreply-web:
+    image: diwenne/openreply:latest
+    command: ["npm", "run", "start"]
+    environment:
+      - NEXTAUTH_URL=https://openreply.workflowapi.com.br
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - CRON_SECRET=${CRON_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/openreply
+      - REDIS_URL=redis://redis:6379
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - META_GRAPH_API_VERSION=v25.0
+      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}
+      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}
+      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
+      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN}
+    networks:
+      network_public:
+        aliases:
+          - openreply-web
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1024M"
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=network_public
+        - traefik.http.routers.openreply-web.rule=Host(`openreply.workflowapi.com.br`)
+        - traefik.http.routers.openreply-web.entrypoints=websecure
+        - traefik.http.routers.openreply-web.tls.certresolver=letsencryptresolver
+        - traefik.http.services.openreply-web.loadbalancer.server.port=3000
+        - traefik.http.services.openreply-web.loadbalancer.passHostHeader=true
+
+  openreply-worker:
+    image: diwenne/openreply:latest
+    command: ["npm", "run", "worker"]
+    environment:
+      - NEXTAUTH_URL=https://openreply.workflowapi.com.br
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - CRON_SECRET=${CRON_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/openreply
+      - REDIS_URL=redis://redis:6379
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - META_GRAPH_API_VERSION=v25.0
+      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}
+      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}
+      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
+      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN}
+      - COMMENT_POLL_INTERVAL_MS=300000
+      - COMMENT_POLL_MAX_PER_SWEEP=30
+      - COMMENT_POLL_LOOKBACK_HOURS=72
+    networks:
+      network_public:
+        aliases:
+          - openreply-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1024M"
 
 volumes:
   evonexus_config:
@@ -337,6 +453,7 @@ volumes:
   evonexus_codex_auth:
   evonexus_openclaude_auth:
   omniroute_data:
+  postgres_data:
 
 networks:
   network_public:

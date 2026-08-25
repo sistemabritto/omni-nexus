@@ -186,3 +186,39 @@ def test_remove_rotulo_de_estrutura(entrada, esperado):
 def test_prosa_com_a_mesma_palavra_sobrevive(texto):
     """A palavra sozinha não é rótulo — sem negrito e sem 'aqui está', é frase."""
     assert bridge.limpar(texto, 3000) == texto
+
+
+# ── resolver_url: nunca deixar a preview do Ghost virar link publicado ────
+#
+# O incidente de 05/08/2026 (aprovação 137): três artigos agendados geraram
+# oito aprovações de rede carregando blog.sistemabritto.com.br/p/<uuid>/ — a
+# URL de preview do Ghost, que só existe antes de o artigo publicar. O Felipe
+# clicou e tomou 404.
+
+def test_resolver_url_troca_preview_por_url_canonica(monkeypatch):
+    monkeypatch.setenv("GHOST_URL", "https://blog.sistemabritto.com.br")
+    post = {"url": "https://blog.sistemabritto.com.br/p/abc-123-uuid/", "slug": "meu-artigo"}
+    assert bridge.resolver_url(post) == "https://blog.sistemabritto.com.br/meu-artigo/"
+
+
+def test_resolver_url_preserva_url_publicada(monkeypatch):
+    monkeypatch.setenv("GHOST_URL", "https://blog.sistemabritto.com.br")
+    post = {"url": "https://blog.sistemabritto.com.br/meu-artigo/", "slug": "meu-artigo"}
+    assert bridge.resolver_url(post) == "https://blog.sistemabritto.com.br/meu-artigo/"
+
+
+def test_resolver_url_sem_slug_devolve_preview(monkeypatch):
+    """Draft real (nunca teve slug) não tem para onde resolver — devolve a preview mesmo."""
+    monkeypatch.setenv("GHOST_URL", "https://blog.sistemabritto.com.br")
+    post = {"url": "https://blog.sistemabritto.com.br/p/abc-123-uuid/", "slug": ""}
+    assert bridge.resolver_url(post) == "https://blog.sistemabritto.com.br/p/abc-123-uuid/"
+
+
+@pytest.mark.parametrize("source_url,esperado", [
+    ("https://blog.sistemabritto.com.br/p/abc-123-uuid/", True),
+    ("https://blog.sistemabritto.com.br/meu-artigo/", False),
+    (None, False),
+    ("", False),
+])
+def test_de_artigo_nao_publicado(source_url, esperado):
+    assert bridge._de_artigo_nao_publicado(source_url) is esperado

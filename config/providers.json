@@ -12,10 +12,9 @@
         "OPENAI_MODEL": "auto/best-coding"
       },
       "default_base_url": "http://omniroute:20128/v1",
-      "default_model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "default_model": "nvidia/meta/llama-3.1-70b-instruct",
       "model_chain": [
-        "nvidia/nemotron-3-ultra-550b-a55b",
-        "nvidia/nemotron-3-super-120b-a12b",
+        "nvidia/meta/llama-3.1-70b-instruct",
         "auto/reasoning",
         "auto/coding",
         "auto/fast",

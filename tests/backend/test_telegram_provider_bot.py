@@ -88,6 +88,50 @@ class TelegramProviderBotMemoryTests(unittest.TestCase):
         finally:
             bot.TELEGRAM_ENV = original_env
 
+    def test_ajuste_pendente_sobrevive_sem_reply_amarrado(self) -> None:
+        """O bug real de 05/08/2026: apertar 'pedir ajuste' e depois responder
+        SEM o Telegram amarrar o reply (áudio solto pela tela inicial, toque
+        fora do balão) não pode cair na conversa comum. A marca em disco é
+        quem resolve isso — o teste cobre só o estado, não o laço inteiro."""
+        original = bot.REVISE_STATE
+        try:
+            bot.REVISE_STATE = bot.CHAT_MEMORY_DIR / "ajuste_pendente.json"
+            self.assertIsNone(bot.ajuste_pendente("999"))
+
+            bot.marcar_ajuste_pendente("999", 146)
+            self.assertEqual(bot.ajuste_pendente("999"), 146)
+
+            # aprovar/rejeitar limpa a marca — a próxima mensagem é conversa de novo
+            bot.limpar_ajuste_pendente("999", 146)
+            self.assertIsNone(bot.ajuste_pendente("999"))
+        finally:
+            bot.REVISE_STATE = original
+
+    def test_ajuste_pendente_expira(self) -> None:
+        original = bot.REVISE_STATE
+        try:
+            bot.REVISE_STATE = bot.CHAT_MEMORY_DIR / "ajuste_pendente.json"
+            bot.marcar_ajuste_pendente("999", 146)
+            estado = bot.read_json(bot.REVISE_STATE, {})
+            estado["999"]["quando"] -= bot.REVISE_TTL_S + 1
+            bot.REVISE_STATE.write_text(bot.json.dumps(estado), encoding="utf-8")
+
+            self.assertIsNone(bot.ajuste_pendente("999"), "marca velha não pode valer para sempre")
+        finally:
+            bot.REVISE_STATE = original
+
+    def test_limpar_ajuste_pendente_nao_apaga_outro_card(self) -> None:
+        """Aprovar o card A não pode apagar o ajuste que o humano já tinha
+        começado a pedir no card B, no mesmo chat."""
+        original = bot.REVISE_STATE
+        try:
+            bot.REVISE_STATE = bot.CHAT_MEMORY_DIR / "ajuste_pendente.json"
+            bot.marcar_ajuste_pendente("999", 146)
+            bot.limpar_ajuste_pendente("999", approval_id=999)  # id errado
+            self.assertEqual(bot.ajuste_pendente("999"), 146)
+        finally:
+            bot.REVISE_STATE = original
+
     def test_provider_chain_uses_strict_telegram_override(self) -> None:
         original_path = bot.PROVIDERS_PATH
         cfg = bot.CHAT_MEMORY_DIR / "providers.json"

@@ -19,6 +19,7 @@ import html
 import json
 import logging
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -34,6 +35,49 @@ WORKSPACE = Path(__file__).resolve().parent.parent.parent
 # Legenda de foto no Telegram vai até 1024 caracteres (texto puro vai a 4096).
 # Estourar faz a API recusar a mensagem inteira — a aprovação sumiria calada.
 _TELEGRAM_CAPTION_LIMIT = 1024
+
+# O que o corte deixa no lugar do texto que tirou. Contado no orçamento, nunca
+# somado depois: a versão anterior cortava em `1024 - 20` e ANEXAVA 29
+# caracteres, entregando 1033 — o próprio corte estourava o limite. É por isso
+# que os cards das aprovações 138 e 145 foram recusados com "caption is too
+# long" em 05/08/2026 e chegaram sem a capa, justamente quando o Felipe tinha
+# pedido capa nova.
+_AVISO_DE_CORTE = "\n… (texto completo no painel)"
+
+
+def _medida_telegram(texto: str) -> int:
+    """Tamanho na régua do Telegram: unidades UTF-16, não caracteres Python.
+
+    Emoji fora do BMP (🔔, ✏️) ocupa DUAS unidades. Contar `len()` é otimista
+    exatamente nos cards da esteira, que começam com emoji — e otimismo aqui
+    não degrada nada, faz a API recusar a mensagem inteira.
+    """
+    return len((texto or "").encode("utf-16-le")) // 2
+
+
+def _cortar_para_legenda(cabeca: str, corpo: str, rodape: str) -> str:
+    """Monta a legenda cabendo em 1024, preservando cabeça e rodapé.
+
+    O rodapé carrega `#apr:<id>`, que é o que permite pedir ajuste respondendo
+    ao card. Um corte cego pelo fim apagava justamente ele: o card sobrevivia,
+    parecia normal, e a resposta do humano não tinha como ser amarrada em
+    aprovação nenhuma. Só o corpo é encurtado.
+    """
+    fixo = _medida_telegram(cabeca) + _medida_telegram(rodape)
+    sobra = _TELEGRAM_CAPTION_LIMIT - fixo - _medida_telegram(_AVISO_DE_CORTE)
+    if _medida_telegram(cabeca + corpo + rodape) <= _TELEGRAM_CAPTION_LIMIT:
+        return cabeca + corpo + rodape
+    if sobra <= 0:
+        # Cabeça e rodapé sozinhos já não cabem: sem corpo é o máximo honesto.
+        return cabeca + rodape
+    cortado = corpo
+    while cortado and _medida_telegram(cortado) > sobra:
+        cortado = cortado[:-1]
+    # O corpo vem escapado (`&amp;`, `&lt;`), e o corte pode parar no meio de uma
+    # entidade — `&am` faz o parse_mode HTML recusar a mensagem inteira, que é o
+    # mesmo desfecho que este bloco existe para evitar.
+    cortado = re.sub(r"&[a-zA-Z#0-9]{0,8}$", "", cortado)
+    return cabeca + cortado.rstrip() + _AVISO_DE_CORTE + rodape
 
 # ── Load .env so TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID are available ──
 _env_file = WORKSPACE / ".env"
@@ -212,7 +256,9 @@ def send_approval_request(approval_id: int, title: str, body: str,
     # A marca #apr:<id> é o que permite pedir ajuste RESPONDENDO a esta
     # mensagem: teclado inline não coleta texto, e o mesmo padrão de resposta
     # já é usado na ponte de tickets (#tkt:<id>).
-    text = f"🔔 <b>{safe_title}</b>\n\n{safe_body}\n\n<code>#apr:{approval_id}</code>"
+    cabeca = f"🔔 <b>{safe_title}</b>\n\n"
+    rodape = f"\n\n<code>#apr:{approval_id}</code>"
+    text = cabeca + safe_body + rodape
 
     def _enviar(metodo: str, corpo: dict) -> dict | None:
         try:
@@ -239,8 +285,7 @@ def send_approval_request(approval_id: int, title: str, body: str,
 
     result = None
     if photo_url:
-        legenda = text if len(text) <= _TELEGRAM_CAPTION_LIMIT else (
-            text[: _TELEGRAM_CAPTION_LIMIT - 20].rstrip() + "\n… (texto completo no painel)")
+        legenda = _cortar_para_legenda(cabeca, safe_body, rodape)
         pedido = {"chat_id": cid, "photo": _preview_leve(photo_url), "caption": legenda,
                   "parse_mode": "HTML", "reply_markup": reply_markup}
         result = _enviar("sendPhoto", pedido)

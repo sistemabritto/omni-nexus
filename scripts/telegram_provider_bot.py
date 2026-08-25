@@ -211,7 +211,7 @@ def handle_groq_command(command: str) -> str:
     return "Comandos: /groq status | /groq set <GROQ_API_KEY>"
 
 
-def api(token: str, method: str, payload: dict | None = None, timeout: int = 35) -> dict:
+def api(token: str, method: str, payload: dict | None = None, timeout: int = 60) -> dict:
     url = f"https://api.telegram.org/bot{token}/{method}"
     data = None
     headers = {}
@@ -457,19 +457,72 @@ def decide_approval_via_api(approval_id: int, decision: str, from_id: str,
         return {"ok": False, "toast": f"Erro ao decidir: {exc}"}
 
 
+def _telegram_provider_override(config: dict) -> str | None:
+    """Strict pin, if one is set: env wins over the /provider command's
+    config write, same precedence active_provider_info() always used inline
+    before this was pulled out into its own function."""
+    return os.environ.get("TELEGRAM_PROVIDER") or config.get("telegram_provider") or None
+
+
 def active_provider_info() -> tuple[str, str | None, str | None]:
     config = read_json(PROVIDERS_PATH, {"active_provider": "anthropic", "providers": {}})
-    provider_id = (
-        os.environ.get("TELEGRAM_PROVIDER")
-        or config.get("telegram_provider")
-        or config.get("active_provider")
-        or "anthropic"
-    )
+    provider_id = _telegram_provider_override(config) or config.get("active_provider") or "anthropic"
     provider = config.get("providers", {}).get(provider_id, {})
     env = provider.get("env_vars", {})
     model = env.get("OPENAI_MODEL") or env.get("GEMINI_MODEL") or provider.get("default_model")
     base_url = env.get("OPENAI_BASE_URL") or provider.get("default_base_url")
     return provider_id, model, base_url
+
+
+def provider_models(provider_id: str, providers: dict) -> list[str | None]:
+    """Model attempts for one provider, most-preferred first.
+
+    Mirrors `_build_provider_entry`'s model_chain resolution in
+    provider_fallback.py (config's own `model_chain` first, else
+    `default_model` + `fallback_models`), but always falls back to `[None]`
+    rather than only for `cli_command == "claude"` — an unknown or
+    minimally-configured provider (as in a strict /provider pin that just
+    names an id) still needs ONE attempt with "use whatever this CLI/base_url
+    defaults to", not zero.
+    """
+    prov = (providers or {}).get(provider_id, {})
+    model_chain = list(prov.get("model_chain") or [])
+    if not model_chain:
+        primary = prov.get("default_model") or prov.get("env_vars", {}).get("OPENAI_MODEL")
+        if primary:
+            model_chain.append(primary)
+        for fallback_model in prov.get("fallback_models", []):
+            if fallback_model and fallback_model not in model_chain:
+                model_chain.append(fallback_model)
+    return model_chain or [None]
+
+
+def provider_chain() -> list[tuple[str, dict]]:
+    """Ordered (provider_id, config) attempts for Magneto's OWN conversational
+    orchestration (invoke_orchestrator) — not just a display helper.
+
+    A /provider pin (telegram_provider in config, or TELEGRAM_PROVIDER env)
+    is STRICT: it returns only that one provider, never active_provider's
+    fallback_providers chain. Pinning Magneto to a specific provider to
+    debug it is defeated if a failure there silently falls through to
+    something else — the whole point of pinning is seeing THAT provider's
+    real behavior, good or bad. Without the override, the chain follows
+    active_provider + its fallback_providers, same shape
+    provider_fallback.py's _resolve_provider_chain already uses for
+    everything else (heartbeats, routines) — Magneto gets the same
+    reliability, not a second, weaker implementation.
+    """
+    config = read_json(PROVIDERS_PATH, {"active_provider": "anthropic", "providers": {}})
+    providers = config.get("providers", {})
+    override = _telegram_provider_override(config)
+    if override:
+        return [(override, providers.get(override, {}))]
+    active_id = config.get("active_provider") or "anthropic"
+    chain = [(active_id, providers.get(active_id, {}))]
+    for pid in providers.get(active_id, {}).get("fallback_providers", []):
+        if pid in providers and pid not in {p for p, _ in chain}:
+            chain.append((pid, providers[pid]))
+    return chain
 
 
 def set_telegram_provider(provider_id: str | None) -> str:
@@ -858,7 +911,18 @@ def invoke_orchestrator(prompt: str) -> tuple[str, str]:
     heartbeats use — real tool-use (Bash, Agent/Task spawning of any
     .claude/agents/*.md specialist), routed through the active provider
     chain in config/providers.json (opencode by default).
+
+    A /provider pin is passed through as force_provider so it actually
+    constrains this call — before, active_provider_info() computed the same
+    override only for display (/provider status, the reply after /provider
+    <id>), and invoke_with_fallback() below always fell through to
+    providers.json's own active_provider regardless. Pinning Magneto to a
+    provider looked like it worked (the confirmation message named it) while
+    every real reply kept coming from whatever active_provider actually was.
     """
+    # Length alone can't tell a pin apart from an active_provider that simply
+    # has no fallback_providers configured — ask the override directly.
+    pinned = _telegram_provider_override(read_json(PROVIDERS_PATH, {}))
     result = invoke_with_fallback(
         prompt=prompt,
         agent="",  # no fixed persona — the model self-dispatches to any of
@@ -866,6 +930,7 @@ def invoke_orchestrator(prompt: str) -> tuple[str, str]:
                    # as a normal interactive Claude Code session would.
         max_turns=TELEGRAM_MAX_TURNS,
         timeout_seconds=TELEGRAM_TIMEOUT,
+        force_provider=pinned,
     )
     if result.get("status") == "busy":
         raise RuntimeError(
@@ -937,6 +1002,79 @@ def save_offset(offset: int) -> None:
     DIRECT_STATE.write_text(json.dumps({"offset": offset}, indent=2) + "\n", encoding="utf-8")
 
 
+# ── quem está esperando ajuste ───────────────────────────────────────────
+#
+# O botão "pedir ajuste" abre um force_reply com `#apr:<id>` no texto, e até
+# 05/08/2026 esse marcador era o ÚNICO estado do fluxo. Quem apertasse o botão e
+# depois mandasse a crítica sem a mensagem vir amarrada — porque tocou fora do
+# balão, porque gravou o áudio pelo microfone da tela inicial, porque respondeu
+# da notificação — caía no handler de conversa. E aí o pedido não era só
+# ignorado: virava prompt para o orquestrador.
+#
+# Foi exatamente o que aconteceu às 11:14:25Z de 05/08/2026 com a aprovação 146.
+# A crítica caiu na conversa, a cadeia de providers bateu timeout em quatro
+# tentativas (6min13s), o bot respondeu "via error", e o card seguiu `pending`
+# até alguém ir olhar o banco. O humano acha que ensinou e não ensinou.
+#
+# O estado passa a viver aqui: quem apertou o botão fica marcado, e a próxima
+# mensagem dele naquele chat é a crítica, amarrada ou não. Em disco (não em
+# memória) porque o serviço reinicia a cada deploy e o ajuste não pode morrer
+# num redeploy que o humano não viu acontecer.
+REVISE_STATE = TELEGRAM_STATE / "ajuste_pendente.json"
+# 30 min: mais que o suficiente para ler o card, pensar e ditar; pouco o
+# bastante para uma mensagem de assunto totalmente outro, uma hora depois, não
+# ser confundida com crítica ao post.
+REVISE_TTL_S = int(os.environ.get("TELEGRAM_REVISE_TTL", "1800"))
+
+
+def marcar_ajuste_pendente(chat_id: str, approval_id: int) -> None:
+    """Registra que este chat apertou 'pedir ajuste' e deve a crítica."""
+    estado = read_json(REVISE_STATE, {})
+    estado[str(chat_id)] = {"approval_id": int(approval_id), "quando": time.time()}
+    try:
+        TELEGRAM_STATE.mkdir(parents=True, exist_ok=True)
+        REVISE_STATE.write_text(json.dumps(estado, indent=2) + "\n", encoding="utf-8")
+    except OSError as exc:
+        # Sem o arquivo o fluxo volta a depender do reply amarrado, que é o
+        # comportamento antigo — degrada, não quebra.
+        log(f"não consegui gravar ajuste pendente: {exc}")
+
+
+def ajuste_pendente(chat_id: str) -> int | None:
+    """A aprovação que este chat está devendo crítica, se ainda vale."""
+    entrada = read_json(REVISE_STATE, {}).get(str(chat_id))
+    if not isinstance(entrada, dict):
+        return None
+    try:
+        quando = float(entrada.get("quando") or 0)
+        approval_id = int(entrada.get("approval_id"))
+    except (TypeError, ValueError):
+        return None
+    if time.time() - quando > REVISE_TTL_S:
+        limpar_ajuste_pendente(chat_id)
+        return None
+    return approval_id
+
+
+def limpar_ajuste_pendente(chat_id: str, approval_id: int | None = None) -> None:
+    """Tira a marca. Com `approval_id`, só se for a aprovação marcada.
+
+    O filtro por id importa: aprovar o card A não pode apagar o ajuste que o
+    humano já tinha começado a pedir no card B.
+    """
+    estado = read_json(REVISE_STATE, {})
+    entrada = estado.get(str(chat_id))
+    if not isinstance(entrada, dict):
+        return
+    if approval_id is not None and entrada.get("approval_id") != int(approval_id):
+        return
+    estado.pop(str(chat_id), None)
+    try:
+        REVISE_STATE.write_text(json.dumps(estado, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
 def unblock_ticket(ticket_id: str, reply_text: str, author: str) -> str:
     """Ponte Telegram→ticket: anexa a resposta do humano como comentário e reabre
     o ticket (blocked→open) para o orquestrador retomar. Cada round da entrevista
@@ -986,6 +1124,37 @@ def unblock_ticket(ticket_id: str, reply_text: str, author: str) -> str:
             f"Sua resposta foi anexada — {ticket.get('assignee_agent')} retoma na próxima rodada.")
 
 
+# Quantos 409 seguidos antes de avisar. Três porque o intervalo entre eles é de
+# ~8s: avisar no primeiro transformaria a sobreposição de dois segundos de um
+# redeploy em alerta, e esperar vinte deixaria três minutos de cliques perdidos
+# passarem calados.
+LIMITE_ALERTA_409 = int(os.environ.get("TELEGRAM_ALERTA_409", "3"))
+
+
+def _alertar_conflito_de_polling(token: str, quantos: int) -> None:
+    """Avisa no próprio chat que os cliques podem estar indo para outro lugar.
+
+    Best-effort e no chat de sempre: a mensagem vai pelo mesmo token que está em
+    conflito, então pode ser justamente ela que se perde — e é por isso que o
+    log continua existindo. Um dos dois chega.
+    """
+    destino = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+    if not destino:
+        return
+    try:
+        api(token, "sendMessage", {
+            "chat_id": destino,
+            "text": (f"⚠️ Conflito de polling no Telegram ({quantos} seguidos).\n"
+                     "Outro processo está usando o MESMO token do bot, e cada mensagem "
+                     "cai num dos dois ao acaso — clique de aprovação e pedido de ajuste "
+                     "podem se perder.\n\n"
+                     "Enquanto isso não for resolvido, decida os gates em /approvals no "
+                     "painel, que não passa pelo bot."),
+        }, timeout=15)
+    except Exception as exc:  # noqa: BLE001 — alerta nunca derruba o laço
+        log(f"não consegui alertar sobre o conflito de polling: {exc}")
+
+
 def main() -> int:
     token = read_telegram_token()
     me = api(token, "getMe")
@@ -993,6 +1162,7 @@ def main() -> int:
     log(f"polling @{username}; provider follows {PROVIDERS_PATH}")
 
     offset = load_offset()
+    conflitos_409 = 0
     while True:
         try:
             payload = {
@@ -1002,6 +1172,7 @@ def main() -> int:
             if offset is not None:
                 payload["offset"] = offset
             updates = api(token, "getUpdates", payload, timeout=35).get("result", [])
+            conflitos_409 = 0  # poll limpo: se o intruso sair, o alerta rearma
             for update in updates:
                 offset = int(update["update_id"]) + 1
                 save_offset(offset)
@@ -1035,10 +1206,16 @@ def main() -> int:
                             "reply_markup": {"force_reply": True,
                                              "input_field_placeholder": "ex.: falta o CTA do /whatsapp"},
                         })
+                        # O force_reply é a via preferida; a marca em disco é a
+                        # rede de segurança para quando ela não vem amarrada.
+                        marcar_ajuste_pendente(cq_chat_id, int(m.group(1)))
                         log(f"approval-revise-prompt chat={cq_chat_id} approval={m.group(1)}")
                         continue  # teclado fica de pé: ele ainda pode aprovar ou rejeitar
                     if m and from_id in approval_approvers():
                         decision = "approve" if m.group(2) == "a" else "reject"
+                        # Decidiu no botão: não deve mais crítica nenhuma deste
+                        # card, e a próxima mensagem dele é conversa de novo.
+                        limpar_ajuste_pendente(cq_chat_id, int(m.group(1)))
                         resp = decide_approval_via_api(int(m.group(1)), decision, from_id)
                         api(token, "answerCallbackQuery", {"callback_query_id": cq["id"], "text": resp["toast"]})
                         log(f"approval-decision chat={cq_chat_id} approval={m.group(1)} decision={decision} ok={resp['ok']}")
@@ -1081,7 +1258,22 @@ def main() -> int:
                 # no ledger que alimenta as próximas gerações. `caption` conta
                 # porque o card com imagem é uma foto legendada, não um texto.
                 m_apr = re.search(r"#apr:(\d+)", reply_src)
-                if m_apr:
+                m_tkt = re.search(r"#tkt:([0-9a-fA-F-]+)", reply_src)
+                # Ordem de precedência, e cada nível cobre um caso real:
+                #   1. reply amarrado em #apr — a intenção está explícita;
+                #   2. reply amarrado em #tkt — desbloqueio de ticket ganha da
+                #      marca em disco, senão uma entrevista de ticket seria lida
+                #      como crítica ao post;
+                #   3. a marca em disco — ele apertou "pedir ajuste" e está
+                #      falando; amarrado ou não, é a crítica.
+                # Comando (`/new`, `/start`) nunca é crítica, e só aprovador
+                # dispara o nível 3 — a marca é por chat, e chat pode ter mais
+                # de uma pessoa.
+                alvo_ajuste = int(m_apr.group(1)) if m_apr else None
+                if (alvo_ajuste is None and not m_tkt and not text.startswith("/")
+                        and from_id in approval_approvers()):
+                    alvo_ajuste = ajuste_pendente(chat_id)
+                if alvo_ajuste is not None:
                     # Crítica falada é o caso NORMAL no celular, não a exceção:
                     # é mais rápido ditar do que digitar com o post na tela. Sem
                     # transcrever aqui, o áudio caía no agente de conversa e
@@ -1113,11 +1305,16 @@ def main() -> int:
                     if from_id not in approval_approvers():
                         api(token, "sendMessage", {"chat_id": chat_id, "text": "não autorizado",
                                                    "reply_to_message_id": message.get("message_id")})
-                        log(f"approval-revise chat={chat_id} approval={m_apr.group(1)} "
+                        log(f"approval-revise chat={chat_id} approval={alvo_ajuste} "
                             f"audio={bool(audio_id)} ok=False motivo=nao-autorizado")
                         continue
 
-                    resp = decide_approval_via_api(int(m_apr.group(1)), "revise", from_id,
+                    # A marca sai antes da chamada: se a ponte falhar, o humano
+                    # recebe o erro e manda de novo por vontade própria. Deixar
+                    # a marca de pé faria a mensagem seguinte — que pode ser
+                    # "e aí, funcionou?" — virar crítica ao post.
+                    limpar_ajuste_pendente(chat_id, alvo_ajuste)
+                    resp = decide_approval_via_api(alvo_ajuste, "revise", from_id,
                                                    feedback=critica)
 
                     # Card já decidido não é beco sem saída. Em 30/07/2026 um
@@ -1141,7 +1338,7 @@ def main() -> int:
                                               else critica),
                             speaker=sender_name,
                         )
-                        log(f"approval-revise chat={chat_id} approval={m_apr.group(1)} "
+                        log(f"approval-revise chat={chat_id} approval={alvo_ajuste} "
                             f"audio={bool(audio_id)} ok=False -> devolvido ao orquestrador")
                         continue
 
@@ -1154,10 +1351,9 @@ def main() -> int:
                              if resp.get("ok") else f"Não consegui registrar: {resp['toast']}")
                     api(token, "sendMessage", {"chat_id": chat_id, "text": aviso,
                                                "reply_to_message_id": message.get("message_id")})
-                    log(f"approval-revise chat={chat_id} approval={m_apr.group(1)} "
-                        f"audio={bool(audio_id)} ok={resp.get('ok')}")
+                    log(f"approval-revise chat={chat_id} approval={alvo_ajuste} "
+                        f"audio={bool(audio_id)} amarrado={bool(m_apr)} ok={resp.get('ok')}")
                     continue
-                m_tkt = re.search(r"#tkt:([0-9a-fA-F-]+)", reply_src)
                 if m_tkt:
                     # Mesmo motivo da ponte de ajuste acima: desbloquear ticket
                     # falando é o normal no celular, e sem transcrever o áudio
@@ -1267,6 +1463,22 @@ def main() -> int:
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", "ignore")
             log(f"telegram http error {exc.code}: {body[:300]}")
+            if exc.code == 409:
+                conflitos_409 += 1
+                # 409 no getUpdates significa que OUTRO processo está fazendo
+                # long-polling com o mesmo token — e o Telegram entrega cada
+                # update a um dos dois ao acaso. Não é degradação: é clique de
+                # aprovação e crítica de post caindo num processo que não sabe o
+                # que fazer com eles.
+                #
+                # Em 05/08/2026, entre 11:21 e 11:24Z, foram 21 conflitos: o
+                # `run_orchestrated_reply` havia acabado de subir um CLI que
+                # inicia o canal Telegram do plugin oficial a partir do mesmo
+                # `channels/telegram/.env`. Os 21 ficaram no log e ninguém viu.
+                if conflitos_409 == LIMITE_ALERTA_409:
+                    _alertar_conflito_de_polling(token, conflitos_409)
+            else:
+                conflitos_409 = 0
             time.sleep(5)
         except KeyboardInterrupt:
             return 0

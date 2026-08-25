@@ -102,6 +102,13 @@ _429_PATTERNS = [
     re.compile(r"billing.?limit", re.IGNORECASE),
     re.compile(r"plan.?limit", re.IGNORECASE),
     re.compile(r"maximum combo retry limit reached", re.IGNORECASE),
+    # OmniRoute internal queue timeout (request queue budget maxWaitMs)
+    re.compile(r"maxwaitms", re.IGNORECASE),
+    re.compile(r"request.?queue", re.IGNORECASE),
+    re.compile(r"queue.?budget", re.IGNORECASE),
+    # Subprocess/CLI timeouts that should trigger fallback
+    re.compile(r"timeout", re.IGNORECASE),
+    re.compile(r"timed out", re.IGNORECASE),
     # Cota do Claude Code esgotada. O CLI devolve "You've hit your monthly
     # spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message"
     # — nenhum dos padrões acima casa com esse texto, e a rotina morria em vez
@@ -112,6 +119,7 @@ _429_PATTERNS = [
     re.compile(r"cc_cli_limit_message", re.IGNORECASE),
     re.compile(r"credit balance", re.IGNORECASE),
     re.compile(r"out of credit", re.IGNORECASE),
+    re.compile(r"insufficient.?credits?", re.IGNORECASE),
 ]
 
 # Fatal errors that should NOT trigger fallback (auth / config issues)
@@ -312,13 +320,15 @@ def _build_provider_entry(provider_id: str, providers: dict) -> dict:
     env_vars = {k: v for k, v in prov.get("env_vars", {}).items()
                 if v and k not in ("OPENAI_API_KEY", "OPENAI_MODEL")}
 
-    primary_model = prov.get("default_model") or prov.get("env_vars", {}).get("OPENAI_MODEL")
-    model_chain = []
-    if primary_model:
-        model_chain.append(primary_model)
-    for fallback_model in prov.get("fallback_models", []):
-        if fallback_model and fallback_model not in model_chain:
-            model_chain.append(fallback_model)
+    # Use model_chain from config (new format) or fall back to default_model + fallback_models
+    model_chain = prov.get("model_chain", [])
+    if not model_chain:
+        primary_model = prov.get("default_model") or prov.get("env_vars", {}).get("OPENAI_MODEL")
+        if primary_model:
+            model_chain.append(primary_model)
+        for fallback_model in prov.get("fallback_models", []):
+            if fallback_model and fallback_model not in model_chain:
+                model_chain.append(fallback_model)
 
     if not model_chain and prov.get("cli_command") == "claude":
         model_chain = [None]

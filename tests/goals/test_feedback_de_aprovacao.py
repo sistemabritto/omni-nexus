@@ -408,14 +408,26 @@ def test_allowlist_vazia_recusa_qualquer_um(monkeypatch):
 
 # ── crítica por áudio (falha do primeiro teste real, 25/07) ──────────────
 
+def _fonte_do_bot() -> str:
+    return (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
+
+
+def _handler_de_ajuste(fonte: str) -> str:
+    """O bloco que trata a crítica, delimitado pelo que o abre e o que o fecha.
+
+    Fatiado por `alvo_ajuste` e não por `m_apr` porque o alvo do ajuste deixou de
+    vir só do reply amarrado — ver `test_ajuste_sobrevive_a_resposta_solta`.
+    """
+    return fonte.split("alvo_ajuste = int(m_apr.group(1))")[1].split("if m_tkt:")[0]
+
+
 def test_ponte_de_ajuste_aceita_audio():
     """No celular, ditar a crítica é o caso NORMAL — mais rápido que digitar
     com o post na tela. O handler só olhava `text`, então o áudio caía no
     agente de conversa e virava uma resposta sem relação com a aprovação.
     Foi exatamente o que aconteceu no primeiro teste real do Felipe."""
-    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
-    trecho = fonte.split("m_apr = re.search")[1].split("m_tkt = re.search")[0]
-    assert "if m_apr:" in trecho, "não pode exigir texto para entrar no handler"
+    trecho = _handler_de_ajuste(_fonte_do_bot())
+    assert "if alvo_ajuste is not None:" in trecho, "não pode exigir texto para entrar no handler"
     assert "message_audio_file_id" in trecho
     assert "handle_audio_message" in trecho
 
@@ -423,20 +435,17 @@ def test_ponte_de_ajuste_aceita_audio():
 def test_ajuste_por_audio_ecoa_a_transcricao():
     """Numa crítica ditada o humano precisa ver o que o sistema entendeu antes
     de o agente refazer em cima disso."""
-    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
-    trecho = fonte.split("m_apr = re.search")[1].split("m_tkt = re.search")[0]
-    assert "Entendi" in trecho
+    assert "Entendi" in _handler_de_ajuste(_fonte_do_bot())
 
 
 def test_falha_de_transcricao_nao_vira_silencio():
-    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
-    trecho = fonte.split("m_apr = re.search")[1].split("m_tkt = re.search")[0]
+    trecho = _handler_de_ajuste(_fonte_do_bot())
     assert "Manda por texto" in trecho, "erro tem que dizer o que fazer em seguida"
 
 
 def test_ponte_de_ticket_tambem_aceita_audio():
     """Mesmo defeito, uma linha abaixo — deixar o idêntico ao lado é pior."""
-    fonte = (REPO_ROOT / "scripts" / "telegram_provider_bot.py").read_text(encoding="utf-8")
-    trecho = fonte.split("m_tkt = re.search")[1].split("audio_file_id = message_audio_file_id")[0]
-    assert "if m_tkt:" in trecho
+    fonte = _fonte_do_bot()
+    trecho = fonte.split("if m_tkt:")[1].split("audio_file_id = message_audio_file_id")[0]
     assert "handle_audio_message" in trecho
+    assert "unblock_ticket" in trecho

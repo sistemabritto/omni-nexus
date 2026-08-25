@@ -50,6 +50,15 @@ MAX_STORED_MESSAGE_CHARS = 1600
 TELEGRAM_MAX_TURNS = int(os.environ.get("TELEGRAM_MAX_TURNS", "25"))
 TELEGRAM_TIMEOUT = int(os.environ.get("TELEGRAM_TIMEOUT", "600"))
 TELEGRAM_MAX_CONCURRENT = int(os.environ.get("TELEGRAM_MAX_CONCURRENT", "4"))
+# provider_fallback's PER_ATTEMPT_TIMEOUT_CAP default (180s) is sized for
+# background jobs — a human waiting live in the chat needs the chain to
+# rotate much faster when one candidate stalls. Confirmed live 2026-08-25:
+# OmniRoute's SSE stream occasionally stalls mid-response with no error (the
+# same symptom Hermes hits and recovers from in ~2s via its own retry —
+# Magneto's subprocess+external-timeout has no equivalent), and with a
+# 9-entry model_chain a single 180s stall already burns half of
+# TELEGRAM_TIMEOUT before the chain even advances once.
+TELEGRAM_PER_ATTEMPT_TIMEOUT_CAP = int(os.environ.get("TELEGRAM_PER_ATTEMPT_TIMEOUT_CAP", "45"))
 
 
 def _load_workspace_env() -> None:
@@ -931,6 +940,7 @@ def invoke_orchestrator(prompt: str) -> tuple[str, str]:
         max_turns=TELEGRAM_MAX_TURNS,
         timeout_seconds=TELEGRAM_TIMEOUT,
         force_provider=pinned,
+        per_attempt_timeout_cap=TELEGRAM_PER_ATTEMPT_TIMEOUT_CAP,
     )
     if result.get("status") == "busy":
         raise RuntimeError(

@@ -740,10 +740,12 @@ class FallbackEngine:
         force_provider: str | None = None,
         force_model: str | None = None,
         cwd: Path | None = None,
+        per_attempt_timeout_cap: int | None = None,
     ) -> Iterator[FallbackAttempt]:
         config = _read_providers_config()
         attempt_num = 0
         deadline = time.time() + timeout_seconds
+        attempt_cap = per_attempt_timeout_cap or PER_ATTEMPT_TIMEOUT_CAP
 
         chain = self.provider_chain
         if force_provider:
@@ -797,7 +799,7 @@ class FallbackEngine:
                 remaining = deadline - time.time()
                 if remaining < 20:
                     return
-                attempt_timeout = int(min(remaining, PER_ATTEMPT_TIMEOUT_CAP))
+                attempt_timeout = int(min(remaining, attempt_cap))
 
                 attempt_num += 1
 
@@ -921,6 +923,7 @@ def invoke_with_fallback(
     force_provider: str | None = None,
     force_model: str | None = None,
     cwd: Path | None = None,
+    per_attempt_timeout_cap: int | None = None,
 ) -> dict:
     """Invoke CLI with automatic 429 fallback. Returns the first successful result.
 
@@ -933,11 +936,22 @@ def invoke_with_fallback(
     of that tree and gains nothing from serializing behind it. Concurrency
     for isolated-cwd callers is the caller's own responsibility (e.g. the
     media-worker's replicas=1 + per-job DB lock).
+
+    `per_attempt_timeout_cap`: overrides PER_ATTEMPT_TIMEOUT_CAP (180s) for
+    this call only. A human waiting live in Telegram (Magneto) needs a much
+    shorter leash than a background routine — OmniRoute's SSE stream
+    occasionally stalls mid-response (confirmed live 2026-08-25, the same
+    symptom Hermes hits and recovers from via its own fast retry-on-stream-
+    error; Magneto's subprocess+external-timeout design has no equivalent,
+    so a stall here just eats the full cap before the chain even advances).
+    With a 9-entry model_chain and a 180s cap, one stalled first attempt
+    already burns half of TELEGRAM_TIMEOUT before trying anything else.
     """
     if cwd is not None:
         return _invoke_with_fallback_locked(
             prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
             agent=agent, force_provider=force_provider, force_model=force_model, cwd=cwd,
+            per_attempt_timeout_cap=per_attempt_timeout_cap,
         )
     holder = f"agent={agent or 'none'}"
     try:
@@ -945,6 +959,7 @@ def invoke_with_fallback(
             return _invoke_with_fallback_locked(
                 prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
                 agent=agent, force_provider=force_provider, force_model=force_model,
+                per_attempt_timeout_cap=per_attempt_timeout_cap,
             )
     except TimeoutError as exc:
         print(f"[fallback] {exc}", flush=True)
@@ -964,6 +979,7 @@ def _invoke_with_fallback_locked(
     force_provider: str | None = None,
     force_model: str | None = None,
     cwd: Path | None = None,
+    per_attempt_timeout_cap: int | None = None,
 ) -> dict:
     engine = FallbackEngine()
     last_result = None
@@ -971,6 +987,7 @@ def _invoke_with_fallback_locked(
     for attempt in engine.attempts(
         prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
         agent=agent, force_provider=force_provider, force_model=force_model, cwd=cwd,
+        per_attempt_timeout_cap=per_attempt_timeout_cap,
     ):
         result = attempt.run()
         result["provider_id"] = attempt.provider_id

@@ -1,0 +1,72 @@
+## Plausible Analytics — self-hosted, track.workflowapi.com.br.
+## Já rodando na VPS (stack `plausible`, deployada fora deste repo) — este
+## arquivo é a referência versionada, não redeploya nada sozinho.
+##
+## Secrets (env da stack no Portainer, nunca aqui):
+##   PLAUSIBLE_POSTGRES_PASSWORD → openssl rand -base64 32
+##   PLAUSIBLE_SECRET_KEY_BASE   → openssl rand -hex 32 (Phoenix SECRET_KEY_BASE)
+version: "3.8"
+services:
+  plausible_db:
+    image: postgres:15-alpine
+    command: ["postgres","-c","shared_buffers=256MB","-c","max_connections=200"]
+    environment:
+      POSTGRES_PASSWORD: ${PLAUSIBLE_POSTGRES_PASSWORD}
+      POSTGRES_USER: plausible
+      POSTGRES_DB: plausible_db
+    volumes:
+      - /opt/plausible/db:/var/lib/postgresql/data
+    networks:
+      - plausible_net
+    deploy:
+      restart_policy:
+        condition: any
+
+  plausible_events_db:
+    image: clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - /opt/plausible/clickhouse:/var/lib/clickhouse
+      - /opt/plausible/clickhouse_config:/etc/clickhouse-server/users.d
+    networks:
+      - plausible_net
+    deploy:
+      restart_policy:
+        condition: any
+
+  plausible:
+    image: plausible/analytics:latest
+    command: sh -c "/app/bin/plausible start"
+    environment:
+      DATABASE_URL: postgres://plausible:${PLAUSIBLE_POSTGRES_PASSWORD}@plausible_db:5432/plausible_db
+      SECRET_KEY_BASE: ${PLAUSIBLE_SECRET_KEY_BASE}
+      DISABLE_TELEMETRY: "true"
+      ENABLE_IMPORT_URLS: "true"
+      BASE_URL: https://track.workflowapi.com.br
+      CLICKHOUSE_DATABASE_URL: http://plausible_events_db:8123/plausible_events_db
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+    volumes:
+      - /opt/plausible/events:/var/lib/plausible/events
+      - /opt/plausible/logs:/var/lib/plausible/logs
+    networks:
+      - plausible_net
+      - network_public
+    deploy:
+      restart_policy:
+        condition: any
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.plausible.rule=Host(`track.workflowapi.com.br`)
+        - traefik.http.routers.plausible.entrypoints=websecure
+        - traefik.http.routers.plausible.tls.certresolver=letsencrypt
+        - traefik.http.services.plausible.loadbalancer.server.port=8000
+
+networks:
+  plausible_net:
+    external: true
+  network_public:
+    external: true

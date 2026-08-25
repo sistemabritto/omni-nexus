@@ -370,8 +370,24 @@ def _nucleo(texto: str) -> set[str]:
     return {p.rstrip("s") for p in palavras if p not in _VAZIAS and len(p) > 2}
 
 
-def titulos_publicados() -> list[str]:
-    """Títulos e keywords que o blog já cobre — para não canibalizar."""
+# Carência do núcleo: assunto publicado dentro desta janela fica bloqueado
+# mesmo que a keyword literal seja outra. Calibrado acima do ciclo semanal por
+# folga real — sete dias não bastou: o mesmo assunto de WhatsApp Business
+# dominou dois ciclos seguidos (27/07 e 03/08/2026), porque `limit=100` sem
+# filtro de data cobre só ~33 dias no ritmo de 3 posts/dia e o corte é por
+# CONTAGEM de post, não por tempo — ele encolhe conforme o blog cresce.
+DIAS_CARENCIA_NUCLEO = int(os.environ.get("DIAS_CARENCIA_NUCLEO", "45"))
+
+
+def titulos_publicados(dias: int = DIAS_CARENCIA_NUCLEO) -> list[str]:
+    """Títulos e keywords que o blog já cobre — para não canibalizar.
+
+    Janela explícita em TEMPO, não em contagem. `limit=100` sozinho decide
+    "recente" pelo ritmo de publicação, que só sobe — o mesmo corte que hoje
+    cobre 45 dias vai cobrir 20 daqui a um ano de blog maduro, e o dedupe
+    silenciosamente perde alcance sem ninguém mudar uma linha.
+    """
+    corte = (datetime.now(timezone.utc) - timedelta(days=dias)).isoformat()
     ja = []
     try:
         import requests
@@ -380,16 +396,26 @@ def titulos_publicados() -> list[str]:
         cfg = _config()
         if cfg:
             url, key = cfg
-            r = requests.get(f"{url}/ghost/api/admin/posts/?limit=100&fields=title,status",
-                             headers=_headers(key), timeout=45)
+            r = requests.get(
+                f"{url}/ghost/api/admin/posts/"
+                f"?limit=100&order=published_at%20desc&fields=title,status,published_at",
+                headers=_headers(key), timeout=45)
             if r.status_code < 300:
-                ja += [p.get("title", "") for p in r.json().get("posts", [])]
+                for p in r.json().get("posts", []):
+                    quando = (p.get("published_at") or "").replace("Z", "+00:00")
+                    # Sem data (rascunho nunca publicado) ainda vale — é
+                    # trabalho em andamento no mesmo assunto, não histórico.
+                    if quando and quando < corte:
+                        continue
+                    ja.append(p.get("title", ""))
     except Exception as exc:  # noqa: BLE001 — sem a lista o pior caso é repetir
         log(f"não consegui ler o blog para deduplicar ({exc})")
     try:
         from sdk_client import evo
 
         for p in (evo.get("/api/pautas", {"limit": 200}) or {}).get("pautas", []):
+            if (p.get("data_alvo") or "9999") < corte[:10]:
+                continue
             if p.get("status") in ("escrita", "publicada"):
                 ja.append(p.get("titulo") or p.get("keyword") or "")
     except Exception as exc:  # noqa: BLE001
@@ -484,6 +510,111 @@ def alternar_funis(keywords: list[dict], alvo: int) -> list[dict]:
         distribuicao = ", ".join(f"{f}:{sum(1 for k in saida if funil_de(k['kw']) == f)}"
                                  for f in ordem)
         log(f"rodízio de funis — {distribuicao} (cota {cota})")
+    return saida
+
+
+# ── 3a-bis. tema — eixo mais fino que funil, contra o "dia de um assunto só" ──
+#
+# A cota de funil resolve o WhatsApp tomando a SEMANA inteira; não resolve o
+# mesmo assunto tomando o DIA. 04 e 05/08/2026 tiveram os três posts do dia
+# sobre WhatsApp Business — "vantagens e desvantagens", "premium valor",
+# "atendimento automatizado grátis" — três keywords diferentes o bastante para
+# passar pelo dedupe de núcleo (que exige 60% de sobreposição literal), mas o
+# leitor que abre o blog naquele dia lê a mesma coisa três vezes.
+#
+# `funil_de` tem só 3 baldes porque decide CTA (/whatsapp, /socialjobs,
+# /sistema) — granularidade errada para isto. `tema` é mais fino: separa
+# WhatsApp de redes sociais, automação/IA e vendas/CRM, então "sistema" (que
+# hoje é um funil só) deixa de virar três posts de automação genérica no
+# mesmo dia.
+TEMAS: dict[str, tuple[str, ...]] = {
+    "whatsapp": ("whatsapp", "zap"),
+    "redes-sociais": ("instagram", "tiktok", "youtube", "reels", "shorts", "stories",
+                       "story", "carrossel", "conteúdo", "conteudo", "rede social",
+                       "redes sociais", "seguidor", "engajamento", "postar", "trafego pago",
+                       "tráfego pago"),
+    "ia-automacao": ("agente de ia", "agentes de ia", "inteligência artificial",
+                      "inteligencia artificial", "automação", "automacao", "chatbot",
+                      "ia generativa", "hiperautomação", "hiperautomacao", "low code",
+                      "no code"),
+    "vendas-crm": ("crm", "lead", "funil de venda", "página de venda", "pagina de venda",
+                   "página de alta conversão", "pagina de alta conversao"),
+}
+# Todo o resto (ex.: "o que é uma call de descoberta") cai aqui — bucket largo
+# de propósito, cabe menos apertar um assunto de nicho que ainda não tem massa
+# para merecer eixo próprio.
+TEMA_PADRAO = "outros"
+
+# Cota por dia: nunca 2 do mesmo tema no mesmo bloco de 3. Cota por ciclo: 6 de
+# 21 (28%) é folga real sem deixar nenhum tema monopolizar a semana — a cota de
+# funil já limita a 7, esta aperta mais um degrau dentro do funil mais amplo
+# (sistema engloba ia-automacao E vendas-crm).
+COTA_TEMA_POR_DIA = 1
+COTA_TEMA_POR_CICLO = 6
+
+
+def tema_de(keyword: str) -> str:
+    """Bucket temático de uma keyword. Ver `TEMAS` para o porquê de cada eixo."""
+    texto = (keyword or "").lower()
+    for tema, gatilhos in TEMAS.items():
+        if any(g in texto for g in gatilhos):
+            return tema
+    return TEMA_PADRAO
+
+
+def equilibrar_temas(keywords: list[dict], *, por_dia: int = POSTS_POR_DIA) -> list[dict]:
+    """Reordena (nunca descarta) para que nenhum dia repita tema, se possível.
+
+    Permutação pura de propósito: cortar aqui repetiria o erro que a reserva
+    do X já cometeu uma vez — "falha calada" ao encolher a semana sem avisar.
+    Em vez disso, o excedente de um tema é empurrado para mais tarde na lista;
+    se isso ultrapassar `alvo`, quem corta é `montar_pautas` (o mesmo ponto que
+    já cortava antes desta função existir), e o log abaixo diz exatamente o
+    que sobrou.
+
+    Greedy por bloco de dia: escolhe, na ordem de prioridade original, o
+    primeiro item cujo tema (a) ainda não apareceu hoje e (b) não passou da
+    cota do ciclo; se nenhum atender as duas, relaxa a cota do ciclo antes de
+    relaxar "não repetir hoje" — repetir cota é aceitável, repetir dia não.
+    """
+    restantes = list(keywords)
+    saida: list[dict] = []
+    usados_ciclo: dict[str, int] = {}
+    dias_forcados = 0
+
+    while restantes:
+        temas_do_dia: set[str] = set()
+        for _ in range(por_dia):
+            if not restantes:
+                break
+            escolha = None
+            for respeitar_cota in (True, False):
+                for i, kw in enumerate(restantes):
+                    tema = tema_de(kw["kw"])
+                    if tema in temas_do_dia:
+                        continue
+                    if respeitar_cota and usados_ciclo.get(tema, 0) >= COTA_TEMA_POR_CICLO:
+                        continue
+                    escolha = i
+                    break
+                if escolha is not None:
+                    break
+            if escolha is None:
+                # Nenhum tema novo sobrou para hoje — todo item restante já
+                # apareceu no dia. Aceitar a repetição é melhor que travar.
+                escolha = 0
+                dias_forcados += 1
+            kw = restantes.pop(escolha)
+            tema = tema_de(kw["kw"])
+            temas_do_dia.add(tema)
+            usados_ciclo[tema] = usados_ciclo.get(tema, 0) + 1
+            saida.append(kw)
+
+    if dias_forcados:
+        log(f"equilíbrio de tema: {dias_forcados} dia(s) repetiram tema por falta de "
+            "outro assunto disponível na semana")
+    if usados_ciclo:
+        log("distribuição por tema — " + ", ".join(f"{t}:{n}" for t, n in usados_ciclo.items()))
     return saida
 
 
@@ -855,6 +986,12 @@ def main() -> int:
         log(f"só {len(keywords)} keyword(s) inédita(s) — nem o SEO nem o X deram "
             "material suficiente. Amplie as seeds antes de rodar de novo.")
         return 1
+
+    # Último filtro, depois de juntar SEO + reserva do X: cobre qualquer
+    # caminho que preencha a semana, não só o rodízio de funil. Permutação
+    # pura — não encolhe a lista, só reordena para não repetir tema no mesmo
+    # dia. Ver `equilibrar_temas`.
+    keywords = equilibrar_temas(keywords)
 
     pautas = montar_pautas(keywords, inicio)
     OUT_DIR.mkdir(parents=True, exist_ok=True)

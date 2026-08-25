@@ -248,6 +248,22 @@ UA_NAVEGADOR = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
 
+def resolver_url(post: dict) -> str:
+    """URL pública do post, nunca a URL de preview /p/<uuid>/.
+
+    O Ghost devolve /p/<uuid>/ para posts em draft — essa URL é a que
+    virava o link no post social. Mas /p/ não é pública: quem clica cai
+    em 404. Se o post tem slug, usamos a URL canônica; se não (draft
+    real), devolve a preview.
+    """
+    url = post.get("url", "") or ""
+    slug = post.get("slug", "") or ""
+    base = (os.environ.get("GHOST_URL") or "").strip().rstrip("/")
+    if "/p/" in url and slug and base:
+        return f"{base}/{slug}/"
+    return url
+
+
 def buscar_post(post_id: str) -> dict | None:
     url = (os.environ.get("GHOST_URL") or "").strip().rstrip("/")
     key = (os.environ.get("GHOST_ADMIN_API_KEY") or "").strip()
@@ -356,7 +372,7 @@ def adaptar(post: dict, rede: str) -> str:
     """Versão da rede via x.ai; sem chave ou em erro, cai num fallback que não inventa nada."""
     titulo = post.get("title", "")
     resumo = post.get("custom_excerpt") or post.get("excerpt") or ""
-    link = post.get("url", "")
+    link = resolver_url(post)
     key = (os.environ.get("XAI_API_KEY") or "").strip()
 
     # Correções que o Felipe já pediu entram como regra, não como sugestão. É o
@@ -498,9 +514,28 @@ def redes_ja_derivadas(post_id: str) -> set[str]:
         pub = a.get("publish") or {}
         # `source_id` é o artigo de origem do post de rede; `publish_ref` é o
         # artigo do gate do blog. Só o primeiro identifica uma derivação.
-        if pub.get("source_id") == post_id and pub.get("target") in REDES:
-            achadas.add(pub["target"])
+        if pub.get("source_id") != post_id or pub.get("target") not in REDES:
+            continue
+        if _de_artigo_nao_publicado(pub.get("source_url")):
+            continue
+        achadas.add(pub["target"])
     return achadas
+
+
+def _de_artigo_nao_publicado(source_url: str | None) -> bool:
+    """A derivação foi feita quando o artigo ainda não estava no ar?
+
+    Reconhecida pela URL de preview do Ghost (`/p/<uuid>/`), que é a única que
+    existe antes de o artigo publicar. Uma derivação assim **não conta como
+    feita**: o link dela morre no momento em que o artigo ganha o slug real.
+
+    Sem esta exceção, as oito aprovações inválidas de 05/08/2026 travariam a
+    rederivação para sempre — `redes_ja_derivadas` olha TODOS os estados de
+    propósito, então rejeitá-las seria o mesmo que apagar aqueles três artigos
+    das redes. A regra é estreita a ponto de não poder confundir: artigo
+    publicado nunca tem `/p/` na URL.
+    """
+    return "/p/" in (source_url or "")
 
 
 def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) -> dict:
@@ -508,8 +543,26 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
     post = buscar_post(post_id)
     if not post:
         return {"ok": False, "erro": f"post {post_id} não encontrado no Ghost"}
-    if post.get("status") not in ("published", "scheduled"):
-        return {"ok": True, "ignorado": f"post está '{post.get('status')}', não 'published'/'scheduled'"}
+    # SÓ `published`. `scheduled` já esteve aceito aqui, com o argumento de que a
+    # URL de preview (`/p/<uuid>/`) serve para revisar antes de o artigo ir ao ar.
+    # Não serve, e o custo apareceu inteiro em 05/08/2026: os três artigos do dia
+    # estavam agendados para 12h, 16h e 21h, oito aprovações de rede nasceram
+    # carregando `blog.sistemabritto.com.br/p/`, e o Felipe clicou e tomou 404 —
+    # está escrito no motivo da aprovação 137.
+    #
+    # O erro é estrutural, não cosmético:
+    #   • a URL de preview morre quando o artigo publica com o slug real, então
+    #     todo post aprovado sairia com link que deixa de valer;
+    #   • `publish_at` da rede é +2h, então o post podia ir ao ar ANTES do
+    #     artigo que ele anuncia;
+    #   • o texto é gerado a partir de um artigo que ainda pode mudar no gate.
+    #
+    # Quem cobre o agendado é o varredor de 15 min (`derivar_pendentes`), depois
+    # de o Ghost publicar. Esperar 15 minutos custa nada; publicar link quebrado
+    # custa o clique que o artigo inteiro existe para conseguir.
+    if post.get("status") != "published":
+        return {"ok": True, "ignorado": f"post está '{post.get('status')}', não 'published' — "
+                                        "o varredor deriva quando ele for ao ar"}
 
     quando = datetime.now(timezone.utc) + timedelta(hours=em_horas)
     resultado: dict = {"ok": True, "post": post.get("title"), "redes": {}, "pulados": {}}
@@ -557,12 +610,12 @@ def distribuir(post_id: str, *, em_horas: float = 2.0, dry_run: bool = False) ->
             # e no Threads não vai link nenhum, então não existe preview para
             # competir; e no X uma imagem própria rende mais que o card de link.
             "publish_media": midia,
-            "publish_comments": comentarios_da_rede(rede, post.get("url") or "", post.get("title") or ""),
+            "publish_comments": comentarios_da_rede(rede, resolver_url(post) or "", post.get("title") or ""),
             "publish_at": agendado.isoformat().replace("+00:00", "Z"),
             # Link do artigo, para conferir o texto completo na hora de aprovar.
             # Em draft o Ghost devolve a URL de preview (/p/<uuid>/), que abre
             # sem login — vale tanto para revisar antes quanto depois de publicar.
-            "source_url": post.get("url"),
+            "source_url": resolver_url(post),
             # O id é o que permite REFAZER: pedir ajuste precisa voltar ao
             # artigo de origem para gerar outra versão. Sem ele o feedback fica
             # registrado e o texto não é regenerado.
@@ -655,7 +708,7 @@ def refazer(outcome_anterior: dict, feedback: str, ticket_id: str,
     # versão e outra o gate do blog pode ter trocado a imagem, e republicar a
     # antiga entregaria uma thumb que o Felipe já reprovou.
     novo["publish_media"] = midia_do_post(post)[0]
-    novo["publish_comments"] = comentarios_da_rede(rede, post.get("url") or "", post.get("title") or "")
+    novo["publish_comments"] = comentarios_da_rede(rede, resolver_url(post) or "", post.get("title") or "")
     novo["result"] = (f"Versão {tentativa + 1} de {rede} do artigo "
                       f"'{post.get('title')}' (após ajuste pedido)")
 
@@ -840,7 +893,7 @@ def aprovar_artigo(post_id: str, *, publicar_em: str | None = None,
         "publish_content": resumo,
         "publish_media": [capa] if capa else [],
         "publish_at": publicar_em,
-        "source_url": post.get("url"),
+        "source_url": resolver_url(post),
     }
     if dry_run:
         return {"ok": True, "dry_run": True, "outcome": outcome}
@@ -891,9 +944,14 @@ def posts_publicados_recentes(horas: float = JANELA_VARREDURA_HORAS,
     key = (os.environ.get("GHOST_ADMIN_API_KEY") or "").strip()
     if not url or not key:
         return []
+    # `published` e nada mais. Enquanto `scheduled` entrava aqui, o varredor
+    # derivava artigo que ainda não existia no ar — ver o bloco em `distribuir`.
+    # Um agendado só some da varredura por um caminho: publicar. Quando publica,
+    # `published_at` cai dentro da janela de 26h e o varredor o pega no tick
+    # seguinte, no máximo 15 minutos depois.
     r = requests.get(
         f"{url}/ghost/api/admin/posts/"
-        f"?filter=status:[published,scheduled]&order=published_at%20desc&limit={limite}"
+        f"?filter=status:published&order=published_at%20desc&limit={limite}"
         f"&fields=id,title,status,published_at,url",
         headers={"Authorization": f"Ghost {ghost_jwt(key)}", "User-Agent": UA_NAVEGADOR},
         timeout=45)

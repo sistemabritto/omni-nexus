@@ -29,7 +29,8 @@
         "anthropic",
         "opencode-go"
       ],
-      "requires_logout": true
+      "requires_logout": true,
+      "mode": "code"
     },
     "nvidia": {
       "name": "NVIDIA NIM",
@@ -39,7 +40,8 @@
         "CLAUDE_CODE_USE_OPENAI": "1",
         "OPENAI_BASE_URL": "https://integrate.api.nvidia.com/v1",
         "NVIDIA_API_KEY": "",
-        "OPENAI_MODEL": ""
+        "OPENAI_MODEL": "",
+        "OPENAI_API_KEY": ""
       },
       "default_base_url": "https://integrate.api.nvidia.com/v1",
       "default_model": "",
@@ -56,7 +58,16 @@
         "openrouter",
         "anthropic"
       ],
-      "requires_logout": true
+      "requires_logout": true,
+      "mode": "code",
+      "fallback_models": [
+        "minimaxai/minimax-m3"
+      ],
+      "model_tiers": {
+        "opus": "z-ai/glm-5.1",
+        "sonnet": "z-ai/glm-5.1",
+        "haiku": "z-ai/glm-5.1"
+      }
     },
     "openrouter": {
       "name": "OpenRouter (Free Tier)",
@@ -106,6 +117,71 @@
       ],
       "fallback_providers": [],
       "requires_logout": true
+    },
+    "openai": {
+      "name": "OpenAI (API Key)",
+      "description": "GPT-4.x / GPT-5.x via API Key da OpenAI",
+      "cli_command": "openclaude",
+      "env_vars": {
+        "CLAUDE_CODE_USE_OPENAI": "1",
+        "OPENAI_API_KEY": "",
+        "OPENAI_MODEL": ""
+      },
+      "default_model": "gpt-4.1",
+      "requires_logout": true
+    },
+    "codex_auth": {
+      "name": "OpenAI Codex (OAuth)",
+      "description": "GPT-5.x via ChatGPT Codex — login OAuth, sem API key",
+      "cli_command": "openclaude",
+      "env_vars": {
+        "CLAUDE_CODE_USE_OPENAI": "1",
+        "OPENAI_MODEL": "codexplan"
+      },
+      "default_model": "codexplan",
+      "auth_type": "oauth",
+      "auth_file": "~/.codex/auth.json",
+      "requires_logout": true,
+      "setup_hint": "Use o botão Login para autenticar via OAuth do ChatGPT"
+    },
+    "gemini": {
+      "name": "Google Gemini (em breve)",
+      "description": "Gemini 2.5 Pro/Flash via Google AI",
+      "cli_command": "openclaude",
+      "env_vars": {
+        "CLAUDE_CODE_USE_GEMINI": "1",
+        "GEMINI_API_KEY": "",
+        "GEMINI_MODEL": ""
+      },
+      "default_model": "gemini-2.5-pro",
+      "requires_logout": true,
+      "coming_soon": true
+    },
+    "bedrock": {
+      "name": "AWS Bedrock (em breve)",
+      "description": "Claude via AWS Bedrock",
+      "cli_command": "openclaude",
+      "env_vars": {
+        "CLAUDE_CODE_USE_BEDROCK": "1",
+        "AWS_REGION": "",
+        "AWS_BEARER_TOKEN_BEDROCK": ""
+      },
+      "requires_logout": true,
+      "coming_soon": true
+    },
+    "vertex": {
+      "name": "Google Vertex AI (em breve)",
+      "description": "Claude via Google Cloud Vertex AI",
+      "cli_command": "openclaude",
+      "env_vars": {
+        "CLAUDE_CODE_USE_VERTEX": "1",
+        "ANTHROPIC_VERTEX_PROJECT_ID": "",
+        "CLOUD_ML_REGION": ""
+      },
+      "default_region": "us-east5",
+      "requires_logout": true,
+      "coming_soon": true
     }
-  }
+  },
+  "telegram_provider": ""
 }

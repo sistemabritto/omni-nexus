@@ -2,11 +2,16 @@
 
 import logging
 import subprocess
+import time
 from pathlib import Path
 
 log = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 60  # seconds
+# Um `.git/index.lock` mais velho que isto, com o job runner segurando o lock
+# global (só um job por processo, ver job_runner), só pode ser resto de um
+# processo git que morreu — nenhum git nosso vive tanto assim.
+STALE_LOCK_SECONDS = 300
 DEFAULT_GIT_USER_NAME = "EvoNexus"
 DEFAULT_GIT_USER_EMAIL = "evonexus@users.noreply.github.com"
 
@@ -27,6 +32,45 @@ def _run(cmd: list[str], cwd: Path | None = None, timeout: int = DEFAULT_TIMEOUT
         text=True,
         timeout=timeout,
     )
+
+
+def limpar_lock_orfao(repo_dir: Path, idade_minima: int = STALE_LOCK_SECONDS) -> bool:
+    """Remove um `.git/index.lock` deixado por processo git que morreu.
+
+    Sem isto, um único git interrompido (OOM, container derrubado no meio de
+    um commit) trava o brain repo **para sempre**: todo `git add -A` seguinte
+    sai com exit 128 e o sync nunca mais roda. Aconteceu de verdade — um lock
+    de 22/08/2026, zero bytes, manteve o sync quebrado por 4 dias, e o único
+    sinal era um traceback repetido no log que ninguém associava a "meu
+    workspace parou de ser versionado".
+
+    O critério é conservador de propósito. O job runner garante um job por
+    processo, então nenhum git NOSSO está rodando quando chegamos aqui; ainda
+    assim exigimos idade mínima, para nunca disputar com um git de fora
+    (alguém num shell dentro do container) que esteja legitimamente no meio de
+    uma operação. Lock recente é respeitado e o erro sobe como antes.
+    """
+    lock = repo_dir / ".git" / "index.lock"
+    try:
+        idade = time.time() - lock.stat().st_mtime
+    except OSError:
+        return False  # não existe (caso normal) ou não dá para ler
+    if idade < idade_minima:
+        log.warning(
+            "brain_repo: index.lock existe há %.0fs em %s — recente demais para "
+            "ser órfão, deixando quieto", idade, repo_dir,
+        )
+        return False
+    try:
+        lock.unlink()
+    except OSError as exc:
+        log.error("brain_repo: não consegui remover index.lock órfão: %s", exc)
+        return False
+    log.warning(
+        "brain_repo: removido index.lock órfão de %.0f min em %s — resto de um "
+        "git que morreu; o sync estava travado desde então", idade / 60, repo_dir,
+    )
+    return True
 
 
 def _ensure_identity(repo_dir: Path) -> None:
@@ -82,6 +126,12 @@ def commit_all(repo_dir: Path, message: str) -> bool:
     _ensure_identity(repo_dir)
 
     add_result = _run(["git", "add", "-A"], cwd=repo_dir)
+    # Falhou por causa de lock? Tenta limpar o órfão e repetir UMA vez. Só
+    # logar não bastava: o sync ficava quebrado até alguém entrar no container
+    # e apagar o arquivo na mão, o que ninguém faz porque ninguém está olhando.
+    if add_result.returncode != 0 and "index.lock" in add_result.stderr:
+        if limpar_lock_orfao(repo_dir):
+            add_result = _run(["git", "add", "-A"], cwd=repo_dir)
     if add_result.returncode != 0:
         raise RuntimeError(
             f"git add -A failed (exit {add_result.returncode}): "

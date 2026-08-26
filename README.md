@@ -29,19 +29,21 @@
 <p align="center">
   <a href="https://github.com/evolution-foundation/evo-nexus"><img src="https://img.shields.io/badge/upstream-evolution--foundation%2Fevo--nexus-00ffa7?style=for-the-badge" alt="Upstream" /></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache%202.0-2563eb?style=for-the-badge" alt="License: Apache 2.0" /></a>
-  <img src="https://img.shields.io/badge/testes-936%20automatizados-16a34a?style=for-the-badge" alt="936 testes" />
+  <img src="https://img.shields.io/badge/testes-1.311%20automatizados-16a34a?style=for-the-badge" alt="1311 testes" />
   <img src="https://img.shields.io/badge/deploy-Docker%20Swarm-0ea5e9?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Swarm" />
 </p>
 
 <p align="center">
   <a href="https://sistemabritto.com.br"><img src="https://img.shields.io/badge/site-sistemabritto.com.br-111827?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Site" /></a>
   <a href="https://instagram.com/sistemabritto"><img src="https://img.shields.io/badge/Instagram-@sistemabritto-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram" /></a>
+  <a href="https://blog.sistemabritto.com.br"><img src="https://img.shields.io/badge/blog-blog.sistemabritto.com.br-f59e0b?style=for-the-badge&logo=ghost&logoColor=white" alt="Blog" /></a>
   <a href="https://youtube.com/@sistemabritto"><img src="https://img.shields.io/badge/YouTube-@sistemabritto-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube" /></a>
   <a href="https://www.linkedin.com/in/fsbritto/"><img src="https://img.shields.io/badge/LinkedIn-fsbritto-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
 </p>
 
 <p align="center">
   <a href="#-o-que-mudou-o-mapa-dos-upgrades">Upgrades</a> &middot;
+  <a href="docs/DIVERGENCIA-DO-UPSTREAM.md">Por que divergiu</a> &middot;
   <a href="#-como-funciona-passo-a-passo-guia-sem-jargão">Guia sem jargão</a> &middot;
   <a href="#-a-esteira-de-conteúdo--do-tema-ao-post-publicado">Esteira de conteúdo</a> &middot;
   <a href="#-omniroute--o-gateway-de-ia-da-stack">OmniRoute</a> &middot;
@@ -67,6 +69,10 @@ Duas frentes:
 1. **Autonomia de infraestrutura** — rodar o EvoNexus inteiro numa VPS com Docker Swarm, sem depender de gateway de IA externo e sem exigir login claude.ai. Qualquer provider, vários ao mesmo tempo, com fallback automático.
 2. **Autonomia de operação** — um time de agentes que produz trabalho de verdade (conteúdo, publicação, medição, briefing) e para em **gates humanos** antes de qualquer coisa ir ao ar.
 
+> 📐 Quer o detalhe técnico de **por que** este fork divergiu do upstream — harness
+> agnóstico, combos de fallback com OmniRoute, self-healing de gateway? Está em
+> [`docs/DIVERGENCIA-DO-UPSTREAM.md`](docs/DIVERGENCIA-DO-UPSTREAM.md).
+
 > 🧭 Não é técnico e só quer entender **o que esse sistema faz pela sua empresa**? Vá direto para o [guia sem jargão](#-como-funciona-passo-a-passo-guia-sem-jargão).
 
 ---
@@ -89,7 +95,9 @@ Duas frentes:
 | 12 | **[Artefatos dentro do Nexus](#-artefatos--relatório-com-link-estável-dentro-do-seu-produto)** | Relatório hospedado fora some quando a sessão morre | `/shares` com link estável, revogação e expiração | Relatório que você mostra a cliente, versionado no seu domínio |
 | 13 | **[Memória com recall semântico](#-memória--o-agente-que-não-esquece-entre-sessões)** | `/clear` apagava tudo que o agente aprendeu | MemPalace indexa memória, aprendizados e histórico de features | O agente lembra do incidente de três semanas atrás |
 | 14 | **[Pipeline VPS + hardening](#-deploy-completo-na-vps-passo-a-passo)** | Deploy manual, trust de workspace quebrando como root, auto-update matando sessão | GitHub Actions → Docker Hub → `service update` | Push na branch, e a produção sobe |
-| 15 | **[936 testes automatizados](#-a-suíte-de-testes--cada-teste-é-uma-cicatriz)** | Cada bug corrigido voltava depois | Suíte que documenta o **porquê** de cada regra | Nenhuma correção de produção é perdida |
+| 15 | **[Fila de orquestração persistente](docs/DIVERGENCIA-DO-UPSTREAM.md#4-fila-de-orquestração-persistente-novidade-da-rc01)** | Comando de orquestração levava minutos e sumia sem rastro se o processo reiniciasse | Job persistido em banco, por estágios, com checkpoint entre eles | Você acompanha em `/orquestracao` e cancela no meio se mudar de ideia |
+| 16 | **[Self-healing do cache do gateway](docs/DIVERGENCIA-DO-UPSTREAM.md#3-self-healing-do-cache-lkgp)** | Modelo aposentado ficava preso no cache do OmniRoute e travava toda resposta | Rotina de 15 em 15 min que só limpa em erro permanente, nunca em pico de uso | Provider morre e o sistema se recupera sozinho |
+| 17 | **[1.311 testes automatizados](#-a-suíte-de-testes--cada-teste-é-uma-cicatriz)** | Cada bug corrigido voltava depois | Suíte que documenta o **porquê** de cada regra | Nenhuma correção de produção é perdida |
 
 ---
 
@@ -368,7 +376,7 @@ Sessões são efêmeras (`/clear`, redeploys, novos terminais); memória não po
 
 ## 🧪 A suíte de testes — cada teste é uma cicatriz
 
-**936 testes automatizados** no repositório. Eles não existem por métrica de cobertura: quase todos guardam um erro que aconteceu de verdade em produção, e o docstring explica **por quê**.
+**1.311 testes automatizados** no repositório. Eles não existem por métrica de cobertura: quase todos guardam um erro que aconteceu de verdade em produção, e o docstring explica **por quê**.
 
 Exemplos do que está travado por teste:
 
@@ -512,7 +520,8 @@ Em conformidade com essas condições, esta distribuição **não remove nem mod
 
 <p align="center">
   <b>Sistema Britto</b><br/>
-  <a href="https://sistemabritto.com.br">sistemabritto.com.br</a>
+  <a href="https://sistemabritto.com.br">sistemabritto.com.br</a> &middot;
+  <a href="https://blog.sistemabritto.com.br">blog.sistemabritto.com.br</a>
 </p>
 
 <p align="center">
@@ -520,6 +529,7 @@ Em conformidade com essas condições, esta distribuição **não remove nem mod
   <a href="https://youtube.com/@sistemabritto"><img src="https://img.shields.io/badge/YouTube-@sistemabritto-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="YouTube" /></a>
   <a href="https://www.linkedin.com/in/fsbritto/"><img src="https://img.shields.io/badge/LinkedIn-fsbritto-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
   <a href="https://sistemabritto.com.br"><img src="https://img.shields.io/badge/Site-sistemabritto.com.br-111827?style=flat-square&logo=googlechrome&logoColor=white" alt="Site" /></a>
+  <a href="https://blog.sistemabritto.com.br"><img src="https://img.shields.io/badge/Blog-blog.sistemabritto.com.br-f59e0b?style=flat-square&logo=ghost&logoColor=white" alt="Blog" /></a>
 </p>
 
 <p align="center">

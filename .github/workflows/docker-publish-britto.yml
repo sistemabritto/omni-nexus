@@ -11,13 +11,13 @@ name: Build & Publish (Docker Hub Sistema Britto)
 #
 # Triggers:
 #   * push na branch main  -> publica :latest e :sha-xxxx
-#   * push de tag vX.Y.Z                                     -> publica :vX.Y.Z e :latest
+#   * push de tag vX.Y.Z ou rcNN                             -> publica :vX.Y.Z / :rcNN e :latest
 #   * disparo manual (workflow_dispatch)                     -> builda e publica
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ['v*', 'rc*']
   workflow_dispatch:
 
 env:

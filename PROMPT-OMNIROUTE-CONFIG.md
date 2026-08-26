@@ -349,3 +349,72 @@ Validação: 12 chamadas seguidas, **12× HTTP 200**, 1,1–2,9s, revezando entr
 - [OmniRoute Architecture](https://omni.workflowapi.com.br/docs/architecture/ARCHITECTURE)
 - [README do Omni-Nexus](README.md)
 - [Stack de exemplo na VPS](evonexus-vps.stack.example.yml)
+
+---
+
+## Auditoria de 2026-08-26 — `/v1` sem autenticação, e combo sem visão
+
+Duas mudanças em produção nesta rodada, as duas confirmadas por chamada real
+(nunca só "aceitou porque não validava nada").
+
+### `REQUIRE_API_KEY` estava `false` — drift entre o stack.yml e o serviço
+
+O `evonexus-vps.stack.yml` já na própria VPS já declarava
+`REQUIRE_API_KEY=true`; o serviço rodando estava travado em `false` desde o
+deploy anterior a essa correção nunca ter sido reaplicado. Todo consumidor
+interno (`config/providers.json`, env `OMNI_KEY` do scheduler) usava chave
+placeholder (`sk-761...3957`, 13 caracteres com reticências literais) — e
+funcionava, porque o gateway não validava nada. `/v1/chat/completions`
+respondia 200 pra qualquer um na internet, sem header de Authorization.
+
+Corrigido: duas chaves reais emitidas via `POST /api/keys`
+(`evonexus-provider`, `evonexus-scheduler-vision`), aplicadas nos dois
+consumidores, `REQUIRE_API_KEY=true` ativado via
+`docker service update --env-add`. Downtime real: ~60s, uma única janela
+corrigida no ato. Detalhe completo:
+`memory/omniroute-v1-sem-autenticacao.md` no workspace.
+
+**Login de sessão (`POST /api/auth/login`) precisa ser feito via HTTPS
+público**, nunca via `http://omniroute:20128` interno: o serviço roda com
+`AUTH_COOKIE_SECURE=true`, e um cookie `Secure` é descartado pelo cliente
+(curl incluso) numa conexão sem TLS — o login "funciona" (200, `success:true`)
+mas o cookie nunca é salvo, e toda chamada seguinte volta com
+`AUTH_001 Authentication required` como se a senha estivesse errada.
+
+### Nenhum dos combos "Britto-*" tinha modelo com visão, exceto o Heavy
+
+Estado em 26/08/2026 (a config do `NEVE-Mastery` documentada na auditoria de
+28/07 foi substituída por quatro combos: `Britto-Fast`, `Britto-Core`,
+`Britto-Coding`, `Britto-Heavy`, todos `strategy: priority`). Só o `Heavy`
+tinha um membro multimodal (`claude/claude-opus-4-1-20250805`, na 2ª
+posição) — os outros três rodavam só modelos de texto puro
+(`nvidia/stepfun-ai/step-3.7-flash`, `codex/gpt-5.6-terra-*`,
+`groq/openai/gpt-oss-120b`). Uma chamada com `image_url` nesses três não
+tinha pra onde cair: falha ou, pior, interpretação inventada.
+
+Corrigido replicando o padrão do próprio `Heavy` — um modelo Claude (mesma
+`connectionId`, já provada viva) inserido na 2ª posição de cada combo:
+
+| Combo | Modelo de visão adicionado | Posição |
+|---|---|---|
+| `Britto-Fast` | `claude/claude-haiku-4-5-20251001` | 2ª (`f_vis`) |
+| `Britto-Core` | `claude/claude-sonnet-5` | 2ª (`b_vis`) |
+| `Britto-Coding` | `claude/claude-sonnet-5` | 2ª (`c_vis`) |
+| `Britto-Heavy` | já tinha (`claude-opus-4-1`) | 2ª (`h2`) |
+
+Validado com imagem real (PNG 1x1 em base64, pergunta "que cor é esse
+pixel"): `Britto-Fast`/`Core`/`Coding` erram no 1º modelo (não-multimodal) e
+caem certo pro Claude inserido — a resposta chega, não falha. `Britto-Heavy`
+resolve já no 1º modelo (`gpt-5.6-terra-xhigh` via Codex também é
+multimodal). Texto puro sem imagem confirmado inalterado: os quatro combos
+continuam tentando o modelo original em 1º lugar antes de qualquer fallback
+— a inserção não reordenou nada, só preencheu o buraco.
+
+**Combo é exposto em `/v1/models` pelo nome capitalizado exato**
+(`Britto-Fast`, não `britto-fast`) — usar `id` (minúsculo, usado nas rotas
+de gestão `/api/combos/{id}`) como `model:` no `/v1/chat/completions` dá 404.
+
+**Transcrição de áudio não tem — nem precisa ter — membro nos combos**: o
+workspace já resolve isso à parte, indo direto no Groq Whisper
+(`transcricao.py`, `feedback_audio.py`), fora do `/v1/chat/completions` do
+OmniRoute. Não há gap ali.

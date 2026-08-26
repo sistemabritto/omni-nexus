@@ -96,7 +96,14 @@ def _get_mining_status():
                 # Process finished
                 MINING_STATUS_FILE.unlink(missing_ok=True)
                 return None
-        return None
+        # Sem pid e com phase ainda ativa = corrida real, não lixo: `mine()`
+        # grava o status com "pid": None ANTES de spawnar o processo e só
+        # depois volta para carimbar o pid de verdade. Devolver None nessa
+        # janela faz /status dizer que não há mineração em curso — e é
+        # exatamente esse retorno que o 409 de "já está minerando" consulta,
+        # então duas chamadas concorrentes conseguiam largar dois workers em
+        # cima do mesmo índice.
+        return status
     except Exception:
         return None
 

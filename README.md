@@ -29,7 +29,7 @@
 <p align="center">
   <a href="https://github.com/evolution-foundation/evo-nexus"><img src="https://img.shields.io/badge/upstream-evolution--foundation%2Fevo--nexus-00ffa7?style=for-the-badge" alt="Upstream" /></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache%202.0-2563eb?style=for-the-badge" alt="License: Apache 2.0" /></a>
-  <img src="https://img.shields.io/badge/testes-1.311%20automatizados-16a34a?style=for-the-badge" alt="1311 testes" />
+  <img src="https://img.shields.io/badge/testes-1.322%20automatizados-16a34a?style=for-the-badge" alt="1322 testes" />
   <img src="https://img.shields.io/badge/deploy-Docker%20Swarm-0ea5e9?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Swarm" />
 </p>
 
@@ -97,7 +97,7 @@ Duas frentes:
 | 14 | **[Pipeline VPS + hardening](#-deploy-completo-na-vps-passo-a-passo)** | Deploy manual, trust de workspace quebrando como root, auto-update matando sessão | GitHub Actions → Docker Hub → `service update` | Push na branch, e a produção sobe |
 | 15 | **[Fila de orquestração persistente](docs/DIVERGENCIA-DO-UPSTREAM.md#4-fila-de-orquestração-persistente-novidade-da-rc01)** | Comando de orquestração levava minutos e sumia sem rastro se o processo reiniciasse | Job persistido em banco, por estágios, com checkpoint entre eles | Você acompanha em `/orquestracao` e cancela no meio se mudar de ideia |
 | 16 | **[Self-healing do cache do gateway](docs/DIVERGENCIA-DO-UPSTREAM.md#3-self-healing-do-cache-lkgp)** | Modelo aposentado ficava preso no cache do OmniRoute e travava toda resposta | Rotina de 15 em 15 min que só limpa em erro permanente, nunca em pico de uso | Provider morre e o sistema se recupera sozinho |
-| 17 | **[1.311 testes automatizados](#-a-suíte-de-testes--cada-teste-é-uma-cicatriz)** | Cada bug corrigido voltava depois | Suíte que documenta o **porquê** de cada regra | Nenhuma correção de produção é perdida |
+| 17 | **[1.322 testes automatizados](#-a-suíte-de-testes--cada-teste-é-uma-cicatriz)** | Cada bug corrigido voltava depois | Suíte que documenta o **porquê** de cada regra | Nenhuma correção de produção é perdida |
 
 ---
 
@@ -376,7 +376,7 @@ Sessões são efêmeras (`/clear`, redeploys, novos terminais); memória não po
 
 ## 🧪 A suíte de testes — cada teste é uma cicatriz
 
-**1.311 testes automatizados** no repositório. Eles não existem por métrica de cobertura: quase todos guardam um erro que aconteceu de verdade em produção, e o docstring explica **por quê**.
+**1.322 testes automatizados** no repositório. Eles não existem por métrica de cobertura: quase todos guardam um erro que aconteceu de verdade em produção, e o docstring explica **por quê**.
 
 Exemplos do que está travado por teste:
 

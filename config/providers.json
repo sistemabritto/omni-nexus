@@ -25,7 +25,6 @@
         "auto/cheap"
       ],
       "fallback_providers": [
-        "nvidia",
         "openrouter",
         "anthropic",
         "opencode-go"

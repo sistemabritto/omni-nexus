@@ -45,10 +45,27 @@ PROMPT_ARG_SAFE_BYTES = 100_000
 
 
 def _usable_secret(value: str | None) -> bool:
+    """True se `value` parece uma credencial de verdade, não um placeholder.
+
+    Achado em 2026-08-26: `config/providers.json` tinha `OPENAI_API_KEY:
+    "sk-761...3957"` — 13 caracteres, com os pontos literais — passando
+    incólume por esta função porque só filtrava `[REDACTED]`/`REDACTED`.
+    O gateway (OmniRoute) não valida chave nenhuma, então a chave falsa era
+    aceita e ninguém percebeu: o `/v1` estava aberto ao público sem exigir
+    chave real de nenhum consumidor interno. `...` literal é o padrão usado
+    em TODO placeholder truncado deste arquivo (`sk-or-...de1c`, `sk-...`) —
+    nenhuma chave real do OpenAI/OmniRoute contém reticências.
+    """
     if not value:
         return False
     value = value.strip()
-    return value not in {"[REDACTED]", "REDACTED", "your_bot_token_here", "your_chat_id_here"}
+    if not value:
+        return False
+    if value in {"[REDACTED]", "REDACTED", "your_bot_token_here", "your_chat_id_here"}:
+        return False
+    if "..." in value:
+        return False
+    return True
 
 
 def _load_workspace_env() -> None:

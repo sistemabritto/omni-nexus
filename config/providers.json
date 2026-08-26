@@ -118,6 +118,23 @@
       "fallback_providers": [],
       "requires_logout": true
     },
+    "opencode": {
+      "name": "OpenCode (via OmniRoute)",
+      "description": "Harness `opencode` falando com o gateway OmniRoute. É o provider que a esteira de vídeo pina com force_provider=\"opencode\": a imagem media-worker instala SÓ o binário opencode, então qualquer outro provider ali falha com \"binary not found in PATH\".",
+      "cli_command": "opencode",
+      "env_vars": {
+        "OPENAI_BASE_URL": "http://omniroute:20128/v1",
+        "OPENAI_API_KEY": "sk-..."
+      },
+      "default_base_url": "http://omniroute:20128/v1",
+      "default_model": "auto/coding",
+      "model_chain": [
+        "auto/coding",
+        "auto"
+      ],
+      "fallback_providers": [],
+      "requires_logout": true
+    },
     "openai": {
       "name": "OpenAI (API Key)",
       "description": "GPT-4.x / GPT-5.x via API Key da OpenAI",

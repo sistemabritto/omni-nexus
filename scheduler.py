@@ -307,6 +307,17 @@ def setup_schedule():
     schedule.every(30).minutes.do(
         run_adw, "Derivar Redes Pendentes", "derivar_redes_pendentes.py")
 
+    # A cada 15 minutos: o OmniRoute cacheia "último provider que funcionou"
+    # por combo (auto/coding, auto/reasoning...), e não invalida essa entrada
+    # sozinho quando o modelo cacheado se aposenta (410 Gone). Toda chamada
+    # nova paga a taxa de tentar o morto primeiro antes de ciclar o resto da
+    # pool — em 25/08/2026 isso travou respostas do Magneto/Hermes até
+    # alguém limpar o cache na mão. Checagem é leve (um GET), só age
+    # (DELETE) quando o erro é claramente permanente — 429/5xx nunca
+    # disparam, é exatamente o tipo de pico que o cache existe pra suavizar.
+    schedule.every(15).minutes.do(
+        run_adw, "Self-Healing OmniRoute LKGP", "omniroute_lkgp_healer.py")
+
     # Domingo 09:00, uma hora depois do research: a semana já fechou e as
     # métricas de sábado já foram coletadas. Lê o funil, acha o maior
     # vazamento e abre um ticket com a hipótese — a decisão continua humana,

@@ -9,24 +9,43 @@ Endpoints:
 from __future__ import annotations
 
 import logging
-import os
-import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Blueprint, jsonify, request
 
-from dashboard.backend.models import db, OrchestrationJob
+# `from models import ...`, não `from dashboard.backend.models import ...`:
+# app.py sobe com `dashboard/backend` no sys.path (é o cwd do processo e o
+# WORKDIR da imagem), então o pacote `dashboard` não é importável de dentro
+# dele. Os outros 20 blueprints em routes/ já usam esta forma; a absoluta
+# derrubava o boot inteiro com ModuleNotFoundError na linha de import.
+from models import db, OrchestrationJob
 
 logger = logging.getLogger(__name__)
 
 ORCHESTRATION_WORKSPACE = Path(__file__).resolve().parent.parent.parent / "workspace"
 WORKSPACE_ROOT = ORCHESTRATION_WORKSPACE if ORCHESTRATION_WORKSPACE.exists() else Path("/workspace/workspace")
 
-# Ensure the workspace-level lock directory exists
-(ORCHESTRATION_WORKSPACE / ".locks").mkdir(parents=True, exist_ok=True)
+# Sem mkdir do diretório de locks aqui: `provider_fallback._workspace_bash_lock`
+# já cria o `.locks` no momento em que pega o lock. Fazer isso em tempo de
+# import era escrita em disco durante o boot do Flask — falha em filesystem
+# somente-leitura e derruba a aplicação inteira para proteger nada.
 
 bp = Blueprint("orchestration", __name__, url_prefix="/api")
+
+
+def _job_ou_404(job_id: str):
+    """Devolve (job, None) ou (None, resposta_404).
+
+    `get_or_404` responde com a página HTML de erro do Flask — numa API que o
+    frontend consome via fetch().json(), isso vira um erro de parse em vez de
+    um "não encontrei", que é bem mais difícil de debugar do lado do cliente.
+    """
+    job = OrchestrationJob.query.get(job_id)
+    if job is None:
+        return None, (jsonify({"error": f"job '{job_id}' não encontrado"}), 404)
+    return job, None
 
 
 # ── API: POST /api/orchestration-jobs ──────────────────────────────────
@@ -46,9 +65,12 @@ def create_job():
     if not prompt:
         return jsonify({"error": "prompt é obrigatório"}), 400
 
-    job_id = os.environ.get("JOB_ID") or f"job-{int(time.time()*1000)}-{os.getpid()}"
-    # Tornar mais legível se desejar, mas UUID seria melhor. Mantendo compat.
-    job_id = job_id[:36] if len(job_id) > 36 else job_id + "0" * (36 - len(job_id))
+    # UUID, e não `os.environ.get("JOB_ID")`: ler uma variável de ambiente do
+    # processo para gerar a CHAVE PRIMÁRIA de uma linha por requisição faz todo
+    # job daquele container nascer com o mesmo id — o segundo POST estoura
+    # IntegrityError. O padding com zeros até 36 chars, além disso, colava
+    # sufixo falso num id que já era único.
+    job_id = str(uuid.uuid4())
 
     job = OrchestrationJob(
         id=job_id,
@@ -92,7 +114,9 @@ def list_jobs():
 @bp.route("/orchestration-jobs/<job_id>", methods=["GET"])
 def get_job(job_id):
     """Retorna o status de um job e seus logs (últimas linhas)."""
-    job = OrchestrationJob.query.get_or_404(job_id)
+    job, erro = _job_ou_404(job_id)
+    if erro:
+        return erro
     # Lê logs do arquivo de stderr/stdout associado (se existir)
     log_path = WORKSPACE_ROOT / f"logs/orchestration-{job_id}.log"
     logs = ""
@@ -116,7 +140,9 @@ def get_job(job_id):
 @bp.route("/orchestration-jobs/<job_id>/cancel", methods=["POST"])
 def cancel_job(job_id):
     """Solicita cancelamento de um job (melhor-effort)."""
-    job = OrchestrationJob.query.get_or_404(job_id)
+    job, erro = _job_ou_404(job_id)
+    if erro:
+        return erro
     if job.status in ("success", "failed", "cancelled"):
         return jsonify({"error": f"Job já finalizado com status '{job.status}'"}), 400
 
@@ -138,12 +164,10 @@ def _run_agent_stage(job: OrchestrationJob) -> dict:
 
     Este é um esqueleto — o worker real está em chat_orchestrator.py.
     Retorna {"status": "success"|"failed", "output": "...", "error": "..."}.
+
+    Import preguiçoso de propósito: chat_orchestrator puxa provider_fallback,
+    que resolve a cadeia de providers inteira. Carregar isso no import do
+    blueprint atrasaria o boot do Flask por algo usado só sob demanda.
     """
-    from dashboard.backend.chat_orchestrator import run_orchestration_job
+    from chat_orchestrator import run_orchestration_job
     return run_orchestration_job(job)
-
-
-# Hook para garantir que o worker pode ser importado via `python -m dashboard.backend.chat_orchestrator`
-# (importação preguiçosa para evitar circular imports)
-if __name__ == "__main__":
-    pass

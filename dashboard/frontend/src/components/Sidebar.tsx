@@ -9,6 +9,7 @@ import {
   Users, ScrollText, LogOut, Menu, X, Shield, BookOpen, Library, Database,
   ArrowUpCircle, ChevronDown, Webhook, HardDriveDownload, Settings, Share2, Heart, Target, Activity, Package,
   Puzzle, Terminal, Columns3, FolderKanban, CheckCircle2, Video, Newspaper,
+  Workflow,
 } from 'lucide-react'
 import {
   getAllPluginSidebarGroups,
@@ -62,6 +63,10 @@ const navGroups: NavGroup[] = [
       { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
       { to: '/media', labelKey: 'media', icon: Video, resource: 'media_jobs' },
       { to: '/pautas', labelKey: 'pautas', icon: Newspaper, resource: 'goals' },
+      // Fila de jobs de orquestração multi-agente disparados pelo chat/Telegram.
+      // Mesmo `resource` do Kanban: quem enxerga ticket enxerga o trabalho que
+      // a orquestração produz.
+      { to: '/orquestracao', labelKey: 'orchestration', icon: Workflow, resource: 'tickets' },
       // Fallback de visibilidade/aprovação — antes só existia como mensagem
       // no Telegram (panorama 2026-07-17, item 1).
       { to: '/approvals', labelKey: 'approvals', icon: CheckCircle2, resource: 'goals' },

@@ -11,7 +11,7 @@ Integra com o motor resiliente existente (provider_fallback.invoke_with_fallback
 para ter fallback automático entre modelos/providers (NVIDIA → OpenRouter → Anthropic).
 
 Uso:
-  from dashboard.backend.chat_orchestrator import start_orchestration_worker
+  from chat_orchestrator import start_orchestration_worker
   start_orchestration_worker(app)  # dentro do contexto Flask
 """
 
@@ -36,8 +36,13 @@ try:
 except Exception:
     pass
 
-from dashboard.backend.provider_fallback import invoke_with_fallback, PER_ATTEMPT_TIMEOUT_CAP
-from dashboard.backend.models import db, OrchestrationJob
+# Imports locais, não `dashboard.backend.*`: o processo sobe com
+# `dashboard/backend` como cwd/WORKDIR, então o pacote `dashboard` não é
+# importável de dentro dele. Ver o comentário gêmeo em routes/orchestration.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from provider_fallback import invoke_with_fallback, PER_ATTEMPT_TIMEOUT_CAP  # noqa: E402
+from models import db, OrchestrationJob  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +136,17 @@ class OrchestrationWorker:
                 if self._stop_event.is_set():
                     break
 
+                # Cancelamento pedido pelo humano enquanto o job já rodava.
+                # `POST /cancel` só grava `status='cancelled'` na linha — sem
+                # esta releitura entre etapas, o worker seguia até o fim e
+                # sobrescrevia com 'success'. O cancelamento aparecia na API
+                # por alguns segundos e depois sumia sozinho: a pior forma de
+                # falhar, porque o humano vê o pedido ser aceito e ignorado.
+                db.session.refresh(job)
+                if job.status == "cancelled":
+                    logger.info(f"[orchestration] Job {job.id} cancelado — parando antes da etapa {stage['name']}")
+                    return
+
                 stage_name = stage["name"]
                 job.stage = stage_name
                 job.updated_at = datetime.now(timezone.utc)
@@ -167,6 +183,13 @@ class OrchestrationWorker:
                     logger.error(f"[orchestration] Job {job.id} FALHOU na etapa {stage_name}: {error}")
                     return
 
+            # Uma última checagem: o cancelamento pode ter chegado durante a
+            # chamada de modelo da etapa final, que é justamente a mais longa.
+            db.session.refresh(job)
+            if job.status == "cancelled":
+                logger.info(f"[orchestration] Job {job.id} cancelado na última etapa — não marca sucesso")
+                return
+
             # Todas etapas completaram com sucesso
             job.status = "success"
             job.stage = "done"
@@ -176,13 +199,22 @@ class OrchestrationWorker:
 
         except Exception as exc:
             logger.exception(f"[orchestration] Job {job.id} erro inesperado: {exc}")
-            with self.app.app_context():
-                job = OrchestrationJob.query.get(job.id)
+            # Já estamos dentro do app_context aberto por `_run` — abrir outro
+            # aqui empilhava contexto à toa. O que este bloco precisa de fato é
+            # desfazer a sessão: se o erro veio de um commit, a sessão está em
+            # estado inválido e o commit seguinte (o que grava 'failed') falha
+            # também, deixando o job preso em 'running' para sempre.
+            job_id = job.id
+            db.session.rollback()
+            try:
+                job = OrchestrationJob.query.get(job_id)
                 if job and job.status not in ("success", "failed", "cancelled"):
                     job.status = "failed"
                     job.error = f"Erro interno: {exc}"
                     job.completed_at = datetime.now(timezone.utc)
                     db.session.commit()
+            except Exception:  # noqa: BLE001
+                logger.exception(f"[orchestration] não consegui marcar {job_id} como failed")
         finally:
             self._current_job_id = None
 
@@ -241,15 +273,18 @@ def stop_orchestration_worker() -> None:
 # ── CLI direto ──────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    # Permite rodar: python -m dashboard.backend.chat_orchestrator <job_id>
+    # Rodar de dentro de dashboard/backend: python chat_orchestrator.py <job_id>
     import argparse
-    from dashboard.backend.app import create_app
+
+    # `app.py` não expõe factory — o Flask app é criado no nível do módulo.
+    # A versão anterior importava `create_app`, que nunca existiu: este CLI
+    # falhava com ImportError na primeira linha, sempre.
+    from app import app  # noqa: E402
 
     parser = argparse.ArgumentParser(description="Processa um job de orquestração específico")
     parser.add_argument("job_id", help="ID do job a processar")
     args = parser.parse_args()
 
-    app = create_app()
     with app.app_context():
         job = OrchestrationJob.query.get(args.job_id)
         if not job:

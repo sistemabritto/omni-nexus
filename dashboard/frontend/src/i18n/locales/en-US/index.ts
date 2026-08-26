@@ -186,6 +186,7 @@ const translations = {
       kanban: 'Kanban',
       media: 'Media',
       pautas: 'Content Queue',
+      orchestration: 'Orchestration',
       approvals: 'Approvals',
       tasks: 'Tasks',
       triggers: 'Triggers',

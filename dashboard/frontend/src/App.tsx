@@ -43,6 +43,7 @@ const Activity = lazyDefault(() => import('./pages/Activity'))
 const Goals = lazyDefault(() => import('./pages/Goals'))
 const Pautas = lazyDefault(() => import('./pages/Pautas'))
 const Media = lazyDefault(() => import('./pages/Media'))
+const Orchestration = lazyDefault(() => import('./pages/Orchestration'))
 const ProjectsOverview = lazyDefault(() => import('./pages/ProjectsOverview'))
 const Kanban = lazyDefault(() => import('./pages/Kanban'))
 const Approvals = lazyDefault(() => import('./pages/Approvals'))
@@ -272,6 +273,7 @@ function AppContent() {
               {hasPermission('workspace', 'manage') && <Route path="/shares" element={<ShareLinks />} />}
               <Route path="/goals" element={<Goals />} />
               <Route path="/pautas" element={<Pautas />} />
+              <Route path="/orquestracao" element={<Orchestration />} />
               {hasPermission('media_jobs', 'view') && <Route path="/media" element={<Media />} />}
               <Route path="/projects" element={<ProjectsOverview />} />
               <Route path="/plugins" element={<Plugins />} />

@@ -174,6 +174,7 @@ const translations = {
       kanban: 'Kanban',
       media: 'Medios',
       pautas: 'Cola de Contenido',
+      orchestration: 'Orquestación',
       approvals: 'Aprobaciones',
       tasks: 'Tareas',
       triggers: 'Disparadores',

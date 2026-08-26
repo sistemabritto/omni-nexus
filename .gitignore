@@ -196,3 +196,6 @@ scripts/ghost_integration_test.py
 
 # Local Portainer import with Postiz secrets
 /postiz-vps.env
+
+# Estado local do OpenCode (node_modules, goal-state) — não vai pro repositório
+.opencode/

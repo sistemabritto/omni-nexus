@@ -1,5 +1,6 @@
 """Flask backend for the workspace dashboard — EvoNexus."""
 
+import logging
 import os
 import sys
 import secrets
@@ -11,6 +12,8 @@ from dotenv import load_dotenv
 from flask import Flask, send_from_directory, request, jsonify, g
 from flask_cors import CORS
 from flask_login import LoginManager, current_user, login_user
+
+logger = logging.getLogger(__name__)
 
 # Workspace root: two levels up from backend/
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
@@ -1328,6 +1331,7 @@ from routes.plugins import bp as plugins_bp
 from routes.mcp_servers import bp as mcp_servers_bp
 from routes.plugin_public_pages import bp as plugin_public_pages_bp
 from routes.instagram import bp as instagram_api_bp
+from routes.orchestration import bp as orchestration_bp
 
 # Brain Repo + Onboarding blueprints (loaded after routes are created)
 try:
@@ -1410,6 +1414,7 @@ app.register_blueprint(plugins_bp)
 app.register_blueprint(mcp_servers_bp)
 # B2.0: plugin public pages (unauthenticated, token-bound portals)
 app.register_blueprint(plugin_public_pages_bp)
+app.register_blueprint(orchestration_bp)
 
 # --------------- Social Auth blueprints ---------------
 # The social-auth package lives as a sibling directory; add it once so the
@@ -1607,6 +1612,14 @@ if __name__ == "__main__":
 
     task_thread = threading.Thread(target=_poll_scheduled_tasks, daemon=True, name="task-poller")
     task_thread.start()
+
+    # Inicia worker de orquestração de chat (jobs assíncronos via Telegram/Chat)
+    try:
+        from chat_orchestrator import start_orchestration_worker
+        start_orchestration_worker(app)
+        logger.info("[app] Orchestration worker iniciado")
+    except Exception as exc:
+        logger.warning(f"[app] Falha ao iniciar orchestration worker: {exc}")
 
     # Dev mode: EVONEXUS_DEV=1 enables Flask's auto-reloader so edits to
     # dashboard/backend/*.py take effect without a manual restart. Disabled by

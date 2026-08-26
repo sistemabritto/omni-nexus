@@ -1,0 +1,179 @@
+## OpenReply — Instagram Comment-to-DM Automation (agent "Link")
+## Stack separada do evonexus, no mesmo molde do Postiz (ver
+## docs/postiz-portainer-swarm.md): Postgres e Redis dedicados, dashboard do
+## EvoNexus fala com ela só por HTTP via integração (skill custom-int-openreply).
+##
+## Migrada para cá em 25/08/2026: vivia dentro de evonexus-vps.stack.yml,
+## compartilhando o mesmo compose do dashboard/telegram/scheduler. Foi a causa
+## raiz de boa parte do troubleshooting daquele dia — um serviço sem nada a ver
+## com o dashboard fazendo o arquivo divergir em três lugares (repo, Portainer,
+## VPS ao vivo) ao mesmo tempo. Ver ticket 3497e698 no Nexus.
+##
+## Secrets (Env da stack no Portainer, nunca aqui):
+##   POSTGRES_PASSWORD    → openssl rand -hex 24 (dedicado a este banco)
+##   NEXTAUTH_SECRET       → openssl rand -base64 32
+##   CRON_SECRET            → openssl rand -base64 32
+##   ENCRYPTION_KEY         → openssl rand -hex 32 (64 hex chars)
+##   WEBHOOK_VERIFY_TOKEN   → openssl rand -base64 32
+##   INSTAGRAM_APP_ID / INSTAGRAM_APP_SECRET → Instagram Login no Meta app
+##   FACEBOOK_APP_SECRET    → do Meta app (Basic settings)
+##   SMTP_* → mesmas credenciais Gmail já usadas em N8N_SMTP_* / SMTP_* do
+##     resto do workspace (smtp.gmail.com, workflowapistudio@gmail.com)
+##
+## Bug CORRIGIDO na origem em 25/08/2026 (ver ticket 3497e698): a
+## excarplex/openreply:latest antiga não empacotava /app/app/generated/prisma
+## (client do Prisma) no estágio final — o worker (tsx worker/dm-worker.ts,
+## runtime TypeScript cru) crashava em MODULE_NOT_FOUND. O openreply-web nunca
+## teve o problema porque next start usa o bundle do .next/, que já embute o
+## client.
+##
+## Corrigido de verdade, não contornado: fork em github.com/sistemabritto/openreply
+## (docker-support branch, mergeada em main) ganhou um Dockerfile próprio
+## (o upstream diwenne/openreply não tinha nenhum) que mantém node_modules +
+## app/generated/prisma + tsconfig.json + lib/+worker/ no estágio final — ver
+## o Dockerfile lá para o raciocínio completo. GH Action builda e publica em
+## excarplex/openreply em push na main. PR aberta no upstream:
+## github.com/diwenne/openreply/pull/33.
+
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=openreply
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      network_public:
+        aliases:
+          - openreply-postgres
+    volumes:
+      - openreply_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    image: redis:alpine
+    networks:
+      network_public:
+        aliases:
+          - openreply-redis
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+
+  openreply-web:
+    image: excarplex/openreply:latest
+    command: ["npm", "run", "start"]
+    environment:
+      - NEXTAUTH_URL=https://openreply.workflowapi.com.br
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - CRON_SECRET=${CRON_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@openreply-postgres:5432/openreply
+      - REDIS_URL=redis://openreply-redis:6379
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=OpenReply <workflowapistudio@gmail.com>
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_SSL=false
+      - SMTP_USER=workflowapistudio@gmail.com
+      - SMTP_PASS=${GMAIL_SMTP_PASSWORD}
+      - SMTP_SENDER=workflowapistudio@gmail.com
+      - META_GRAPH_API_VERSION=v25.0
+      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}
+      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}
+      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
+      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN}
+    networks:
+      network_public:
+        aliases:
+          - openreply-web
+    depends_on:
+      - postgres
+      - redis
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1024M"
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=network_public
+        - traefik.http.routers.openreply-web.rule=Host(`openreply.workflowapi.com.br`)
+        - traefik.http.routers.openreply-web.entrypoints=websecure
+        - traefik.http.routers.openreply-web.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.openreply-web.service=openreply-web
+        - traefik.http.services.openreply-web.loadbalancer.server.port=3000
+        - traefik.http.services.openreply-web.loadbalancer.passHostHeader=true
+
+  openreply-worker:
+    ## excarplex/openreply:latest a partir de 25/08/2026 já empacota
+    ## app/generated/prisma + tsconfig.json corretamente (ver comentário no
+    ## topo deste arquivo). Não precisa mais de config nem de imagem local.
+    image: excarplex/openreply:latest
+    command: ["npm", "run", "worker"]
+    environment:
+      - NEXTAUTH_URL=https://openreply.workflowapi.com.br
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - CRON_SECRET=${CRON_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@openreply-postgres:5432/openreply
+      - REDIS_URL=redis://openreply-redis:6379
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=OpenReply <workflowapistudio@gmail.com>
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_SSL=false
+      - SMTP_USER=workflowapistudio@gmail.com
+      - SMTP_PASS=${GMAIL_SMTP_PASSWORD}
+      - SMTP_SENDER=workflowapistudio@gmail.com
+      - META_GRAPH_API_VERSION=v25.0
+      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}
+      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}
+      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
+      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN}
+      - COMMENT_POLL_INTERVAL_MS=300000
+      - COMMENT_POLL_MAX_PER_SWEEP=30
+      - COMMENT_POLL_LOOKBACK_HOURS=72
+    networks:
+      network_public:
+        aliases:
+          - openreply-worker
+    depends_on:
+      - postgres
+      - redis
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1024M"
+
+volumes:
+  openreply_postgres_data:
+
+networks:
+  network_public:
+    external: true
+    name: network_public

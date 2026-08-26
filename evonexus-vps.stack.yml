@@ -7,61 +7,38 @@
 ##   * Cert resolver: letsencryptresolver
 ##   * Public hosts: nexus.workflowapi.com.br (EvoNexus)
 ##                   omni.workflowapi.com.br  (OmniRoute)
-##                   openreply.workflowapi.com.br (OpenReply)
+##
+## OpenReply (openreply.workflowapi.com.br) mora em stack PRÓPRIA desde
+## 25/08/2026 — ver openreply-vps.stack.yml. Não voltar a colar aqui: foi
+## exatamente misturar um serviço sem nada a ver com o dashboard neste mesmo
+## compose que causou a divergência de três vias (repo/Portainer/VPS ao vivo)
+## descoberta naquele dia. Ver ticket 3497e698 no Nexus.
+##
+## OmniRoute: os segredos reais (JWT_SECRET, API_KEY_SECRET,
+## STORAGE_ENCRYPTION_KEY) NÃO vêm daqui nem do Portainer — o próprio app os
+## gera no primeiro boot e persiste em /app/data/server.env, dentro do volume
+## omniroute_data. Definir essas três como env da stack SOBRESCREVE o arquivo
+## e invalida toda API key já emitida (aconteceu em 25/08/2026, derrubou o
+## Hermes local do Felipe). Deixar de fora de propósito — omitir é o correto.
 ##
 ## Segredos ficam FORA do repo: os valores reais (DASHBOARD_API_TOKEN,
-## OMNIROUTE_*, SMTP_*, POSTGRES_PASSWORD, NEXTAUTH_SECRET, etc) são preenchidos
-## como variáveis de ambiente da stack no Portainer. Os placeholders abaixo
-## marcam onde entram.
+## OMNIROUTE_INITIAL_PASSWORD, SMTP_*, etc) são preenchidos como variáveis de
+## ambiente da stack no Portainer. Os placeholders abaixo marcam onde entram.
 ##   DASHBOARD_API_TOKEN        → openssl rand -base64 32
 ##   APPROVAL_BRIDGE_TOKEN      → openssl rand -base64 32 (SÓ em
 ##     evonexus_dashboard + evonexus_telegram — NUNCA em evonexus_scheduler,
 ##     que spawna os subprocessos dos agentes; ver goal-ticket-unification
 ##     ADR SPEC 3f / Vault V1c-V2-V10)
-##   OMNIROUTE_INITIAL_PASSWORD → openssl rand -base64 12 (senha de login)
-##   OMNIROUTE_JWT_SECRET       → openssl rand -base64 48
-##   OMNIROUTE_API_KEY_SECRET   → openssl rand -hex 32
-##   OMNIROUTE_STORAGE_KEY      → openssl rand -hex 32
-##   POSTGRES_PASSWORD          → openssl rand -base64 32
-##   NEXTAUTH_SECRET            → openssl rand -base64 32
-##   CRON_SECRET                → openssl rand -base64 32
-##   ENCRYPTION_KEY             → openssl rand -hex 32 (64 hex chars)
-##   WEBHOOK_VERIFY_TOKEN       → openssl rand -base64 32
-##   RESEND_API_KEY             → re_... (Resend) ou use EMAIL_SERVER
-##   EMAIL_FROM                 → OpenReply <login@seu-dominio.com>
-##   INSTAGRAM_APP_ID           → do Instagram Login no Meta app
-##   INSTAGRAM_APP_SECRET       → do Instagram Login no Meta app
-##   FACEBOOK_APP_SECRET        → do Meta app (Basic settings)
+##   OMNIROUTE_INITIAL_PASSWORD → só vale no bootstrap de banco vazio (ver
+##     nota acima) — não redefinir num omniroute já inicializado.
 ## ============================================================================
 version: "3.7"
 
 services:
 
-  postgres:
-    image: postgres:16
-    environment:
-      - POSTGRES_DB=openreply
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    networks:
-      network_public:
-        aliases:
-          - postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          memory: 512M
-
+  ## Fica sozinho aqui porque o OmniRoute (abaixo) usa redis://redis:6379 pra
+  ## cache/fila própria. Não é do OpenReply — o OpenReply tem o seu dedicado
+  ## na stack separada (ver openreply-vps.stack.yml).
   redis:
     image: redis:alpine
     networks:
@@ -144,6 +121,9 @@ services:
       ## tela /pautas (feedback_audio.py). Mesma chave que o media-worker usa
       ## na Fase 1B da esteira de vídeo (transcricao.py), serviço separado.
       - GROQ_API_KEY=${GROQ_API_KEY}
+      ## Provider API Keys (needed for fallback chain)
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
     deploy:
       placement:
@@ -164,14 +144,23 @@ services:
         - traefik.http.routers.evonexus_dashboard.entrypoints=websecure
         - traefik.http.routers.evonexus_dashboard.priority=1
         - traefik.http.routers.evonexus_dashboard.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.evonexus_dashboard.service=evonexus_dashboard
         - traefik.http.services.evonexus_dashboard.loadbalancer.server.port=8080
         - traefik.http.services.evonexus_dashboard.loadbalancer.passHostHeader=true
 
         ## Embedded terminal-server on :32352. /terminal is stripped before proxying.
+        ## Both routers need an explicit .service= label: two services share this
+        ## container's label set, and without it Traefik can't auto-link either
+        ## router — it errors "cannot be linked automatically with multiple
+        ## Services" and drops BOTH routers silently (confirmed 2026-08-24: took
+        ## nexus.workflowapi.com.br entirely offline, 404 on every path including
+        ## the video shares behind /aula-vps-crm-do-zero).
         - traefik.http.routers.evonexus_terminal.rule=Host(`nexus.workflowapi.com.br`) && PathPrefix(`/terminal`)
         - traefik.http.routers.evonexus_terminal.entrypoints=websecure
         - traefik.http.routers.evonexus_terminal.priority=10
         - traefik.http.routers.evonexus_terminal.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.evonexus_terminal.service=evonexus_terminal
+        - traefik.http.routers.evonexus_terminal.middlewares=evonexus_terminal_strip
         - traefik.http.services.evonexus_terminal.loadbalancer.server.port=32352
         - traefik.http.services.evonexus_terminal.loadbalancer.passHostHeader=true
         - traefik.http.middlewares.evonexus_terminal_strip.stripprefix.prefixes=/terminal
@@ -195,7 +184,9 @@ services:
       - evonexus_openclaude_auth:/root/.openclaude
 
     networks:
-      - network_public
+      network_public:
+        aliases:
+          - evonexus_telegram
 
     environment:
       - DASHBOARD_API_TOKEN=${DASHBOARD_API_TOKEN}
@@ -213,6 +204,12 @@ services:
       - MINIO_PUBLIC_BASE=${MINIO_PUBLIC_BASE}
       - EVONEXUS_API_URL=http://evonexus-dashboard:8080
       - TELEGRAM_MODE=provider
+      - TELEGRAM_TIMEOUT=900
+      - TELEGRAM_MAX_TURNS=30
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      ## Provider API Keys (needed for fallback chain)
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TZ=America/Sao_Paulo
       - SMTP_DOMAIN=${SMTP_DOMAIN}
       - SMTP_USERNAME=${SMTP_USERNAME}
@@ -263,6 +260,12 @@ services:
       - MINIO_PUBLIC_BASE=${MINIO_PUBLIC_BASE}
       - TZ=America/Sao_Paulo
       - REQUIRE_ANTHROPIC_KEY=1
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      ## Provider API Keys (needed for fallback chain)
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TELEGRAM_TIMEOUT=900
+      - TELEGRAM_MAX_TURNS=30
       - SMTP_DOMAIN=${SMTP_DOMAIN}
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
@@ -292,6 +295,44 @@ services:
         limits:
           cpus: "1"
           memory: "1024M"
+
+  ## Media worker — esteira de vídeo (corte bruto, corte editorial, cortes
+  ## virais). Consome MediaJob via polling; ver .claude/rules/esteira-de-video.md.
+  ## Reintroduzido em 25/08/2026: existia rodando na VPS (deployado direto por
+  ## docker service/stack deploy fora do Portainer) mas tinha sumido deste
+  ## arquivo — um deploy a partir dele sem este bloco teria removido o serviço.
+  evonexus_media_worker:
+    image: excarplex/evo-nexus-media-worker:latest
+
+    volumes:
+      - evonexus_media:/workspace/media
+      - evonexus_config:/workspace/config
+
+    networks:
+      - network_public
+
+    environment:
+      - DASHBOARD_API_TOKEN=${DASHBOARD_API_TOKEN}
+      - EVONEXUS_API_URL=http://evonexus-dashboard:8080
+      - MEDIA_WORKSPACE=/workspace/media
+      - MEDIA_SKILLS_DIR=/workspace/.claude/skills-media
+      - MEDIA_WORKER_POLL_SECONDS=${MEDIA_WORKER_POLL_SECONDS:-10}
+      - MEDIA_JOB_TIMEOUT_SECONDS=${MEDIA_JOB_TIMEOUT_SECONDS:-21600}
+      - MEDIA_MAX_FILE_SIZE_BYTES=${MEDIA_MAX_FILE_SIZE_BYTES:-8589934592}
+      - TZ=America/Sao_Paulo
+
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        reservations:
+          cpus: "1.0"
+          memory: 1024M
+        limits:
+          cpus: "4.0"
+          memory: 5120M
 
   ## OmniRoute — gateway de IA (237+ providers, fallback automático,
   ## compressão de tokens). O provider "omnirouter" do EvoNexus aponta
@@ -357,90 +398,11 @@ services:
         - traefik.http.services.omniroute.loadbalancer.server.port=20128
         - traefik.http.services.omniroute.loadbalancer.passHostHeader=true
 
-  ## OpenReply — Instagram Comment-to-DM Automation (agent "Link")
-  ## Web app on Vercel-style domain, worker consumes BullMQ queue
-  openreply-web:
-    image: diwenne/openreply:latest
-    command: ["npm", "run", "start"]
-    environment:
-      - NEXTAUTH_URL=https://openreply.workflowapi.com.br
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - CRON_SECRET=${CRON_SECRET}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/openreply
-      - REDIS_URL=redis://redis:6379
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - EMAIL_FROM=${EMAIL_FROM}
-      - META_GRAPH_API_VERSION=v25.0
-      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}
-      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}
-      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
-      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN}
-    networks:
-      network_public:
-        aliases:
-          - openreply-web
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          cpus: "1"
-          memory: "1024M"
-      labels:
-        - traefik.enable=true
-        - traefik.docker.network=network_public
-        - traefik.http.routers.openreply-web.rule=Host(`openreply.workflowapi.com.br`)
-        - traefik.http.routers.openreply-web.entrypoints=websecure
-        - traefik.http.routers.openreply-web.tls.certresolver=letsencryptresolver
-        - traefik.http.services.openreply-web.loadbalancer.server.port=3000
-        - traefik.http.services.openreply-web.loadbalancer.passHostHeader=true
-
-  openreply-worker:
-    image: diwenne/openreply:latest
-    command: ["npm", "run", "worker"]
-    environment:
-      - NEXTAUTH_URL=https://openreply.workflowapi.com.br
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - CRON_SECRET=${CRON_SECRET}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/openreply
-      - REDIS_URL=redis://redis:6379
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - EMAIL_FROM=${EMAIL_FROM}
-      - META_GRAPH_API_VERSION=v25.0
-      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}
-      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}
-      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
-      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN}
-      - COMMENT_POLL_INTERVAL_MS=300000
-      - COMMENT_POLL_MAX_PER_SWEEP=30
-      - COMMENT_POLL_LOOKBACK_HOURS=72
-    networks:
-      network_public:
-        aliases:
-          - openreply-worker
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          cpus: "1"
-          memory: "1024M"
+  ## OpenReply migrou pra stack própria em 25/08/2026 — ver openreply-vps.stack.yml
+  ## e o comentário no topo deste arquivo. Não redeclarar aqui.
 
 volumes:
+  evonexus_media:
   evonexus_config:
   evonexus_workspace:
   evonexus_dashboard_data:
@@ -453,7 +415,6 @@ volumes:
   evonexus_codex_auth:
   evonexus_openclaude_auth:
   omniroute_data:
-  postgres_data:
 
 networks:
   network_public:

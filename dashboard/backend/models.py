@@ -1523,3 +1523,44 @@ class SocialPost(db.Model):
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.created_at else None,
             "retry_count": self.retry_count,
         }
+
+
+class OrchestrationJob(db.Model):
+    """Persistent record of a multi-agent orchestration triggered via chat (Telegram, etc.).
+    
+    Tracks the job's progress through discrete stages, enabling resumability,
+    observability, and reliable execution even after process restarts.
+    """
+    
+    __tablename__ = "orchestration_jobs"
+    
+    id = db.Column(db.String(36), primary_key=True)  # UUID
+    agent = db.Column(db.String(50), nullable=False)  # e.g. 'ops', 'projects'
+    prompt = db.Column(db.Text, nullable=False)
+    stage = db.Column(db.String(50), nullable=False, default='start')
+    stage_result = db.Column(db.Text)
+    status = db.Column(db.String(20), nullable=False, default='pending')  # pending, running, success, failed, cancelled
+    error = db.Column(db.Text)
+    telegram_chat_id = db.Column(db.String(50))
+    telegram_message_id = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "agent": self.agent,
+            "prompt": self.prompt[:200] + "..." if len(self.prompt) > 200 else self.prompt,
+            "stage": self.stage,
+            "stage_result": self.stage_result[:200] + "..." if self.stage_result and len(self.stage_result) > 200 else self.stage_result,
+            "status": self.status,
+            "error": self.error[:200] + "..." if self.error and len(self.error) > 200 else self.error,
+            "telegram_chat_id": self.telegram_chat_id,
+            "telegram_message_id": self.telegram_message_id,
+            "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.created_at else None,
+            "updated_at": self.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.updated_at else None,
+            "started_at": self.started_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.started_at else None,
+            "completed_at": self.completed_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.completed_at else None,
+        }

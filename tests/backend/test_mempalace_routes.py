@@ -34,11 +34,19 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import types
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from flask import make_response
+
+# As views do mempalace devolvem `jsonify(...)` OU `(jsonify(...), status)`,
+# dependendo do caminho. Chamadas diretas de view (sem test_client) recebem
+# a tupla crua, e `.status_code` / `.get_data()` estouram AttributeError —
+# eram 25 falhas assim. `make_response` normaliza as duas formas numa
+# Response de verdade, com o status já aplicado.
 
 
 # ---------------------------------------------------------------------------
@@ -47,6 +55,31 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_DIR = REPO_ROOT / "dashboard" / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
+
+
+# `mempalace` e `chromadb` são dependências OPCIONAIS: não estão instaladas no
+# ambiente de teste, e o código as importa DENTRO das funções (justamente para
+# poder rodar sem elas). Isso quebra `patch("mempalace.searcher....")`, que
+# precisa importar o alvo antes de trocá-lo — dava ModuleNotFoundError, não
+# falha de asserção. Plantar stubs em sys.modules é o que torna o patch viável.
+@pytest.fixture
+def stub_mempalace():
+    searcher = types.ModuleType("mempalace.searcher")
+    searcher.search_memories = MagicMock(return_value={"query": "x", "results": []})
+    pacote = types.ModuleType("mempalace")
+    pacote.__version__ = "3.4.0"
+    pacote.searcher = searcher
+    with patch.dict(sys.modules, {"mempalace": pacote, "mempalace.searcher": searcher}):
+        yield searcher.search_memories
+
+
+@pytest.fixture
+def stub_chromadb():
+    mod = types.ModuleType("chromadb")
+    mod.PersistentClient = MagicMock()
+    with patch.dict(sys.modules, {"chromadb": mod}):
+        yield mod
+
 
 
 # ---------------------------------------------------------------------------
@@ -82,6 +115,24 @@ def tmp_palace_dir(tmp_path):
     d = tmp_path / "mempalace"
     d.mkdir()
     return d
+
+
+# Isola TUDO que o módulo escreve/lê em disco, inclusive `WORKSPACE` — que é a
+# allowlist de caminho do add_source. Sem apontar WORKSPACE para o tmp, um
+# diretório em /tmp é (corretamente) recusado com 400 "must be within home
+# directory or workspace", e o teste do caminho feliz nunca chega no 201.
+# Isolar WORKSPACE também esvazia DEFAULT_SOURCES: nenhum dos diretórios
+# padrão existe sob o tmp, então `_seed_default_sources` devolve [] e as
+# contagens do teste voltam a bater.
+@pytest.fixture
+def isolar_palace(tmp_palace_dir):
+    import routes.mempalace as mp
+    with patch.object(mp, "PALACE_DIR", tmp_palace_dir), \
+         patch.object(mp, "SOURCES_FILE", tmp_palace_dir / "sources.json"), \
+         patch.object(mp, "MINING_STATUS_FILE", tmp_palace_dir / "mining_status.json"), \
+         patch.object(mp, "WORKSPACE", tmp_palace_dir):
+        yield tmp_palace_dir
+
 
 
 @pytest.fixture()
@@ -158,7 +209,7 @@ class TestStatusEndpoint:
              patch.object(mp, "_get_palace_stats",
                           return_value={"total_drawers": 0, "wings": [], "rooms": []}), \
              app.test_request_context():
-                response = mp.status()
+                response = make_response(mp.status())
                 data = json.loads(response.get_data(as_text=True))
 
         assert data["installed"] is True
@@ -176,7 +227,7 @@ class TestStatusEndpoint:
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
              app.test_request_context():
-                response = mp.status()
+                response = make_response(mp.status())
                 data = json.loads(response.get_data(as_text=True))
 
         assert data["installed"] is False
@@ -193,16 +244,16 @@ class TestStatusEndpoint:
 class TestSourcesEndpoint:
     """Verify ``/api/mempalace/sources`` CRUD + path allowlist."""
 
-    def test_add_source_happy_path(self, app, admin_user, tmp_palace_dir):
+    def test_add_source_happy_path(self, app, admin_user, isolar_palace):
         import routes.mempalace as mp
 
-        target = tmp_palace_dir / "src"
+        target = isolar_palace / "src"
         target.mkdir()
 
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": str(target), "label": "src", "wing": "evo-nexus"}):
-                response = mp.add_source()
+                response = make_response(mp.add_source())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 201
@@ -217,7 +268,7 @@ class TestSourcesEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": ""}):
-                response = mp.add_source()
+                response = make_response(mp.add_source())
                 assert response.status_code == 400
 
     def test_add_source_rejects_nonexistent_dir(self, app, admin_user, tmp_path):
@@ -227,26 +278,26 @@ class TestSourcesEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": str(bogus)}):
-                response = mp.add_source()
+                response = make_response(mp.add_source())
                 assert response.status_code == 400
 
-    def test_add_source_rejects_duplicate(self, app, admin_user, tmp_palace_dir):
+    def test_add_source_rejects_duplicate(self, app, admin_user, isolar_palace):
         import routes.mempalace as mp
 
-        target = tmp_palace_dir / "src"
+        target = isolar_palace / "src"
         target.mkdir()
 
         # First add succeeds
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": str(target)}):
-                first = mp.add_source()
+                first = make_response(mp.add_source())
 
         # Second add with same resolved path → 409
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": str(target)}):
-                second = mp.add_source()
+                second = make_response(mp.add_source())
                 assert second.status_code == 409
 
         assert first.status_code == 201
@@ -278,22 +329,22 @@ class TestSourcesEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": str(target)}):
-                response = mp.add_source()
+                response = make_response(mp.add_source())
                 assert response.status_code == 400
                 body = json.loads(response.get_data(as_text=True))
                 assert "outside" in body["error"].lower() or "within" in body["error"].lower()
 
-    def test_delete_source_by_index(self, app, admin_user, tmp_palace_dir):
+    def test_delete_source_by_index(self, app, admin_user, isolar_palace):
         import routes.mempalace as mp
 
-        target = tmp_palace_dir / "src"
+        target = isolar_palace / "src"
         target.mkdir()
         mp._save_sources([{"path": str(target), "label": "src", "wing": None}])
 
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context():
-                response = mp.delete_source(0)
+                response = make_response(mp.delete_source(0))
                 data = json.loads(response.get_data(as_text=True))
 
         assert data["status"] == "removed"
@@ -305,7 +356,7 @@ class TestSourcesEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context():
-                response = mp.delete_source(99)
+                response = make_response(mp.delete_source(99))
                 assert response.status_code == 404
 
 
@@ -324,7 +375,7 @@ class TestSearchEndpoint:
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
              app.test_request_context():
-                response = mp.search()
+                response = make_response(mp.search())
                 assert response.status_code == 400
                 body = json.loads(response.get_data(as_text=True))
                 assert "q" in body["error"]
@@ -336,10 +387,10 @@ class TestSearchEndpoint:
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
              app.test_request_context(query_string={"q": "anything"}):
-                response = mp.search()
+                response = make_response(mp.search())
                 assert response.status_code == 400
 
-    def test_search_calls_mempalace_and_returns_payload(self, app, admin_user):
+    def test_search_calls_mempalace_and_returns_payload(self, app, admin_user, stub_mempalace):
         import routes.mempalace as mp
 
         fake_payload = {
@@ -368,7 +419,7 @@ class TestSearchEndpoint:
              app.test_request_context(query_string={
                  "q": "jwt auth", "wing": "evo-nexus", "n": "10",
              }):
-                response = mp.search()
+                response = make_response(mp.search())
                 data = json.loads(response.get_data(as_text=True))
 
         assert data["query"] == "jwt auth"
@@ -380,19 +431,16 @@ class TestSearchEndpoint:
         assert kwargs["wing"] == "evo-nexus"
         assert kwargs["n_results"] == 10
 
-    def test_search_clamps_n_to_50(self, app, admin_user):
+    def test_search_clamps_n_to_50(self, app, admin_user, stub_mempalace):
         """Requests for n>50 must be clamped server-side, not forwarded."""
         import routes.mempalace as mp
 
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
-             patch(
-                "mempalace.searcher.search_memories",
-                return_value={"query": "x", "results": []},
-             ) as mock_search, \
+             patch.object(sys.modules["mempalace.searcher"], "search_memories", return_value={"query": "x", "results": []}) as mock_search, \
              app.test_request_context(query_string={"q": "anything", "n": "500"}):
-                response = mp.search()
+                response = make_response(mp.search())
                 assert response.status_code == 200
 
         kwargs = mock_search.call_args.kwargs
@@ -492,7 +540,7 @@ class TestInstallEndpoint:
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
              app.test_request_context():
-                response = mp.install()
+                response = make_response(mp.install())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 200
@@ -510,10 +558,10 @@ class TestInstallEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
-             patch("routes.mempalace.shutil.which", return_value="/usr/bin/uv"), \
+             patch("shutil.which", return_value="/usr/bin/uv"), \
              patch("routes.mempalace.subprocess.run", return_value=mock_result) as mock_run, \
              app.test_request_context():
-                response = mp.install()
+                response = make_response(mp.install())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 200
@@ -521,7 +569,7 @@ class TestInstallEndpoint:
         # First call = install, second call = init
         assert mock_run.call_count == 2
         install_cmd = mock_run.call_args_list[0][0][0]
-        assert "uv" in install_cmd
+        assert install_cmd[0].endswith("uv")
 
     def test_install_success_via_pip_fallback(self, app, admin_user, tmp_palace_dir):
         """When uv is not available, fall back to pip."""
@@ -535,10 +583,10 @@ class TestInstallEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
-             patch("routes.mempalace.shutil.which", return_value=None), \
+             patch("shutil.which", return_value=None), \
              patch("routes.mempalace.subprocess.run", return_value=mock_result) as mock_run, \
              app.test_request_context():
-                response = mp.install()
+                response = make_response(mp.install())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 200
@@ -560,10 +608,10 @@ class TestInstallEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
-             patch("routes.mempalace.shutil.which", return_value=None), \
+             patch("shutil.which", return_value=None), \
              patch("routes.mempalace.subprocess.run", return_value=mock_result), \
              app.test_request_context():
-                response = mp.install()
+                response = make_response(mp.install())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 500
@@ -579,11 +627,11 @@ class TestInstallEndpoint:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
-             patch("routes.mempalace.shutil.which", return_value=None), \
+             patch("shutil.which", return_value=None), \
              patch("routes.mempalace.subprocess.run",
                    side_effect=subprocess.TimeoutExpired(cmd="pip", timeout=120)), \
              app.test_request_context():
-                response = mp.install()
+                response = make_response(mp.install())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 500
@@ -610,20 +658,20 @@ class TestMineEndpoint:
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
              app.test_request_context(json={}):
-                response = mp.mine()
+                response = make_response(mp.mine())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 400
         assert "not installed" in data["error"]
 
-    def test_mine_no_sources_returns_400(self, app, admin_user):
+    def test_mine_no_sources_returns_400(self, app, admin_user, isolar_palace):
         import routes.mempalace as mp
 
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
              app.test_request_context(json={}):
-                response = mp.mine()
+                response = make_response(mp.mine())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 400
@@ -643,7 +691,7 @@ class TestMineEndpoint:
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
              app.test_request_context(json={"source_index": 99}):
-                response = mp.mine()
+                response = make_response(mp.mine())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 404
@@ -670,7 +718,7 @@ class TestMineEndpoint:
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
              patch.object(mp, "_get_mining_status", return_value={"pid": 12345}), \
              app.test_request_context(json={}):
-                response = mp.mine()
+                response = make_response(mp.mine())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 409
@@ -699,7 +747,7 @@ class TestMineEndpoint:
              patch.object(mp, "_get_mining_status", return_value=None), \
              patch("routes.mempalace.subprocess.Popen", return_value=mock_process) as mock_popen, \
              app.test_request_context(json={}):
-                response = mp.mine()
+                response = make_response(mp.mine())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 200
@@ -745,7 +793,7 @@ class TestMineEndpoint:
              patch.object(mp, "_get_mining_status", return_value=None), \
              patch("routes.mempalace.subprocess.Popen", return_value=mock_process), \
              app.test_request_context(json={"source_index": 0}):
-                response = mp.mine()
+                response = make_response(mp.mine())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 200
@@ -775,7 +823,7 @@ class TestRBACEnforcement:
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(False, None)), \
              app.test_request_context():
-                response = mp.status()
+                response = make_response(mp.status())
                 # 200 — viewer has view permission
                 assert response.status_code == 200
 
@@ -785,7 +833,7 @@ class TestRBACEnforcement:
         with patch("routes.auth_routes.current_user", viewer_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context():
-                response = mp.list_sources()
+                response = make_response(mp.list_sources())
                 assert response.status_code == 200
 
     def test_viewer_blocked_from_add_source(self, app, viewer_user, tmp_palace_dir):
@@ -881,19 +929,19 @@ class TestHelperEdgeCases:
         installed, version = mp._mempalace_available()
         assert isinstance(installed, bool)
 
-    def test_get_palace_stats_returns_none_on_exception(self, app, admin_user, tmp_palace_dir):
+    def test_get_palace_stats_returns_none_on_exception(self, app, admin_user, tmp_palace_dir, stub_chromadb):
         """_get_palace_stats returns None when chromadb raises."""
         import routes.mempalace as mp
 
         mp.PALACE_DIR = tmp_palace_dir
 
-        with patch("routes.mempalace.chromadb.PersistentClient",
+        with patch.object(sys.modules["chromadb"], "PersistentClient",
                    side_effect=Exception("chroma not available")):
             result = mp._get_palace_stats()
 
         assert result is None
 
-    def test_get_palace_stats_missing_collection(self, app, admin_user, tmp_palace_dir):
+    def test_get_palace_stats_missing_collection(self, app, admin_user, tmp_palace_dir, stub_chromadb):
         """_get_palace_stats returns zeroed stats when collection doesn't exist."""
         import routes.mempalace as mp
 
@@ -902,36 +950,34 @@ class TestHelperEdgeCases:
         mock_client = MagicMock()
         mock_client.get_collection.side_effect = Exception("collection not found")
 
-        with patch("routes.mempalace.chromadb.PersistentClient", return_value=mock_client):
+        with patch.object(sys.modules["chromadb"], "PersistentClient", return_value=mock_client):
             result = mp._get_palace_stats()
 
         assert result == {"total_drawers": 0, "wings": [], "rooms": []}
 
-    def test_search_exception_returns_500(self, app, admin_user):
+    def test_search_exception_returns_500(self, app, admin_user, stub_mempalace):
         """When search_memories raises, the endpoint returns 500."""
         import routes.mempalace as mp
 
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
-             patch("mempalace.searcher.search_memories",
-                   side_effect=RuntimeError("embedding model failed")), \
+             patch.object(sys.modules["mempalace.searcher"], "search_memories", side_effect=RuntimeError("embedding model failed")), \
              app.test_request_context(query_string={"q": "test"}):
-                response = mp.search()
+                response = make_response(mp.search())
                 data = json.loads(response.get_data(as_text=True))
 
         assert response.status_code == 500
         assert "embedding model failed" in data["error"]
 
-    def test_search_wing_room_filter_passthrough(self, app, admin_user):
+    def test_search_wing_room_filter_passthrough(self, app, admin_user, stub_mempalace):
         """Verify wing and room filters are passed to search_memories."""
         import routes.mempalace as mp
 
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              patch.object(mp, "_mempalace_available", return_value=(True, "3.4.0")), \
-             patch("mempalace.searcher.search_memories",
-                   return_value={"query": "x", "results": []}) as mock_search, \
+             patch.object(sys.modules["mempalace.searcher"], "search_memories", return_value={"query": "x", "results": []}) as mock_search, \
              app.test_request_context(query_string={
                  "q": "test", "wing": "evo-nexus", "room": "technical",
              }):
@@ -978,7 +1024,7 @@ class TestHelperEdgeCases:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": str(link_dir)}):
-                response = mp.add_source()
+                response = make_response(mp.add_source())
                 # The resolved path is inside safe_zone ($HOME) → accepted
                 assert response.status_code == 201
 
@@ -1001,7 +1047,7 @@ class TestHelperEdgeCases:
         with patch("routes.auth_routes.current_user", admin_user), \
              patch("routes.auth_routes.has_permission", return_value=True), \
              app.test_request_context(json={"path": str(traversal_path)}):
-                response = mp.add_source()
+                response = make_response(mp.add_source())
                 assert response.status_code == 400
                 body = json.loads(response.get_data(as_text=True))
                 assert "within" in body["error"].lower() or "outside" in body["error"].lower()

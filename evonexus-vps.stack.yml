@@ -244,6 +244,13 @@ services:
       - evonexus_claude_workspace:/workspace/.claude
       - evonexus_agent_memory:/workspace/.claude/agent-memory
       - evonexus_codex_auth:/root/.codex
+      ## Sem isto o Daily Backup (21:00) escrevia em /workspace/backups da
+      ## camada efêmera do container: sobrevivia até o próximo restart do
+      ## serviço (deploy, docker service update por qualquer motivo) e
+      ## sumia — o volume evonexus_backups já existia e já estava montado
+      ## no dashboard, só nunca tinha sido montado aqui, que é quem roda o
+      ## backup de fato. Achado em 27/08/2026 via backup_watchdog.py.
+      - evonexus_backups:/workspace/backups
 
     networks:
       - network_public

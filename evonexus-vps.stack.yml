@@ -259,6 +259,16 @@ services:
       - DASHBOARD_API_TOKEN=${DASHBOARD_API_TOKEN}
       - DASHBOARD_API_USER=${DASHBOARD_API_USER:-admin}
       - EVONEXUS_API_URL=http://evonexus-dashboard:8080
+      ## Backup diário (S3-compat: AWS, MinIO, R2...). BACKUP_S3_BUCKET vazio =
+      ## modo local (fallback), sem retenção sem BACKUP_RETAIN_LOCAL — sem isto o
+      ## disco enche sem aviso. Achado + wiring em 27/08/2026.
+      - BACKUP_S3_BUCKET=${BACKUP_S3_BUCKET}
+      - BACKUP_S3_PREFIX=${BACKUP_S3_PREFIX:-evonexus-backups/}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL}
+      - BACKUP_RETAIN_LOCAL=${BACKUP_RETAIN_LOCAL:-3}
+      - BACKUP_RETAIN_S3=${BACKUP_RETAIN_S3:-30}
       ## MinIO/S3 for agents a routine might spawn to prepare a social post.
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}

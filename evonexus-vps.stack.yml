@@ -336,6 +336,11 @@ services:
       - MEDIA_WORKER_POLL_SECONDS=${MEDIA_WORKER_POLL_SECONDS:-10}
       - MEDIA_JOB_TIMEOUT_SECONDS=${MEDIA_JOB_TIMEOUT_SECONDS:-21600}
       - MEDIA_MAX_FILE_SIZE_BYTES=${MEDIA_MAX_FILE_SIZE_BYTES:-8589934592}
+      # Groq Whisper powers the deterministic transcription stage in
+      # dashboard/backend/transcricao.py. Keep this aligned with the other
+      # runtime services: MediaJobs otherwise fail after download/audio
+      # extraction despite the stack having a configured Groq credential.
+      - GROQ_API_KEY=${GROQ_API_KEY}
       - TZ=America/Sao_Paulo
 
     deploy:

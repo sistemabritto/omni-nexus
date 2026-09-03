@@ -97,13 +97,17 @@ def mover_pauta(pauta_id: int, status: str, **campos) -> None:
 def processar(pauta: dict, dry_run: bool) -> dict:
     """Uma pauta: escreve, cria o rascunho, gera a capa, abre o gate."""
     from escritor_de_artigo import escrever
-    from ghost_publisher import atualizar, buscar, criar_rascunho
+    from ghost_publisher import (atualizar, buscar, criar_rascunho,
+                                 publicados_recentes)
     from ghost_social_bridge import aprovar_artigo
 
     rotulo = f"#{pauta['prioridade']} {pauta['keyword']!r}"
     log(f"{rotulo} — escrevendo")
 
-    artigo, erro = escrever(pauta)
+    # Os candidatos a link interno vêm daqui e não de dentro do escritor: a
+    # rotina já fala com o Ghost, e manter `escrever` sem rede é o que deixa o
+    # teste da esteira rodar sem tocar em produção.
+    artigo, erro = escrever(pauta, relacionados=publicados_recentes())
     if erro:
         return {"pauta": pauta["id"], "ok": False, "etapa": "escrita", "erro": erro}
     log(f"{rotulo} — {artigo['palavras']} palavras: {artigo['titulo'][:60]}")
@@ -113,7 +117,10 @@ def processar(pauta: dict, dry_run: bool) -> dict:
                 "titulo": artigo["titulo"], "palavras": artigo["palavras"]}
 
     post_id, erro = criar_rascunho(artigo["titulo"], artigo["html"],
-                                   excerpt=artigo["excerpt"])
+                                   excerpt=artigo["excerpt"],
+                                   tags=artigo.get("tags"),
+                                   meta_title=artigo.get("meta_title", ""),
+                                   meta_description=artigo.get("meta_description", ""))
     if erro:
         return {"pauta": pauta["id"], "ok": False, "etapa": "rascunho", "erro": erro}
 

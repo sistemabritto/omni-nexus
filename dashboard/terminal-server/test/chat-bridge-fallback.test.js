@@ -1,4 +1,7 @@
 const assert = require('assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const test = require('node:test');
 
 const {
@@ -6,7 +9,41 @@ const {
   isRetryableProviderError,
   isFatalProviderError,
   SDK_COMPATIBLE_CLI,
+  discoverPluginSkills,
+  pluginSkillsRuntimeBlock,
 } = require('../src/chat-bridge');
+
+test('catálogo de plugins expõe skills ativas e ignora plugins desabilitados', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'evo-plugin-skills-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const active = path.join(root, '.claude', 'skills', 'plugin-reach-reach-video');
+  const disabled = path.join(root, '.claude', 'skills', 'plugin-old-disabled.disabled');
+  fs.mkdirSync(active, { recursive: true });
+  fs.mkdirSync(disabled, { recursive: true });
+  fs.writeFileSync(path.join(active, 'SKILL.md'), [
+    '---',
+    'name: "plugin-reach-reach-video"',
+    'description: Transcreve videos publicos.',
+    '---',
+    '# Reach Video',
+  ].join('\n'));
+  fs.writeFileSync(path.join(disabled, 'SKILL.md'), [
+    '---',
+    'name: plugin-old-disabled',
+    'description: Nao deve aparecer.',
+    '---',
+  ].join('\n'));
+
+  assert.deepEqual(discoverPluginSkills(root), [{
+    name: 'plugin-reach-reach-video',
+    description: 'Transcreve videos publicos.',
+  }]);
+  const block = pluginSkillsRuntimeBlock(root);
+  assert.match(block, /plugin-reach-reach-video/);
+  assert.match(block, /invoke the matching Skill before saying it is unavailable/);
+  assert.doesNotMatch(block, /plugin-old-disabled/);
+});
 
 // Fixture no formato retornado por loadProviderConfig()
 function makeConfig() {

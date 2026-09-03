@@ -34,6 +34,12 @@ ffmpeg -i /tmp/reach.mp4 -vf 'fps=2,scale=512:-2' /tmp/reach-frame-%03d.jpg
 agent-reach transcribe "<URL>" -o /tmp/reach-transcript.txt
 ```
 
+Uma falha no OpenCLI nao prova que a URL individual esta inacessivel. Para
+Reels/posts publicos recebidos diretamente do usuario, execute o probe do
+`yt-dlp` antes de declarar bloqueio. OpenCLI e necessario para descoberta de
+perfil, busca e listagem; nao para todo URL individual que o extractor consiga
+ler sem login.
+
 Para o exemplo solicitado, o comando tenta descobrir ate cinco videos publicos
 com o backend oficial do Agent Reach:
 

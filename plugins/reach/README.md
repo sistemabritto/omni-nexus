@@ -7,10 +7,15 @@ reimplementa o projeto nem mascara falhas dos backends.
 ## Capacidades e limites
 
 - YouTube usa `yt-dlp` e funciona sem login para leitura e legendas.
-- Instagram usa OpenCLI com uma sessao Chrome ja autenticada e controlada pelo
-  usuario. O upstream documenta esse caminho como desktop-only.
-- Em VPS headless, Instagram nao e considerado configurado ate existir uma
-  sessao Chrome/OpenCLI visivel e autorizada.
+- URLs individuais e publicas de Reels/posts devem ser testadas primeiro com
+  `yt-dlp`; esse caminho funciona na VPS quando o extractor consegue acessar a
+  midia sem login.
+- Descoberta de perfil, busca e listagem de posts no Instagram usam OpenCLI com
+  uma sessao Chrome ja autenticada e controlada pelo usuario. O upstream
+  documenta esse caminho como desktop-only.
+- Em VPS headless, descoberta de perfis no Instagram nao e considerada
+  configurada ate existir uma sessao Chrome/OpenCLI visivel e autorizada. Isso
+  nao impede o teste de uma URL publica individual com `yt-dlp`.
 - Nao usar login automatizado, cookies de terceiros, CAPTCHA bypass ou scraping
   alternativo.
 - Metricas publicas nao provam causalidade. O relatorio usa hipoteses e sinais
@@ -39,8 +44,16 @@ yt-dlp --write-auto-subs --sub-langs 'pt.*,en.*' --skip-download \
 
 ## Instagram de referencia
 
-O caminho suportado pelo upstream e desktop/OpenCLI. Depois de instalar o
-OpenCLI e a extensao no Chrome da sessao autorizada:
+Para uma URL individual publica:
+
+```bash
+yt-dlp --dump-json --no-playlist 'https://www.instagram.com/p/SHORTCODE/'
+agent-reach transcribe 'https://www.instagram.com/p/SHORTCODE/' -o /tmp/reach-transcript.txt
+```
+
+Para descobrir perfis/posts, o caminho suportado pelo upstream e
+desktop/OpenCLI. Depois de instalar o OpenCLI e a extensao no Chrome da sessao
+autorizada:
 
 ```bash
 opencli doctor

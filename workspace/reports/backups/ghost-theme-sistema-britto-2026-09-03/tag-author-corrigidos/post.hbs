@@ -1,0 +1,83 @@
+{{!< default}}
+
+{{#post}}
+<article class="artigo">
+    <div class="container">
+        <header class="artigo__cabeca">
+            {{#if primary_tag}}
+                <a class="etiqueta" href="{{primary_tag.url}}">{{primary_tag.name}}</a>
+            {{/if}}
+
+            <h1 style="margin-top:1.2rem">{{title}}</h1>
+
+            {{#if custom_excerpt}}
+                <p style="font-size:var(--t-lg);color:var(--texto-suave);max-width:56ch;margin:1rem auto 0">{{custom_excerpt}}</p>
+            {{/if}}
+
+            <div class="artigo__meta">
+                {{#primary_author}}
+                    {{#if profile_image}}
+                        <img class="cartao__avatar" src="{{profile_image}}" alt="" width="26" height="26">
+                    {{/if}}
+                    <a href="{{url}}">{{name}}</a>
+                {{/primary_author}}
+                <span aria-hidden="true">·</span>
+                <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD [de] MMMM [de] YYYY"}}</time>
+                <span aria-hidden="true">·</span>
+                <span>{{reading_time minute="1 min de leitura" minutes="% min de leitura"}}</span>
+            </div>
+        </header>
+
+        {{#if feature_image}}
+        <figure class="artigo__capa">
+            {{!-- Capa do artigo é o LCP desta página: eager, prioridade alta e
+                  dimensões declaradas para não haver salto de layout. --}}
+            <img src="{{img_url feature_image size="l"}}"
+                 srcset="{{img_url feature_image size="m"}} 750w,
+                         {{img_url feature_image size="l"}} 1200w,
+                         {{img_url feature_image size="xl"}} 2000w"
+                 sizes="(max-width: 1080px) 100vw, 1080px"
+                 alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}"
+                 width="1200" height="675"
+                 fetchpriority="high" decoding="async">
+        </figure>
+        {{/if}}
+
+        <div class="conteudo">
+            {{content}}
+        </div>
+
+        {{#primary_author}}
+        <aside class="autor-caixa">
+            {{#if profile_image}}<img src="{{profile_image}}" alt="" width="64" height="64" loading="lazy">{{/if}}
+            <div>
+                <h3>{{name}}</h3>
+                {{#if bio}}<p>{{bio}}</p>{{else}}<p>Escreve sobre o que aprende operando.</p>{{/if}}
+            </div>
+        </aside>
+        {{/primary_author}}
+    </div>
+</article>
+
+{{> cta-whatsapp}}
+
+{{#if @site.members_enabled}}{{> newsletter}}{{/if}}
+
+{{!-- Leituras seguintes: mesma tag primária, para o próximo passo ser
+      relacionado e não aleatório. --}}
+{{#get "posts" filter="id:-{{id}}+tags:[{{primary_tag.slug}}]" limit="3" include="authors,tags" as |relacionados|}}
+    {{#if relacionados}}
+    <section class="secao" style="padding-top:0">
+        <div class="container">
+            <div class="secao__cabeca">
+                <span class="secao__etiqueta">Continue</span>
+                <h2 style="font-size:var(--t-xl)">Do mesmo assunto</h2>
+            </div>
+            <div class="bento">
+                {{#foreach relacionados}}{{> post-card}}{{/foreach}}
+            </div>
+        </div>
+    </section>
+    {{/if}}
+{{/get}}
+{{/post}}

@@ -1,0 +1,21 @@
+{{!-- Assinatura nativa do Ghost: o `data-members-form` é o que faz o Portal
+      interceptar o envio. Sem ele o formulário posta e recarrega a página. --}}
+<section class="secao">
+    <div class="container">
+        <div class="news revela">
+            <h2>Receba o que a gente aprende operando</h2>
+            <p>Sem teoria requentada. O que testamos, o que deu certo e o que
+               custou caro, direto no seu e-mail, quando houver algo que valha.</p>
+
+            <form class="news__form" data-members-form="subscribe">
+                <label class="visualmente-oculto" for="email-news">Seu melhor e-mail</label>
+                <input id="email-news" type="email" name="email" required
+                       placeholder="voce@empresa.com.br" data-members-email
+                       autocomplete="email">
+                <button class="botao botao--principal" type="submit">Quero receber</button>
+            </form>
+
+            <p class="news__aviso">Um clique cancela. Sem repasse de dados, nunca.</p>
+        </div>
+    </div>
+</section>

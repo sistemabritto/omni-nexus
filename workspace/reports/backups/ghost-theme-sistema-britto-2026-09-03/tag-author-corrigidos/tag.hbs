@@ -1,0 +1,28 @@
+{{!< default}}
+{{#tag}}
+<section class="perfil">
+    <div class="container">
+        <span class="secao__etiqueta">Assunto</span>
+        <h1 style="font-size:var(--t-2xl)">{{name}}</h1>
+        {{#if description}}<p style="max-width:52ch;margin:0 auto;color:var(--texto-suave)">{{description}}</p>{{/if}}
+        <p style="color:var(--texto-fraco);font-size:var(--t-sm);margin-top:1rem">
+            {{plural ../pagination.total empty="Nenhum artigo ainda" singular="% artigo" plural="% artigos"}}
+        </p>
+    </div>
+</section>
+{{/tag}}
+
+{{!-- O helper {{pagination}} (e {{#foreach posts}}) precisa do contexto raiz
+      da rota, o mesmo de index.hbs. Dentro de {{#tag}}...{{/tag}} o contexto
+      vira o modelo da Tag, e o helper pagination não existe ali — é o que
+      dava "The {{pagination}} helper was used outside of a paginated
+      context." Acesso a propriedade (../pagination.total, acima) sempre
+      funcionou dentro de {{#tag}}; só o helper bruto não. --}}
+<section class="secao">
+    <div class="container">
+        <div class="bento">
+            {{#foreach posts}}{{> post-card}}{{/foreach}}
+        </div>
+        {{pagination}}
+    </div>
+</section>

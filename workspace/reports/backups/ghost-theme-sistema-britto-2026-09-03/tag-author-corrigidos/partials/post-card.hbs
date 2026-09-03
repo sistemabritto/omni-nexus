@@ -1,0 +1,48 @@
+{{!-- Cartão de post. `@index` marca o primeiro da home como destaque; o resto
+      entra na grade normal. --}}
+<article class="cartao revela {{#if destaque}}cartao--destaque{{/if}}">
+    {{#if feature_image}}
+    <div class="cartao__imagem">
+        {{!-- `loading` e `fetchpriority` vêm de fora: o primeiro cartão é o
+              LCP da home e precisa ser eager; os demais, lazy. --}}
+        <img src="{{img_url feature_image size="m"}}"
+             srcset="{{img_url feature_image size="s"}} 400w,
+                     {{img_url feature_image size="m"}} 750w,
+                     {{img_url feature_image size="l"}} 1200w"
+             sizes="{{#if destaque}}(max-width: 1180px) 100vw, 1180px{{else}}(max-width: 700px) 100vw, 380px{{/if}}"
+             alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}"
+             width="1200" height="675"
+             loading="{{#if destaque}}eager{{else}}lazy{{/if}}"
+             decoding="async"
+             {{#if destaque}}fetchpriority="high"{{/if}}>
+    </div>
+    {{/if}}
+
+    <div class="cartao__corpo">
+        <div class="cartao__meta">
+            {{#if primary_tag}}<span class="etiqueta">{{primary_tag.name}}</span>{{/if}}
+            <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD MMM YYYY"}}</time>
+            <span aria-hidden="true">·</span>
+            <span>{{reading_time minute="1 min de leitura" minutes="% min de leitura"}}</span>
+        </div>
+
+        <h3 class="cartao__titulo">
+            <a class="cartao__link" href="{{url}}">{{title}}</a>
+        </h3>
+
+        {{#if custom_excerpt}}
+            <p class="cartao__resumo">{{custom_excerpt}}</p>
+        {{else}}
+            <p class="cartao__resumo">{{excerpt words="26"}}</p>
+        {{/if}}
+
+        {{#primary_author}}
+        <div class="cartao__rodape">
+            {{#if profile_image}}
+                <img class="cartao__avatar" src="{{profile_image}}" alt="" width="26" height="26" loading="lazy">
+            {{/if}}
+            <span>{{name}}</span>
+        </div>
+        {{/primary_author}}
+    </div>
+</article>

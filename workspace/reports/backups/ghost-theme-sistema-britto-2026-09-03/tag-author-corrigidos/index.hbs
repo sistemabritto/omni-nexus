@@ -1,0 +1,166 @@
+{{!< default}}
+
+{{!-- O hero só aparece na home de verdade: da segunda página em diante o
+      leitor está paginando, e repetir a chamada empurraria o conteúdo para
+      baixo. `{{#is "home"}}` é o helper para isso — `@first` só existe dentro
+      de {{#foreach}} e, usado aqui, era sempre falso: o hero, o marquee, a
+      linha do tempo, a newsletter e o CTA simplesmente não saíam no HTML. --}}
+{{#is "home"}}
+{{!-- Duas colunas quando existe imagem de capa, uma só quando não existe.
+      A imagem entra pelo painel do Ghost (Settings → Design → Publication
+      cover), então trocar a arte não exige deploy nenhum.
+
+      O corte é `object-position: right` de propósito: as artes da marca
+      trazem logo e tagline à esquerda, e o hero já tem título — dois títulos
+      na mesma tela competem e enfraquecem os dois. Mostrando o lado direito,
+      sobra o que a imagem tem de melhor aqui, que é o rosto e o contexto. --}}
+<section class="hero {{#if @site.cover_image}}hero--com-imagem{{/if}}">
+    <div class="container hero__grade">
+      <div class="hero__texto">
+        <span class="hero__selo">Operação com IA, na prática</span>
+
+        <h1>
+            O que a gente aprende<br>
+            <span class="hero__brilho">operando de verdade</span>
+        </h1>
+
+        <p class="hero__linha">
+            A internet está cheia de gente ensinando IA sem nunca ter colocado
+            uma no ar. Aqui é o contrário: só entra o que já quebrou, custou
+            caro e voltou a funcionar na nossa operação ou na de um cliente.
+        </p>
+
+        <div class="hero__acoes">
+            <a class="botao botao--principal" href="#artigos">Ler os artigos</a>
+            <a class="botao botao--vazado" href="https://sistemabritto.com.br/sistema?utm_source=blog&utm_medium=content&utm_campaign=home-hero">Quero meu projeto definido</a>
+        </div>
+
+        {{!-- Números com contador. `data-conta` é o alvo; o texto dentro é o
+              que aparece sem JavaScript, então nunca fica um zero na tela. --}}
+      </div>
+
+      {{#if @site.cover_image}}
+      <div class="hero__arte">
+        <img src="{{img_url @site.cover_image size="l"}}"
+             srcset="{{img_url @site.cover_image size="m"}} 750w, {{img_url @site.cover_image size="l"}} 1200w"
+             sizes="(max-width: 900px) 100vw, 46vw"
+             alt="" width="1200" height="675" fetchpriority="high" decoding="async">
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="container">
+        <div class="numeros">
+            <div class="numero revela">
+                <span class="numero__valor" data-conta="3" data-sufixo="/dia">3/dia</span>
+                <span class="numero__rotulo">Artigos que saem daqui</span>
+            </div>
+            <div class="numero revela">
+                <span class="numero__valor" data-conta="38" data-sufixo="">38</span>
+                <span class="numero__rotulo">Agentes na operação</span>
+            </div>
+            <div class="numero revela">
+                <span class="numero__valor" data-conta="7" data-sufixo="/7">7/7</span>
+                <span class="numero__rotulo">Dias por semana, sem folga</span>
+            </div>
+            <div class="numero revela">
+                <span class="numero__valor" data-conta="0" data-sufixo="">0</span>
+                <span class="numero__rotulo">Publicados sem eu aprovar</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{!-- Marquee: a lista aparece duas vezes porque a animação desloca -50%, e no
+      fim do ciclo a segunda cópia está exatamente onde a primeira começou.
+      A duplicata é aria-hidden — o leitor de tela lê a lista uma vez só. --}}
+<div class="marquee" aria-label="Tecnologias que usamos no dia a dia">
+    <div class="marquee__trilho">
+        <span class="marquee__item">WhatsApp Business API</span>
+        <span class="marquee__item">Evolution API</span>
+        <span class="marquee__item">Ghost</span>
+        <span class="marquee__item">Supabase</span>
+        <span class="marquee__item">Next.js</span>
+        <span class="marquee__item">Docker Swarm</span>
+        <span class="marquee__item">Claude</span>
+        <span class="marquee__item">PostgreSQL</span>
+        <span class="marquee__item">Traefik</span>
+        <span class="marquee__item">n8n</span>
+
+        <span class="marquee__item" aria-hidden="true">WhatsApp Business API</span>
+        <span class="marquee__item" aria-hidden="true">Evolution API</span>
+        <span class="marquee__item" aria-hidden="true">Ghost</span>
+        <span class="marquee__item" aria-hidden="true">Supabase</span>
+        <span class="marquee__item" aria-hidden="true">Next.js</span>
+        <span class="marquee__item" aria-hidden="true">Docker Swarm</span>
+        <span class="marquee__item" aria-hidden="true">Claude</span>
+        <span class="marquee__item" aria-hidden="true">PostgreSQL</span>
+        <span class="marquee__item" aria-hidden="true">Traefik</span>
+        <span class="marquee__item" aria-hidden="true">n8n</span>
+    </div>
+</div>
+{{/is}}
+
+<section class="secao" id="artigos">
+    <div class="container">
+        {{#is "home"}}
+        <div class="secao__cabeca">
+            <span class="secao__etiqueta">Artigos</span>
+            <h2>O que publicamos por aqui</h2>
+            <p class="secao__linha">Cada texto sai de um problema que apareceu numa operação de verdade: a nossa, ou a de quem nos contratou.</p>
+        </div>
+        {{/is}}
+
+        <div class="bento">
+            {{#foreach posts}}
+                {{!-- Só o primeiro da primeira página vira destaque: é ele que
+                      carrega o LCP e merece a largura toda. --}}
+                {{#if @first}}
+                    {{> post-card destaque=true}}
+                {{else}}
+                    {{> post-card}}
+                {{/if}}
+            {{/foreach}}
+        </div>
+
+        {{pagination}}
+    </div>
+</section>
+
+{{#is "home"}}
+{{!-- Linha do tempo: o processo, sem jargão de agência. --}}
+<section class="secao">
+    <div class="container">
+        <div class="secao__cabeca secao__cabeca--centro">
+            <span class="secao__etiqueta">Como funciona</span>
+            <h2>Do problema à operação rodando</h2>
+        </div>
+
+        <div class="linha-tempo" style="max-width:var(--largura-texto);margin-inline:auto">
+            <div class="etapa revela">
+                <span class="etapa__num">01</span>
+                <h3>A gente escuta o gargalo</h3>
+                <p>Conversa de 30 minutos. Você fala, a gente ouve. Sai de lá com escopo e prazo, ou com a informação de que não é para nós.</p>
+            </div>
+            <div class="etapa revela">
+                <span class="etapa__num">02</span>
+                <h3>Desenho da operação</h3>
+                <p>O que a IA faz, o que a pessoa faz, e onde uma passa para a outra. Sem automatizar o que não deve ser automatizado.</p>
+            </div>
+            <div class="etapa revela">
+                <span class="etapa__num">03</span>
+                <h3>Sobe em produção</h3>
+                <p>No seu WhatsApp, no seu CRM, com os seus dados. Você acompanha rodando, não em apresentação.</p>
+            </div>
+            <div class="etapa revela">
+                <span class="etapa__num">04</span>
+                <h3>Ajuste com número na mão</h3>
+                <p>O que não converte a gente muda. A decisão sai da métrica, não do achismo.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{> newsletter}}
+{{> cta-whatsapp}}
+{{/is}}

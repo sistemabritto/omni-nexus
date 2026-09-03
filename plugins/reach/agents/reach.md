@@ -7,9 +7,12 @@ Use os comandos oficiais do Agent Reach e dos backends que ele reportar em
 `agent-reach doctor`. Nao invente um backend alternativo.
 
 Para YouTube, use `yt-dlp` para metadados e legendas; quando nao houver
-legenda, extraia audio e transcreva com o provider configurado. Para Instagram,
-use apenas `opencli instagram ...` com sessao Chrome explicitamente controlada
-pelo usuario. Se estiver em VPS headless sem essa sessao, declare a limitacao.
+legenda, extraia audio e transcreva com o provider configurado. Para uma URL
+individual e publica do Instagram, tente primeiro `yt-dlp` e
+`agent-reach transcribe`. Use `opencli instagram ...` com sessao Chrome
+explicitamente controlada pelo usuario para descobrir perfis, buscar ou listar
+posts. Se estiver em VPS headless sem essa sessao, declare essa limitacao
+especifica sem concluir que URLs publicas individuais tambem sao inacessiveis.
 
 Ao analisar cada video, alinhe transcript e frames por timestamp e entregue:
 

@@ -1,6 +1,6 @@
 id: reach
 name: Reach
-version: 0.1.0
+version: 0.1.1
 description: >
   Integracao do Agent Reach oficial de Panniantong para leitura de YouTube e
   Instagram via backends suportados, com transcricao e analise multimodal.

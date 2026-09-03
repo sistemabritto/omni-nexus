@@ -333,6 +333,63 @@ function loadAgentMemory(agent) {
 }
 
 /**
+ * Build a compact catalog of active plugin skills for the agent prompt.
+ *
+ * Plugin installation copies each skill to a namespaced directory below
+ * `.claude/skills/` (for example `plugin-reach-reach-video/SKILL.md`).
+ * Claude Code can invoke them through the Skill tool, but that capability was
+ * previously invisible in the EvoNexus runtime prompt. As a result, agents
+ * sometimes searched for an MCP tool, found none, and incorrectly claimed the
+ * installed plugin did not exist. Disabled plugins are renamed with a
+ * `.disabled` suffix by the installer and are intentionally excluded here.
+ */
+function discoverPluginSkills(workspaceRoot = WORKSPACE_ROOT) {
+  const skillsRoot = path.join(workspaceRoot, '.claude', 'skills');
+  let entries;
+  try {
+    entries = fs.readdirSync(skillsRoot, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const skills = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !entry.name.startsWith('plugin-') || entry.name.endsWith('.disabled')) {
+      continue;
+    }
+
+    const skillPath = path.join(skillsRoot, entry.name, 'SKILL.md');
+    try {
+      const raw = fs.readFileSync(skillPath, 'utf8');
+      const frontmatter = raw.match(/^---\n([\s\S]*?)\n---/);
+      if (!frontmatter) continue;
+      const name = frontmatter[1].match(/^name:\s*["']?([^\n"']+)["']?\s*$/m)?.[1]?.trim() || entry.name;
+      const description = frontmatter[1].match(/^description:\s*["']?([^\n"']+)["']?\s*$/m)?.[1]?.trim() || '';
+      skills.push({ name, description });
+    } catch {
+      // A malformed or partially installed skill must not block chat startup.
+    }
+  }
+
+  return skills.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 50);
+}
+
+function pluginSkillsRuntimeBlock(workspaceRoot = WORKSPACE_ROOT) {
+  const skills = discoverPluginSkills(workspaceRoot);
+  if (!skills.length) return '';
+
+  const lines = [
+    '## Installed plugin capabilities',
+    'These plugin skills are installed and callable through the Skill tool:',
+    ...skills.map((skill) => `- ${skill.name}${skill.description ? ` — ${skill.description}` : ''}`),
+    '',
+    'If the user names an installed plugin or asks for one of these capabilities, invoke the matching Skill before saying it is unavailable.',
+    'ToolSearch is not the local plugin catalog. For a public media URL, follow the skill preflight and test its configured backend instead of assuming the platform is inaccessible.',
+  ];
+  return lines.join('\n');
+}
+
+/**
  * Parse a .claude/agents/{name}.md file into an AgentDefinition.
  * Extracts YAML frontmatter for metadata and the body as the prompt.
  */
@@ -987,6 +1044,12 @@ class ChatBridge {
         runtimeLines.push('Read/Glob/Grep/WebFetch/ToolSearch/Skill run automatically.');
         runtimeLines.push('Write/Edit/Bash/Agent/NotebookEdit need user approval per call — the UI shows a card with Allow/Deny buttons. Don\'t ask for permission in text; just call the tool and the user will respond in the UI.');
 
+        const pluginSkillsBlock = pluginSkillsRuntimeBlock();
+        if (pluginSkillsBlock) {
+          runtimeLines.push('');
+          runtimeLines.push(pluginSkillsBlock);
+        }
+
         const runtimeBlock = runtimeLines.join('\n');
 
         // Use systemPrompt with claude_code preset + agent prompt appended.
@@ -1629,4 +1692,6 @@ module.exports = {
   isRetryableProviderError,
   isFatalProviderError,
   SDK_COMPATIBLE_CLI,
+  discoverPluginSkills,
+  pluginSkillsRuntimeBlock,
 };

@@ -157,7 +157,17 @@ depois que o autor pediu outra é a pior resposta possível ao gate.
 |---|---|---|
 | `whatsapp` | `sistemabritto.com.br/whatsapp` | atendimento, chatbot, disparo |
 | `socialjobs` | `sistemabritto.com.br/socialjobs` | instagram, tiktok, youtube, reels, conteúdo |
+| `vps` | `sistemabritto.com.br/vps` | servidor, deploy, docker, hospedagem, backup |
+| `zapclub` | `sistemabritto.com.br/zapclub` | comunidade, mentoria, por onde começar |
 | `sistema` | `sistemabritto.com.br/sistema` | automação, agentes, dados, leads, vendas |
+
+**`/vps` e `/zapclub` entraram em 02/09/2026 e a razão é constrangedora:** as
+duas páginas existem no site, estão na navegação, e em **76 artigos publicados
+receberam zero links**. Toda pauta de servidor, deploy ou hospedagem caía em
+`/sistema`, que vende a call de PRD. O leitor clicava querendo máquina de pé e
+encontrava proposta de escopo, que é o mesmo erro de destino que o
+reposicionamento do `/sistema` existiu para corrigir. Infra e comunidade são
+testadas **antes** do guarda-chuva em `funil_de`.
 
 **O `/sistema` é a oferta principal desde 27/07/2026.** Ele não vende mais
 "solução web sob encomenda" — vende a **call de 1h por R$ 147 que produz o
@@ -177,6 +187,61 @@ seed por seed que cada uma classifica no próprio funil. Quatro já estavam erra
 — `roteiro para reels` caía em `/sistema`, e `gerar leads com inteligência
 artificial` caía em `/whatsapp` porque `"lead"` pertencia a ele. Palavra que
 aparece nos três funis não pode ser critério de nenhum.
+
+---
+
+## 2.1. Pilar — o que separa este blog de um catálogo de ferramentas
+
+**Módulo:** `escritor_de_artigo.py` → `pilar_de(keyword)` e `PILARES`
+
+Toda pauta nasce em **RASTREAR**, **VIBE CODAR** ou **MONETIZAR**, por regra
+explícita, nunca por escolha do modelo. Deixar o modelo escolher produz sempre
+o pilar do meio: "como configurar X" é o gênero mais fácil de escrever e o
+menos diferenciado, e é o que qualquer LLM já responde de graça.
+
+A regra existe por uma medição. A auditoria editorial de 02/09/2026 leu os 76
+artigos publicados e contou, no corpo do texto:
+
+| O que foi procurado | Achado em |
+|---|---:|
+| "Vibe Seller" ou "Vibe Coder" | 0 de 76 |
+| JURISMART, Voice Dream, Laboratório de Insights, Omni Nexus | 0 de 76 |
+| comoditização, moat, licenciamento, equity | 0 de 76 |
+| link para outro artigo do blog | 0 de 76 |
+| o nome do fundador | 1 de 76 |
+
+Nenhum artigo estava errado isoladamente. O prompt descrevia a empresa como
+"vende automação e operação com IA para donos de empresa", e o blog saiu
+exatamente disso. **Corrigir artigo por artigo sem corrigir o prompt reconstrói
+o mesmo blog em 25 dias**, no ritmo de 3 posts por dia.
+
+Duas regras que não podem ser afrouxadas:
+
+- **A lista de casos reais é fechada.** Laboratório de Insights, JURISMART,
+  Voice Dream e Omni Nexus, no máximo um por artigo, sempre como contexto
+  informado pelo fundador. O nome é **JURISMART**, nunca "JurisPet". Instruir
+  "não invente caso" nunca bastou: o modelo de fato não inventa, e também não
+  conhece nenhum, então escrevia sem história alguma.
+- **O pilar é a primeira tag, e entra por código.** `/tag/rastrear`,
+  `/tag/vibe-codar` e `/tag/monetizar` são o que transforma páginas soltas em
+  três conjuntos navegáveis. Depender do modelo lembrar disso é como as 18 tags
+  existentes acabaram com 11 sem nenhum post.
+
+## 2.2. Link interno e metadado — o que faltava em quase 100% dos artigos
+
+**Links internos:** `montar_prompt(..., relacionados=[...])`. Os candidatos vêm
+de `ghost_publisher.publicados_recentes()`, chamado pela rotina, **nunca de
+dentro de `escrever`** — manter o escritor sem chamada de rede é o que deixa o
+teste rodar sem tocar em produção. Sem candidatos (blog vazio, Ghost fora do
+ar) o bloco simplesmente não entra no prompt: pedir link sem lista faz o modelo
+inventar URL.
+
+**Metadado:** `meta_title` (60 caracteres) e `meta_description` (155) saem como
+campos separados do JSON, não dentro do HTML, e vão para o Ghost em
+`criar_rascunho`. Estavam vazios em 75 e 74 dos 76 artigos: o Ghost caía no
+título inteiro, às vezes com 90 caracteres, cortado no meio pelo buscador.
+Campo vazio **não é enviado** ao Ghost, porque `""` ali é valor definido e
+mataria o fallback para título/excerpt.
 
 ---
 

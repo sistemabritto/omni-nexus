@@ -165,3 +165,40 @@ def test_tags_existem_mesmo_sem_o_modelo_devolver_nenhuma():
     # 74 dos 76 artigos publicados saíram sem tag nenhuma. O pilar entra por
     # código justamente para que a navegação nunca dependa do modelo lembrar.
     assert ea._tags({}, "como criar um agente") == ["vibe-codar"]
+
+
+def test_vocabulario_de_venda_nao_decide_pilar():
+    # Mesma armadilha de "lead" em funil_de: palavra que aparece nos três
+    # pilares não pode ser critério de nenhum. Com "vendas" dentro de
+    # MONETIZAR, o backfill de 02/09/2026 rotulou "segurança de dados em
+    # automação de vendas" como MONETIZAR, que é VIBE CODAR.
+    assert ea.pilar_de("segurança de dados em automação de vendas") == "VIBE CODAR"
+    assert ea.pilar_de("como automatizar vendas pelo whatsapp") == "VIBE CODAR"
+    # O termo econômico específico continua decidindo.
+    assert ea.pilar_de("como aumentar margem com automação") == "MONETIZAR"
+    assert ea.pilar_de("como recuperar receita perdida") == "MONETIZAR"
+
+
+def test_titulo_curto_prefere_fronteira_natural():
+    assert ea.titulo_curto("Segurança de dados em automação de vendas: como proteger "
+                           "clientes sem travar o faturamento") == \
+        "Segurança de dados em automação de vendas"
+
+
+def test_titulo_curto_recusa_fronteira_curta_demais():
+    # "Agente de IA WhatsApp" tem 21 caracteres: cabe, mas desperdiça a linha
+    # do resultado de busca. Sem meta_title, o buscador recebe o título inteiro
+    # e corta onde quiser, o que informa mais.
+    assert ea.titulo_curto("Agente de IA WhatsApp: como colocar um assistente real "
+                           "atendendo seus clientes hoje") == ""
+
+
+def test_titulo_curto_recusa_corte_no_meio_da_frase():
+    # "Como estruturar a governança de IA em atendimento via" é pior que campo
+    # vazio: sem meta_title o Ghost entrega a frase inteira ao buscador.
+    assert ea.titulo_curto("Como estruturar a governança de IA em atendimento "
+                           "via WhatsApp sem travar a operação") == ""
+
+
+def test_titulo_curto_devolve_o_titulo_quando_ja_cabe():
+    assert ea.titulo_curto("Quanto custa um chatbot?") == "Quanto custa um chatbot?"

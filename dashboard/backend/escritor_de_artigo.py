@@ -141,10 +141,17 @@ def pilar_de(keyword: str) -> str:
                                 "metrica", "diagnóstico", "diagnostico", "gargalo",
                                 "por que", "onde")):
         return "RASTREAR"
+    # "vender", "venda" e "vendas" ficaram DE FORA de propósito, pela mesma razão
+    # que "lead" ficou de fora de `funil_de`: são vocabulário dos três pilares.
+    # Com eles dentro, o backfill de 02/09/2026 classificou 15 artigos como
+    # MONETIZAR, entre eles "segurança de dados em automação de vendas", que é
+    # VIBE CODAR. Palavra que aparece nos três pilares não pode ser critério de
+    # nenhum, e um /tag/monetizar cheio de artigo que não fala de captura de
+    # valor mente sobre o acervo.
     if any(t in texto for t in ("receita", "faturamento", "margem", "lucro", "conversão",
-                                "conversao", "vender", "venda", "vendas", "monetiz",
-                                "licenc", "economia", "economizar", "reduzir custo",
-                                "roi", "equity")):
+                                "conversao", "monetiz", "licenc", "economia",
+                                "economizar", "reduzir custo", "roi", "equity",
+                                "valuation", "precificar", "ticket médio")):
         return "MONETIZAR"
     return "VIBE CODAR"
 
@@ -419,6 +426,30 @@ LIMITE_META_TITLE = 60
 LIMITE_META_DESCRIPTION = 155
 
 
+def titulo_curto(titulo: str) -> str:
+    """Versão do título que cabe em `meta_title`, ou "" se não houver uma boa.
+
+    Cortar na palavra produz coisas como "Como estruturar a governança de IA em
+    atendimento via", que é pior que não ter meta_title nenhum: o Ghost cai no
+    título inteiro, e o buscador ao menos recebe a frase completa para decidir
+    onde cortar. Por isso a função tenta primeiro uma fronteira natural (o que
+    vem antes de ":", "?" ou ",") e só devolve algo quando o resultado é uma
+    frase inteira.
+    """
+    base = sem_travessao((titulo or "").strip())
+    if not base:
+        return ""
+    if len(base) <= LIMITE_META_TITLE:
+        return base
+    for sep in (":", "?", ","):
+        cabeca = base.split(sep)[0].strip()
+        if sep == "?":
+            cabeca += "?"
+        if 25 <= len(cabeca) <= LIMITE_META_TITLE:
+            return cabeca
+    return ""
+
+
 def _meta_title(artigo: dict, titulo: str) -> str:
     """meta_title do modelo, ou o título cortado na palavra.
 
@@ -429,11 +460,12 @@ def _meta_title(artigo: dict, titulo: str) -> str:
     bruto = sem_travessao((artigo.get("meta_title") or "").strip())
     if bruto and len(bruto) <= LIMITE_META_TITLE:
         return bruto
-    base = sem_travessao(titulo)
-    if len(base) <= LIMITE_META_TITLE:
-        return base
-    corte = base[:LIMITE_META_TITLE].rsplit(" ", 1)[0]
-    return corte.rstrip(" ,;:")
+    limpo = titulo_curto(titulo)
+    if limpo:
+        return limpo
+    # Sem fronteira natural, o corte na palavra é o último recurso e vale só
+    # porque aqui o campo iria vazio de qualquer jeito.
+    return sem_travessao(titulo)[:LIMITE_META_TITLE].rsplit(" ", 1)[0].rstrip(" ,;:")
 
 
 def _meta_description(artigo: dict, titulo: str) -> str:

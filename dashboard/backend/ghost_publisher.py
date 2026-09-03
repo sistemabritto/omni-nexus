@@ -345,8 +345,38 @@ def subir_imagem(caminho: Path) -> tuple[str, str]:
     return devolvida, ""
 
 
+def publicados_recentes(limite: int = 50) -> list[dict]:
+    """Títulos e slugs dos artigos já publicados, do mais novo para o mais velho.
+
+    Serve ao link interno da esteira: o escritor precisa saber o que existe
+    para poder apontar para lá. Best-effort por definição — blog fora do ar não
+    pode impedir que o artigo do dia seja escrito, só faz o texto sair sem link
+    interno, que é exatamente o estado anterior.
+    """
+    cfg = _config()
+    if not cfg:
+        return []
+    url, key = cfg
+    try:
+        r = requests.get(
+            f"{url}/ghost/api/admin/posts/",
+            headers=_headers(key), timeout=30,
+            params={"limit": limite, "filter": "status:published",
+                    "order": "published_at desc", "fields": "slug,title"},
+        )
+    except requests.RequestException as exc:
+        log.warning("não consegui listar publicados para link interno: %s", exc)
+        return []
+    if r.status_code >= 300:
+        log.warning("Ghost recusou a listagem de publicados (%s)", r.status_code)
+        return []
+    return [{"slug": p["slug"], "titulo": p["title"]}
+            for p in (r.json() or {}).get("posts") or [] if p.get("slug")]
+
+
 def criar_rascunho(titulo: str, html: str, *, excerpt: str = "",
-                   tags: list[str] | None = None) -> tuple[str, str]:
+                   tags: list[str] | None = None, meta_title: str = "",
+                   meta_description: str = "") -> tuple[str, str]:
     """Cria o artigo como draft no Ghost. Devolve (post_id, erro).
 
     Nasce draft sempre, nunca published: o gate do artigo é quem decide se vai
@@ -365,6 +395,13 @@ def criar_rascunho(titulo: str, html: str, *, excerpt: str = "",
         corpo["custom_excerpt"] = excerpt[:300]
     if tags:
         corpo["tags"] = [{"name": t} for t in tags[:6]]
+    # Campo vazio não é enviado: o Ghost trata "" como valor definido e para de
+    # cair no título/excerpt, que é o fallback que queremos preservar quando o
+    # modelo não devolveu metadado utilizável.
+    if meta_title:
+        corpo["meta_title"] = meta_title[:300]
+    if meta_description:
+        corpo["meta_description"] = meta_description[:500]
     try:
         r = requests.post(f"{url}/ghost/api/admin/posts/?source=html",
                           headers=_headers(key), json={"posts": [corpo]}, timeout=90)

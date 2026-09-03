@@ -104,12 +104,14 @@ O pipeline `Leads do Site` tem 52 registros em `Novo Lead`, sem conversas vincul
 - O repositório `sistemabritto/site` foi localizado e auditado em leitura. O `/links` já captura UTMs e eventos de CTA.
 - Homepage, links e `llms.txt` ainda enfatizam automação, sistemas sob medida, CRM e ferramentas; não narram de modo consistente **Rastrear → Vibe Codar → Monetizar**.
 - O site possui endpoints de tracking e leads, mas o acesso administrativo de analytics não está configurado no ambiente atual, impedindo reconciliação do funil no período.
+- A auditoria de código identificou credenciais de integração EvoCRM codificadas como fallback em rotas de API do repositório. O valor não é reproduzido neste relatório. Isso é um risco de segurança P0 e precisa de rotação e remoção em branch separada, antes de qualquer ajuste editorial.
 
 | Mensagem atual | Conflito | Impacto | Proposta | Prioridade |
 |---|---|---|---|---|
 | Automação/CRM/ferramentas | Pode reforçar perfil de “cara das ferramentas” | Médio | Explicitar oportunidade, valor capturado e casos | P1 |
 | `/links` com múltiplas ofertas históricas | Dispersa a promessa dos Reels | Alto | Organizar por intenção: diagnóstico, prova/casos, implementação | P0 |
 | `llms.txt` e metadados antigos | Diferenciam pouco a nova tese | Médio | Atualizar só após decisão de narrativa final | P2 |
+| Fallback de credencial em rotas de API | Segredo pode estar exposto no histórico/código | Crítico | Rotacionar, remover fallback e validar variáveis de ambiente em CI | P0 |
 
 # 5. Arquitetura recomendada — nativa, sem novo agente social
 

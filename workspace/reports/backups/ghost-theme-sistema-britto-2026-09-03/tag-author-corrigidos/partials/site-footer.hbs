@@ -1,0 +1,45 @@
+<footer class="rodape">
+    <div class="container">
+        <div class="rodape__grade">
+            <div>
+                <a class="nav__marca" href="{{@site.url}}">
+                    <span class="nav__marca-selo" aria-hidden="true">SB</span>
+                    <span>{{@site.title}}</span>
+                </a>
+                <p style="margin-top:1rem;color:var(--texto-suave);font-size:var(--t-sm);max-width:34ch">
+                    {{#if @site.description}}{{@site.description}}{{else}}Operação com IA para empresas que querem crescer sem contratar mais braço.{{/if}}
+                </p>
+            </div>
+
+            <div>
+                <h4>Soluções</h4>
+                <ul>
+                    <li><a href="https://sistemabritto.com.br/whatsapp?utm_source=blog&utm_medium=content&utm_campaign=rodape">WhatsApp com IA</a></li>
+                    <li><a href="https://sistemabritto.com.br/socialjobs?utm_source=blog&utm_medium=content&utm_campaign=rodape">Conteúdo e redes</a></li>
+                    <li><a href="https://sistemabritto.com.br/sistema?utm_source=blog&utm_medium=content&utm_campaign=rodape">Sistema sob medida</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4>Conteúdo</h4>
+                <ul>
+                    {{#foreach @site.navigation}}<li><a href="{{url}}">{{label}}</a></li>{{/foreach}}
+                </ul>
+            </div>
+
+            <div>
+                <h4>Contato</h4>
+                <ul>
+                    <li><a href="https://wa.me/5511914088571">WhatsApp</a></li>
+                    <li><a href="https://sistemabritto.com.br/politicas-de-privacidade">Privacidade</a></li>
+                    <li><a href="https://sistemabritto.com.br/termos-de-uso">Termos de uso</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rodape__base">
+            <span>&copy; {{date format="YYYY"}} {{@site.title}}. Todos os direitos reservados.</span>
+            <span>Feito com operação própria, não com sorte.</span>
+        </div>
+    </div>
+</footer>

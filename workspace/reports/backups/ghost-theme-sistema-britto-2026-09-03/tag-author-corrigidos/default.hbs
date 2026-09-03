@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="{{@site.locale}}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{meta_title}}</title>
+
+    {{!-- A folha é uma só e vai antes do ghost_head, para que o CSS do tema
+          seja resolvido cedo e nada dependa de requisição extra. --}}
+    <link rel="stylesheet" href="{{asset "css/screen.css"}}">
+
+    {{!-- Precarrega só a fonte de texto. A monoespaçada aparece em código e
+          selo, que raramente estão na primeira dobra — precarregá-la também
+          disputaria banda com o LCP. --}}
+    <link rel="preload" href="{{asset "fonts/GeistVF.woff"}}" as="font" type="font/woff" crossorigin>
+
+    {{!-- Não há preload da imagem do LCP aqui: `{{#post}}` e `{{#get}}` não
+          resolvem dentro do <head> do default.hbs, e o bloco saía vazio no
+          HTML. O efeito equivalente vem do post-card, que marca o primeiro
+          cartão com `fetchpriority="high"` e `loading="eager"`. --}}
+
+    <link rel="icon" href="{{@site.icon}}">
+    <meta name="theme-color" content="#0a0a0a">
+    {{#if @site.description}}<meta name="description" content="{{@site.description}}">{{/if}}
+
+    {{ghost_head}}
+</head>
+
+<body class="{{body_class}}">
+    <a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+    {{!-- Fundo decorativo, fora do fluxo e sem eventos. --}}
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="malha" aria-hidden="true"></div>
+
+    {{> site-nav}}
+
+    <main id="conteudo">
+        {{{body}}}
+    </main>
+
+    {{> site-footer}}
+
+    {{!-- `defer`: baixa em paralelo e executa depois do parse, sem bloquear a
+          primeira pintura. --}}
+    <script defer src="{{asset "js/main.js"}}"></script>
+    {{ghost_foot}}
+</body>
+</html>

@@ -1,0 +1,26 @@
+{{!< default}}
+{{#post}}
+<article class="artigo">
+    <div class="container">
+        {{#if @page.show_title_and_feature_image}}
+        <header class="artigo__cabeca">
+            <h1>{{title}}</h1>
+            {{#if custom_excerpt}}
+            <p style="font-size:var(--t-lg);color:var(--texto-suave);max-width:56ch;margin:1rem auto 0">{{custom_excerpt}}</p>
+            {{/if}}
+        </header>
+
+        {{#if feature_image}}
+        <figure class="artigo__capa">
+            <img src="{{img_url feature_image size="l"}}"
+                 alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}"
+                 width="1200" height="675" fetchpriority="high" decoding="async">
+        </figure>
+        {{/if}}
+        {{/if}}
+
+        <div class="conteudo">{{content}}</div>
+    </div>
+</article>
+{{> cta-whatsapp}}
+{{/post}}

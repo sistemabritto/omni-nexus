@@ -1,0 +1,7 @@
+{{#if pagination.pages}}
+<nav class="paginacao" role="navigation" aria-label="Paginação">
+    {{#if prev}}<a class="botao botao--vazado" href="{{page_url prev}}">← Mais recentes</a>{{/if}}
+    <span style="color:var(--texto-fraco)">Página {{page}} de {{pages}}</span>
+    {{#if next}}<a class="botao botao--vazado" href="{{page_url next}}">Mais antigos →</a>{{/if}}
+</nav>
+{{/if}}

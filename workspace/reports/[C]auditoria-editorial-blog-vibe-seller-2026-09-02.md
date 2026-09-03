@@ -343,24 +343,149 @@ Ver seção "Alterações" abaixo. Resumo: a causa raiz — o prompt da esteira 
 reposicionada para a tese, com pilar por código, casos reais fechados,
 metadados obrigatórios, links internos e dois funis que faltavam.
 
-## Proposto, não executado (exige aprovação ou acesso indisponível)
+## Executado em 03/09/2026, com autorização do Felipe
 
-| # | Item | Onde | Risco | Por que não executei |
-|---|---|---|---|---|
-| 1 | Liberar GPTBot/ClaudeBot/Google-Extended no `robots.txt` | Cloudflare | decisão de negócio (treino de modelo vs citação) | é escolha do Felipe, não técnica |
-| 2 | Corrigir `/author/fsbritto/` (erro `{{pagination}}` no `author.hbs`) | tema Ghost | baixo | **não há backup do tema e a API recusa o download** |
-| 3 | Escrever a bio e a `meta_description` do autor | Ghost admin | baixo | escrita em produção, exige aprovação |
-| 4 | Reescrever `/about/` (hoje é o placeholder default, em inglês, assinado "Workflow API Studio") | Ghost admin | baixo | idem |
-| 5 | Criar as tags de pilar e a navegação por pilar | Ghost admin | baixo | idem |
-| 6 | Corrigir `timezone` de `America/Argentina/Buenos_Aires` para `America/Sao_Paulo` | Ghost settings | **médio: afeta agendamento da esteira** | mudar horário de publicação sem aviso é alterar produção |
-| 7 | Corrigir `twitter` de `@ghost` (placeholder) e definir `lang: pt-BR` | Ghost settings | baixo | idem |
-| 8 | Remover `secondary_navigation` "Sign up" (assinatura está desativada: `members_signup_access = none`) | Ghost settings | baixo | botão que não faz nada |
-| 9 | Criar o hub `/vibe-seller` no site | repo `sistemabritto/site` | baixo | repositório não está clonado localmente |
-| 10 | Atualizar `llms.txt` (descreve a empresa como "parceiro de implementação", sem a tese) | repo do site | baixo | idem |
-| 11 | 301 dos 4 pares MERGE | Ghost / Cloudflare | **médio: mexe em slug publicado** | exige aprovação explícita |
+Backup do estado anterior (92 posts com HTML completo, páginas, tags e autor)
+em `workspace/reports/backups/ghost-2026-09-02/`. Todas as escritas foram
+verificadas contra ele.
 
-**Nenhum slug publicado foi alterado. Nenhum post foi editado, publicado ou
-apagado. Nenhum redirect foi criado.**
+| # | O que | Resultado |
+|---|---|---|
+| 1 | Página `/about/` reescrita | era o placeholder default do Ghost, em inglês, assinado "Workflow API Studio". Agora é *Sobre a Sistema Britto e o Vibe Seller*, 474 palavras, com a tese, os quatro casos reais e as cinco ofertas. Slug `about` preservado. |
+| 2 | Tags de pilar criadas | `rastrear`, `vibe-codar`, `monetizar`, `cases`, com descrição. |
+| 3 | Taxonomia aplicada aos 76 posts | de 2 para **76** posts com tag. Pilar sempre em primeiro. Tag que já existia no post foi preservada. |
+| 4 | `meta_title` | de 1 para **25**. Só onde há corte em fronteira natural: título mutilado é pior que campo vazio, porque sem ele o buscador recebe a frase inteira. |
+| 5 | `meta_description` | de 2 para **74**, a partir do `custom_excerpt` que cada artigo já tinha. Nenhum texto novo foi inventado. |
+| 6 | `canonical_url` nos 4 duplicados | aponta para o canônico. É o sinal correto quando não há 301 disponível, e não exige tocar em slug. |
+| 7 | Links internos | de **0 para 32**, inseridos só onde a âncora já existia no texto do artigo. |
+
+**Invariante verificado em toda escrita:** o texto lido pelo humano tem de
+continuar idêntico. A comparação contra o backup, ao final, dá **0 posts com
+texto alterado**, 76 ainda publicados, todos os slugs e `published_at`
+preservados. O guard barrou 11 escritas na primeira passada; eram falso
+positivo meu (envolver `chatbot,` num link cria espaço antes da vírgula), a
+normalização foi corrigida e as 11 entraram depois.
+
+## Ainda bloqueado (o token de API não tem permissão)
+
+Sondagem de permissões do token de integração, em 03/09/2026:
+
+| Endpoint | Resultado |
+|---|---|
+| posts, pages, tags | **200** — foi o que permitiu tudo acima |
+| `PUT /users/{id}/` (bio do autor) | **403** `NoPermissionError` |
+| `PUT /settings/` (navegação, timezone, twitter) | **403** |
+| `GET /themes/` e download | **403** |
+| `GET /redirects/download/` | **403** |
+
+Nenhuma credencial de Cloudflare existe no workspace (`.env`, `.env.example`,
+`config/`, stacks), então o `robots.txt` também não é alcançável por aqui.
+
+## O bloqueio que ficou maior do que parecia
+
+**O tema está quebrado em `tag.hbs` E em `author.hbs`, com o mesmo erro:**
+
+```
+[tag.hbs] The {{pagination}} helper was used outside of a paginated context.
+[author.hbs] The {{pagination}} helper was used outside of a paginated context.
+```
+
+`/tag/rastrear/` e `/author/fsbritto/` devolvem **HTTP 400** e exibem a
+mensagem de erro como H1. Consequência direta: **a taxonomia está correta no
+dado, mas as páginas de pilar não abrem**, e a navegação por pilar não pode ser
+publicada até isso ser consertado. Como o `Disallow` já bloqueia os crawlers de
+IA e o 400 impede indexação, não há dano de ranking — há trabalho parado.
+
+Isto não pôde ser corrigido nem contornado: o download do tema é 403, então não
+existe backup, e a regra desta sessão é não alterar tema sem backup.
+
+## Pendente para quem tem acesso ao painel (runbook)
+
+Em ordem de impacto. Os cinco primeiros são cliques, não projetos.
+
+### 1. Liberar os crawlers de IA (Cloudflare) — maior impacto isolado
+
+Painel do Cloudflare → domínio `sistemabritto.com.br` → **AI Crawl Control**
+(antigo *AI Audit* / *Bots*) → desativar o bloqueio para os agentes de
+**resposta**: `GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`.
+
+Mantenha `Content-Signal: ai-train=no`. São dois trade-offs diferentes hoje
+presos na mesma chave: `ai-train` protege o conteúdo de virar treino;
+`Disallow` a esses agentes impede a **citação em resposta**, que é o objetivo
+declarado da Fase 6. Enquanto estiver como está, todo trabalho de GEO rende
+zero.
+
+Como conferir depois: `curl -sL https://blog.sistemabritto.com.br/robots.txt`
+não deve mais listar `GPTBot` sob `Disallow: /`.
+
+### 2. Corrigir o tema (`tag.hbs` e `author.hbs`)
+
+Ghost admin → **Design → Change theme → Download** o tema `sistema-britto`
+(guarde o zip: é o backup que a API não deixa fazer). Nos dois arquivos, o
+`{{pagination}}` precisa estar dentro do bloco `{{#foreach posts}}` /
+`{{/foreach}}` da coleção, ou o `routes.yaml` precisa declarar a taxonomia
+como coleção paginada.
+
+Destrava de uma vez: as páginas de pilar, a página de autor e a navegação por
+pilar do item 4.
+
+### 3. Escrever a bio do autor
+
+Ghost admin → **Settings → Staff → Felipe Britto**. Hoje `bio` e
+`meta_description` estão vazios, e é isso que deixa o `Person` do JSON-LD sem
+`description`. Sugestão, alinhada à fonte de verdade e sem número novo:
+
+> Felipe Britto rastreia oportunidades de negócio, vibe coda a solução quando
+> faz sentido e encontra a forma de capturar o valor. Veio de marketing e
+> vendas, e constrói a partir do problema comercial, não da tecnologia.
+> Fundador da Sistema Britto.
+
+### 4. Navegação por pilar
+
+**Só depois do item 2**, senão os itens do menu levam a páginas com erro.
+Ghost admin → **Settings → Navigation**:
+
+| Label | URL |
+|---|---|
+| Rastrear | `/tag/rastrear/` |
+| Vibe Codar | `/tag/vibe-codar/` |
+| Monetizar | `/tag/monetizar/` |
+| Sobre | `/about/` |
+| Site | `https://www.sistemabritto.com.br/` |
+
+E em **secondary navigation**, remover o "Sign up": `members_signup_access`
+está em `none`, então o botão abre um portal que não aceita ninguém.
+
+### 5. Duas settings erradas
+
+Ghost admin → **Settings → General**:
+
+- `timezone` está em `America/Argentina/Buenos_Aires`; o certo é
+  `America/Sao_Paulo`. Os dois estão em UTC-3 hoje e nenhum usa horário de
+  verão, então a troca **não desloca** nenhum agendamento existente da esteira.
+- `twitter` está em `@ghost`, o placeholder de fábrica.
+- `lang` está vazio; o certo é `pt-BR` (o HTML já sai correto pelo tema, mas o
+  campo alimenta o feed e o e-mail).
+
+### 6. 301 dos 4 duplicados (opcional)
+
+`canonical_url` já resolve o sinal para o buscador. Se quiser o 301 de fato:
+Ghost admin → **Settings → Advanced → Redirects → Download/Upload**, e
+acrescentar as quatro entradas ao `redirects.json`. A API recusa esse endpoint
+para token de integração.
+
+### 7. No repositório `sistemabritto/site` (não clonado nesta máquina)
+
+- Criar o hub `/vibe-seller` (hoje 404). Enquanto não existir, o canônico da
+  tese é o artigo #3 do roadmap.
+- Atualizar `llms.txt`: descreve a empresa como "parceiro de implementação",
+  sem a tese Rastrear → Vibe Codar → Monetizar.
+
+**Nenhum slug publicado foi alterado. Nenhum artigo foi publicado, despublicado
+ou apagado, e nenhum texto de artigo foi reescrito.** As escritas de 03/09 nos
+76 posts mexeram em tags, `meta_title`, `meta_description`, `canonical_url` e na
+inserção de link em texto que já existia — verificado contra o backup, com 0
+posts de texto alterado.
 
 ---
 

@@ -542,3 +542,18 @@ ao custo de perder o sinal explícito `Content-Signal: ai-train=no`.
   IA configurado (nem bloqueado nem permitido) — pendente, mais simples que
   o caso do blog porque não têm o histórico de gerenciamento conflitante.
 - **`zapmagico.com.br`** já estava correto, nada a fazer.
+
+## Confirmado nos 4 domínios — 04/09/2026, tarde
+
+Felipe aplicou "Desative a configuração robots.txt" em todos, e testei o
+conteúdo completo de cada um (sem cache):
+
+| Domínio | Estado |
+|---|---|
+| `www.sistemabritto.com.br` | `robots.txt` próprio, escrito na origem (Next.js), com GPTBot/ChatGPT-User/ClaudeBot/Google-Extended/Bytespider/PerplexityBot/Applebot-Extended/anthropic-ai/cohere-ai todos `Allow: /` explícito. Nunca dependeu do Cloudflare. |
+| `blog.sistemabritto.com.br` | Robots.txt nativo do Ghost, sem nenhum bloqueio de bot (ver seção 7). |
+| `voicedream.com.br` | `Allow: /` geral; só bloqueia rotas privadas (`/wallet/`, `/auth/`, `/profile/` etc). Nenhum bot de IA nomeado bloqueado. |
+| `zapmagico.com.br` | `Allow: /` explícito por bot (11 bots nomeados), só bloqueia `/magic`, `/admin`, `/magicboss`, `/api/`. |
+| `workflowapi.com.br` | Redireciona (301) para `sistemabritto.com.br` — segue a mesma regra. |
+
+Os 4 domínios estão liberados para citação por IA. Encerrado.

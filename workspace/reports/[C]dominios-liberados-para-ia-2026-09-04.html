@@ -1,0 +1,550 @@
+<title>Domínios Liberados para IA</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --surface-2: #f2f4f3;
+    --border: #e2e5e3;
+    --text: #0c0f0d;
+    --text-soft: #4b524e;
+    --text-faint: #767d79;
+    --accent: #059669;
+    --accent-strong: #047857;
+    --accent-on: #ffffff;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --danger-border: #fecaca;
+    --ok: #059669;
+    --ok-bg: #ecfdf5;
+    --ok-border: #a7f3d0;
+    --code-bg: #0c0f0d;
+    --code-text: #d7ffe9;
+    --radius: 14px;
+    --font-head: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #08090a;
+      --surface: #101312;
+      --surface-2: #161a18;
+      --border: #232827;
+      --text: #f2f6f4;
+      --text-soft: #b7c0bb;
+      --text-faint: #7c8783;
+      --accent: #00ffa7;
+      --accent-strong: #00e69a;
+      --accent-on: #06110c;
+      --danger: #ff6b6b;
+      --danger-bg: #241213;
+      --danger-border: #4a2224;
+      --ok: #00ffa7;
+      --ok-bg: #0c1f18;
+      --ok-border: #1d4636;
+      --code-bg: #000000;
+      --code-text: #7dffc9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #08090a;
+    --surface: #101312;
+    --surface-2: #161a18;
+    --border: #232827;
+    --text: #f2f6f4;
+    --text-soft: #b7c0bb;
+    --text-faint: #7c8783;
+    --accent: #00ffa7;
+    --accent-strong: #00e69a;
+    --accent-on: #06110c;
+    --danger: #ff6b6b;
+    --danger-bg: #241213;
+    --danger-border: #4a2224;
+    --ok: #00ffa7;
+    --ok-bg: #0c1f18;
+    --ok-border: #1d4636;
+    --code-bg: #000000;
+    --code-text: #7dffc9;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: var(--accent-on); }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 20px 96px; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--ok-bg);
+    border: 1px solid var(--ok-border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    margin-bottom: 24px;
+  }
+  .badge svg { width: 14px; height: 14px; flex-shrink: 0; }
+  h1 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: clamp(32px, 5.2vw, 52px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin: 0 0 18px;
+  }
+  h1 em { color: var(--accent); font-style: normal; }
+  .lede {
+    font-size: 18px;
+    color: var(--text-soft);
+    max-width: 62ch;
+    margin: 0 0 28px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+  .meta-row span { display: inline-flex; align-items: center; gap: 6px; }
+  .meta-row svg { width: 14px; height: 14px; opacity: 0.7; }
+
+  /* ---------- SECTION ---------- */
+  section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h2 {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: clamp(24px, 3.4vw, 32px);
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+  }
+  h3 {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0 0 8px;
+  }
+  p { margin: 0 0 16px; color: var(--text-soft); }
+  strong { color: var(--text); font-weight: 700; }
+  code {
+    font-family: var(--font-mono);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: var(--text);
+  }
+
+  /* ---------- STAT GRID ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 8px 0 4px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+  }
+  .stat .n {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat .l {
+    font-size: 12.5px;
+    color: var(--text-faint);
+    line-height: 1.4;
+  }
+
+  /* ---------- BEFORE/AFTER ---------- */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  @media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+  .panel {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-head.bad { background: var(--danger-bg); color: var(--danger); border-bottom: 1px solid var(--danger-border); }
+  .panel-head.good { background: var(--ok-bg); color: var(--ok); border-bottom: 1px solid var(--ok-border); }
+  .panel pre {
+    margin: 0;
+    padding: 16px;
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .panel .strike { text-decoration: line-through; opacity: 0.55; }
+
+  /* ---------- DOMAIN TABLE ---------- */
+  .dtable { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 20px 0; }
+  .drow {
+    display: grid;
+    grid-template-columns: 1.4fr 2.2fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .drow:last-child { border-bottom: none; }
+  .drow .dom {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .drow .desc { font-size: 13.5px; color: var(--text-faint); }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    background: var(--ok-bg);
+    color: var(--ok);
+    border: 1px solid var(--ok-border);
+  }
+  .pill svg { width: 12px; height: 12px; }
+  @media (max-width: 640px) {
+    .drow { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- TIMELINE ---------- */
+  .tl { position: relative; padding-left: 28px; margin-top: 24px; }
+  .tl::before {
+    content: '';
+    position: absolute;
+    left: 6px; top: 4px; bottom: 4px;
+    width: 1px;
+    background: var(--border);
+  }
+  .tl-item { position: relative; padding-bottom: 28px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -28px; top: 4px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .tl-item h3 { margin-bottom: 4px; }
+  .tl-item .tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- LESSON CARDS ---------- */
+  .lessons { display: grid; gap: 14px; margin-top: 20px; }
+  .lesson {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .lesson .k { font-family: var(--font-mono); font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .lesson p { margin: 0; font-size: 14.5px; }
+
+  /* ---------- CTA ---------- */
+  .cta {
+    margin-top: 40px;
+    border-radius: 20px;
+    padding: 44px 36px;
+    background: linear-gradient(155deg, var(--surface) 0%, var(--surface-2) 100%);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  .cta::before {
+    content: '';
+    position: absolute;
+    top: -60%; left: 50%;
+    width: 520px; height: 520px;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, var(--accent) 0%, transparent 68%);
+    opacity: 0.16;
+    pointer-events: none;
+  }
+  .cta-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .cta h2 {
+    font-size: clamp(24px, 4vw, 34px);
+    max-width: 46ch;
+    margin: 0 auto 14px;
+    position: relative;
+  }
+  .cta p.sub {
+    max-width: 52ch;
+    margin: 0 auto 30px;
+    position: relative;
+    font-size: 15.5px;
+  }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: var(--accent-on);
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 16px;
+    padding: 16px 30px;
+    border-radius: 12px;
+    text-decoration: none;
+    position: relative;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -8px var(--accent); }
+  .cta-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .cta-btn svg { width: 18px; height: 18px; }
+  .cta-fine {
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+    position: relative;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    padding: 40px 0 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .hero { padding-top: 48px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="hero">
+    <span class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      Concluído · 04/09/2026
+    </span>
+    <h1>Os 4 domínios da Sistema Britto agora são <em>rastreáveis por IA</em></h1>
+    <p class="lede">GPTBot, ClaudeBot, PerplexityBot e Google&#8209;Extended tinham acesso bloqueado ao blog e a três outros domínios. Nenhum artigo, case ou página de oferta podia ser citado por ChatGPT, Claude ou Perplexity. Corrigido, testado e confirmado ao vivo — sem cache, sem achismo.</p>
+    <div class="meta-row">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>~30h de investigação, 3-4/09/2026</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>4 domínios</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>omni-nexus · sistemabritto/site · sistemabritto/ghost-theme</span>
+    </div>
+  </div>
+
+  <section>
+    <p class="eyebrow">O placar</p>
+    <h2>Antes de mexer em nada</h2>
+    <div class="stats">
+      <div class="stat"><div class="n">0/4</div><div class="l">domínios liberados para citação por IA</div></div>
+      <div class="stat"><div class="n">9</div><div class="l">bots bloqueados só no blog (GPTBot, ClaudeBot, Google&#8209;Extended e outros 6)</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">domínios sem nenhuma regra de IA configurada</div></div>
+      <div class="stat"><div class="n">1</div><div class="l">recurso da Cloudflare que simplesmente não funcionou (via API nem via painel)</div></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">O antes e depois</p>
+    <h2>O robots.txt do blog</h2>
+    <p>Era o pior caso: um bloqueio explícito, bot por bot, escondido atrás de uma ferramenta da Cloudflare que dizia estar tudo liberado — enquanto o arquivo servido ao vivo continuava recusando.</p>
+    <div class="compare">
+      <div class="panel">
+        <div class="panel-head bad">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          Antes — bloqueado
+        </div>
+        <pre>User-agent: ClaudeBot
+<span class="strike">Disallow: /</span>
+
+User-agent: Google-Extended
+<span class="strike">Disallow: /</span>
+
+User-agent: GPTBot
+<span class="strike">Disallow: /</span>
+
+<span style="opacity:.5"># + Amazonbot, Bytespider, CCBot,
+# Applebot-Extended, meta-externalagent...</span></pre>
+      </div>
+      <div class="panel">
+        <div class="panel-head good">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Depois — liberado
+        </div>
+        <pre>User-agent: *
+Sitemap: .../sitemap.xml
+Disallow: /ghost/
+Disallow: /email/
+<span style="opacity:.5">
+# nenhum bot de IA nomeado.
+# nenhuma citação bloqueada.</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Resultado, domínio por domínio</p>
+    <h2>Os 4 confirmados ao vivo</h2>
+    <p>Testado com <code>curl</code> usando o User-Agent real de cada bot, sem cache (<code>cf-cache-status: MISS</code>) — não confiei em nenhum resumo de dashboard.</p>
+    <div class="dtable">
+      <div class="drow">
+        <div class="dom">blog.sistemabritto.com.br</div>
+        <div class="desc">robots.txt nativo do Ghost, gestão da Cloudflare desativada — o gargalo real</div>
+        <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Liberado</span>
+      </div>
+      <div class="drow">
+        <div class="dom">www.sistemabritto.com.br</div>
+        <div class="desc">robots.txt próprio na origem, 9 bots de IA já em Allow explícito</div>
+        <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Liberado</span>
+      </div>
+      <div class="drow">
+        <div class="dom">voicedream.com.br</div>
+        <div class="desc">Allow geral, só rotas privadas (wallet, auth, profile) seguem bloqueadas</div>
+        <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Liberado</span>
+      </div>
+      <div class="drow">
+        <div class="dom">zapmagico.com.br</div>
+        <div class="desc">Allow explícito por bot, só admin e API internos bloqueados</div>
+        <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Liberado</span>
+      </div>
+    </div>
+    <p style="font-size:13.5px;color:var(--text-faint)">workflowapi.com.br redireciona (301) para sistemabritto.com.br — herda a mesma regra automaticamente.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow">Como aconteceu</p>
+    <h2>A linha do tempo</h2>
+    <div class="tl">
+      <div class="tl-item">
+        <span class="tag">Causa raiz</span>
+        <h3>O bloqueio não vinha do Ghost</h3>
+        <p>Confirmado direto no código-fonte do Ghost, na VPS: o robots.txt nativo dele é curto e genérico. Todo o bloqueio bot-a-bot e o cabeçalho <code>Content-Signal</code> vinham de uma camada da Cloudflare injetada por cima — a ferramenta "AI Crawl Control".</p>
+      </div>
+      <div class="tl-item">
+        <span class="tag">Tentativa 1 — via API</span>
+        <h3>Bloqueada pelo próprio esquema de autenticação</h3>
+        <p><code>PATCH /zones/{id}/bot_management</code> devolvia <code>10405 Method not allowed for this authentication scheme</code> para qualquer campo, mesmo com a permissão certa no token. Não é escopo — é a Cloudflare recusando token de API nesse endpoint específico, ponto.</p>
+      </div>
+      <div class="tl-item">
+        <span class="tag">Tentativa 2 — via painel, rota granular</span>
+        <h3>Search / Agent / Training + Bot Preference Sync</h3>
+        <p>A via "certa", recomendada até pelo assistente de IA embutido no próprio painel da Cloudflare. Configuramos Pesquisa e Agente em Allow, Treinamento em Block. O campo que deveria conectar essa política ao robots.txt real (<code>bot_preference_sync_enabled</code>) nunca saiu de <code>false</code> — e não apareceu em lugar nenhum da interface.</p>
+      </div>
+      <div class="tl-item">
+        <span class="tag">O que resolveu</span>
+        <h3>Desligar o gerenciamento por completo</h3>
+        <p>Security → Settings → Gerenciar robots.txt → <strong>Desative a configuração robots.txt</strong>. A Cloudflare para de injetar qualquer coisa, e cada origem volta a servir o próprio arquivo — que, nos 4 domínios, já não bloqueava ninguém. Confirmado bot por bot, com <code>curl</code>, sem cache.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Vale registrar</p>
+    <h2>O que ficou de lição</h2>
+    <div class="lessons">
+      <div class="lesson">
+        <div class="k">Dashboard mente, arquivo servido não</div>
+        <p>A API do AI Crawl Control chegou a mostrar "Allow: /" pra todos os bots enquanto o robots.txt ao vivo ainda bloqueava tudo. A única fonte confiável foi testar o arquivo de verdade, sempre sem cache.</p>
+      </div>
+      <div class="lesson">
+        <div class="k">A ferramenta granular está quebrada nesta conta</div>
+        <p>Nem pelo painel, nem pela API, nem pelo próprio agente de IA da Cloudflare (que relatou "token expirado" no meio da sessão) foi possível fazer Search/Agent/Training refletir no arquivo real. A saída pragmática foi desligar tudo.</p>
+      </div>
+      <div class="lesson">
+        <div class="k">A troca teve custo</div>
+        <p>Desativar o gerenciamento também derruba o sinal explícito <code>Content-Signal: ai-train=no</code>. Hoje os domínios estão abertos para citação — o sinal formal de "não treine com isso" fica para uma implementação futura, na origem.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <div class="cta-eyebrow">Vibe Seller</div>
+    <h2>Isso aqui é o tipo de trabalho que caça dinheiro mal resolvido, não conteúdo bonito</h2>
+    <p class="sub">Achar o gargalo, ler a documentação certa, testar de verdade em vez de confiar no resumo de um dashboard — é o mesmo raciocínio que a gente usa pra transformar operação travada em oferta que roda. O Desafio Monetizar com IA ensina esse método em 21 dias.</p>
+    <a class="cta-btn" href="https://nexus.workflowapi.com.br/api/shares/pivSC6mKAOGr8ymEGdJqGMVtI52Y3oG2LQdMzaDS_9M/click?to=https%3A%2F%2Fsistemabritto.com.br%2Fdesafio-monetizar-com-ia%3Futm_source%3Dnexus%26utm_medium%3Dartifact%26utm_campaign%3Ddominios-liberados-ia&amp;label=cta-dominios-liberados-ia" target="_blank" rel="noopener">
+      Quero entrar no Desafio
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 5l7 7-7 7"/></svg>
+    </a>
+    <div class="cta-fine">21 dias, assíncrono. Você sai com uma oportunidade priorizada e a primeira validação no mundo.</div>
+  </div>
+
+  <footer>
+    <span>Sistema Britto · OmniNexus</span>
+    <span>Documento interno · uso compartilhável</span>
+  </footer>
+
+</div>

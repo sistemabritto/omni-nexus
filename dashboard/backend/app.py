@@ -1258,7 +1258,13 @@ def auth_middleware():
         or path.startswith("/api/docs")
         or path.startswith("/api/triggers/webhook/")
         or path.startswith("/api/instagram/webhook")
-        or (path.startswith("/api/shares/") and "/view" in path)
+        # /click é o redirect de CTA que um artefato público usa (sem JS,
+        # por causa da CSP de /view — ver routes/shares.py). Também precisa
+        # ser público pela mesma razão de /view: quem lê o artefato é
+        # anônimo, e exigir login aqui derrubaria o próprio clique que ele
+        # existe para medir. /events fica de fora de propósito — aquele é
+        # autenticado (só quem tem workspace:manage lê os cliques).
+        or (path.startswith("/api/shares/") and ("/view" in path or "/click" in path))
         or path.startswith("/api/knowledge/v1/")
     ):
         return None

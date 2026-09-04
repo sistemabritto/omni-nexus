@@ -474,3 +474,71 @@ a permissão de Bot Management — é provavelmente um recurso de **conta**, nã
 de zona. Orientado o Felipe a abrir "AI Crawl Control" direto no painel
 (busca no topo do dashboard Cloudflare) e ajustar por lá; aguardando
 confirmação.
+
+---
+
+# 7. Cloudflare AI Crawl Control — resolvido em 04/09/2026
+
+Confirmado ao vivo (`cf-cache-status: MISS`, GPTBot/ClaudeBot/Google-Extended/
+PerplexityBot/Bytespider/meta-externalagent testados individualmente com
+`User-Agent`, todos HTTP 200 sem `Disallow`): o bloqueio de crawler de IA
+está removido em `blog.sistemabritto.com.br`.
+
+## O que realmente resolveu
+
+Não foi ajuste fino de política — foi **desativar por completo o "Gerenciar
+seu robots.txt" da Cloudflare** (opção "Desative a configuração robots.txt").
+O Ghost passou a servir o próprio `robots.txt` nativo, que é curto e nunca
+bloqueou bot nenhum (só `/ghost/`, `/email/`, `/members/api/comments/counts/`,
+`/r/`, `/webmentions/receive/`, `/.ghost/analytics/api/`).
+
+## Por que o caminho "certo" (granular) não funcionou
+
+Tentamos, nesta ordem, sem sucesso:
+
+1. **Bot Management → toggles individuais por bot** (Allow/Block por bot na
+   aba Crawlers) — a API confirmou "Allow" para todos, o `robots.txt` ao vivo
+   continuou bloqueando. Confirmado que `PATCH /zones/{id}/bot_management`
+   devolve `10405 Method not allowed for this authentication scheme` para
+   **qualquer campo**, mesmo com a permissão "Bot Management → Editar" no
+   token — é restrição de esquema de autenticação da Cloudflare, não de
+   escopo. Só sessão de navegador escreve ali.
+2. **"Bloquear bots de IA" (legado, a ser descontinuado em 15/09/2026)** →
+   "Não bloquear" + "propósito misto continuarão permitidos" — mudança feita,
+   salva, e o campo `ai_bots_protection` da API foi de `"disabled"` para
+   `"block"` (o oposto do esperado). Sem explicação encontrada; pode ser bug
+   de interação entre o painel legado e o novo, ou os dois formulários
+   escrevendo no mesmo campo de jeitos diferentes.
+3. **"Configure políticas de bots de IA" (novo)** → Pesquisa=Permitir,
+   Agente=Permitir, Treinamento=Bloquear em todas as páginas — salvo, e a API
+   mostrou `ai_training: "block"` refletido, mas `ai_search`/`ai_user`
+   continuaram `"disabled"` (não viraram `"allow"` visível), e
+   **`bot_preference_sync_enabled` nunca saiu de `false`** em nenhuma das
+   tentativas — esse é o campo que, segundo a documentação que o assistente
+   da própria Cloudflare citou, conecta as políticas de Search/Agent/Training
+   ao conteúdo real do `robots.txt`. Não foi localizado na interface (o
+   modal "Configure políticas de bots de IA" não tinha esse controle visível,
+   nem rolando até o fim).
+
+**Conclusão prática:** a funcionalidade granular nova do Cloudflare
+(lançada em breve/parcialmente, com aviso de "seu token expirou" no próprio
+assistente deles durante a sessão) não estava, nesta conta, em estado
+utilizável via nenhum caminho tentado — nem painel, nem API. Desativar o
+gerenciamento e deixar a origem (Ghost) responder foi a saída que funcionou,
+ao custo de perder o sinal explícito `Content-Signal: ai-train=no`.
+
+## O que ficou em aberto
+
+- **`ai-train=no` não está mais declarado.** Se recuperar esse sinal for
+  importante, o caminho é um `robots.txt` customizado servido pela própria
+  origem (não pelo Cloudflare) — não investigado nesta sessão se o Ghost
+  aceita isso nativamente ou exige rota customizada.
+- **`ai_bots_protection: "block"`** ficou registrado na API mesmo com o
+  `robots.txt` gerenciado desativado. Não tem efeito observável agora (o
+  Ghost está servindo o arquivo, não o Cloudflare), mas se o "Gerenciar
+  robots.txt" for reativado no futuro sem revisar esse campo, o bloqueio
+  pode voltar sem aviso.
+- **`voicedream.com.br` e `workflowapi.com.br`** continuam sem nenhum bot de
+  IA configurado (nem bloqueado nem permitido) — pendente, mais simples que
+  o caso do blog porque não têm o histórico de gerenciamento conflitante.
+- **`zapmagico.com.br`** já estava correto, nada a fazer.

@@ -139,3 +139,27 @@ def test_sem_login_a_leitura_de_eventos_e_recusada(app):
     token = _share(app)
     r = app.test_client().get(f"/api/shares/{token}/events")
     assert r.status_code in (302, 401, 403)
+
+
+def test_to_dict_inclui_click_count_pra_aparecer_na_interface(app):
+    """A tabela de Links de Compartilhamento no Nexus (ShareLinks.tsx) lê
+    click_count do JSON de /api/shares — sem isso no to_dict(), a coluna
+    "Cliques" da interface fica sempre vazia mesmo com clique registrado."""
+    token = _share(app)
+    with app.app_context():
+        from models import FileShare, ShareEvent, db
+        db.session.add(ShareEvent(token=token, event_type="cta_click", meta="cta-x"))
+        db.session.add(ShareEvent(token=token, event_type="cta_click", meta="cta-y"))
+        db.session.commit()
+        share = FileShare.query.filter_by(token=token).first()
+        assert share.to_dict()["click_count"] == 2
+
+
+def test_to_dict_nao_conta_outros_tipos_de_evento_como_clique(app):
+    token = _share(app)
+    with app.app_context():
+        from models import FileShare, ShareEvent, db
+        db.session.add(ShareEvent(token=token, event_type="algo_futuro_nao_cta", meta="x"))
+        db.session.commit()
+        share = FileShare.query.filter_by(token=token).first()
+        assert share.to_dict()["click_count"] == 0

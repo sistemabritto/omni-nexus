@@ -6,10 +6,12 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-from flask import Blueprint, jsonify, request, Response, after_this_request, send_file
+from urllib.parse import urlparse
+
+from flask import Blueprint, jsonify, redirect, request, Response, after_this_request, send_file
 from flask_login import login_required, current_user
 
-from models import db, FileShare, audit, has_workspace_folder_access
+from models import db, FileShare, ShareEvent, audit, has_workspace_folder_access
 from rate_limit import limiter
 from routes.auth_routes import require_permission
 
@@ -324,3 +326,67 @@ def view_share(token: str):
     except UnicodeDecodeError:
         # Binary file — not shareable in v1
         return jsonify({"error": "Arquivo binário não suportado", "code": "unsupported"}), 415
+
+
+# CTA de artefato compartilhado clica aqui, não direto no destino. Existe
+# porque a rota /view tem CSP `default-src 'none'` (ver comentário acima,
+# §prompt injection) — qualquer fetch() de JS embutido no artefato seria
+# bloqueado, e o próprio motivo do bloqueio (script de agente com prompt
+# injetado lendo a sessão do superadmin) não pode ser afrouxado só pra medir
+# clique. Um <a href> puro, sem JS nenhum, contorna isso: o navegador segue
+# link normal, o clique é registrado no servidor antes do redirect.
+#
+# `to` é validado contra um allowlist de host, não é passe livre — sem isso
+# esta rota seria um open redirect a partir de um domínio confiável
+# (nexus.workflowapi.com.br), útil demais pra phishing pra deixar aberto.
+_CLICK_REDIRECT_ALLOWED_HOSTS = {
+    "sistemabritto.com.br",
+    "www.sistemabritto.com.br",
+    "blog.sistemabritto.com.br",
+}
+
+
+@bp.route("/api/shares/<token>/click", methods=["GET"])
+@limiter.limit("60 per minute")
+def click_share(token: str):
+    """Registra o clique de CTA de um artefato público e redireciona.
+
+    Sem autenticação de propósito, pela mesma razão de /view: quem lê o
+    artefato é anônimo. `token` só precisa existir (não precisa estar
+    habilitado — um share revogado ainda pode ter cliques em cache de
+    página que valem registrar, e recusar aqui não desfaz o clique).
+    """
+    share = FileShare.query.filter_by(token=token).first()
+    if not share:
+        return jsonify({"error": "Link inválido", "code": "not_found"}), 404
+
+    destino = request.args.get("to", "")
+    rotulo = (request.args.get("label") or "")[:200]
+    partes = urlparse(destino)
+    if partes.scheme != "https" or partes.netloc not in _CLICK_REDIRECT_ALLOWED_HOSTS:
+        return jsonify({"error": "Destino não permitido", "code": "invalid_target"}), 400
+
+    evento = ShareEvent(token=token, event_type="cta_click", meta=rotulo or destino[:200])
+    db.session.add(evento)
+    db.session.commit()
+
+    return redirect(destino, code=302)
+
+
+@bp.route("/api/shares/<token>/events", methods=["GET"])
+@login_required
+@require_permission("workspace", "manage")
+def list_share_events(token: str):
+    """Eventos de clique registrados para um artefato — para conferir conversão."""
+    share = FileShare.query.filter_by(token=token).first()
+    if not share:
+        return jsonify({"error": "Link inválido", "code": "not_found"}), 404
+    eventos = (ShareEvent.query.filter_by(token=token)
+               .order_by(ShareEvent.created_at.desc()).limit(500).all())
+    return jsonify({
+        "token": token,
+        "path": share.path,
+        "view_count": share.view_count,
+        "click_count": len(eventos),
+        "events": [e.to_dict() for e in eventos],
+    })

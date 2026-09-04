@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Share2, Copy, Check, Trash2, RefreshCw, Link } from 'lucide-react'
+import { Share2, Copy, Check, Trash2, RefreshCw, Link, MousePointerClick } from 'lucide-react'
 import { api } from '../lib/api'
 
 interface ShareRecord {
@@ -10,6 +10,7 @@ interface ShareRecord {
   created_at: string | null
   expires_at: string | null
   view_count: number
+  click_count: number
   enabled: boolean
 }
 
@@ -156,7 +157,7 @@ export default function ShareLinks() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                {['Arquivo', 'Criado por', 'Criado em', 'Expira em', 'Visualizações', 'Status', 'Ações'].map((col) => (
+                {['Arquivo', 'Criado por', 'Criado em', 'Expira em', 'Visualizações', 'Cliques (conversão)', 'Status', 'Ações'].map((col) => (
                   <th
                     key={col}
                     style={{
@@ -230,6 +231,28 @@ export default function ShareLinks() {
                       <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                         {share.view_count}
                       </span>
+                    </td>
+
+                    {/* Click count + conversão. Só existe pra CTA de artefato que
+                        usa /api/shares/<token>/click (ver routes/shares.py) — um
+                        link normal aberto direto no navegador nunca aparece aqui,
+                        então 0 cliques é o estado normal pra maioria dos shares,
+                        não sinal de erro. */}
+                    <td style={{ padding: '10px 16px', textAlign: 'center' }}>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <MousePointerClick size={12} style={{ color: share.click_count > 0 ? 'var(--evo-green)' : 'var(--text-muted)' }} />
+                        <span
+                          className="text-xs font-medium"
+                          style={{ color: share.click_count > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}
+                        >
+                          {share.click_count}
+                        </span>
+                        {share.view_count > 0 && share.click_count > 0 && (
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            ({((share.click_count / share.view_count) * 100).toFixed(0)}%)
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Status */}

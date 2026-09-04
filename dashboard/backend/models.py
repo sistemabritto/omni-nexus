@@ -427,6 +427,35 @@ class FileShare(db.Model):
         }
 
 
+class ShareEvent(db.Model):
+    """Interação registrada num artefato público (`/share/<token>`).
+
+    `view_count` em `FileShare` já conta acesso bruto (toda requisição a
+    `/view`, bot incluído). Isso é diferente: é o clique que prova conversão
+    — um CTA que a própria página do artefato dispara via JS, com o alvo do
+    clique guardado em `meta`. Sem token de autenticação: quem lê o artefato
+    é anônimo por definição, e exigir login aqui mataria o próprio propósito
+    de medir engajamento de quem só tem o link.
+    """
+
+    __tablename__ = "share_events"
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), db.ForeignKey("file_shares.token"), nullable=False, index=True)
+    event_type = db.Column(db.String(40), nullable=False)   # "cta_click", "pageview_js"
+    meta = db.Column(db.String(500), nullable=True)          # alvo do clique, label etc — texto livre, curto
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "token": self.token,
+            "event_type": self.event_type,
+            "meta": self.meta,
+            "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.created_at else None,
+        }
+
+
 class Role(db.Model):
     __tablename__ = "roles"
 

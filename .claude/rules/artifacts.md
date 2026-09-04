@@ -65,6 +65,35 @@ O share serve o arquivo cru, então ele precisa se bastar:
 - Fonte do sistema resolve. Monoespaçada é a escolha certa para identificador,
   hash, nome de serviço e variável de ambiente — é o vernáculo do assunto.
 
+## CTA com rastreio de clique
+
+O share serve o HTML com `Content-Security-Policy: default-src 'none'`
+(defesa contra prompt injection lendo a sessão do superadmin) — **nenhum
+JavaScript roda**, então `fetch()` de tracking embutido no artefato é
+bloqueado de propósito, sem exceção.
+
+Se o artefato tem CTA e o clique precisa ser medido, o botão vira um
+`<a href>` puro apontando pra `/api/shares/<token>/click` em vez do destino
+direto:
+
+```html
+<a href="https://nexus.workflowapi.com.br/api/shares/<TOKEN>/click?to=<URL-ENCODED>&label=<rotulo>"
+   target="_blank" rel="noopener">Texto do CTA</a>
+```
+
+A rota registra o clique (`ShareEvent`) e devolve `302` pro destino real —
+zero script, zero CSP pra afrouxar. `to` só aceita host num allowlist fixo em
+`routes/shares.py::_CLICK_REDIRECT_ALLOWED_HOSTS`; domínio novo precisa ser
+adicionado lá antes de funcionar. Use sempre a URL absoluta do share
+(`https://nexus.workflowapi.com.br/...`), nunca relativa.
+
+O resultado aparece em `/shares` no Nexus, coluna "Cliques (conversão)", ao
+lado de "Visualizações" — não precisa consultar API na mão. Ver
+`memory/rastreio-de-clique-em-artefato-share.md` para os dois erros que já
+custaram um deploy quebrado cada (URL relativa, e o gate de autenticação
+global de `app.py` tendo sua própria lista de caminhos públicos, separada do
+decorator da rota).
+
 ## Quando NÃO usar share
 
 - Conteúdo que vai para o blog → Ghost (`custom-int-ghost`).

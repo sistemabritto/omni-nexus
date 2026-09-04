@@ -423,6 +423,7 @@ class FileShare(db.Model):
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.created_at else None,
             "expires_at": self.expires_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.expires_at else None,
             "view_count": self.view_count,
+            "click_count": ShareEvent.query.filter_by(token=self.token, event_type="cta_click").count(),
             "enabled": self.enabled,
         }
 

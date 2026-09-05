@@ -557,3 +557,26 @@ conteúdo completo de cada um (sem cache):
 | `workflowapi.com.br` | Redireciona (301) para `sistemabritto.com.br` — segue a mesma regra. |
 
 Os 4 domínios estão liberados para citação por IA. Encerrado.
+
+---
+
+# 8. Confirmação real de crawler de IA — 05/09/2026
+
+Verificado via GraphQL Analytics da Cloudflare (permissão de Zone Analytics
+adicionada ao token hoje), filtrando `clientRequestHTTPHost:
+blog.sistemabritto.com.br` por dia (limite de 1 dia por consulta neste
+plano).
+
+| Data | Atividade |
+|---|---|
+| 04/09 | ClaudeBot: 12x `/robots.txt` + 12x `/sitemap.xml`. GPTBot, OAI-SearchBot, Google-Extended: `/robots.txt`. |
+| 05/09 | GPTBot e ClaudeBot seguem em `/sitemap.xml`. **Amazonbot já abriu 4 páginas de conteúdo real**, incluindo `/tag/rastrear/` e 3 artigos. |
+
+**Leitura:** o desbloqueio de 04/09 (seção 7) está confirmado funcionando na
+prática — não é só teórico. Sequência normal de crawler
+(robots → sitemap → página) em andamento; GPTBot/ClaudeBot ainda não abriram
+artigo individual até esta data, o que não indica problema, só que ainda não
+chegaram nessa etapa.
+
+**Plausible não vê nada disso.** É script JS client-side; crawler de IA faz
+requisição HTTP crua sem executar JS — estrutural, não é bug de configuração.

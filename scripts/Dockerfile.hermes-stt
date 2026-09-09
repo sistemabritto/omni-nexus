@@ -1,0 +1,3 @@
+FROM nousresearch/hermes-agent@sha256:4a8b2b1940ff4370b910dce1c327c52f6abcc5ed1c1eb1748611ab967bb3e624
+COPY scripts/patch-hermes-stt.py /tmp/patch-hermes-stt.py
+RUN /opt/hermes/.venv/bin/python /tmp/patch-hermes-stt.py

@@ -55,7 +55,7 @@
     "omnirouter": {
       "name": "OMNIROUTER",
       "description": "OpenAI-compatible custom provider (URL, API Key e Model).",
-      "cli_command": "openclaude",
+      "cli_command": "opencode",
       "env_vars": {
         "CLAUDE_CODE_USE_OPENAI": "1",
         "OPENAI_BASE_URL": "",

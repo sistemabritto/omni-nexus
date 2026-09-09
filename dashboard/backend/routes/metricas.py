@@ -11,6 +11,11 @@ planejado, mesma família de Mission/Project/Goal.
 
 from __future__ import annotations
 
+import json
+import os
+from pathlib import Path
+from datetime import datetime, timezone
+
 from flask import Blueprint, jsonify, request
 from flask_login import current_user
 
@@ -19,6 +24,22 @@ from models import has_permission, audit
 import metricas_crescimento as mc
 
 bp = Blueprint("metricas", __name__)
+
+
+@bp.route("/api/metricas/acquisition", methods=["GET"])
+def acquisition_evidence():
+    """Credential-free agent access to aggregate evidence from the host collector."""
+    denied = _require("view")
+    if denied:
+        return denied
+    path = Path(os.environ.get("GROWTH_EVIDENCE_PATH", "/workspace/workspace/reports/growth/latest.json"))
+    try:
+        data = json.loads(path.read_text())
+        collected = datetime.fromisoformat(data["collected_at"])
+        age = (datetime.now(timezone.utc) - collected).total_seconds()
+    except (OSError, ValueError, KeyError, TypeError):
+        return jsonify({"error": "Acquisition evidence unavailable"}), 503
+    return jsonify({"evidence": data, "age_seconds": round(age), "stale": age > 36 * 3600})
 
 
 def _require(action: str):

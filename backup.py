@@ -408,7 +408,7 @@ def cleanup_old_backups(s3_bucket: str = None):
     """Remove old backups beyond retention limits (BACKUP_RETAIN_LOCAL, BACKUP_RETAIN_S3)."""
 
     # Local cleanup
-    retain_local = os.environ.get("BACKUP_RETAIN_LOCAL", "").strip()
+    retain_local = os.environ.get("BACKUP_RETAIN_LOCAL", "3").strip()
     if retain_local and retain_local.isdigit() and int(retain_local) > 0:
         limit = int(retain_local)
         if BACKUPS_DIR.exists():

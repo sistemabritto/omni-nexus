@@ -1,0 +1,11 @@
+/var/log/vps-backup.log /var/log/sb-backup-retention.log /var/log/hermes-backup-guard.log /var/log/pg-connection-watch.log /var/log/weekly-research.log /var/log/faxina-docker.log {
+    weekly
+    su root root
+    maxsize 20M
+    rotate 4
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}

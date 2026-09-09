@@ -321,13 +321,13 @@ def _resolve_provider_chain(config: dict) -> list[dict]:
     providers = config.get("providers", {})
     active_prov = providers.get(active_id, {})
 
-    explicit_chain = active_prov.get("fallback_providers")
-    if isinstance(explicit_chain, list) and explicit_chain:
+    explicit_chain = active_prov.get("fallback_providers", [])
+    if active_id in providers:
         chain = [_build_provider_entry(active_id, providers)]
-        for pid in explicit_chain:
+        for pid in explicit_chain if isinstance(explicit_chain, list) else []:
             if pid in providers:
                 chain.append(_build_provider_entry(pid, providers))
-        return chain if len(chain) >= 2 else DEFAULT_PROVIDER_CHAIN
+        return chain
 
     return DEFAULT_PROVIDER_CHAIN
 
@@ -535,6 +535,12 @@ def _invoke_cli(
         cmd = [cli_bin, "--print", "--max-turns", str(max_turns),
                "--dangerously-skip-permissions", "--output-format", "json"]
         if cli_command == "openclaude":
+            # OpenClaude distinguishes bypassPermissions (still asks for
+            # sensitive-memory writes) from explicitly authorized fullAccess.
+            if os.environ.get("OPENCLAUDE_PERMISSION_MODE") == "fullAccess":
+                cmd.remove("--dangerously-skip-permissions")
+                cmd.append("--allow-dangerously-skip-permissions")
+                cmd.extend(["--permission-mode", "fullAccess"])
             prompt = _embed_agent_for_openclaude(prompt, agent)
             agent = ""
         if agent:
@@ -558,6 +564,20 @@ def _invoke_cli(
             cmd = cmd[:-2]  # tira "--" e o prompt — claude/openclaude leem stdin sem eles
 
     run_env = _build_agent_run_env(env_overrides)
+    if cli_command == "opencode":
+        # Browser sessions register their selected provider dynamically. Headless
+        # Telegram/heartbeat runs need the same registration: OPENAI_MODEL alone
+        # does not create a provider/model in OpenCode's catalog. Inline config
+        # avoids racing on a shared config file and never persists an API key.
+        inline = json.loads(run_env.get("OPENCODE_CONFIG_CONTENT") or "{}")
+        providers = inline.setdefault("provider", {})
+        entry = providers.setdefault(provider_id or "opencode", {})
+        entry.update({"npm": "@ai-sdk/openai-compatible", "name": provider_id or "opencode"})
+        entry["options"] = {"baseURL": run_env.get("OPENAI_BASE_URL", ""),
+                            "apiKey": "{env:OPENAI_API_KEY}"}
+        entry.setdefault("models", {})[model or "auto"] = {"name": model or "auto"}
+        inline.setdefault("agent", {}).setdefault("build", {})["steps"] = max_turns
+        run_env["OPENCODE_CONFIG_CONTENT"] = json.dumps(inline)
 
     # Acquire a per-model inflight lock so concurrent calls cannot pick the same
     # model at the same instant (the canonical cause of burst 429s on shared
@@ -723,6 +743,11 @@ def _invoke_cli_run(cmd: list, run_env: dict, timeout_seconds: int, workspace: P
             tokens_in = usage.get("input_tokens")
             tokens_out = usage.get("output_tokens")
             cost_usd = envelope.get("total_cost_usd")
+            if envelope.get("is_error") is True:
+                status = "fail"
+                details = envelope.get("result") or envelope.get("errors")
+                if details:
+                    error = (details if isinstance(details, str) else json.dumps(details))[:2000]
             if status != "success" and envelope.get("type") == "result" and envelope.get("result") and envelope.get("is_error") is False:
                 status = "success"
                 error = None

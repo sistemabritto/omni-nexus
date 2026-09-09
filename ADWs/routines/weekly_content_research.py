@@ -655,6 +655,8 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
     pedidas = min(quantas * 2, quantas + 10)
 
     evitar = "\n".join(f"- {k}" for k in ja_escolhidas[:40])
+    from growth_context import load_context
+    growth_evidence = load_context()
     prompt = (
         "Você acha pauta de blog vasculhando o que está sendo discutido AGORA no X "
         "e na web, em português do Brasil.\n\n"
@@ -674,6 +676,7 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
         "Google. Prefira a dor ('como reduzir custo de atendimento') ao "
         "acontecimento ('congresso X anuncia Y').\n\n"
         + (f"CONTEXTO DA SEMANA:\n{noticias[:2000]}\n\n" if noticias else "")
+        + f"EVIDÊNCIA DE AQUISIÇÃO (hipóteses não são resultados; priorize ponte conteúdo → oferta):\n{growth_evidence}\n\n"
         + (f"JÁ ESCOLHIDAS (não repita assunto):\n{evitar}\n\n" if evitar else "")
         + 'Responda APENAS um JSON: {"pautas": [{"keyword": "<termo de busca que '
           'alguém digitaria>", "porque": "<o gancho, até 12 palavras>"}]}'

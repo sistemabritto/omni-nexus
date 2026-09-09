@@ -1,0 +1,12 @@
+[Unit]
+Description=Omni Nexus acquisition evidence and proposed actions (read only)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+UMask=0027
+Nice=15
+IOSchedulingClass=idle
+TimeoutStartSec=1200
+ExecStart=/usr/bin/python3 /usr/local/lib/omni-growth/growth_intelligence.py --env /etc/omni-growth.env --host-evidence --output /var/lib/docker/volumes/evonexus_evonexus_workspace/_data/reports/growth

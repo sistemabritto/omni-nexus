@@ -1,0 +1,8 @@
+ARG BASE_IMAGE=diegosouzapw/omniroute@sha256:92c768c56e2de32c51a0621ef182835018b00b288c9bb235c5c5e4514658c1a1
+FROM ${BASE_IMAGE}
+USER root
+# The shipped standalone image contains only ioredis/package.json.
+# Restore the exact installed version plus its runtime dependencies.
+RUN npm install --prefix /opt/omniroute-redis-runtime --omit=dev --ignore-scripts --no-audit --no-fund ioredis@5.11.1 \
+    && cp -a /opt/omniroute-redis-runtime/node_modules/. /app/node_modules/
+USER node

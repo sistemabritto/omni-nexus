@@ -1,0 +1,10 @@
+# Build from the existing production image, retaining its dependencies.
+# See docs/operations/agent-recovery-2026-09-09.md.
+ARG BASE_IMAGE=excarplex/evo-nexus-runtime:latest
+FROM ${BASE_IMAGE}
+COPY dashboard/backend/provider_fallback.py /workspace/dashboard/backend/provider_fallback.py
+COPY scripts/telegram_provider_bot.py /workspace/scripts/telegram_provider_bot.py
+COPY opencode.json /workspace/opencode.json
+COPY dashboard/backend/routes/metricas.py /workspace/dashboard/backend/routes/metricas.py
+COPY dashboard/backend/growth_context.py /workspace/dashboard/backend/growth_context.py
+COPY ADWs/routines/weekly_content_research.py /workspace/ADWs/routines/weekly_content_research.py

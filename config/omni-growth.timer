@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily acquisition review before editorial production
+
+[Timer]
+OnCalendar=*-*-* 05:10:00 America/Bahia
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

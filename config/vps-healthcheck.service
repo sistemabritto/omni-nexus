@@ -1,0 +1,10 @@
+[Unit]
+Description=VPS resource and central agent gateway health
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/vps-healthcheck.py
+Nice=15
+IOSchedulingClass=idle
+TimeoutStartSec=120

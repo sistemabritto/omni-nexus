@@ -7,6 +7,21 @@ metadata:
 
 # Estratégia Editorial — Single Point of Belief + 3 Pilares + Funil de Conteúdo
 
+## A crença (decore isto — todo conteúdo reforça)
+
+> **"Vibe coder constrói. Vibe Seller lucra."**
+>
+> Apoio: *"Construir ficou barato. Capturar valor, não."*
+
+Formal: virar Vibe Seller é a única forma de ganhar dinheiro de verdade com
+IA, e o caminho é o método do Sistema Britto (call de PRD, funil `/sistema`).
+
+Cada pilar tem um **enquadramento de crença obrigatório** — a frase onde o
+conteúdo daquele pilar tem que aterrissar. Ver a tabela em
+`references/posicionamento-sistema-britto.md`. Atenção especial ao VIBE
+CODAR: sem o enquadramento "construir ficou barato, **por isso** o dinheiro
+não está aí", ele reforça a identidade de vibe coder — o oposto da crença.
+
 ## Onde essa skill entra no pipeline
 
 ```
@@ -49,10 +64,16 @@ pré-frame é só pra fisgar seguidor, não pra vender).
 
 ## Regra de ouro
 
-A crença e os pilares em `posicionamento-sistema-britto.md` são **propostas
-até o Felipe confirmar** — nunca trate como definitivo sem revalidar
-periodicamente contra dado real (a mesma auditoria de Reels que embasou a
-primeira versão).
+A crença ("Vibe coder constrói. Vibe Seller lucra.") e os 3 pilares foram
+confirmados com o Felipe em 10/09/2026 — mas **revalide contra dado real**
+periodicamente (a mesma auditoria de Reels que embasou a primeira versão).
+Se um ciclo inteiro de conteúdo não mover nenhuma métrica, o problema pode
+ser a crença, não a execução.
+
+Ao escrever qualquer roteiro: se o tema não reforça a crença por nenhum
+ângulo, ele não entra no calendário. É a regra mais dura do Hack #5 —
+conteúdo que não constrói a crença é trabalho jogado fora, mesmo quando
+gera like.
 
 ## Relacionado
 - `social-hook-bank`, `social-reels-scripts` — a camada de execução

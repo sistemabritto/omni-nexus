@@ -45,36 +45,91 @@ avançado que já tem tudo resolvido). Confirmar/ajustar com o Felipe:
 - O que o afasta? Prometer o que não entrega — regra do próprio material de
   ganchos (`social-hook-bank`).
 
-## Proposta de Single Point of Belief (Hack #4)
+## Single Point of Belief (Hack #4)
 
-> Se eu puder fazer o dono de negócio/vibecoder crer que **"construir
-> sozinho com IA não é o suficiente — só quem sabe RASTREAR onde o negócio
-> perde dinheiro, VIBE CODAR a solução certa e MONETIZAR o valor criado se
-> torna um Vibe Seller e lucra de verdade"**, e isso só é possível através
-> do **método do Sistema Britto (a call de PRD do funil `/sistema` +
-> ferramentas reais mostradas no conteúdo)**, então objeções como preço,
-> "não sei programar" e "já tentei sozinho" se tornam irrelevantes.
+### A frase (é isso que o Felipe decora e repete)
 
-Essa crença já está latente na fala real do Felipe (Reel de 02/09,
-transcrição completa no documento de auditoria): *"Porque construir um site
-não vai te deixar rico. O dinheiro está em monetizar o valor que você cria.
-[...] Eu tinha virado um vibe seller."* — o material só formaliza o que já
-apareceu naturalmente no seu melhor texto solo. **Confirmar com o Felipe se
-"Vibe Seller" deve ser o nome público da crença** (já usado 1x) ou se fica
-só como conceito interno.
+> **"Vibe coder constrói. Vibe Seller lucra."**
 
-## Os 3 pilares, via "Fugir para Chegar" (Hack #5)
+Linha de apoio, pra quando precisar explicar em uma frase a mais:
+*"Construir ficou barato. Capturar valor, não."*
 
-Já existiam como classificação editorial (RASTREAR/VIBE CODAR/MONETIZAR,
-usados desde o blog — `esteira-de-conteudo.md`). Reformulados aqui como
-jornada fugir→chegar, que é o que faltava pra virarem pilares de verdade
-no sentido do livro:
+### A crença formal (estrutura do livro)
 
-| Pilar | Foge de | Chega em | O QUÊ (grátis) | O COMO (fica no produto) |
-|---|---|---|---|---|
-| **RASTREAR** | Não saber onde a operação perde dinheiro/tempo | Ver com clareza o gargalo real | Sinais de onde procurar, perguntas de diagnóstico, casos reais de gargalo encontrado | O roteiro completo de mapeamento (é o que abre a call de PRD) |
-| **VIBE CODAR** | Depender de agência/SaaS caro ou travar tentando construir sozinho | Ter o sistema rodando, self-host, com ferramenta real | Qual ferramenta usar, prova de que funciona, comando/demo ao vivo | A configuração fim-a-fim pro seu caso específico (é o que a call de PRD escopa) |
-| **MONETIZAR** | Ter sistema/ferramenta e não virar dinheiro | Vender mais, gastar menos, construir equity | Casos reais (Lab. de Insights, JURISMART, Voice Dream, Omni Nexus), a lógica de precificar por valor | O playbook completo de precificação/oferta (é o produto) |
+> Se eu puder fazer o vibe coder crer que **virar Vibe Seller é a única
+> forma de ganhar dinheiro de verdade com IA**, e isso só é possível através
+> do método do Sistema Britto (a call de PRD do funil `/sistema`), então
+> preço, "não sei vender" e "já tentei sozinho" viram objeções irrelevantes.
+
+### Por que a primeira versão estava errada (registro do erro)
+
+A v1 desta crença era: *"construir sozinho com IA não é suficiente — só quem
+RASTREIA, VIBE CODA e MONETIZA vira Vibe Seller"*. Impossível de decorar, e
+por um motivo estrutural, não estético: **ela enfiou os 3 pilares dentro da
+crença.** No livro são coisas separadas — a crença é UMA, os pilares são 3
+ângulos que a reforçam. Com os pilares dentro da crença, ela ficou longa E
+os pilares ficaram sem nada pra reforçar.
+
+Compare com os exemplos do próprio livro, todos de uma cláusula só:
+"Funis são a única forma de ter sucesso online" · "Massagem com pedras
+quentes é a principal fonte de lucro dos maiores massagistas" · "Azul é a
+cor que faz passar em concurso".
+
+A crença nova é do mesmo formato: **um substantivo (Vibe Seller), uma
+afirmação (é a única forma de ganhar dinheiro com IA)**.
+
+**Confirmado com o Felipe em 10/09/2026:** "Vibe Seller" fica como nome
+público — é a identidade que o vibe coder quer alcançar, então serve como
+aspiração, não só como jargão interno.
+
+## Os 3 pilares, revisados contra o livro (Hack #5)
+
+### O problema que a revisão de 10/09/2026 encontrou
+
+RASTREAR/VIBE CODAR/MONETIZAR **não nasceram desta metodologia** — vieram da
+taxonomia editorial do blog (`esteira-de-conteudo.md`), criada pra
+classificar artigo de SEO. Foram herdados sem passar pelo teste do Hack #5.
+Passando agora:
+
+1. **Os 3 sobrevivem como etapas da jornada.** Ver a oportunidade → construir
+   barato → capturar o valor é uma linha fugir→chegar coerente, e é
+   exatamente o caminho do vibe coder até Vibe Seller. ✅
+2. **O Felipe tem repertório real nos três** (8 anos de marketing digital +
+   10 mil vendas online + os casos próprios). Critério do livro: "pilar é
+   aquilo sobre o que você fala por muito tempo sem cansar". ✅
+3. **Mas nenhum dos três nomeia a crença.** No livro, os pilares do Rafael
+   são "vínculo, copy, funil" — e a crença dele é FUNIL. Cada pilar aponta
+   de volta pro objeto da crença ("copy PARA funil", "vínculo pra converter
+   NO funil"). Nos nossos, "Vibe Seller" não aparece em lugar nenhum. ⚠️
+4. **VIBE CODAR joga contra a crença se não for enquadrado.** É o pilar de
+   maior alcance comprovado (SetupOrion, 18k), mas "olha essa ferramenta que
+   constrói pra você" reforça a identidade de *vibe coder* — justamente a
+   identidade que a crença diz que não basta. ⚠️⚠️
+
+**Decisão:** manter os três nomes (estão em código — `PILARES` no
+`escritor_de_artigo.py`, no classificador da auditoria e nas tags do blog;
+renomear criaria drift), e adicionar a cada um um **enquadramento de crença
+obrigatório**: a frase que todo conteúdo daquele pilar tem que aterrissar.
+
+### A tabela revisada
+
+| Pilar | Enquadramento de crença (todo conteúdo tem que aterrissar aqui) | Foge de | Chega em |
+|---|---|---|---|
+| **RASTREAR** | "O Vibe Seller começa procurando valor não capturado, não procurando o que construir" | Não saber onde a operação perde dinheiro | Ver o gargalo real com clareza |
+| **VIBE CODAR** | "Construir ficou barato — **por isso** não é aí que está o dinheiro" | Depender de agência/SaaS caro ou travar sozinho | Ter o sistema rodando, self-host |
+| **MONETIZAR** | "Foi aqui que o vibe coder virou Vibe Seller" | Ter sistema e não virar dinheiro | Vender mais, gastar menos, equity |
+
+### Onde fica a linha do grátis em cada pilar (a resposta à pergunta)
+
+Os pilares são os mesmos no conteúdo gratuito — **mas a linha entre O QUÊ e
+O COMO cai em lugar diferente em cada um.** Era isso que faltava na v1, que
+tratava os três de forma simétrica:
+
+| Pilar | Quanto entregar de graça | O COMO que fica no produto | Por quê |
+|---|---|---|---|
+| **RASTREAR** | **Quase tudo.** As perguntas de diagnóstico, os sinais, os casos de gargalo achado | O protocolo completo de mapeamento | Contraintuitivo mas correto: quem acha o próprio gargalo **precisa de ajuda pra resolver**. Generosidade aqui *cria* demanda pela call |
+| **VIBE CODAR** | **Ferramenta, prova, demo ao vivo.** Pode ser generoso — é o motor de alcance | A configuração fim-a-fim pro caso específico da pessoa | É onde a tentação de entregar demais é maior. O DM-gate ("me chama que eu mando o vídeo") já resolve: vitória pequena entregue, processo completo não |
+| **MONETIZAR** | **O mais contido dos três.** A lógica, o princípio, os casos reais | O playbook de precificação e construção de oferta | Este pilar **é** o produto. Entregar o COMO aqui é entregar a call de PRD de graça |
 
 ## As 3 fases do funil de conteúdo (Hack #6), aplicadas
 

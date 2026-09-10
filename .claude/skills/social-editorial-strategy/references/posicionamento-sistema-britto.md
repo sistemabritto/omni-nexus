@@ -168,7 +168,7 @@ tratava os três de forma simétrica:
 |---|---|---|---|
 | **RASTREAR** | **Quase tudo.** As perguntas de diagnóstico, os sinais, os casos de gargalo achado | O protocolo completo de mapeamento | Contraintuitivo mas correto: quem acha o próprio gargalo **precisa de ajuda pra resolver**. Generosidade aqui *cria* demanda pela call |
 | **VIBE CODAR** | **Ferramenta, prova, demo ao vivo.** Pode ser generoso — é o motor de alcance | A configuração fim-a-fim pro caso específico da pessoa | É onde a tentação de entregar demais é maior. O DM-gate ("me chama que eu mando o vídeo") já resolve: vitória pequena entregue, processo completo não |
-| **MONETIZAR** | **O mais contido dos três.** A lógica, o princípio, os casos reais | O playbook de precificação e construção de oferta | Este pilar **é** o produto. Entregar o COMO aqui é entregar a Sessão de Arquitetura de graça |
+| **MONETIZAR** | **O mais contido dos três.** A lógica, o princípio, os casos reais | O playbook de precificação e construção de oferta | Este pilar **é** o produto. Entregar o COMO aqui é entregar a Consultoria a Laser de graça |
 
 ## As 3 fases do funil de conteúdo (Hack #6), aplicadas
 
@@ -176,10 +176,10 @@ tratava os três de forma simétrica:
 |---|---|---|
 | **Pré-frame** (público frio) | VIBE CODAR com colaboração/autoridade emprestada — é o que já prova maior alcance | SetupOrion/Davidson, @caiomktviral |
 | **Doutrinação** (quem já segue) | Os 3 pilares alternados, sempre reforçando a mesma crença única | Confissão Lab. Insights→JURISMART→Voice Dream (RASTREAR/MONETIZAR); "idiota em movimento" (VIBE CODAR) |
-| **Pré-conversão** (campanha ativa da Sessão de Arquitetura) | MONETIZAR batendo as 7 objeções da Sessão de Arquitetura (matriz já pronta em `social-reels-scripts/references/matriz-temas-sistemabritto.md`, Aba 3) | Ainda não tem exemplo real publicado — gap identificado |
+| **Pré-conversão** (campanha ativa da Consultoria a Laser) | MONETIZAR batendo as 7 objeções da Consultoria a Laser (matriz já pronta em `social-reels-scripts/references/matriz-temas-sistemabritto.md`, Aba 3) | Ainda não tem exemplo real publicado — gap identificado |
 
 **Gap real encontrado:** nenhum dos 47 Reels auditados é claramente
-pré-conversão (matar objeção específica da Sessão de Arquitetura). Todo o conteúdo
+pré-conversão (matar objeção específica da Consultoria a Laser). Todo o conteúdo
 hoje é pré-frame ou doutrinação. Isso é normal enquanto não há campanha
 ativa — mas vale reservar 1-2 reels por ciclo pra essa fase mesmo fora de
 campanha, testando o formato.

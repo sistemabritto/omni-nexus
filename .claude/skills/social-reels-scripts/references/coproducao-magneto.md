@@ -69,10 +69,16 @@ Depois do ping-pong, entregue a ficha completa com:
 ## Congruência comercial vigente
 
 Não herdar automaticamente o antigo CTA de desafio, /sistema ou R$147 das
-referências. A oferta de diagnóstico/escopo atual é a Sessão de Arquitetura:
-https://www.sistemabritto.com.br/sessao-de-arquitetura — R$150 verificados em
-10/09/2026; revalidar preço antes de campanha futura. Ela pode levar a Sprint
-ou Implementação, conforme escopo; não prometer serviço incluído na sessão.
+referências. A oferta de diagnóstico/escopo atual é a Consultoria a Laser:
+https://www.sistemabritto.com.br/sessao-de-arquitetura — R$150 (de R$300,
+condição válida só para as 3 primeiras agendas da semana, ciclo renova
+domingo 00h — não inventar número diferente desse), verificado em 10/09/2026;
+revalidar preço antes de campanha futura. O valor entra como crédito total se
+o cliente avançar pro Sprint ou pra Implementação — a sessão nunca é pago de
+novo depois. Ela pode levar a Sprint ou Implementação, conforme escopo; não
+prometer serviço incluído na sessão. O que sai da sessão é o PRD do projeto
+(o Gambito de Valor documentado) — mencionar isso no CTA quando o contexto
+for RASTREAR/VIBE CODAR, não só "diagnóstico" genérico.
 Infra definida → /vps; aula gratuita de CRM → /aula-vps-crm-do-zero.
 Entregue a recompensa anunciada antes de convidar para a sessão.
 

@@ -42,7 +42,7 @@
   Isso é controle por prompt, não garantia transacional de ticket único.
 - Magneto recebe contrato completo ao detectar tema de Reel/gancho/roteiro/
   headline/estrutura de linguagem/OpenReply. Contrato instalado no volume compartilhado de skills.
-- Recompensa antes de oferta; Sessão de Arquitetura R$150, sem herdar desafio
+- Recompensa antes de oferta; Consultoria a Laser R$150, sem herdar desafio
   ou R$147 da matriz antiga. Preserva pilares e identidade Vibe Seller.
 
 ## Testes e deploy

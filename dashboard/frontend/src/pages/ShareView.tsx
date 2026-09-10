@@ -7,7 +7,7 @@ const API_BASE = import.meta.env.DEV ? 'http://localhost:8080' : ''
 
 type ViewState =
   | { status: 'loading' }
-  | { status: 'html'; content: string }
+  | { status: 'html' }
   | { status: 'markdown'; content: string }
   | { status: 'code'; content: string; extension: string }
   | { status: 'text'; content: string }
@@ -29,6 +29,17 @@ export default function ShareView() {
 
     const load = async () => {
       try {
+        // Probe without counting a view. HTML must navigate to the response
+        // carrying its CSP, not srcDoc (which discards the server headers).
+        const probe = await fetch(`${API_BASE}/api/shares/${token}/view`, { method: 'HEAD' })
+        if (!probe.ok) {
+          setState({ status: 'error', message: 'Este link expirou ou não está mais disponível.' })
+          return
+        }
+        if ((probe.headers.get('content-type') || '').includes('text/html')) {
+          setState({ status: 'html' })
+          return
+        }
         const res = await fetch(`${API_BASE}/api/shares/${token}/view`)
 
         if (!res.ok) {
@@ -40,8 +51,7 @@ export default function ShareView() {
 
         // HTML: served raw — we have the raw text, render it
         if (contentType.includes('text/html')) {
-          const html = await res.text()
-          setState({ status: 'html', content: html })
+          setState({ status: 'html' })
           return
         }
 
@@ -99,7 +109,7 @@ export default function ShareView() {
     return (
       <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <iframe
-          srcDoc={state.content}
+          src={`${API_BASE}/api/shares/${token}/view`}
           style={{
             flex: 1,
             width: '100%',
@@ -108,7 +118,7 @@ export default function ShareView() {
             background: '#0C111D',
           }}
           title="Arquivo compartilhado"
-          sandbox="allow-same-origin allow-scripts"
+          sandbox="allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
         />
         <PoweredByFooter />
       </div>

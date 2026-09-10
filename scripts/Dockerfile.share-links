@@ -1,0 +1,5 @@
+# Retain the deployed harness fixes; update only the public artifact renderer.
+ARG BASE_IMAGE=evo-nexus-dashboard:harness-fix-20260909
+FROM ${BASE_IMAGE}
+COPY dashboard/backend/routes/shares.py /workspace/dashboard/backend/routes/shares.py
+COPY dashboard/frontend/dist/ /workspace/dashboard/frontend/dist/

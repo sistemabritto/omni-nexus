@@ -90,6 +90,25 @@ def _publicar(app, nome: str, conteudo: str) -> str:
     return token, alvo
 
 
+def test_head_probe_nao_conta_visualizacao(app):
+    from models import FileShare
+    token, alvo = _publicar(app, "[C]teste-head.html", "<h1>Guia</h1>")
+    try:
+        client = app.test_client()
+        response = client.head(f"/api/shares/{token}/view")
+        assert response.status_code == 200
+        assert response.data == b""
+        assert "text/html" in response.content_type
+        assert "sandbox" in response.headers["Content-Security-Policy"]
+        with app.app_context():
+            assert FileShare.query.filter_by(token=token).one().view_count == 0
+        assert client.get(f"/api/shares/{token}/view").status_code == 200
+        with app.app_context():
+            assert FileShare.query.filter_by(token=token).one().view_count == 1
+    finally:
+        alvo.unlink(missing_ok=True)
+
+
 def test_html_publico_vem_com_csp(app):
     token, alvo = _publicar(app, "[C]teste-csp.html", "<h1>Relatório</h1>")
     try:

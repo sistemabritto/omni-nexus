@@ -234,14 +234,13 @@ def view_share(token: str):
     if full is None or not full.exists() or not full.is_file():
         return jsonify({"error": "Arquivo não encontrado", "code": "not_found"}), 404
 
-    # Increment view count
-    share.view_count = (share.view_count or 0) + 1
-    db.session.commit()
-
-    # Log the view (user=None for anonymous)
-    ip = request.remote_addr or "-"
-    ua = (request.headers.get("User-Agent", "-") or "-")[:200]
-    audit(None, "share_view", "shares", detail=f"token={token} ip={ip} ua={ua[:80]}")
+    # HEAD is the renderer's MIME probe, not a read of the material.
+    if request.method == "GET":
+        share.view_count = (share.view_count or 0) + 1
+        db.session.commit()
+        ip = request.remote_addr or "-"
+        ua = (request.headers.get("User-Agent", "-") or "-")[:200]
+        audit(None, "share_view", "shares", detail=f"token={token} ip={ip} ua={ua[:80]}")
 
     # Vault §2.S2: security headers on all public share responses.
     @after_this_request

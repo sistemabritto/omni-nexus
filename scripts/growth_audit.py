@@ -48,6 +48,23 @@ def metric_value(payload: dict, name: str) -> int | str:
     return "NOT_SUPPORTED"
 
 
+def retention_status(average_watch_time, duration_s) -> str | float:
+    """Approximate completion rate: average_watch_time / video duration.
+
+    Not a real Graph API metric — the API never returns "retention" directly.
+    growth_audit.py doesn't have duration_s (it never downloads media, per this
+    collector's own contract), so this only resolves when called with a
+    duration sourced elsewhere (e.g. ffprobe output from
+    scripts/growth_reels_creative_audit.py, keyed by media_id). Returns a
+    marker string when duration is unavailable instead of silently claiming
+    the platform doesn't support retention — it does, approximately; this
+    collector just doesn't have the other half of the fraction.
+    """
+    if not isinstance(average_watch_time, (int, float)) or not duration_s:
+        return "NOT_COMPUTED_HERE:needs duration_s (see growth_reels_creative_audit.py ffprobe output)"
+    return round(average_watch_time / duration_s, 4)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--days", type=int, default=30)
@@ -83,10 +100,22 @@ def main() -> int:
             continue
         if timestamp < cutoff:
             continue
+        is_reel = item.get("media_product_type") == "REELS"
+        # `plays` was deprecated Jul 2024 in favor of `views`. Watch-time
+        # metrics only exist for Reels — requesting them on a photo/carousel
+        # makes the whole /insights call error out, which would wipe
+        # reach/likes/etc for that item too (metric_value returns
+        # COLLECTION_FAILED for everything when payload.get("error")).
+        if ig_login:
+            base_metrics = "reach,likes,comments,saved,shares"
+            metric_param = f"{base_metrics},views,ig_reels_avg_watch_time,ig_reels_video_view_total_time" if is_reel else base_metrics
+        else:
+            metric_param = "impressions,reach,engagement"
         insight = get_json(base, f"{item.get('id', '')}/insights", {
-            "metric": "reach,likes,comments,saved,shares" if ig_login else "impressions,reach,engagement",
+            "metric": metric_param,
             "access_token": token,
         })
+        average_watch_time = metric_value(insight, "ig_reels_avg_watch_time") if (ig_login and is_reel) else "NOT_SUPPORTED"
         records.append({
             "media_id": item.get("id", ""),
             "permalink": item.get("permalink", ""),
@@ -99,10 +128,19 @@ def main() -> int:
             "reach": metric_value(insight, "reach"),
             "saved": metric_value(insight, "saved"),
             "shares": metric_value(insight, "shares"),
-            "plays": "NOT_SUPPORTED",
-            "watch_time": "NOT_SUPPORTED",
-            "average_watch_time": "NOT_SUPPORTED",
-            "retention": "NOT_SUPPORTED",
+            "plays": metric_value(insight, "views") if (ig_login and is_reel) else "NOT_SUPPORTED",
+            "watch_time": metric_value(insight, "ig_reels_video_view_total_time") if (ig_login and is_reel) else "NOT_SUPPORTED",
+            "average_watch_time": average_watch_time,
+            # Real API metric, approximated (average_watch_time / duration) — this
+            # collector has no duration_s (never downloads media). Pass one in
+            # from ffprobe evidence (growth_reels_creative_audit.py) downstream
+            # if you need the actual ratio; see retention_status() docstring.
+            "retention": retention_status(average_watch_time, None),
+            # follows/profile_visits/link_clicks: real platform ceiling, not a
+            # missing-parameter bug. These are ACCOUNT-level insights
+            # (profile_views, follower_count, website_clicks on
+            # /{ig-user-id}/insights) — the API never attributes them to a
+            # single Reel. No token/permission/version change unlocks this.
             "follows": "NOT_AVAILABLE",
             "profile_visits": "NOT_AVAILABLE",
             "link_clicks": "NOT_AVAILABLE",

@@ -49,17 +49,47 @@ avançado que já tem tudo resolvido). Confirmar/ajustar com o Felipe:
 
 ### A frase (é isso que o Felipe decora e repete)
 
-> **"Vibe coder constrói. Vibe Seller lucra."**
+> **"Vibe coder constrói. Vibe Seller joga o Gambito de Valor."**
 
 Linha de apoio, pra quando precisar explicar em uma frase a mais:
-*"Construir ficou barato. Capturar valor, não."*
+*"Construir ficou barato. Capturar valor antes de todo mundo, não."*
 
 ### A crença formal (estrutura do livro)
 
 > Se eu puder fazer o vibe coder crer que **virar Vibe Seller é a única
-> forma de ganhar dinheiro de verdade com IA**, e isso só é possível através
-> do método do Sistema Britto (a call de PRD do funil `/sistema`), então
-> preço, "não sei vender" e "já tentei sozinho" viram objeções irrelevantes.
+> forma de ganhar dinheiro de verdade com IA**, e isso só é possível
+> **jogando o Gambito de Valor**, então preço, "não sei vender" e "já tentei
+> sozinho" viram objeções irrelevantes.
+
+### O mecanismo: o Gambito de Valor
+
+No xadrez, um gambito é abrir mão de uma peça de propósito, logo no início,
+pra ganhar posição mais à frente. O trabalho não diminui — ele muda de alvo.
+Sai de proteger o que você já tinha e vai construir a vantagem que a jogada
+abriu.
+
+O Gambito de Valor funciona igual. Você abre mão da ideia que nasceria do
+seu próprio gosto técnico ou da vontade de mostrar serviço — o primeiro
+impulso de todo vibe coder. Em troca, você só entra depois que RASTREAR já
+confirmou que aquele gargalo tem comprador do outro lado, seja um mercado
+mal servido ou um vazamento dentro de uma operação que já roda, como o caso
+do VGRA.
+
+O esforço de construir continua existindo. Ele para de ser gasto testando
+ideia às cegas — foi assim que o Laboratório de Insights morreu e o
+JURISMART chegou tarde demais — e passa a mirar direto em algo que já tem
+quem pague. VIBE CODAR entra rápido e barato porque o alvo já está certo.
+MONETIZAR fecha a jogada: o xeque-mate só existe porque o sacrifício do
+início abriu espaço pra ele.
+
+Os 3 pilares deixam de ser categorias soltas e viram as 3 jogadas do
+Gambito:
+
+| Jogada | Pilar | Pergunta que responde |
+|---|---|---|
+| 1. O sacrifício | RASTREAR | Onde está o gargalo de valor não capturado? |
+| 2. A construção | VIBE CODAR | Como resolver isso rápido e barato, hoje que virou possível? |
+| 3. O xeque-mate | MONETIZAR | Como isso vira venda, margem ou equity? |
 
 ### Por que a primeira versão estava errada (registro do erro)
 
@@ -70,17 +100,25 @@ crença.** No livro são coisas separadas — a crença é UMA, os pilares são 
 ângulos que a reforçam. Com os pilares dentro da crença, ela ficou longa E
 os pilares ficaram sem nada pra reforçar.
 
+A v2 ("Vibe coder constrói. Vibe Seller lucra.") corrigiu isso, mas ainda
+faltava nomear O QUE se faz pra chegar lá — a crença dizia o destino, não o
+caminho. "Gambito de Valor" é o caminho: um mecanismo com nome próprio, não
+genérico o suficiente pra qualquer mentor de vibe coding ensinar (diferente
+de "inverta a ordem: ache o problema antes de construir", testado e
+descartado nesta mesma conversa por não ser defensável).
+
 Compare com os exemplos do próprio livro, todos de uma cláusula só:
 "Funis são a única forma de ter sucesso online" · "Massagem com pedras
 quentes é a principal fonte de lucro dos maiores massagistas" · "Azul é a
-cor que faz passar em concurso".
-
-A crença nova é do mesmo formato: **um substantivo (Vibe Seller), uma
-afirmação (é a única forma de ganhar dinheiro com IA)**.
+cor que faz passar em concurso". "Gambito de Valor" segue o mesmo molde:
+um mecanismo nomeado, não um conselho.
 
 **Confirmado com o Felipe em 10/09/2026:** "Vibe Seller" fica como nome
 público — é a identidade que o vibe coder quer alcançar, então serve como
-aspiração, não só como jargão interno.
+aspiração, não só como jargão interno. "Gambito de Valor" fechou depois de
+várias rodadas de nome (Cheque de Oportunidade → Xeque → Xeque-Mate →
+Gambito), documentadas em [[single-point-of-belief-vibe-seller]] pra quem
+quiser o histórico completo da decisão.
 
 ## Os 3 pilares, revisados contra o livro (Hack #5)
 
@@ -129,7 +167,7 @@ tratava os três de forma simétrica:
 |---|---|---|---|
 | **RASTREAR** | **Quase tudo.** As perguntas de diagnóstico, os sinais, os casos de gargalo achado | O protocolo completo de mapeamento | Contraintuitivo mas correto: quem acha o próprio gargalo **precisa de ajuda pra resolver**. Generosidade aqui *cria* demanda pela call |
 | **VIBE CODAR** | **Ferramenta, prova, demo ao vivo.** Pode ser generoso — é o motor de alcance | A configuração fim-a-fim pro caso específico da pessoa | É onde a tentação de entregar demais é maior. O DM-gate ("me chama que eu mando o vídeo") já resolve: vitória pequena entregue, processo completo não |
-| **MONETIZAR** | **O mais contido dos três.** A lógica, o princípio, os casos reais | O playbook de precificação e construção de oferta | Este pilar **é** o produto. Entregar o COMO aqui é entregar a call de PRD de graça |
+| **MONETIZAR** | **O mais contido dos três.** A lógica, o princípio, os casos reais | O playbook de precificação e construção de oferta | Este pilar **é** o produto. Entregar o COMO aqui é entregar a Sessão de Arquitetura de graça |
 
 ## As 3 fases do funil de conteúdo (Hack #6), aplicadas
 
@@ -137,10 +175,10 @@ tratava os três de forma simétrica:
 |---|---|---|
 | **Pré-frame** (público frio) | VIBE CODAR com colaboração/autoridade emprestada — é o que já prova maior alcance | SetupOrion/Davidson, @caiomktviral |
 | **Doutrinação** (quem já segue) | Os 3 pilares alternados, sempre reforçando a mesma crença única | Confissão Lab. Insights→JURISMART→Voice Dream (RASTREAR/MONETIZAR); "idiota em movimento" (VIBE CODAR) |
-| **Pré-conversão** (campanha ativa do `/sistema`) | MONETIZAR batendo as 7 objeções da call de PRD (matriz já pronta em `social-reels-scripts/references/matriz-temas-sistemabritto.md`, Aba 3) | Ainda não tem exemplo real publicado — gap identificado |
+| **Pré-conversão** (campanha ativa da Sessão de Arquitetura) | MONETIZAR batendo as 7 objeções da Sessão de Arquitetura (matriz já pronta em `social-reels-scripts/references/matriz-temas-sistemabritto.md`, Aba 3) | Ainda não tem exemplo real publicado — gap identificado |
 
 **Gap real encontrado:** nenhum dos 47 Reels auditados é claramente
-pré-conversão (matar objeção específica da call de PRD). Todo o conteúdo
+pré-conversão (matar objeção específica da Sessão de Arquitetura). Todo o conteúdo
 hoje é pré-frame ou doutrinação. Isso é normal enquanto não há campanha
 ativa — mas vale reservar 1-2 reels por ciclo pra essa fase mesmo fora de
 campanha, testando o formato.

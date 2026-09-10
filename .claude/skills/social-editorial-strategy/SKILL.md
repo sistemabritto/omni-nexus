@@ -9,18 +9,26 @@ metadata:
 
 ## A crença (decore isto — todo conteúdo reforça)
 
-> **"Vibe coder constrói. Vibe Seller lucra."**
+> **"Vibe coder constrói. Vibe Seller joga o Gambito de Valor."**
 >
-> Apoio: *"Construir ficou barato. Capturar valor, não."*
+> Apoio: *"Construir ficou barato. Capturar valor antes de todo mundo, não."*
 
 Formal: virar Vibe Seller é a única forma de ganhar dinheiro de verdade com
-IA, e o caminho é o método do Sistema Britto (call de PRD, funil `/sistema`).
+IA, e isso só acontece jogando o **Gambito de Valor** — o mecanismo, não o
+método de entrega. Ver a explicação completa (por que é um "gambito" de
+verdade, não um atalho) em `references/posicionamento-sistema-britto.md`.
 
-Cada pilar tem um **enquadramento de crença obrigatório** — a frase onde o
-conteúdo daquele pilar tem que aterrissar. Ver a tabela em
-`references/posicionamento-sistema-britto.md`. Atenção especial ao VIBE
-CODAR: sem o enquadramento "construir ficou barato, **por isso** o dinheiro
-não está aí", ele reforça a identidade de vibe coder — o oposto da crença.
+O Gambito de Valor tem 3 jogadas, e são os próprios pilares:
+
+1. **O sacrifício (RASTREAR)** — abrir mão da ideia que você mesmo
+   construiria, e só entrar depois que existe gargalo de valor confirmado
+   (mercado mal servido ou vazamento numa operação que já roda).
+2. **A construção (VIBE CODAR)** — resolver rápido e barato, porque o alvo
+   já está certo. Sem o enquadramento "construir ficou barato, **por isso**
+   o dinheiro não está aí", esse pilar reforça a identidade de vibe coder —
+   o oposto da crença.
+3. **O xeque-mate (MONETIZAR)** — fecha em venda, margem ou equity. Só
+   existe porque o sacrifício da jogada 1 abriu espaço pra ele.
 
 ## Onde essa skill entra no pipeline
 
@@ -45,8 +53,8 @@ pré-frame é só pra fisgar seguidor, não pra vender).
    - Público frio, quer alcance/seguidor novo → **pré-frame** (colaboração
      e autoridade emprestada performam melhor, dado real do Sistema Britto)
    - Público que já segue → **doutrinação** (a maioria do calendário)
-   - Campanha ativa da call de PRD → **pré-conversão** (matar objeção
-     específica, ver Aba 3 da matriz de temas)
+   - Campanha ativa da Sessão de Arquitetura → **pré-conversão** (matar
+     objeção específica, ver Aba 3 da matriz de temas)
 3. **Escolha o pilar** (RASTREAR/VIBE CODAR/MONETIZAR) pela tabela
    fugir→chegar em `posicionamento-sistema-britto.md`.
 4. **Passe pro `social-hook-bank`** (bloco certo) e `social-reels-scripts`
@@ -64,8 +72,9 @@ pré-frame é só pra fisgar seguidor, não pra vender).
 
 ## Regra de ouro
 
-A crença ("Vibe coder constrói. Vibe Seller lucra.") e os 3 pilares foram
-confirmados com o Felipe em 10/09/2026 — mas **revalide contra dado real**
+A crença ("Vibe coder constrói. Vibe Seller joga o Gambito de Valor.") e os
+3 pilares foram confirmados com o Felipe em 10/09/2026 — mas **revalide
+contra dado real**
 periodicamente (a mesma auditoria de Reels que embasou a primeira versão).
 Se um ciclo inteiro de conteúdo não mover nenhuma métrica, o problema pode
 ser a crença, não a execução.

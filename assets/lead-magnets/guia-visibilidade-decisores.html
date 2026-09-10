@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Guia para donos de empresa: revise acesso, clareza e o caminho até o contato nas buscas com IA. Checklist, prompt e próximo passo para aplicar no seu negócio.">
+<title>Sua empresa nas buscas com IA — do acesso ao próximo cliente | Sistema Britto</title>
+<style>
+:root{color-scheme:light dark;--bg:#f7f8f4;--surface:#fff;--text:#17241e;--muted:#475b50;--line:#c6d4c9;--accent:#175e38;--button:#b6ff00;--button-text:#102014;--tint:#eaf3e6}
+@media(prefers-color-scheme:dark){:root{--bg:#090e0b;--surface:#111b15;--text:#f0f5ee;--muted:#bac9be;--line:#405448;--accent:#b6ff00;--tint:#18271b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+main{max-width:900px;margin:auto;padding:32px 22px 64px}header{padding:20px 0 32px}.eyebrow{font-size:12px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}h1{font-size:clamp(34px,6.2vw,59px);line-height:1.1;letter-spacing:-.035em;max-width:820px;margin:16px 0 24px;text-wrap:balance}h2{font-size:clamp(26px,4vw,36px);line-height:1.2;letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance}h3{font-size:21px;line-height:1.3;margin:0 0 10px}p{margin:0 0 16px;color:var(--muted)}strong{color:var(--text)}.lead{font-size:21px;max-width:740px}.note{font-size:14px}.tag{display:inline-block;background:var(--tint);padding:5px 12px;border:1px solid var(--line);border-radius:6px;font-size:14px}
+section{padding:32px 0;border-top:1px solid var(--line);scroll-margin-top:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:24px}.card p:last-child{margin-bottom:0}.number{display:block;color:var(--accent);font-size:13px;font-weight:800;margin-bottom:10px}.checklist{padding-left:24px}.checklist li{margin:12px 0;color:var(--muted)}a{color:var(--accent);text-underline-offset:4px}a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:5px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:14px 20px;border-radius:9px;background:var(--button);color:var(--button-text);font-weight:800;text-decoration:none;line-height:1.4}.button:hover{filter:brightness(.92)}.button:active{filter:brightness(.84)}.offer{padding:28px;border:1px solid var(--line);border-radius:16px;background:var(--tint);margin:16px 0 32px}.offer h2{margin-top:12px}.offer ul{padding-left:22px}.offer li{margin:8px 0}.offer .note{margin-top:16px}.textlink{display:inline-flex;align-items:center;min-height:44px;padding:8px 0}details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin:16px 0}summary{font-weight:750;cursor:pointer;min-height:44px;padding:8px 0}details>div{padding-top:16px}pre{white-space:pre-wrap;overflow-x:auto;overflow-wrap:anywhere;background:var(--bg);border:1px solid var(--line);padding:18px;border-radius:8px;font:14px/1.6 ui-monospace,monospace}code{font-family:ui-monospace,monospace}footer{padding-top:28px;font-size:14px}nav{display:flex;gap:20px;flex-wrap:wrap;margin-top:16px}nav a{min-height:44px;display:inline-flex;align-items:center}
+@media(max-width:600px){main{padding:20px 18px 48px}.grid{grid-template-columns:1fr}.card,.offer{padding:22px}.button{width:100%}.lead{font-size:19px}}
+@media print{body{background:white;color:black}p{color:#222}details>div{display:block}a{color:#175e38}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">Sistema Britto · guia para donos e gestores · versão 09/09/2026</div>
+<h1>Quando alguém procura uma empresa como a sua no ChatGPT, o que encontra?</h1>
+<p class="lead">Comece pelo que você controla: deixar seu site acessível, explicar com clareza o que sua empresa resolve e facilitar o próximo contato.</p>
+<p>Este guia ajuda você a revisar essas três etapas e levar um pedido objetivo para quem cuida do seu site. <strong>Não precisa começar aprendendo código.</strong></p>
+<span class="tag">Checklist + exemplo + prompt de diagnóstico</span>
+<nav aria-label="Nesta página"><a href="#checklist">Fazer a revisão</a><a href="#prompt">Copiar o prompt</a><a href="#sessao">Quero ajuda para aplicar</a></nav>
+<p class="note">Ninguém pode garantir que sua empresa será citada por uma IA. Aqui, o trabalho é remover barreiras verificáveis e melhorar o caminho de quem chega ao seu negócio.</p>
+</header>
+
+<section id="checklist">
+<div class="eyebrow">Primeiro, a revisão</div>
+<h2>Três perguntas antes de investir em mais uma ferramenta.</h2>
+<div class="card">
+<span class="number">01 · ACESSO</span><h3>As páginas públicas da empresa podem ser lidas?</h3>
+<p>Abra sua página de serviço sem login. Depois peça ao responsável técnico que verifique se há bloqueios de rastreamento, erros ou desafios de segurança impedindo a leitura pública.</p>
+<p><strong>O que pedir:</strong> URLs testadas, status HTTP, regras aplicáveis e evidência do que precisa mudar. “Está liberado no painel” não substitui a verificação.</p>
+</div>
+<div class="card" style="margin-top:16px">
+<span class="number">02 · CLAREZA</span><h3>Quem chega entende o que você faz e para quem?</h3>
+<p>Na página do serviço, procure: problema resolvido, público atendido, região ou forma de atendimento, entrega e prova verificável. Se só houver “inovação”, “excelência” e “soluções completas”, o visitante ainda precisa adivinhar.</p>
+<p><strong>O que fazer:</strong> escreva uma frase concreta e peça a alguém de fora da empresa para explicar, com as próprias palavras, o que pode contratar ali.</p>
+</div>
+<div class="card" style="margin-top:16px">
+<span class="number">03 · PRÓXIMA AÇÃO</span><h3>Se chegar um interessado hoje, o caminho até o atendimento funciona?</h3>
+<p>Abra o botão de contato no celular. Confira destino, mensagem inicial, formulário e o responsável pelo retorno. Se o contato acontece fora do site, verifique também onde ele vira oportunidade e qual é a próxima ação.</p>
+<p><strong>O que conferir:</strong> link funcionando, expectativa clara e processo de atendimento. Visibilidade sozinha não substitui essa passagem.</p>
+</div>
+</section>
+
+<section>
+<h2>Clareza não é escrever mais. É deixar menos para o cliente adivinhar.</h2>
+<p>Se a revisão já mostrou um problema e você quer ajuda para decidir o que fazer primeiro, <a class="textlink" href="#sessao">veja a Sessão de Arquitetura</a>. O guia continua abaixo, sem precisar contratar.</p>
+<p class="note">Exemplo fictício, apenas para ilustrar a estrutura.</p>
+<div class="grid">
+<div class="card"><span class="number">GENÉRICO</span><h3>“Soluções inovadoras para sua empresa.”</h3><p>Não diz qual problema resolve, quem atende nem o que acontece depois do contato.</p></div>
+<div class="card"><span class="number">ESPECÍFICO</span><h3>“Manutenção de ar-condicionado para escritórios em Salvador.”</h3><p>“Atendemos empresas com visita técnica e plano de manutenção. Envie a quantidade de aparelhos para solicitar uma avaliação.”</p></div>
+</div>
+<p style="margin-top:20px">A mesma lógica vale para sua oferta: <strong>o que resolve + para quem + evidência + próximo passo.</strong> Só use prazos, resultados e diferenciais que sua operação realmente consegue sustentar.</p>
+</section>
+
+<section id="prompt">
+<div class="eyebrow">Use com sua equipe ou assistente de IA</div>
+<h2>Um pedido de diagnóstico, em vez de uma ordem para mudar tudo.</h2>
+<p>Copie o texto, substitua os campos e use um assistente com acesso à web. Se ele não puder consultar uma página, a resposta correta é registrar a limitação, não inventar o teste.</p>
+<pre>Quero revisar a presença digital da minha empresa.
+Site: [URL pública]
+Serviço principal: [serviço]
+Cliente que atendemos: [público e região]
+Próximo passo esperado: [contato, orçamento ou agenda]
+
+Faça uma análise sem alterar nada:
+1. Leia as páginas públicas e diga se serviço, público,
+   prova e próximo passo estão claros. Cite as URLs.
+2. Verifique robots.txt e sitemap.xml, quando tiver
+   ferramentas para isso. Separe observação de hipótese.
+3. Para busca no ChatGPT, examine a política de
+   OAI-SearchBot. Não confunda busca com treinamento.
+4. Revise o caminho do visitante até o contato.
+   Não envie formulários nem contate ninguém.
+5. Entregue até três prioridades, com evidência,
+   impacto esperado e como validar cada correção.
+
+Não prometa citação em IA ou aumento de vendas.
+Não solicite senhas nem dados de clientes.
+Não desative segurança. Peça aprovação para mudanças.</pre>
+<p class="note">Este prompt não garante uma auditoria completa. Testes de infraestrutura dependem das ferramentas e dos acessos disponíveis; confirmar permissões no servidor é trabalho do responsável técnico.</p>
+</section>
+
+<section>
+<h2>Encontrou um problema? Escolha a próxima ação pelo diagnóstico.</h2>
+<ul class="checklist">
+<li><strong>Acesso bloqueado:</strong> leve a evidência ao responsável técnico e peça correção pontual, preservando a segurança.</li>
+<li><strong>Oferta pouco clara:</strong> ajuste primeiro a página do serviço, a prova e o convite para contato.</li>
+<li><strong>Contato sem continuidade:</strong> revise formulário, atendimento e CRM antes de buscar mais volume.</li>
+<li><strong>Mais de uma etapa com problema:</strong> priorize o que impede o cliente de avançar hoje. Não precisa trocar toda a operação.</li>
+</ul>
+<p>O guia ajuda a enxergar o que investigar. A aplicação exige decidir <strong>o que fazer primeiro, quem executa e quais custos e integrações estão envolvidos.</strong></p>
+</section>
+
+<section id="sessao" class="offer">
+<div class="eyebrow">Próximo passo para aplicar na sua empresa</div>
+<h2>Quer transformar esse diagnóstico em um plano de execução?</h2>
+<p>Na <strong>Sessão de Arquitetura com Felipe Britto</strong>, você traz o site e o contexto do negócio. Definimos o problema prioritário, o escopo e a rota de aplicação — antes de contratar desenvolvimento ou acumular ferramentas.</p>
+<ul>
+<li>Problema e critério de sucesso documentados.</li>
+<li>O que entra agora, o que fica de fora e em qual ordem.</li>
+<li>Integrações, dependências e estimativa de custos com premissas claras.</li>
+<li>Decisão entre adaptar o que existe, executar com acompanhamento ou contratar implementação.</li>
+</ul>
+<p><strong>É a mesma sessão que abre o Sprint e a Implementação.</strong> A compra é da sessão, não do projeto completo. Se avançarmos, o valor é abatido conforme as condições da oferta.</p>
+<a class="button" href="https://nexus.workflowapi.com.br/api/shares/JmqUbtpIsv8eU8Gif-9XzmuU9w2O7S95M_g1pCxYMQ4/click?to=https%3A%2F%2Fwww.sistemabritto.com.br%2Fsessao-de-arquitetura%3Futm_source%3Dinstagram%26utm_medium%3Dlead_magnet%26utm_campaign%3Dvisibilidade-ia-arquitetura-v3%26utm_content%3Dguia-ia-v3&amp;label=guia-ia-v3-sessao-principal" target="_blank" rel="noopener noreferrer">Ver a Sessão de Arquitetura e o investimento →</a>
+<p class="note">Você abre a página com os detalhes antes de pagar. Agenda após confirmação do pagamento, conforme condições e disponibilidade apresentadas. A sessão não é garantia de citação no ChatGPT nem de vendas.</p>
+</section>
+
+<section id="tecnico">
+<div class="eyebrow">Para encaminhar ao responsável técnico</div>
+<h2>A parte técnica, sem transformar você em administrador de servidor.</h2>
+<details><summary>Busca no ChatGPT não é a mesma coisa que treinamento</summary><div>
+<p><strong>OAI-SearchBot</strong> é usado para busca. <strong>GPTBot</strong> pode coletar conteúdo para treinamento. Os controles são independentes: liberar busca não exige liberar treinamento. <strong>ChatGPT-User</strong> atende determinadas ações de usuários; não substitui a política de busca.</p>
+<p>Verifique a política pretendida no arquivo público e na infraestrutura. Um teste com user-agent alterado não comprova uma visita real do crawler nem garante indexação. Confirme a documentação e os endereços publicados antes de configurar exceções.</p>
+<a class="textlink" href="https://developers.openai.com/api/docs/bots" target="_blank" rel="noopener noreferrer">Consultar a documentação oficial da OpenAI →</a>
+</div></details>
+<details><summary>Checklist técnico de acesso e estrutura</summary><div>
+<ul class="checklist">
+<li>Verificar respostas das páginas públicas, redirecionamentos, erros 403/429 e desafios de segurança.</li>
+<li>Comparar o robots.txt público com a política desejada e com a origem; identificar regras injetadas por CDN.</li>
+<li>Conferir sitemap com URLs canônicas públicas e consistentes; revisar páginas de serviço e seus dados estruturados quando aplicáveis.</li>
+<li>Corrigir apenas o bloqueio necessário. Não desligar WAF, autenticação ou proteção de APIs para liberar conteúdo público.</li>
+<li>Tratar llms.txt como material complementar, não como garantia de inclusão em respostas.</li>
+<li>Registrar o antes/depois e acompanhar contatos e oportunidades, além de visitas.</li>
+</ul>
+<pre># Substitua pelo domínio público autorizado.
+curl -sS -I https://SEU-DOMINIO.com/
+curl -sS -L https://SEU-DOMINIO.com/robots.txt
+curl -sS -L https://SEU-DOMINIO.com/sitemap.xml
+
+# Diagnóstico de resposta ao user-agent, não prova
+# de rastreamento real nem validação de origem:
+curl -sS -I -A 'OAI-SearchBot' https://SEU-DOMINIO.com/</pre>
+<p class="note">robots.txt não protege conteúdo privado. Áreas restritas precisam de autenticação e controles de acesso próprios.</p>
+</div></details>
+<details><summary>Isso garante que minha empresa vai aparecer?</summary><div><p>Não. A revisão melhora aspectos verificáveis da presença digital. A seleção de fontes e as respostas das plataformas não são controladas por nós. Trate menções observadas como evidência datada, não promessa permanente.</p></div></details>
+<details><summary>Preciso contratar para usar o material?</summary><div><p>Não. O checklist e o prompt são gratuitos. A sessão é uma opção para quem quer ajuda na priorização e no plano de execução. Não precisa contratar Sprint ou Implementação para aproveitar o guia.</p></div></details>
+<a class="button" href="https://nexus.workflowapi.com.br/api/shares/JmqUbtpIsv8eU8Gif-9XzmuU9w2O7S95M_g1pCxYMQ4/click?to=https%3A%2F%2Fwww.sistemabritto.com.br%2Fsessao-de-arquitetura%3Futm_source%3Dinstagram%26utm_medium%3Dlead_magnet%26utm_campaign%3Dvisibilidade-ia-arquitetura-v3%26utm_content%3Dguia-ia-v3&amp;label=guia-ia-v3-sessao-final" target="_blank" rel="noopener noreferrer">Quero um plano para aplicar na minha empresa →</a>
+</section>
+<footer><strong>Sistema Britto · Felipe Britto</strong><p>IA aplicada a problemas reais da empresa. Material revisado em 09/09/2026 · v3-decisores-arquitetura.</p></footer>
+</main>
+</body>
+</html>

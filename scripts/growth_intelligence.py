@@ -36,7 +36,7 @@ def window(days=30,end=None):
 
 def site_queries(start,end):
     def span(col='created_at'):return f"{col} >= '{start.isoformat()}'::timestamptz AND {col} < '{end.isoformat()}'::timestamptz"
-    return {
+    queries = {
       'visits':f"select count(*) pageviews,count(distinct session_id) sessions,count(*) filter(where nullif(utm_source,'') is not null) tagged from public.pageviews where {span()}",
       'daily':f"select (created_at at time zone 'America/Bahia')::date as date,count(*) views,count(distinct session_id) sessions from public.pageviews where {span()} group by 1 order by 1",
       'sources':f"select coalesce(nullif(utm_source,''),'unattributed') source,count(*) views,count(distinct session_id) sessions from public.pageviews where {span()} group by 1 order by 2 desc",
@@ -54,6 +54,14 @@ def site_queries(start,end):
       'classroom_cohort':f"with entry as (select session_id,min(created_at) entered from public.pageviews where {span()} and path='/aula-vps-crm-do-zero' group by 1) select count(*) entered_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/aula-vps-crm-do-zero' and c.cta_action='unlock' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) unlocked_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/aula-vps-crm-do-zero' and c.cta_label='conhecer-desafio' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) offer_click_sessions from entry e",
       'bio_cohort':f"with entry as (select session_id,min(created_at) entered from public.pageviews where {span()} and path='/links' group by 1) select count(*) entered_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/links' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) clicked_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/links' and c.cta_label='aula-crm' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) classroom_click_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/links' and c.cta_label='desafio-monetizar-com-ia' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) offer_click_sessions from entry e",
     }
+    # Preserve historical Challenge counts; add Architecture separately so the
+    # commercial pivot cannot look like a broken CTA or a causal A/B result.
+    for cohort,label in [('classroom_cohort','conhecer-arquitetura'),('bio_cohort','sessao-arquitetura')]:
+        page='/aula-vps-crm-do-zero' if cohort=='classroom_cohort' else '/links'
+        metric=f",count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='{page}' and c.cta_label='{label}' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) architecture_click_sessions"
+        queries[cohort]=queries[cohort].removesuffix(' from entry e')+metric+' from entry e'
+    queries['architecture_cohort']=f"with entry as (select session_id,min(created_at) entered from public.pageviews where {span()} and path='/sessao-de-arquitetura' group by 1) select count(*) entered_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/sessao-de-arquitetura' and c.cta_label='arquitetura-checkout' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) checkout_click_sessions from entry e"
+    return queries
 
 def collect_site(start,end):
     ref=os.environ['SUPABASE_PROJECT_REF']
@@ -155,7 +163,7 @@ def propose_actions(report):
         if source['status']!='ok':actions.append({'priority':'P0','hypothesis':False,'action':'Restaurar coleta '+name,'evidence':source['status']})
     site=report['sources'].get('site',{}).get('data',{})
     cohort=(site.get('classroom_cohort') or [{}])[0]
-    if cohort.get('unlocked_sessions',0)>=20 and cohort.get('offer_click_sessions',0)==0:
+    if cohort.get('unlocked_sessions',0)>=20 and cohort.get('offer_click_sessions',0)==0 and cohort.get('architecture_click_sessions',0)==0:
         actions.append({'priority':'P1','hypothesis':True,'action':'Testar ponte aula → oferta com um CTA rastreado e próximo passo concreto.',
             'evidence':cohort,'metric':'sessões que clicam na oferta / sessões que desbloqueiam; depois pedidos pagos',
             'window':'14 dias; reportar amostra, não declarar vencedor com poucos eventos'})

@@ -17,3 +17,16 @@ def test_cohort_proposal_stays_hypothesis_and_draft():
     actions=propose_actions({'sources':{'site':{'status':'ok','data':{'classroom_cohort':[{'unlocked_sessions':39,'offer_click_sessions':0}]}}}})
     assert actions[0]['hypothesis'] is True
     assert actions[-1]['execution'].startswith('draft_only')
+
+def test_architecture_is_counted_separately_from_historical_challenge():
+    queries=site_queries(*window(30,'2026-09-09'))
+    for key,label in [('classroom_cohort','conhecer-arquitetura'),('bio_cohort','sessao-arquitetura')]:
+        assert 'architecture_click_sessions' in queries[key]
+        assert 'offer_click_sessions' in queries[key]
+        assert label in queries[key]
+        assert "c.created_at>=e.entered" in queries[key]
+    assert 'arquitetura-checkout' in queries['architecture_cohort']
+
+def test_architecture_clicks_do_not_trigger_false_zero_offer_alert():
+    actions=propose_actions({'sources':{'site':{'status':'ok','data':{'classroom_cohort':[{'unlocked_sessions':39,'offer_click_sessions':0,'architecture_click_sessions':2}]}}}})
+    assert not any('Testar ponte aula' in a['action'] for a in actions)

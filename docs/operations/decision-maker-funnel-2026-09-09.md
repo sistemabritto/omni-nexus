@@ -26,6 +26,14 @@ Backup target: `reports/backups/[C]guia-ia-before-decisores-20260909.html`. To r
 
 Pre-deployment baseline: primary token 65 accumulated views / 1 click; another share of the same file had 16 views. Generic Nexus `triggers` did not contain ID 17. No automation or recipient selection was changed based on an assumed mapping. Separate release-version click labels from lifetime counters; diagnostic checks may increment view counts.
 
-## Intentionally not done in this release
+## Publication confirmed
+
+Vercel marked site commit `ea9084a` successful; the new session page returned HTTP 200. The existing guide file was replaced only after backing up the verified original. Public `/view` matched source SHA256 `974b1ed7c537dd01e7d6284dff9c9c3cb7419bda41b4123a4117a7bbb96318c6`; CSP remained intact. HTML size changed from 1,812,288 bytes to 15,203 bytes. This is a size reduction, not measured conversion uplift.
+
+One live click probe labeled `qa-smoke-v3-20260909` confirmed the expected 302 to the session page. Exclude that diagnostic click from commercial results. Successful live view probes also incremented lifetime views; no payment was attempted.
+
+Daily collector adds separate `architecture_click_sessions` to classroom/bio cohorts and an `architecture_cohort` for session-page → checkout. Historical `offer_click_sessions` remains the Challenge-only field for backward compatibility; never combine those fields into a single experimental treatment. Seven Python tests passed; queries were verified through the existing read-only Management API. No table, index, RLS policy or customer row was changed. The host collector was updated for its next scheduled execution.
+
+## Remaining scope
 
 Instagram profile changes are a proposed copy, not published. No outreach, new pricing policy, payment test or lead backfill. OTP gate and lead persistence remediation remain separate work; this release changes the commercial bridge, not authentication or CRM reliability.

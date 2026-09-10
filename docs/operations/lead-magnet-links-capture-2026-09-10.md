@@ -24,7 +24,7 @@
 - Navegador: 375/768/1440px, sem overflow; UTMs preservadas; guia light/dark.
 - Fluxo aula com respostas controladas: falha não libera, mantém campos, reenvio bem-sucedido libera, reload mantém acesso; zero chamadas OTP.
 - Produção: popup real para sitemaps.org a partir do iframe público abriu; sandbox sem scripts/same-origin confirmado.
-- Produção: dois POSTs sintéticos com e-mail `.invalid`, sem telefone, origem `qa-funnel-20260910`, retornaram Supabase=true e EvoCRM=true. Supabase confirmou uma linha. Não houve envio intencional de mensagens ou compra. Excluir esse contato e visitas técnicas da análise de conversão.
+- Produção: dois POSTs sintéticos com e-mail `.invalid`, sem telefone, origem `qa-funnel-20260910`, retornaram Supabase=true e EvoCRM=true. Supabase confirmou uma linha; consulta read-only no CRM confirmou um contato e uma oportunidade após os dois envios. Não houve envio intencional de mensagens ou compra. Excluir esse contato e visitas técnicas da análise de conversão.
 
 ## Deploy / rollback
 
@@ -34,6 +34,7 @@
 - Guia SHA256: `01660c5c6145bf3791d2b5d06db7c0072bfe4453f6873b305942985b939e1a62`.
 - Backup da v3 preservado no volume workspace: `reports/backups/[C]guia-ia-before-tecnico-20260910.html`. Publicado atomicamente no caminho existente `reports/[C]guia-ser-mencionado-por-ia-v2.html`.
 - Alterações preexistentes nos stacks e apresentações locais não foram incluídas nos commits.
+- Em novo deploy pelo Portainer, preservar a imagem corrigida do dashboard ou usar uma imagem reconstruída deste commit. A stack local ainda referencia a tag remota latest e não foi redeployada integralmente.
 
 ## Limites / próximos acompanhamentos
 

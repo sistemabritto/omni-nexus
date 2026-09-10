@@ -41,7 +41,7 @@ BRT_OFFSET = timedelta(hours=-3)
 
 
 def _now_brt() -> datetime:
-    return datetime.now(timezone.utc) + BRT_OFFSET
+    return datetime.now(timezone(BRT_OFFSET))
 
 
 def _get_db():
@@ -128,7 +128,7 @@ def generate_pulse() -> tuple[str, bool]:
     conn = _get_db()
     now_brt = _now_brt()
     today_str = now_brt.strftime("%Y-%m-%d")
-    today_utc = today_str + "T00:00:00.000000Z"
+    today_utc = now_brt.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     has_critical = False
 
     lines = [
@@ -153,7 +153,7 @@ def generate_pulse() -> tuple[str, bool]:
         )
         hb = {r["status"]: r["cnt"] for r in hb_stats}
         ok = hb.get("success", 0)
-        fail = hb.get("fail", 0)
+        fail = sum(hb.get(s, 0) for s in ("fail", "timeout", "error"))
         running = hb.get("running", 0)
         rate = f"{(ok / max(1, ok + fail) * 100):.0f}%" if (ok + fail) > 0 else "—"
         lines.append(f"❤️ Heartbeats: <b>{ok} ok</b> / {fail} fail / {running} run | {rate}")
@@ -191,7 +191,7 @@ def generate_pulse() -> tuple[str, bool]:
         zombies = _safe_scalar(
             conn,
             "SELECT COUNT(*) FROM heartbeat_runs WHERE status='running' AND started_at < ?",
-            ((now_brt - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),),
+            ((now_brt - timedelta(hours=2)).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),),
         )
         if zombies > 0:
             lines.append(f"🧟 Zumbis: <b>{zombies}</b> heartbeat(s) travados há 2h+")
@@ -203,7 +203,7 @@ def generate_pulse() -> tuple[str, bool]:
     if cost > 0:
         lines.append(f"💰 Tokens hoje: <b>US$ {cost:.2f}</b>")
     else:
-        lines.append("💰 Tokens hoje: US$ 0.00")
+        lines.append("💰 Custo: sem valor positivo registrado (não comprova custo zero)")
 
     # ── Integrações críticas ──
     # Verifica via env vars se as credenciais estão presentes
@@ -223,7 +223,7 @@ def generate_pulse() -> tuple[str, bool]:
     integrations.append("✅ Ghost" if ghost_url else "— Ghost")
     postiz = os.environ.get("POSTIZ_URL")
     integrations.append("✅ Postiz" if postiz else "— Postiz")
-    lines.append(f"🔌 Integrações: {' '.join(integrations)}")
+    lines.append(f"🔌 Configuração presente (não teste de saúde): {' '.join(integrations)}")
 
     conn.close()
 
@@ -232,7 +232,7 @@ def generate_pulse() -> tuple[str, bool]:
     if has_critical:
         lines.append("🚨 <b>Ação recomendada:</b> verificar itens críticos acima")
     else:
-        lines.append("✅ Sistema saudável — próxima janela 18:30 BRT")
+        lines.append("✅ Sem alerta nos sinais consultados; isto não valida todas as integrações")
 
     return ("\n".join(lines), has_critical)
 
@@ -259,13 +259,15 @@ def main():
     if args.alert:
         # Modo alerta: só envia se houver problema.
         if has_critical:
-            send_telegram_alert(text)
+            if not send_telegram_alert(text):
+                return 1
             print("[growth_pulse] alert sent (critical)")
         else:
             print("[growth_pulse] no critical issues, skipping alert")
     else:
         # Pulse completo (2x/dia).
-        send_telegram_alert(text)
+        if not send_telegram_alert(text):
+            return 1
         print("[growth_pulse] pulse sent")
 
     return 0

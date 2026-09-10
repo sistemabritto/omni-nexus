@@ -1,6 +1,6 @@
 # Quadro de conectores — frases de transição
 
-Fonte: mesmo documento de `estruturas-cremi.md`. Use quando estiver sem ideia
+Fonte: mesmo documento de `estruturas-de-linguagem.md`. Use quando estiver sem ideia
 de como começar uma frase, introduzir um novo parágrafo/beat, ou se conectar
 com quem está assistindo — principalmente na transição entre os beats de uma
 das 14 estruturas.
@@ -94,5 +94,5 @@ português correto; o sentido de cada uma foi preservado.
 - Não sou eu que sei tudo... mas aprendi que...
 
 ## Relacionado
-- `estruturas-cremi.md` — os 14 esqueletos de roteiro que essas frases conectam
+- `estruturas-de-linguagem.md` — os 14 esqueletos de roteiro que essas frases conectam
 - `social-hook-bank` — os ganchos de abertura, antes de qualquer conector entrar em cena

@@ -15,6 +15,15 @@ class TelegramProviderBotMemoryTests(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
+    def test_reel_request_loads_coproduction_contract(self) -> None:
+        from unittest.mock import patch
+        with patch.object(bot, "fetch_url_context", return_value=""), patch.object(bot, "fetch_mempalace_context", return_value=""):
+            prompt = bot.build_prompt("123", "Me ajuda com um roteiro de Reel sobre CRM")
+        self.assertIn("Contrato de coprodução de conteúdo:", prompt)
+        self.assertIn("Gancho visual", prompt)
+        self.assertIn("media_id", prompt)
+        self.assertIn("NÃO VALIDADO", prompt)
+
     def test_build_prompt_includes_recent_memory_and_current_message(self) -> None:
         bot.append_chat_memory("123", "user", "Quero usar NVIDIA", speaker="Felipe")
         bot.append_chat_memory("123", "assistant", "provider: nvidia", speaker="Magneto")

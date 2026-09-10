@@ -1,0 +1,6 @@
+ARG BASE_IMAGE=evo-nexus-runtime:harness-fix-20260909
+FROM ${BASE_IMAGE}
+COPY ADWs/runner.py /workspace/ADWs/runner.py
+COPY ADWs/routines/growth_pulse.py /workspace/ADWs/routines/growth_pulse.py
+COPY dashboard/backend/reels_producer.py /workspace/dashboard/backend/reels_producer.py
+COPY scripts/telegram_provider_bot.py /workspace/scripts/telegram_provider_bot.py

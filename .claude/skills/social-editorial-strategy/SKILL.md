@@ -36,7 +36,7 @@ O Gambito de Valor tem 3 jogadas, e são os próprios pilares:
 ```
 1. social-editorial-strategy  → QUAL crença? QUAL pilar? QUAL fase de funil?  (esta skill)
 2. social-hook-bank            → QUAL gancho, dentro do bloco certo pro pilar/fase
-3. social-reels-scripts        → QUAL estrutura CREMI + tema da matriz + CTA/funil
+3. social-reels-scripts        → QUAL estrutura de linguagem + tema da matriz + CTA/funil
 ```
 
 Sempre nessa ordem — decidir a fase de funil antes do gancho evita escrever
@@ -59,7 +59,7 @@ pré-frame é só pra fisgar seguidor, não pra vender).
 3. **Escolha o pilar** (RASTREAR/VIBE CODAR/MONETIZAR) pela tabela
    fugir→chegar em `posicionamento-sistema-britto.md`.
 4. **Passe pro `social-hook-bank`** (bloco certo) e `social-reels-scripts`
-   (estrutura CREMI certa) pra escrever o roteiro de fato.
+   (estrutura de linguagem certa) pra escrever o roteiro de fato.
 
 ## Fontes
 

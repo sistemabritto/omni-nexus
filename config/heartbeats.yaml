@@ -117,8 +117,8 @@ heartbeats:
 - id: pixel-growth-6h
   agent: pixel-social-media
   interval_seconds: 21600
-  max_turns: 15
-  timeout_seconds: 300
+  max_turns: 8
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -143,6 +143,17 @@ heartbeats:
     for, if any>]}.
 
     '
+- id: reels-producer
+  agent: system
+  interval_seconds: 1800
+  max_turns: 0
+  timeout_seconds: 60
+  lock_timeout_seconds: 120
+  wake_triggers: [interval, manual]
+  enabled: false # enable after deployment and verified Telegram delivery
+  handler: reels_producer.tick
+  required_secrets: []
+  decision_prompt: 'Monitor determinístico de publicações verificadas e briefs de coprodução Magneto.'
 - id: goal-planner
   agent: goal-planner
   interval_seconds: 86400

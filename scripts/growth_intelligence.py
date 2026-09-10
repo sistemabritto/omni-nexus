@@ -97,7 +97,7 @@ def collect_instagram(start,end):
         except Exception as exc:result['metrics'][metric]={'status':'unavailable','error':str(exc)}
     after=None
     for _ in range(20):
-        params={'fields':'id,caption,permalink,timestamp,media_type,like_count,comments_count','limit':100}
+        params={'fields':'id,caption,permalink,timestamp,media_type,media_product_type,like_count,comments_count','limit':100}
         if after:params['after']=after
         payload=request('GET',f'{base}/{account}/media',headers=headers,params=params)
         rows=payload.get('data',[])

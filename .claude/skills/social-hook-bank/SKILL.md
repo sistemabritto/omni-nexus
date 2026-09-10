@@ -44,10 +44,13 @@ metadata:
    e contexto pelo caso real — regra 1 do material original: prometer no
    gancho o que o conteúdo não entrega mata a autoridade em duas semanas.
 
-3. **Não repita o mesmo gancho literal em vídeos próximos.** O valor do
-   banco é ter 10 mecanismos diferentes — rode entre eles ao longo da
-   semana/mês em vez de vencer sempre pelo mesmo (ex.: não fazer 5 reels
-   seguidos todos com "erro e advertência").
+3. **Pode repetir o mesmo gancho em conteúdos diferentes ao longo dos meses**
+   — regra 3 do material original, na direção oposta do que se assumiria: a
+   audiência muda o tempo todo, e o que já funcionou tende a funcionar de
+   novo. O que vale evitar é usar sempre o MESMO MECANISMO (ex.: 5 reels
+   seguidos todos "erro e advertência") — isso sim empobrece a semana. Rode
+   entre os 10 blocos; dentro de um bloco, reaproveitar um gancho que já
+   validou não é falha, é economia.
 
 4. **Fale olhando pra câmera, sem introdução.** O gancho É a primeira coisa
    que sai da boca — sem "oi gente", sem apresentação. Isso é regra de

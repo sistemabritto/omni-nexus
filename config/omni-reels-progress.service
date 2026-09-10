@@ -1,0 +1,10 @@
+[Unit]
+Description=Read-only Instagram Reels publication evidence
+After=network-online.target
+
+[Service]
+Type=oneshot
+UMask=0027
+Nice=15
+TimeoutStartSec=120
+ExecStart=/usr/bin/python3 /usr/local/lib/omni-growth/collect_reels_progress.py --env /etc/omni-growth.env --output /var/lib/docker/volumes/evonexus_evonexus_workspace/_data/reports/reels/published.json

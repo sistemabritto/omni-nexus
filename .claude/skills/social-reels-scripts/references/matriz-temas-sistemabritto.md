@@ -8,7 +8,7 @@ original (tráfego pago pra produtos digitais). A estrutura de colunas
 (categoria de gancho) é a mesma; o conteúdo de cada célula é novo.
 
 **Como usar:** cada célula é uma semente de tema, não um roteiro pronto.
-Combine uma célula daqui com uma estrutura de `estruturas-cremi.md` e um
+Combine uma célula daqui com uma estrutura de `estruturas-de-linguagem.md` e um
 gancho de `social-hook-bank` pra montar o roteiro completo.
 
 ## Aba 1 — Brainstorming (consciência do público)
@@ -76,7 +76,7 @@ Laboratório de Insights, JURISMART, Voice Dream e Omni Nexus. Campos como
 — nunca preencher com algo inventado só pra completar a célula.
 
 ## Relacionado
-- `estruturas-cremi.md` — os 14 esqueletos de roteiro
+- `estruturas-de-linguagem.md` — os 14 esqueletos de roteiro
 - `quadro-conectores.md` — frases de transição
 - `social-hook-bank` — os 200 ganchos + 25 visuais
 - `.claude/rules/esteira-de-conteudo.md` — funis reais e pilares RASTREAR/VIBE CODAR/MONETIZAR

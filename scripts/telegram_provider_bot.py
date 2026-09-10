@@ -884,6 +884,10 @@ def build_prompt(chat_id: str, prompt_text: str, *, speaker: str | None = None) 
         workspace_context(),
         "",
     ]
+    if any(word in clean_prompt.lower() for word in ("reel", "roteiro", "gancho", "headline", "estrutura", "openreply", "pauta", "gravar")):
+        contract = ROOT / ".claude/skills/social-reels-scripts/references/coproducao-magneto.md"
+        if contract.is_file():
+            parts.extend(["Contrato de coprodução de conteúdo:", contract.read_text(encoding="utf-8"), ""])
     if any(word in clean_prompt.lower() for word in ("instagram", "tráfego", "trafego", "lead", "funil", "venda", "blog", "bio", "métrica", "metrica")):
         from growth_context import load_context
         parts.extend(["Métricas de aquisição coletadas:", load_context(), ""])

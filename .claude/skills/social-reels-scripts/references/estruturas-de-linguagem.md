@@ -1,8 +1,12 @@
-# 14 estruturas de linguagem (CREMI) — esqueleto do roteiro
+# 14 estruturas de linguagem — esqueleto do roteiro
 
-Fonte: "Estruturas de Linguagem do CREMI + Quadro de Conectores", internalizado
-em 10/09/2026 de `docs.google.com/document/d/1zsIylpiCuXk2WCcTuZJ0hcFIcu4rfW2hvgXoMr7chd0`.
-Uso interno — não redistribuir o documento original.
+Fonte: material de estruturas de linguagem e conectores narrativos,
+internalizado em 10/09/2026 de
+`docs.google.com/document/d/1zsIylpiCuXk2WCcTuZJ0hcFIcu4rfW2hvgXoMr7chd0`.
+Uso interno — não redistribuir o documento original nem citar a fonte
+externa nos materiais do Sistema Britto. Aqui dentro, chamar sempre de
+**Estrutura de Linguagem** (ou "Roteiro", quando for sobre a peça inteira) —
+nunca pelo nome do curso de origem.
 
 Cada estrutura é um **esqueleto pro corpo inteiro do roteiro**, não só pro
 gancho. O gancho (ver skill `social-hook-bank`) resolve os primeiros 1-3

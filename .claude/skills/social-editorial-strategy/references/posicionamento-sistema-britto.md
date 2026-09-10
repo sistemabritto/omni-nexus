@@ -196,7 +196,7 @@ campanha, testando o formato.
 - **Reservar espaço pra pré-conversão** ligado à Aba 3 da matriz de temas
   (`social-reels-scripts`), mesmo sem campanha ativa, pra testar o formato.
 - Ver a skill `social-reels-scripts` pra combinar isso com gancho (banco de
-  200) e estrutura de roteiro (14 CREMI) na hora de escrever.
+  200) e estrutura de roteiro (14 estruturas de linguagem) na hora de escrever.
 
 ## Relacionado
 - `hackeando-conteudo-conceitos.md` — a fonte condensada

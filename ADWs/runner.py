@@ -589,7 +589,7 @@ def banner(title: str, subtitle: str = "", color: str = "cyan"):
 
 
 def summary(results: list, title: str = "Completed"):
-    """Show final summary in terminal."""
+    """Show final summary; failed steps must fail the scheduled process too."""
     total_duration = sum(r.get("duration", 0) for r in results)
     success = sum(1 for r in results if r.get("success"))
     failed = len(results) - success
@@ -608,6 +608,8 @@ def summary(results: list, title: str = "Completed"):
         border_style="green" if failed == 0 else "yellow",
         padding=(0, 2)
     ))
+    if failed:
+        raise SystemExit(1)
 
 
 def send_telegram(text: str, chat_id: str = None) -> bool:

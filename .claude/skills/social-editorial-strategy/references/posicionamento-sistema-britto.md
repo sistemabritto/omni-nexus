@@ -64,32 +64,33 @@ Linha de apoio, pra quando precisar explicar em uma frase a mais:
 ### O mecanismo: o Gambito de Valor
 
 No xadrez, um gambito é abrir mão de uma peça de propósito, logo no início,
-pra ganhar posição mais à frente. O trabalho não diminui — ele muda de alvo.
-Sai de proteger o que você já tinha e vai construir a vantagem que a jogada
-abriu.
+pra abrir caminho pra uma vantagem maior depois.
 
-O Gambito de Valor funciona igual. Você abre mão da ideia que nasceria do
+O Gambito de Valor funciona assim: você abre mão da ideia que nasceria do
 seu próprio gosto técnico ou da vontade de mostrar serviço — o primeiro
-impulso de todo vibe coder. Em troca, você só entra depois que RASTREAR já
-confirmou que aquele gargalo tem comprador do outro lado, seja um mercado
-mal servido ou um vazamento dentro de uma operação que já roda, como o caso
-do VGRA.
+impulso de todo vibe coder. Em troca, você foca só em RASTREAR: achar uma
+demanda de alto valor real, faminta, mal servida (Hack #1 do livro — a
+audiência precisa estar "faminta" e "viciada", não só existir), seja um
+mercado inteiro ou um gargalo dentro de uma operação que já roda, como o
+caso do VGRA.
 
-O esforço de construir continua existindo. Ele para de ser gasto testando
-ideia às cegas — foi assim que o Laboratório de Insights morreu e o
-JURISMART chegou tarde demais — e passa a mirar direto em algo que já tem
-quem pague. VIBE CODAR entra rápido e barato porque o alvo já está certo.
-MONETIZAR fecha a jogada: o xeque-mate só existe porque o sacrifício do
-início abriu espaço pra ele.
+É esse sacrifício que abre o caminho fácil pra MONETIZAR depois. Quando a
+demanda já existe e já está com fome, vender deixa de ser trabalho — o
+mercado puxa a venda, você não empurra. VIBE CODAR entra no meio, rápido e
+barato, só pra colocar a solução certa na frente de quem já queria comprar.
+Foi a falta desse sacrifício que matou o Laboratório de Insights e atrasou
+o JURISMART: os dois foram construídos antes de confirmar a fome do outro
+lado. MONETIZAR fecha a jogada — o xeque-mate só sai fácil porque o
+sacrifício do início já garantiu que tinha comprador esperando.
 
 Os 3 pilares deixam de ser categorias soltas e viram as 3 jogadas do
 Gambito:
 
 | Jogada | Pilar | Pergunta que responde |
 |---|---|---|
-| 1. O sacrifício | RASTREAR | Onde está o gargalo de valor não capturado? |
-| 2. A construção | VIBE CODAR | Como resolver isso rápido e barato, hoje que virou possível? |
-| 3. O xeque-mate | MONETIZAR | Como isso vira venda, margem ou equity? |
+| 1. O sacrifício | RASTREAR | Onde tem uma demanda de alto valor, faminta, ainda não capturada? |
+| 2. A construção | VIBE CODAR | Como colocar a solução na frente dela, rápido e barato? |
+| 3. O xeque-mate, sem esforço | MONETIZAR | A venda em si — fácil porque a demanda já estava com fome |
 
 ### Por que a primeira versão estava errada (registro do erro)
 

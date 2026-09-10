@@ -21,14 +21,15 @@ verdade, não um atalho) em `references/posicionamento-sistema-britto.md`.
 O Gambito de Valor tem 3 jogadas, e são os próprios pilares:
 
 1. **O sacrifício (RASTREAR)** — abrir mão da ideia que você mesmo
-   construiria, e só entrar depois que existe gargalo de valor confirmado
-   (mercado mal servido ou vazamento numa operação que já roda).
+   construiria, e focar em achar uma demanda de alto valor, faminta e mal
+   servida (mercado ou vazamento numa operação que já roda).
 2. **A construção (VIBE CODAR)** — resolver rápido e barato, porque o alvo
    já está certo. Sem o enquadramento "construir ficou barato, **por isso**
    o dinheiro não está aí", esse pilar reforça a identidade de vibe coder —
    o oposto da crença.
-3. **O xeque-mate (MONETIZAR)** — fecha em venda, margem ou equity. Só
-   existe porque o sacrifício da jogada 1 abriu espaço pra ele.
+3. **O xeque-mate sem esforço (MONETIZAR)** — a venda em si fica fácil,
+   porque a demanda já estava com fome. O esforço todo já foi gasto na
+   jogada 1; aqui só se colhe.
 
 ## Onde essa skill entra no pipeline
 

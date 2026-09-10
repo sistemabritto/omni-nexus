@@ -36,6 +36,13 @@ def _sql(stmt: str):
 
 def _row_to_dict(row) -> Dict[str, Any]:
     d = dict(row._mapping)
+    # psycopg2 returns native `uuid` columns as uuid.UUID objects. Routes
+    # compare these against str path params (e.g. `doc["space_id"] != space_id`
+    # from the URL) — left as UUID objects, that comparison is always False,
+    # so GET/PATCH/DELETE on an existing document 404 unconditionally.
+    for key, value in d.items():
+        if isinstance(value, uuid.UUID):
+            d[key] = str(value)
     for col in ("tags", "metadata"):
         if col in d and isinstance(d[col], str):
             try:

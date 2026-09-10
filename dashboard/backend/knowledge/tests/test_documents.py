@@ -69,6 +69,34 @@ class TestDocumentsCRUDUnit:
 
         assert result is None
 
+    def test_get_document_stringifies_native_uuid_columns(self):
+        """Regression: psycopg2 returns native `uuid` columns (id, space_id,
+        unit_id) as uuid.UUID objects, not str. Routes compare
+        doc["space_id"] against a str path param — left as UUID, that
+        comparison is always False and GET/PATCH/DELETE 404 unconditionally
+        on a document that exists. See knowledge_v1.py's `!= space_id` checks.
+        """
+        _add_backend()
+        from knowledge import documents
+
+        space_uuid = uuid.uuid4()
+        row_data = self._make_doc_row()
+        row_data["id"] = uuid.UUID(row_data["id"])
+        row_data["space_id"] = space_uuid  # native uuid.UUID, as psycopg2 returns it
+
+        mock_engine, mock_conn = _make_mock_engine()
+        mock_conn.execute.return_value.fetchone.return_value = _mock_row(row_data)
+
+        with patch.object(documents, "get_dsn", return_value="postgresql://test"), \
+             patch.object(documents, "get_engine", return_value=mock_engine):
+            result = documents.get_document("conn-1", row_data["id"])
+
+        assert isinstance(result["id"], str)
+        assert isinstance(result["space_id"], str)
+        assert result["space_id"] == str(space_uuid)
+        # This is the exact comparison the route does — must not be a UUID vs str mismatch.
+        assert result["space_id"] == str(space_uuid)
+
     def test_delete_document_returns_true(self):
         _add_backend()
         from knowledge import documents

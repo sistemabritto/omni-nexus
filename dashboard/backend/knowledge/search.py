@@ -233,8 +233,11 @@ def hybrid_search(
         default_boost = DEFAULT_BOOSTS.get(content_type, 1.0)
         final_score = rrf_score * space_boost * default_boost
 
-        # Apply optional filters
-        if filters.get("unit_id") and r.get("unit_id") != filters["unit_id"]:
+        # Apply optional filters. unit_id comes back from psycopg2 as a
+        # uuid.UUID (native `uuid` column) — cast before comparing to the
+        # str filter value, or this always mismatches and the filter
+        # silently drops every result.
+        if filters.get("unit_id") and str(r.get("unit_id")) != filters["unit_id"]:
             continue
         if filters.get("chunk_type") and r.get("chunk_type") != filters["chunk_type"]:
             continue

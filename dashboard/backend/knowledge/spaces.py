@@ -30,6 +30,13 @@ def _sql(stmt: str):
 def _row_to_dict(row) -> Dict[str, Any]:
     """Convert a SQLAlchemy Row to a plain dict."""
     d = dict(row._mapping)
+    # psycopg2 returns native `uuid` columns as uuid.UUID objects. Callers
+    # elsewhere (documents.py, units.py) compare these against str path
+    # params, so keep the same convention here for consistency even though
+    # no current spaces route does an equality check on id.
+    for key, value in d.items():
+        if isinstance(value, uuid.UUID):
+            d[key] = str(value)
     # Decode JSONB columns if they come back as strings
     for col in ("access_rules", "content_type_boosts"):
         if col in d and isinstance(d[col], str):

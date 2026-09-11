@@ -40,20 +40,26 @@ def test_amostra_minuscula_nao_vira_ticket():
 
     Abrir ticket com amostra assim é transformar ruído em conclusão — e
     ticket que ninguém age ensina o operador a ignorar tickets.
+
+    Chaves `leads_novos`/`leads_fechados_novos`, não `leads`/`leads_fechados`:
+    achado ao vivo em 11/09/2026, as últimas duas são ESTOQUE (contagem atual
+    do pipeline no CRM), não fluxo da janela — comparar contra elas produzia
+    "100% de perda" toda semana mesmo sem problema real no funil. Ver
+    ADWs/routines/weekly_funnel_review.py e metricas_crescimento.py.
     """
     assert rev.maior_vazamento({"visitas": 2, "cliques_cta": 0,
-                                "leads": 0, "leads_fechados": 0}) is None
+                                "leads_novos": 0, "leads_fechados_novos": 0}) is None
 
 
 def test_funil_saudavel_nao_vira_ticket():
     assert rev.maior_vazamento({"visitas": 100, "cliques_cta": 90,
-                                "leads": 80, "leads_fechados": 70}) is None
+                                "leads_novos": 80, "leads_fechados_novos": 70}) is None
 
 
 def test_queda_abaixo_do_limite_nao_vira_ticket():
     """20% de perda é operação normal, não gargalo."""
     assert rev.maior_vazamento({"visitas": 100, "cliques_cta": 80,
-                                "leads": 70, "leads_fechados": 60}) is None
+                                "leads_novos": 70, "leads_fechados_novos": 60}) is None
 
 
 # ── qual transição a rotina elege ────────────────────────────────────────
@@ -66,15 +72,15 @@ def test_desempate_e_por_perda_absoluta_nao_percentual():
     que mexer muda o resultado do mês.
     """
     de, para, queda = rev.maior_vazamento(
-        {"visitas": 191, "cliques_cta": 1, "leads": 15, "leads_fechados": 0})
+        {"visitas": 191, "cliques_cta": 1, "leads_novos": 15, "leads_fechados_novos": 0})
     assert (de, para) == ("visitas", "cliques_cta")
     assert queda == 99.5
 
 
 def test_gargalo_no_meio_e_encontrado():
     de, para, _ = rev.maior_vazamento(
-        {"visitas": 500, "cliques_cta": 400, "leads": 40, "leads_fechados": 30})
-    assert (de, para) == ("cliques_cta", "leads")
+        {"visitas": 500, "cliques_cta": 400, "leads_novos": 40, "leads_fechados_novos": 30})
+    assert (de, para) == ("cliques_cta", "leads_novos")
 
 
 # ── a memória entre execuções ────────────────────────────────────────────

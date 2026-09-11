@@ -6,7 +6,6 @@
 ##   * TLS entrypoint: websecure
 ##   * Cert resolver: letsencryptresolver
 ##   * Public hosts: nexus.workflowapi.com.br (EvoNexus)
-##                   omni.workflowapi.com.br  (OmniRoute)
 ##
 ## OpenReply (openreply.workflowapi.com.br) mora em stack PRÓPRIA desde
 ## 25/08/2026 — ver openreply-vps.stack.yml. Não voltar a colar aqui: foi
@@ -14,42 +13,25 @@
 ## compose que causou a divergência de três vias (repo/Portainer/VPS ao vivo)
 ## descoberta naquele dia. Ver ticket 3497e698 no Nexus.
 ##
-## OmniRoute: os segredos reais (JWT_SECRET, API_KEY_SECRET,
-## STORAGE_ENCRYPTION_KEY) NÃO vêm daqui nem do Portainer — o próprio app os
-## gera no primeiro boot e persiste em /app/data/server.env, dentro do volume
-## omniroute_data. Definir essas três como env da stack SOBRESCREVE o arquivo
-## e invalida toda API key já emitida (aconteceu em 25/08/2026, derrubou o
-## Hermes local do Felipe). Deixar de fora de propósito — omitir é o correto.
+## OmniRoute (omni.sistemabritto.com.br) mora em stack PRÓPRIA desde
+## 11/09/2026 — ver omniroute-vps.stack.yml. Mesmo raciocínio do OpenReply:
+## é o serviço do qual TUDO aqui depende (dashboard, telegram, scheduler,
+## media-worker via http://omniroute:20128/v1), então ele é o que MENOS pode
+## compartilhar compose com o resto. O `redis` que existia aqui era só dele —
+## foi removido junto; nada mais neste arquivo o usava.
 ##
 ## Segredos ficam FORA do repo: os valores reais (DASHBOARD_API_TOKEN,
-## OMNIROUTE_INITIAL_PASSWORD, SMTP_*, etc) são preenchidos como variáveis de
-## ambiente da stack no Portainer. Os placeholders abaixo marcam onde entram.
+## SMTP_*, etc) são preenchidos como variáveis de ambiente da stack no
+## Portainer. Os placeholders abaixo marcam onde entram.
 ##   DASHBOARD_API_TOKEN        → openssl rand -base64 32
 ##   APPROVAL_BRIDGE_TOKEN      → openssl rand -base64 32 (SÓ em
 ##     evonexus_dashboard + evonexus_telegram — NUNCA em evonexus_scheduler,
 ##     que spawna os subprocessos dos agentes; ver goal-ticket-unification
 ##     ADR SPEC 3f / Vault V1c-V2-V10)
-##   OMNIROUTE_INITIAL_PASSWORD → só vale no bootstrap de banco vazio (ver
-##     nota acima) — não redefinir num omniroute já inicializado.
 ## ============================================================================
 version: "3.7"
 
 services:
-
-  ## Fica sozinho aqui porque o OmniRoute (abaixo) usa redis://redis:6379 pra
-  ## cache/fila própria. Não é do OpenReply — o OpenReply tem o seu dedicado
-  ## na stack separada (ver openreply-vps.stack.yml).
-  redis:
-    image: redis:alpine
-    networks:
-      - network_public
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          memory: 256M
 
   evonexus_dashboard:
     image: excarplex/evo-nexus-dashboard:latest
@@ -101,7 +83,7 @@ services:
       - MINIO_BUCKET=${MINIO_BUCKET:-post}
       - MINIO_PUBLIC_BASE=${MINIO_PUBLIC_BASE}
       - EVONEXUS_API_URL=http://localhost:8080
-      - CORS_ALLOWED_ORIGINS=https://nexus.workflowapi.com.br
+      - CORS_ALLOWED_ORIGINS=https://nexus.workflowapi.com.br,https://nexus.sistemabritto.com.br
       - TZ=America/Sao_Paulo
       - EVONEXUS_PORT=8080
       - TERMINAL_SERVER_PORT=32352
@@ -148,6 +130,13 @@ services:
         - traefik.http.services.evonexus_dashboard.loadbalancer.server.port=8080
         - traefik.http.services.evonexus_dashboard.loadbalancer.passHostHeader=true
 
+        ## Novo domínio em paralelo; manter o hostname antigo para não quebrar shares existentes.
+        - traefik.http.routers.evonexus_dashboard_new.rule=Host(`nexus.sistemabritto.com.br`)
+        - traefik.http.routers.evonexus_dashboard_new.entrypoints=websecure
+        - traefik.http.routers.evonexus_dashboard_new.priority=1
+        - traefik.http.routers.evonexus_dashboard_new.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.evonexus_dashboard_new.service=evonexus_dashboard
+
         ## Embedded terminal-server on :32352. /terminal is stripped before proxying.
         ## Both routers need an explicit .service= label: two services share this
         ## container's label set, and without it Traefik can't auto-link either
@@ -163,6 +152,13 @@ services:
         - traefik.http.routers.evonexus_terminal.middlewares=evonexus_terminal_strip
         - traefik.http.services.evonexus_terminal.loadbalancer.server.port=32352
         - traefik.http.services.evonexus_terminal.loadbalancer.passHostHeader=true
+
+        - traefik.http.routers.evonexus_terminal_new.rule=Host(`nexus.sistemabritto.com.br`) && PathPrefix(`/terminal`)
+        - traefik.http.routers.evonexus_terminal_new.entrypoints=websecure
+        - traefik.http.routers.evonexus_terminal_new.priority=10
+        - traefik.http.routers.evonexus_terminal_new.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.evonexus_terminal_new.service=evonexus_terminal
+        - traefik.http.routers.evonexus_terminal_new.middlewares=evonexus_terminal_strip
         - traefik.http.middlewares.evonexus_terminal_strip.stripprefix.prefixes=/terminal
 
   evonexus_telegram:
@@ -204,7 +200,8 @@ services:
       - MINIO_PUBLIC_BASE=${MINIO_PUBLIC_BASE}
       - EVONEXUS_API_URL=http://evonexus-dashboard:8080
       - TELEGRAM_MODE=provider
-      - TELEGRAM_TIMEOUT=900
+      - TELEGRAM_TIMEOUT=1800
+      - TELEGRAM_PER_ATTEMPT_TIMEOUT_CAP=900
       - TELEGRAM_MAX_TURNS=30
       - GROQ_API_KEY=${GROQ_API_KEY}
       ## Provider API Keys (needed for fallback chain)
@@ -259,6 +256,11 @@ services:
       - DASHBOARD_API_TOKEN=${DASHBOARD_API_TOKEN}
       - DASHBOARD_API_USER=${DASHBOARD_API_USER:-admin}
       - EVONEXUS_API_URL=http://evonexus-dashboard:8080
+      ## OmniRoute virou stack própria em 11/09/2026 (omniroute-vps.stack.yml).
+      ## omniroute_lkgp_healer.py usa isto pra falar com a management API pelo
+      ## domínio público (não tem alias interno pra essa rota administrativa).
+      - OMNIROUTE_URL=${OMNIROUTE_URL:-https://omni.sistemabritto.com.br}
+      - OMNIROUTE_ADMIN_PASSWORD=${OMNIROUTE_ADMIN_PASSWORD}
       ## Backup diário (S3-compat: AWS, MinIO, R2...). BACKUP_S3_BUCKET vazio =
       ## modo local (fallback), sem retenção sem BACKUP_RETAIN_LOCAL — sem isto o
       ## disco enche sem aviso. Achado + wiring em 27/08/2026.
@@ -281,7 +283,8 @@ services:
       ## Provider API Keys (needed for fallback chain)
       - NVIDIA_API_KEY=${NVIDIA_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - TELEGRAM_TIMEOUT=900
+      - TELEGRAM_TIMEOUT=1800
+      - TELEGRAM_PER_ATTEMPT_TIMEOUT_CAP=900
       - TELEGRAM_MAX_TURNS=30
       - SMTP_DOMAIN=${SMTP_DOMAIN}
       - SMTP_USERNAME=${SMTP_USERNAME}
@@ -311,7 +314,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: "1024M"
+          memory: "2048M" # OpenCode exceeded 1 GiB: confirmed scheduler OOM 2026-09-09
 
   ## Media worker — esteira de vídeo (corte bruto, corte editorial, cortes
   ## virais). Consome MediaJob via polling; ver .claude/rules/esteira-de-video.md.
@@ -356,72 +359,9 @@ services:
           cpus: "4.0"
           memory: 5120M
 
-  ## OmniRoute — gateway de IA (237+ providers, fallback automático,
-  ## compressão de tokens). O provider "omnirouter" do EvoNexus aponta
-  ## para http://omniroute:20128/v1 (DNS interno via alias).
-  ## Dashboard público em omni.workflowapi.com.br com auth nativa (login).
-  omniroute:
-    image: diegosouzapw/omniroute:latest
-    depends_on:
-      - redis
-
-    volumes:
-      - omniroute_data:/app/data
-
-    networks:
-      network_public:
-        aliases:
-          - omniroute
-
-    ## Auth NATIVA do OmniRoute (login com INITIAL_PASSWORD, sessão JWT em
-    ## cookie). NÃO usar basic-auth do Traefik na frente: as chamadas
-    ## internas do dashboard (SSE/WS/API) usam Authorization próprio e
-    ## entram em loop de 401 com o basic-auth.
-    ## Segredos via env da stack no Portainer:
-    ##   OMNIROUTE_INITIAL_PASSWORD → senha de login do dashboard
-    ##   OMNIROUTE_JWT_SECRET       → openssl rand -base64 48
-    ##   OMNIROUTE_API_KEY_SECRET   → openssl rand -hex 32
-    ##   OMNIROUTE_STORAGE_KEY      → openssl rand -hex 32
-    environment:
-      - TZ=America/Sao_Paulo
-      - PORT=20128
-      - REQUIRE_API_KEY=true
-      - INITIAL_PASSWORD=${OMNIROUTE_INITIAL_PASSWORD}
-      - JWT_SECRET=${OMNIROUTE_JWT_SECRET}
-      - API_KEY_SECRET=${OMNIROUTE_API_KEY_SECRET}
-      - STORAGE_ENCRYPTION_KEY=${OMNIROUTE_STORAGE_KEY}
-      - AUTH_COOKIE_SECURE=true
-      - OMNIROUTE_TRUST_PROXY=true
-      - NEXT_PUBLIC_BASE_URL=https://omni.workflowapi.com.br
-      - OMNIROUTE_PUBLIC_BASE_URL=https://omni.workflowapi.com.br
-      - CORS_ALLOWED_ORIGINS=https://omni.workflowapi.com.br
-      - REDIS_URL=redis://redis:6379
-
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:20128/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          cpus: "2"
-          memory: "2048M"
-      labels:
-        - traefik.enable=true
-        - traefik.docker.network=network_public
-        - traefik.http.routers.omniroute.rule=Host(`omni.workflowapi.com.br`)
-        - traefik.http.routers.omniroute.entrypoints=websecure
-        - traefik.http.routers.omniroute.tls.certresolver=letsencryptresolver
-        - traefik.http.services.omniroute.loadbalancer.server.port=20128
-        - traefik.http.services.omniroute.loadbalancer.passHostHeader=true
-
-  ## OpenReply migrou pra stack própria em 25/08/2026 — ver openreply-vps.stack.yml
-  ## e o comentário no topo deste arquivo. Não redeclarar aqui.
+  ## OpenReply migrou pra stack própria em 25/08/2026, OmniRoute em
+  ## 11/09/2026 — ver openreply-vps.stack.yml / omniroute-vps.stack.yml e o
+  ## comentário no topo deste arquivo. Não redeclarar aqui.
 
 volumes:
   evonexus_media:
@@ -436,7 +376,6 @@ volumes:
   evonexus_claude_auth:
   evonexus_codex_auth:
   evonexus_openclaude_auth:
-  omniroute_data:
 
 networks:
   network_public:

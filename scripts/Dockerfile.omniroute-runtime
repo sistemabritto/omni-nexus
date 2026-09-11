@@ -3,6 +3,20 @@ FROM ${BASE_IMAGE}
 USER root
 # The shipped standalone image contains only ioredis/package.json.
 # Restore the exact installed version plus its runtime dependencies.
-RUN npm install --prefix /opt/omniroute-redis-runtime --omit=dev --ignore-scripts --no-audit --no-fund ioredis@5.11.1 \
+#
+# bcryptjs has the same gap, one layer deeper: it IS bundled into the main
+# server's compiled chunk (managementPassword.ts imports it statically, so
+# dashboard login works fine), but bin/cli/settings-store.mjs — the
+# `omniroute reset-password` CLI used to recover a lost dashboard password —
+# runs unbundled and needs the real package physically in node_modules/.
+# Nothing else requires it loose, so it's never copied. Confirmed live
+# 11/09/2026: `node bin/reset-password.mjs --password-stdin` failed with
+# "Cannot find package 'bcryptjs'" even with dashboard login working.
+# Upstream fix submitted: github.com/diegosouzapw/OmniRoute/pull/13352
+# (adds both to EXTRA_MODULE_ENTRIES in scripts/build/assembleStandalone.mjs)
+# — once merged and released, this whole file can go back to FROM the
+# upstream image directly.
+RUN npm install --prefix /opt/omniroute-redis-runtime --omit=dev --ignore-scripts --no-audit --no-fund \
+      ioredis@5.11.1 bcryptjs@3.0.3 \
     && cp -a /opt/omniroute-redis-runtime/node_modules/. /app/node_modules/
 USER node

@@ -1,0 +1,201 @@
+## ============================================================================
+## OmniRoute — stack PRÓPRIA (pessoal — Sistema Britto)
+##
+## Migrada para cá em 11/09/2026, saindo de dentro de evonexus-vps.stack.yml
+## (serviço `omniroute`) + agent-recovery.override.yml (bloco `omniroute`).
+## Mesmo motivo do OpenReply (ver cabeçalho de openreply-vps.stack.yml e
+## ticket 3497e698): um serviço do qual TUDO depende (dashboard, telegram,
+## scheduler, media-worker) compartilhando compose com serviços sem nada a
+## ver com ele é o que causa divergência de três vias (repo/Portainer/VPS) e
+## faz um redeploy não relacionado arriscar reiniciar o gateway de IA.
+##
+## O que mudou na separação, e por quê:
+##   * Redis DEDICADO (serviço `redis` abaixo) em vez de reusar o
+##     evonexus_redis da stack do dashboard. Era acoplamento cross-stack
+##     desnecessário — o Redis do OmniRoute é só cache/fila de rate-limit,
+##     nada que precise sobreviver a um redeploy. Estado antigo se perde e
+##     não importa (rebuild automático).
+##   * Volume `omniroute_data` é EXTERNAL, apontando pro volume que já existe
+##     na VPS (`evonexus_omniroute_data`, confirmado via `docker volume ls`
+##     em 11/09/2026 contra o serviço `evonexus_omniroute` rodando). Isso é
+##     obrigatório: o OmniRoute gera sozinho no primeiro boot e persiste em
+##     /app/data/server.env, dentro desse volume, os três segredos reais
+##     (JWT_SECRET, API_KEY_SECRET, STORAGE_ENCRYPTION_KEY) e todas as API
+##     keys já emitidas para os consumidores (Hermes local/VPS, opencode
+##     local, EvoNexus). Se o Swarm criar um volume novo em vez de reusar
+##     este, todo mundo perde a chave e precisa reconfigurar do zero — já
+##     aconteceu antes (ver memory omniroute-secrets-persistidos.md).
+##     NÃO REMOVER `external: true` nem trocar OMNIROUTE_VOLUME_NAME sem
+##     confirmar de novo o nome real do volume na VPS.
+##   * Imagem: a que roda de fato na VPS hoje é a local `omniroute:vps-tuned-
+##     20260909` (buildada em 09/09/2026 via scripts/Dockerfile.omniroute-
+##     runtime, corrige ioredis runtime faltante no pacote oficial — ver
+##     docs/operations/vps-optimization-2026-09-09.md). É tag LOCAL, existe
+##     só no Docker deste host — funciona aqui porque continuamos no mesmo
+##     node, mas não sobrevive a troca de VPS nem a rebuild do zero sem
+##     antes publicar em um registry (mesmo caminho que o OpenReply seguiu:
+##     GH Action publicando em excarplex/omniroute). Ainda não feito —
+##     dívida técnica aceita conscientemente, não bloqueia esta migração.
+##   * Domínio: omni.sistemabritto.com.br é o novo (Traefik principal).
+##     omni.workflowapi.com.br fica vivo em paralelo (router "_legacy"
+##     abaixo), mesmo molde usado para nexus.sistemabritto.com.br em
+##     evonexus-vps.stack.yml — não derruba consumidor nenhum que ainda
+##     aponte pro domínio antigo (lkgp_healer, Hermes, opencode local) até
+##     você migrar cada um e decidir aposentar o domínio velho.
+##     Requer DNS: registro A omni.sistemabritto.com.br -> IP da VPS, mesma
+##     zona Cloudflare onde nexus.sistemabritto.com.br já foi criado.
+##
+## Secrets ficam FORA do repo — variáveis de ambiente da stack no Portainer:
+##   OMNIROUTE_INITIAL_PASSWORD → só vale no bootstrap de banco vazio. Como
+##     estamos reusando o volume existente, o OmniRoute JÁ está inicializado
+##     — não redefinir isso, é ignorado depois do primeiro boot.
+##   OMNIROUTE_JWT_SECRET / OMNIROUTE_API_KEY_SECRET / OMNIROUTE_STORAGE_KEY
+##     → mesma regra do arquivo antigo: NÃO setar. O app já gerou e persistiu
+##     esses três no volume; redefinir aqui SOBRESCREVE e invalida toda API
+##     key já emitida. Deixar de fora é o correto.
+##   OMNIROUTE_VOLUME_NAME → nome exato do volume Docker a reaproveitar.
+##     Confirmado em 11/09/2026: evonexus_omniroute_data
+##   OMNIROUTE_IMAGE → omniroute:vps-tuned-20260909 (local, ver nota acima)
+## ============================================================================
+version: "3.8"
+
+services:
+
+  ## Redis dedicado do OmniRoute — cache/fila de rate-limit, sem persistência
+  ## necessária. Não é o mesmo redis do evonexus (esse ficou só pro dashboard
+  ## depois desta separação).
+  redis:
+    image: redis:alpine
+    networks:
+      network_public:
+        aliases:
+          - omniroute-redis
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+
+  omniroute:
+    image: ${OMNIROUTE_IMAGE:-diegosouzapw/omniroute:latest}
+    depends_on:
+      - redis
+
+    volumes:
+      - omniroute_data:/app/data
+
+    networks:
+      network_public:
+        aliases:
+          ## Mantido idêntico ao alias antigo de propósito — todos os
+          ## consumidores internos (dashboard via config/providers.json,
+          ## media-worker, ai-image-creator) apontam para
+          ## http://omniroute:20128/v1 e não precisam de NENHUMA mudança
+          ## com a stack separada, contanto que este alias não mude.
+          - omniroute
+
+    ## Auth NATIVA do OmniRoute (login com INITIAL_PASSWORD, sessão JWT em
+    ## cookie). NÃO usar basic-auth do Traefik na frente: as chamadas
+    ## internas do dashboard (SSE/WS/API) usam Authorization próprio e
+    ## entram em loop de 401 com o basic-auth.
+    environment:
+      - TZ=America/Sao_Paulo
+      - PORT=20128
+      - REQUIRE_API_KEY=true
+      ## INITIAL_PASSWORD / JWT_SECRET / API_KEY_SECRET / STORAGE_ENCRYPTION_KEY
+      ## DELIBERADAMENTE OMITIDAS — não só "deixadas em branco". Confirmado ao
+      ## vivo em 11/09/2026: declarar a linha com a variável de ambiente sem
+      ## valor (`STORAGE_ENCRYPTION_KEY=${OMNIROUTE_STORAGE_KEY}` sem essa var
+      ## exportada) faz o Compose interpolar pra STRING VAZIA — a env var fica
+      ## DEFINIDA, só que vazia. Isso é diferente de ela não existir. O
+      ## OmniRoute tratou a string vazia como a chave real e toda credencial
+      ## salva parou de descriptografar ("Decryption failed... Auth tag
+      ## validation") no primeiro boot desta stack nova. Redeploy sem
+      ## declarar a chave nenhuma (nem vazia) resolveu. Se algum dia precisar
+      ## setar de propósito (bootstrap de banco vazio), adicione a linha de
+      ## volta temporariamente — nunca deixe ela parada aqui interpolando
+      ## vazio.
+      - AUTH_COOKIE_SECURE=true
+      - OMNIROUTE_TRUST_PROXY=true
+      - NEXT_PUBLIC_BASE_URL=https://omni.sistemabritto.com.br
+      - OMNIROUTE_PUBLIC_BASE_URL=https://omni.sistemabritto.com.br
+      ## Os dois domínios liberados durante a transição. Remover o
+      ## workflowapi.com.br daqui quando aposentar o domínio antigo.
+      - CORS_ALLOWED_ORIGINS=https://omni.sistemabritto.com.br,https://omni.workflowapi.com.br
+      - REDIS_URL=redis://redis:6379
+      ## Tuning real de produção, herdado de agent-recovery.override.yml
+      ## (09/09/2026 — ver docs/operations/vps-optimization-2026-09-09.md).
+      ## Não afrouxar sem reler aquele doc: cada valor tem uma razão medida
+      ## (probes de streaming simultâneo, budget de provider, heap do Node).
+      - NODE_OPTIONS=--max-old-space-size=2560
+      - RATE_LIMIT_MAX_WAIT_MS=300000
+      - RATE_LIMIT_MAX_QUEUE_DEPTH=32
+      - STREAM_RECOVERY_ENABLED=true
+      - STREAM_RECOVERY_MIDSTREAM_ENABLED=false
+      - STREAM_READINESS_TIMEOUT_MS=180000
+      - STREAM_READINESS_MAX_TIMEOUT_MS=600000
+      - STREAM_IDLE_TIMEOUT_MS=180000
+      - FETCH_TIMEOUT_MS=300000
+      - SSE_HEARTBEAT_INTERVAL_MS=15000
+
+    stop_grace_period: 300s
+
+    healthcheck:
+      test: ["CMD", "node", "/app/healthcheck.mjs"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 5
+
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 0
+      update_config:
+        failure_action: rollback
+        monitor: 90s
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "3"
+          memory: "4096M"
+        reservations:
+          cpus: "0.5"
+          memory: "1024M"
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=network_public
+
+        ## Domínio novo — principal a partir desta migração.
+        - traefik.http.routers.omniroute.rule=Host(`omni.sistemabritto.com.br`)
+        - traefik.http.routers.omniroute.entrypoints=websecure
+        - traefik.http.routers.omniroute.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.omniroute.service=omniroute
+        - traefik.http.services.omniroute.loadbalancer.server.port=20128
+        - traefik.http.services.omniroute.loadbalancer.passHostHeader=true
+
+        ## Domínio antigo — mantido vivo em paralelo até migrar todos os
+        ## consumidores externos (OMNIROUTE_URL do lkgp_healer, Hermes
+        ## local/VPS, opencode local) e decidir aposentar. Mesmo molde de
+        ## nexus.sistemabritto.com.br em evonexus-vps.stack.yml. Apagar este
+        ## bloco inteiro (e o workflowapi.com.br do CORS acima) quando
+        ## aposentar de vez.
+        - traefik.http.routers.omniroute_legacy.rule=Host(`omni.workflowapi.com.br`)
+        - traefik.http.routers.omniroute_legacy.entrypoints=websecure
+        - traefik.http.routers.omniroute_legacy.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.omniroute_legacy.service=omniroute
+
+volumes:
+  omniroute_data:
+    external: true
+    name: ${OMNIROUTE_VOLUME_NAME:-evonexus_omniroute_data}
+
+networks:
+  network_public:
+    external: true
+    name: network_public

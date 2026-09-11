@@ -32,7 +32,7 @@ persiste por mais de `REINCIDENCIA_HORAS` depois de já ter sido "resolvido"
 (sinal de que a limpeza não bastou e precisa de olho humano).
 
 Secrets (env da stack no Portainer, nunca aqui):
-  OMNIROUTE_URL             → https://omni.workflowapi.com.br (default)
+  OMNIROUTE_URL             → https://omni.sistemabritto.com.br (default)
   OMNIROUTE_ADMIN_PASSWORD  → senha de login do dashboard do OmniRoute
 """
 
@@ -132,7 +132,7 @@ def gravar_estado(estado: dict) -> None:
 
 def main() -> int:
     carregar_env()
-    base_url = (os.environ.get("OMNIROUTE_URL") or "https://omni.workflowapi.com.br").rstrip("/")
+    base_url = (os.environ.get("OMNIROUTE_URL") or "https://omni.sistemabritto.com.br").rstrip("/")
     senha = (os.environ.get("OMNIROUTE_ADMIN_PASSWORD") or "").strip()
     if not senha:
         print("OMNIROUTE_ADMIN_PASSWORD não configurada — sem ela não dá para "

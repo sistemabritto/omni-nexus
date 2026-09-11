@@ -13,7 +13,7 @@ EvoNexus é o hub de automação da Sistema Britto: orquestra agentes, skills, r
 - **Dashboard backend**: `dashboard/backend/` (Flask). Rotas em `dashboard/backend/routes/`. Banco SQLite em `/workspace/dashboard/data/evonexus.db`.
 - **Shares (Nexus)**: `dashboard/backend/routes/shares.py`. Token em `file_shares` (SQLite) aponta para um **caminho fixo** relativo a `REPO_ROOT` (`/workspace`). O endpoint `/api/shares/<token>/view` serve SEMPRE o arquivo naquele caminho. Para "trocar o conteúdo de um link", atualize `file_shares.path` — não basta copiar arquivo para `shares/`.
 - **Scheduler/rotinas**: `scheduler.py`, `ADWs/`, heartbeats em `config/heartbeats.yaml`.
-- **Deploy VPS**: Docker Swarm (`evonexus-vps.stack.yml`). Containers: `evonexus_evonexus_dashboard`, `evonexus_evonexus_scheduler`, `evonexus_evonexus_media_worker`, `evonexus_omniroute`, `evonexus_evonexus_telegram`.
+- **Deploy VPS**: Docker Swarm (`evonexus-vps.stack.yml`). Containers: `evonexus_evonexus_dashboard`, `evonexus_evonexus_scheduler`, `evonexus_evonexus_media_worker`, `evonexus_evonexus_telegram`. OmniRoute mora em stack própria desde 11/09/2026 (`omniroute-vps.stack.yml`, serviço `omniroute_omniroute`).
 
 ## Decisions Log
 - **2026-08-15**: Investigação de share "preso no 105" revelou que token do Nexus aponta para caminho fixo no banco, não para diretório. Fix: atualizar `file_shares.path` do token para o novo arquivo. Documentar para não repetir o equívoco de "copiar para shares/" sem mexer no banco.

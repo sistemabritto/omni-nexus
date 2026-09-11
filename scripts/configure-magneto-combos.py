@@ -15,7 +15,7 @@ provider['cli_command']='opencode'
 provider['name']='OpenCode (via OmniRoute)'
 provider['fallback_providers']=[]
 provider['model_chain']=['Britto-Core','Britto-Coding','Britto-Heavy','Britto-Fast']
-provider['default_base_url']='http://evonexus_omniroute:20128/v1'
+provider['default_base_url']='http://omniroute:20128/v1'
 provider.setdefault('env_vars',{})['OPENAI_BASE_URL']=provider['default_base_url']
 provider['env_vars']['OPENAI_MODEL']='Britto-Core'
 p.write_text(json.dumps(cfg,ensure_ascii=False,indent=2)+'\n')

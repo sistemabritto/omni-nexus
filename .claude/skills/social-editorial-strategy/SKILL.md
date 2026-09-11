@@ -2,7 +2,7 @@
 name: social-editorial-strategy
 description: "Camada de identidade editorial — Single Point of Belief, cliente dos sonhos, 3 pilares (fugir/chegar) e as 3 fases do funil de conteúdo (pré-frame, doutrinação, pré-conversão), do material 'Hackeando o Conteúdo' (Rafael Marques). Use antes de gerar tema/roteiro quando o usuário pedir 'linha editorial', 'planejamento de calendário editorial', 'qual crença meu conteúdo deve reforçar', 'single point of belief', 'cliente dos sonhos', 'pilares da minha comunicação', ou quiser decidir QUAL fase de funil (atrair/nutrir/converter) um Reel deve servir antes de escrever o roteiro. Decide o PORQUÊ; social-hook-bank e social-reels-scripts decidem o COMO."
 metadata:
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # Estratégia Editorial — Single Point of Belief + 3 Pilares + Funil de Conteúdo
@@ -13,10 +13,11 @@ metadata:
 >
 > Apoio: *"Construir ficou barato. Capturar valor antes de todo mundo, não."*
 
-Formal: virar Vibe Seller é a única forma de ganhar dinheiro de verdade com
-IA, e isso só acontece jogando o **Gambito de Valor** — o mecanismo, não o
-método de entrega. Ver a explicação completa (por que é um "gambito" de
-verdade, não um atalho) em `references/posicionamento-sistema-britto.md`.
+Para público frio: **"Abra mão da ideia favorita. Resolva um problema que já
+custa caro."** O nome organiza o método, não prova que só existe uma maneira
+de ganhar dinheiro com IA. Leia `references/gambito-de-valor-v4.md` antes de
+escrever: é a revisão vigente de copy/evidência. O desenvolvimento histórico
+do nome fica em `references/posicionamento-sistema-britto.md`.
 
 O Gambito de Valor tem 3 jogadas, e são os próprios pilares:
 
@@ -27,9 +28,10 @@ O Gambito de Valor tem 3 jogadas, e são os próprios pilares:
    já está certo. Sem o enquadramento "construir ficou barato, **por isso**
    o dinheiro não está aí", esse pilar reforça a identidade de vibe coder —
    o oposto da crença.
-3. **O xeque-mate sem esforço (MONETIZAR)** — a venda em si fica fácil,
-   porque a demanda já estava com fome. O esforço todo já foi gasto na
-   jogada 1; aqui só se colhe.
+3. **A captura (MONETIZAR)** — demonstrar utilidade, fechar escopo e medir
+   resultado. Demanda comprovada reduz resistência, não elimina venda,
+   implementação ou risco. "Xeque-mate" é metáfora; não prometer renda ou
+   venda sem esforço. O benefício é parar de convencer quem não precisa.
 
 ## Onde essa skill entra no pipeline
 
@@ -51,8 +53,8 @@ pré-frame é só pra fisgar seguidor, não pra vender).
    nada disso, pergunte se vale a pena gravar (Hack #5: não perca tempo com
    tema que não reforça a crença que você precisa provar).
 2. **Escolha a fase de funil primeiro:**
-   - Público frio, quer alcance/seguidor novo → **pré-frame** (colaboração
-     e autoridade emprestada performam melhor, dado real do Sistema Britto)
+   - Público frio, quer alcance/seguidor novo → **pré-frame** (testar
+     demonstração e colaboração; a amostra não prova superioridade causal)
    - Público que já segue → **doutrinação** (a maioria do calendário)
    - Campanha ativa da Consultoria a Laser → **pré-conversão** (matar
      objeção específica, ver Aba 3 da matriz de temas)

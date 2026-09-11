@@ -39,8 +39,9 @@ Preserve o posicionamento Vibe Seller e os pilares RASTREAR, VIBE CODAR,
 MONETIZAR. A audiência desejada inclui decisores: ligue a ferramenta a um
 gargalo de tempo, custo ou vendas; alcance não prova intenção de compra.
 
-Leia `social-editorial-strategy` e as referências de estrutura de linguagem
-(`estruturas-de-linguagem.md`) e de gancho (`social-hook-bank`) da skill. Use
+Leia `social-editorial-strategy`, incluindo sua revisão vigente
+`references/gambito-de-valor-v4.md`, e as referências de estrutura de linguagem
+(`estruturas-de-linguagem.md`) e de gancho (`social-hook-bank`). Use
 os mecanismos, sem reproduzir o material original literalmente. Trate números
 e conclusões causais de referências antigas como hipóteses a verificar.
 
@@ -110,6 +111,12 @@ teste disponíveis antes, vinculação e ativação imediatamente após publica�
 Não afirmar que está pronta para capturar comentários antes dessa vinculação.
 
 ## Cadência proposta
+
+Inventário inicial revisado: `workspace/social/gambito-v4-inventory.json`.
+Os 35 IDs GV4 são rascunhos para revisão, não aprovados nem publicados.
+Antes de propor novos, consulte esse inventário e o estado real dos tickets;
+prefira adaptar uma ficha existente ao ping-pong. Nunca reutilize um ID para
+um vídeo diferente. Materiais: share do caderno indicado nas URLs das fichas.
 
 Quatro espaços diários: diagnóstico de gargalo; demonstração útil;
 caso/objeção; resposta a pergunta de decisor. Rotacionar mecanismos e pilares.

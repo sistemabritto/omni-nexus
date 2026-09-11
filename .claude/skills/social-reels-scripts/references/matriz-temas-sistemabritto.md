@@ -16,7 +16,7 @@ gancho de `social-hook-bank` pra montar o roteiro completo.
 | Dores que não sabe a causa | Problemas que já sabe a causa | Soluções que já conhece (e não resolvem tudo) | O que a audiência ainda não sabe sobre a oferta |
 |---|---|---|---|
 | Por que meu Instagram não converte em cliente mesmo com seguidor? | Não sei programar / tenho medo de mexer em servidor | Contratar agência de tráfego/social media | Dá pra montar sistema próprio (self-host) sem depender de agência |
-| Por que eu trabalho tanto e a margem não aumenta? | Não tenho tempo pra atender todo mundo no WhatsApp | Comprar curso de programação | Existe uma call de 1h (R$147) que já sai com o PRD do projeto pronto |
+| Por que eu trabalho tanto e a margem não aumenta? | Não tenho tempo pra atender todo mundo no WhatsApp | Comprar curso de programação | A Consultoria a Laser organiza prioridades e o PRD; implementação é outra etapa |
 | Por que meu atendimento no WhatsApp não fecha venda mesmo respondendo rápido? | Não sei precificar um serviço de IA/automação | Contratar atendente humano a mais | Ferramenta open source substitui boa parte do SaaS caro |
 | Por que o projeto que comecei sozinho nunca sai do papel? | Não sei o que postar todo dia | Usar ChatGPT genérico sem estratégia | O primeiro passo não é "aprender IA", é mapear onde a operação perde dinheiro |
 | Por que ninguém quer pagar o preço que eu cobro? | Gasto rios de dinheiro com SaaS que não resolve tudo | Comprar SaaS de automação pronto (caro, genérico) | Dá pra provar o valor pro cliente antes de vender (prova de conceito) |
@@ -49,13 +49,19 @@ gancho de `social-hook-bank` pra montar o roteiro completo.
 | Prova/depoimento | Números reais dos próprios posts (reach, conversão) — nunca número inventado |
 | Maneiras pouco conhecidas de [desejo] sem [dor] | Maneiras de crescer no Instagram sem gastar em tráfego pago |
 
-## Aba 3 — Remarketing / quebra de objeção (funil `/sistema` — call de PRD, R$147)
+## Aba 3 — Remarketing / quebra de objeção (Consultoria a Laser, `/sessao-de-arquitetura`)
+
+Condições atuais em `coproducao-magneto.md`: R$150 promocionais, normal R$300,
+crédito integral no Sprint/Implementação. Confirmar vigência e disponibilidade;
+não inferir vagas restantes pelo contador. Os destinos legados da Aba 1 são
+históricos: não usar `/sistema` como recompensa genérica. Entregar o material
+prometido primeiro e escolher o próximo passo de acordo com o gargalo.
 
 | Categoria | Tema Sistema Britto |
 |---|---|
 | Como fazer [x] mesmo se [objeção comum] | Como ter um sistema rodando mesmo se você não sabe programar |
-| Porque começar agora | O preço da call (R$147) não muda, mas o custo de continuar travado sozinho, sim |
-| "Isso é caro?" | R$147 por um documento de escopo evita gastar 10x mais contratando errado depois |
+| Porque começar agora | Qual decisão está pendente e qual é o custo observado de adiá-la? Não inventar urgência |
+| "Isso é caro?" | Compare o escopo e as condições da consultoria com a decisão que precisa tomar; não prometer economia de 10x |
 | "E se não funcionar pro meu caso?" | A própria call já diagnostica se o caso serve pra automação ou não |
 | "Já tenho um dev/agência, ainda serve?" | Serve pra definir o escopo antes de contratar, e a equipe já executa com PRD em mãos |
 | Depoimentos batendo as objeções mais comuns | (preencher com depoimento real quando existir — não inventar) |

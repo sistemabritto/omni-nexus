@@ -1,0 +1,915 @@
+[
+  {
+    "id": "GV4-01",
+    "theme": "Antes de contratar ou construir",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Descoberta",
+    "structure": "CRESA",
+    "visual": "Duas propostas na mesa; colocar entre elas um cartão escrito PROBLEMA.",
+    "headline": "A pergunta que falta nas duas propostas",
+    "hooks": [
+      "Antes de contratar uma agência ou abrir o editor de código, responde uma coisa: o que precisa mudar na sua empresa?",
+      "Duas propostas podem resolver exatamente o problema errado."
+    ],
+    "beats": [
+      "Se a resposta é só “preciso de um sistema”, ainda falta a parte que orienta a decisão.",
+      "O erro é comparar ferramentas antes de combinar o resultado. Você pode receber exatamente o que pediu e continuar com o mesmo gargalo.",
+      "Escreve quem sofre com o problema, quando ele aconteceu pela última vez e como você vai perceber que melhorou. Esse é o primeiro movimento do Gambito de Valor."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-01#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-01 — Antes de contratar ou construir, conta @sistemabritto.\nPúblico: dono. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-01#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sai a falsa escolha agência ruim versus construir sozinho; entra critério de contratação."
+  },
+  {
+    "id": "GV4-02",
+    "theme": "Demo que ajuda a decidir",
+    "audience": "prestador",
+    "pillar": "VIBE CODAR",
+    "stage": "Consideração",
+    "structure": "NPPC",
+    "visual": "Tela dividida: lista de funcionalidades versus uma tarefa concluída em ambiente de teste.",
+    "headline": "O detalhe que falta na sua demo",
+    "hooks": [
+      "Sua demonstração mostra um monte de função, mas o cliente ainda não sabe por que deveria comprar?",
+      "O cliente viu sua demo. Mas conseguiu enxergar a tarefa dele ali?"
+    ],
+    "beats": [
+      "Troca o tour pela tarefa que ele já faz. Pede um exemplo, combina o que seria uma boa resposta e mostra essa mesma tarefa no protótipo.",
+      "A primeira vitória não é ouvir “que legal”. É o cliente conseguir comparar o jeito atual com o teste e apontar o que mudou. A proposta vem com esse contexto, não no lugar dele."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-02#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-02 — Demo que ajuda a decidir, conta @sistemabritto.\nPúblico: prestador. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-02#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Removido primeiro cliente em dez minutos sem fonte. Demo não elimina objeções."
+  },
+  {
+    "id": "GV4-03",
+    "theme": "As três perguntas antes da IA",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Riscar “qual IA?” e escrever três perguntas em um papel.",
+    "headline": "Você está começando pela pergunta errada?",
+    "hooks": [
+      "Qual IA eu compro? Essa costuma ser a segunda conversa. A primeira é sobre o que está travando.",
+      "Antes de escolher a IA, eu faria três perguntas sobre a operação."
+    ],
+    "beats": [
+      "Quando isso aconteceu pela última vez? Quem precisou parar o trabalho para resolver? O que vocês fizeram naquela hora?",
+      "Essas três perguntas tiram a conversa do “seria legal ter” e trazem uma situação real. Pode terminar em automação. Pode terminar num ajuste de processo bem menor."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-03#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-03 — As três perguntas antes da IA, conta @sistemabritto.\nPúblico: dono. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-03#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "As três perguntas agora são entregues no vídeo e no material; não substituídas por oferta."
+  },
+  {
+    "id": "GV4-04",
+    "theme": "Subir não é operar",
+    "audience": "dono",
+    "pillar": "VIBE CODAR",
+    "stage": "Descoberta",
+    "structure": "CRESA",
+    "visual": "Mostrar uma página abrindo; virar três cartões: BACKUP, ACESSO, RESPONSÁVEL.",
+    "headline": "A parte que o vídeo de instalação não mostra",
+    "hooks": [
+      "O sistema abriu no navegador. Ótimo. Agora, quem cuida dele quando alguma coisa falha?",
+      "Instalar é uma etapa. Operar é outra conversa."
+    ],
+    "beats": [
+      "É fácil se empolgar com uma instalação rápida. Eu também gosto de ver a tela funcionar.",
+      "Só que o comando não responde quem restaura o backup, quem atualiza e quem pode acessar os dados.",
+      "Antes de usar na operação, combine essas três responsabilidades. O valor não é só colocar no ar: é a empresa conseguir usar sem depender de sorte."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta INFRA. Eu te mando o checklist de backup, acesso e custo de operação.",
+    "reward": "INFRA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-04#INFRA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-04 — Subir não é operar, conta @sistemabritto.\nPúblico: dono. Gatilho: INFRA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist de backup, acesso e custo de operação: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-04#INFRA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sem promessa de stack inteira ou backup garantido por um comando."
+  },
+  {
+    "id": "GV4-05",
+    "theme": "Atendimento rápido não basta",
+    "audience": "dono",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "CRESA",
+    "visual": "Cronômetro de resposta rápida ao lado de conversa sem próximo passo, com dados fictícios.",
+    "headline": "Respondeu rápido. E depois?",
+    "hooks": [
+      "Seu atendimento responde em segundos e mesmo assim a conversa morre?",
+      "Responder em segundos não resolve uma conversa sem direção."
+    ],
+    "beats": [
+      "Olha uma conversa recente. A pessoa recebeu informação, mas entendeu o que precisava fazer depois?",
+      "O erro é usar velocidade como se fosse venda. Resposta rápida ajuda, mas não substitui oferta clara nem acompanhamento.",
+      "Revise algumas conversas: dúvida resolvida, próximo passo e responsável. Sem esse contexto, calcular “receita perdida” só pelo tempo de resposta é chute."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta FUNIL. Eu te mando o checklist para encontrar onde a conversa deixa de avançar.",
+    "reward": "FUNIL",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-05#FUNIL",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-05 — Atendimento rápido não basta, conta @sistemabritto.\nPúblico: dono. Gatilho: FUNIL; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist para encontrar onde a conversa deixa de avançar: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-05#FUNIL\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sai cálculo que tratava hipótese como dinheiro comprovadamente perdido."
+  },
+  {
+    "id": "GV4-06",
+    "theme": "Pergunta real vira conteúdo",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Descoberta",
+    "structure": "AIDA",
+    "visual": "Post-it “quanto custa?” virando três ângulos no quadro.",
+    "headline": "Essa pergunta do cliente rende mais do que parece",
+    "hooks": [
+      "A pergunta que você respondeu de novo hoje pode ser o seu próximo vídeo.",
+      "Seu cliente acabou de te dar uma pauta. Você percebeu?"
+    ],
+    "beats": [
+      "Pega “quanto custa?”. Em vez de gravar uma tabela de preços, mostra o que muda o orçamento, quando a solução não vale a pena e o que a pessoa precisa trazer para decidir.",
+      "Você não precisa inventar assunto. Precisa traduzir uma dúvida real em uma decisão que o cliente consiga tomar. Um vídeo, uma pergunta, uma pequena resposta útil."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta CONTEUDO. Eu te mando dez perguntas e uma ficha para transformar dúvidas em vídeos.",
+    "reward": "CONTEUDO",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-06#CONTEUDO",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-06 — Pergunta real vira conteúdo, conta @sistemabritto.\nPúblico: dono. Gatilho: CONTEUDO; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão dez perguntas e uma ficha para transformar dúvidas em vídeos: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-06#CONTEUDO\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Material entrega perguntas e ficha de pauta, não apenas uma página de serviço."
+  },
+  {
+    "id": "GV4-07",
+    "theme": "Produto não é negócio",
+    "audience": "prestador",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "ISAC",
+    "visual": "Dois papéis: USUÁRIOS e CUSTO DE OPERAR; não mostrar contas de clientes.",
+    "headline": "O sistema funcionava. A conta não fechava.",
+    "hooks": [
+      "Meu Laboratório de Insights chegou a setenta usuários. E isso não bastou para o negócio sobreviver.",
+      "Setenta usuários não salvaram o meu produto."
+    ],
+    "beats": [
+      "Eu já contei essa história: a infraestrutura custava mais do que a receita, e uma entrega importante não saiu antes da renovação. O produto existia, mas a operação não se sustentou.",
+      "A lição não é que usuário não importa. É que eu precisava olhar também para custo, entrega e renovação. Hoje, quando penso numa solução, a conta de manter aquilo faz parte da construção."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-07#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-07 — Produto não é negócio, conta @sistemabritto.\nPúblico: prestador. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-07#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Relato pessoal publicado na auditoria, não balanço financeiro auditado. Não atribuir tudo a falta de demanda."
+  },
+  {
+    "id": "GV4-08",
+    "theme": "Ferramenta nova ou processo?",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Fechar abas de ferramentas e deixar uma única conversa de exemplo anonimizada.",
+    "headline": "Talvez você não precise de outra assinatura",
+    "hooks": [
+      "Antes de assinar mais uma ferramenta, escolhe uma tarefa que precisa melhorar.",
+      "A próxima assinatura pode estar cobrindo um processo que ninguém definiu."
+    ],
+    "beats": [
+      "Pode ser orçamento sem retorno, cadastro duplicado ou pergunta repetida. Agora confere se o que você já paga resolve uma parte disso e por que essa parte não está sendo usada.",
+      "Às vezes falta integração. Às vezes falta responsável. E às vezes precisa, sim, de outra ferramenta. O diagnóstico serve para separar essas situações antes do próximo boleto."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-08#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-08 — Ferramenta nova ou processo?, conta @sistemabritto.\nPúblico: dono. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-08#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sem afirmar que ferramenta cara é necessariamente ruim ou que grátis sempre resolve."
+  },
+  {
+    "id": "GV4-09",
+    "theme": "Velocidade não é receita",
+    "audience": "prestador",
+    "pillar": "VIBE CODAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Desenhar duas colunas: CONSTRUIR e NEGÓCIO; preencher critérios diferentes.",
+    "headline": "Construir mais rápido resolve qual parte?",
+    "hooks": [
+      "Na Voice Dream, eu estimava dois anos sem IA. Com IA e open source, construímos em dois meses.",
+      "Dois meses para construir não significam dois meses para validar um negócio."
+    ],
+    "beats": [
+      "Essa é a minha experiência, não um prazo que eu prometeria para qualquer projeto. Acelerar a construção mudou a viabilidade de testar aquela ideia.",
+      "Mas tempo de desenvolvimento não mede sozinho o negócio. Ainda entram demanda, adoção, custos e receita. O Gambito de Valor não termina no deploy: ele obriga a olhar para a próxima jogada."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-09#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-09 — Velocidade não é receita, conta @sistemabritto.\nPúblico: prestador. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-09#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Mantida estimativa pessoal publicada; retirado uso de aporte/equity como prova de receita."
+  },
+  {
+    "id": "GV4-10",
+    "theme": "Recorte específico de oportunidade",
+    "audience": "prestador",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "DDC",
+    "visual": "Apagar “IA para empresas” e escrever uma situação operacional específica.",
+    "headline": "Seu concorrente vende IA. E você?",
+    "hooks": [
+      "“Faço automação com IA” explica a ferramenta. Ainda não explica por que escolher você.",
+      "Se a sua oferta cabe em qualquer empresa, talvez ela ainda esteja ampla demais."
+    ],
+    "beats": [
+      "Compara com “ajudo equipes a não esquecer orçamentos sem retorno”. A segunda frase dá uma situação para o comprador reconhecer. Ainda precisa de prova, mas já permite uma conversa concreta.",
+      "O recorte não precisa ser um mercado sem concorrência. Precisa ser um problema que você entende, consegue demonstrar e sabe atender. Qual situação aparece de novo nos seus clientes?"
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-10#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-10 — Recorte específico de oportunidade, conta @sistemabritto.\nPúblico: prestador. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-10#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sem declarar que mercados não saturam ou que sempre existe oportunidade lucrativa."
+  },
+  {
+    "id": "GV4-11",
+    "theme": "Primeiro teste de infraestrutura",
+    "audience": "dono",
+    "pillar": "VIBE CODAR",
+    "stage": "Descoberta",
+    "structure": "AAA",
+    "visual": "Apontar para botão RESTAURAR em um checklist, não executar em produção.",
+    "headline": "O botão que vale testar antes da emergência",
+    "hooks": [
+      "Antes de colocar o CRM no centro da empresa, pergunta se alguém já testou a restauração do backup.",
+      "Você sabe se consegue recuperar o backup ou só sabe que ele foi feito?"
+    ],
+    "beats": [
+      "“O backup roda” e “conseguimos recuperar” são coisas diferentes. Combine um teste isolado, o que será restaurado e quem valida os dados. Não teste apagando o sistema que atende clientes. A pequena vitória aqui é descobrir a dependência enquanto ainda dá para planejar."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta INFRA. Eu te mando o checklist de backup, acesso e custo de operação.",
+    "reward": "INFRA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-11#INFRA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-11 — Primeiro teste de infraestrutura, conta @sistemabritto.\nPúblico: dono. Gatilho: INFRA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist de backup, acesso e custo de operação: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-11#INFRA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Substitui promessa de resolver servidor em cinco minutos por teste seguro e relevante."
+  },
+  {
+    "id": "GV4-12",
+    "theme": "Alternativa que o cliente já usa",
+    "audience": "prestador",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "ISAC",
+    "visual": "Abrir ficha: PROBLEMA / COMO RESOLVE HOJE / POR QUE MUDARIA.",
+    "headline": "Seu concorrente talvez nem seja uma empresa",
+    "hooks": [
+      "No JURISMART, eu terminei o gerador de petições e encontrei advogados que já faziam aquilo no ChatGPT.",
+      "A alternativa ao seu produto pode já estar aberta no navegador do cliente."
+    ],
+    "beats": [
+      "É uma história que eu já compartilhei, e ela mudou a pergunta que eu faço antes de construir. Não basta achar a tarefa interessante. Preciso entender a alternativa que a pessoa já usa.",
+      "Uma planilha, um assistente ou o próprio ChatGPT podem ser suficientes para ela. A próxima solução precisa ter um motivo concreto para a troca. Hoje eu investigo isso antes de me apaixonar pela interface."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-12#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-12 — Alternativa que o cliente já usa, conta @sistemabritto.\nPúblico: prestador. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-12#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Preserva relato publicado e não transforma experiência individual em regra universal."
+  },
+  {
+    "id": "GV4-13",
+    "theme": "Prova para discutir preço",
+    "audience": "prestador",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Trocar cartão “sou especialista” por uma tarefa antes/depois, marcada demonstração.",
+    "headline": "O preço fica sozinho quando falta isso",
+    "hooks": [
+      "Quando a proposta só lista o que você vai fazer, o cliente precisa adivinhar para que aquilo serve.",
+      "Sua proposta explica o preço ou só lista entregas?"
+    ],
+    "beats": [
+      "Mostre o problema, a situação atual e o resultado que o teste permite verificar. Diferencie o que você demonstrou do que ainda depende de implantação.",
+      "Isso não faz o preço virar detalhe. Faz a negociação ter mais informação: escopo, risco, alternativa e valor percebido. Uma prova honesta ajuda mais do que um número de economia inventado."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-13#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-13 — Prova para discutir preço, conta @sistemabritto.\nPúblico: prestador. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-13#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Retiradas propostas com diferença de 5x e economia sem fonte."
+  },
+  {
+    "id": "GV4-14",
+    "theme": "Custo de manter a stack",
+    "audience": "dono",
+    "pillar": "VIBE CODAR",
+    "stage": "Consideração",
+    "structure": "CRESA",
+    "visual": "Pilha de cartões de ferramentas; retirar até sobrar o fluxo necessário.",
+    "headline": "A escolha barata pode cobrar depois",
+    "hooks": [
+      "Na hora de escolher a stack, você está olhando só para a instalação ou também para quem vai manter?",
+      "Quem mantém essa ferramenta depois que o tutorial acaba?"
+    ],
+    "beats": [
+      "A ferramenta nova chama atenção. A parte de atualizar, integrar e recuperar costuma ficar para depois.",
+      "O erro é comparar só o preço da licença. Infraestrutura, manutenção e dependência de uma pessoa também entram na conta.",
+      "Liste o fluxo que precisa funcionar e escolha o conjunto que sua equipe consegue operar. Simples não é ter menos recursos a qualquer custo: é entender a responsabilidade de cada peça."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta INFRA. Eu te mando o checklist de backup, acesso e custo de operação.",
+    "reward": "INFRA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-14#INFRA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-14 — Custo de manter a stack, conta @sistemabritto.\nPúblico: dono. Gatilho: INFRA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist de backup, acesso e custo de operação: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-14#INFRA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Retira prazo fabricado de três meses e mantém contraste concreto."
+  },
+  {
+    "id": "GV4-15",
+    "theme": "Quando pedir ajuda de escopo",
+    "audience": "dono",
+    "pillar": "MONETIZAR",
+    "stage": "Pré-conversão",
+    "structure": "AIDA",
+    "visual": "Mostrar mapa com três portas: PÁGINA / ATENDIMENTO / OFERTA.",
+    "headline": "Onde você mexeria primeiro?",
+    "hooks": [
+      "Chega gente no seu site, mas a venda não anda. Você muda a página, o atendimento ou a oferta?",
+      "Qual projeto merece entrar na sua operação primeiro?"
+    ],
+    "beats": [
+      "Sem olhar a jornada, dá para investir na etapa errada. Eu começo por onde a pessoa entra, o que foi prometido e qual passo ela consegue dar.",
+      "Na Consultoria a Laser, a gente organiza esse problema em prioridade e PRD: escopo, dependências e critério de sucesso. É uma conversa paga para decidir a execução, não a implementação inteira."
+    ],
+    "cta": "Quer organizar prioridades e sair com o PRD do seu projeto? Comenta LASER para conhecer a Consultoria a Laser. É uma consultoria paga; a implementação é uma próxima etapa.",
+    "reward": "LASER",
+    "url": "https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-15",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-15 — Quando pedir ajuda de escopo, conta @sistemabritto.\nPúblico: dono. Gatilho: LASER; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as condições e os horários da Consultoria a Laser, uma oferta paga de diagnóstico e PRD: https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-15\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Não sentencia que o anúncio está certo; explica a entrega concreta da consultoria."
+  },
+  {
+    "id": "GV4-16",
+    "theme": "Gargalo com evidência",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "AAA",
+    "visual": "Marcar uma linha vazia em um fluxograma e aproximar a câmera.",
+    "headline": "Em qual etapa a sua operação fica muda?",
+    "hooks": [
+      "Você sabe onde a tarefa para quando ninguém está cobrando?",
+      "Um gargalo fica mais claro quando você pede um episódio, não uma opinião."
+    ],
+    "beats": [
+      "Escolhe um processo real: do pedido até a entrega, ou do contato até o orçamento. Em cada passagem, pergunta quem assume, qual é a próxima ação e onde fica o registro. A etapa sem resposta é uma hipótese de gargalo para investigar, não uma prova automática de prejuízo."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-16#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-16 — Gargalo com evidência, conta @sistemabritto.\nPúblico: dono. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-16#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Roteiro entrega um teste, em vez de só prometer mapeamento."
+  },
+  {
+    "id": "GV4-17",
+    "theme": "Retomar projeto parado",
+    "audience": "dono",
+    "pillar": "VIBE CODAR",
+    "stage": "Consideração",
+    "structure": "NPPC",
+    "visual": "Cobrir um quadro cheio de tarefas e deixar visível uma única entrega.",
+    "headline": "O projeto parado pode estar pedindo menos",
+    "hooks": [
+      "Se o projeto travou, eu não começaria adicionando mais coisa. Escolheria uma entrega que dá para testar.",
+      "O projeto travou? Talvez o próximo teste esteja grande demais."
+    ],
+    "beats": [
+      "Escreve a tarefa que uma pessoa precisa concluir, o que entra e como você confere a saída. Se não cabe numa demonstração simples, talvez o recorte ainda esteja grande.",
+      "Essa prova ajuda a descobrir a próxima decisão: seguir, corrigir ou parar. Não prometo lançar em três dias; proponho diminuir o tamanho da incerteza antes de aumentar o projeto."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-17#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-17 — Retomar projeto parado, conta @sistemabritto.\nPúblico: dono. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-17#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sai case não comprovado de projeto no ar em três dias."
+  },
+  {
+    "id": "GV4-18",
+    "theme": "Manifesto Gambito de Valor",
+    "audience": "ponte",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Tirar do tabuleiro um cartão “minha ideia favorita” e abrir espaço para “problema real”.",
+    "headline": "A ideia que você precisa tirar do caminho",
+    "hooks": [
+      "O primeiro movimento do meu Gambito de Valor é abrir mão da ideia que eu estava com vontade de construir.",
+      "Eu chamo essa mudança de ordem de Gambito de Valor."
+    ],
+    "beats": [
+      "No lugar dela, eu procuro um problema recente, alguém responsável e uma consequência que vale investigar. Depois monto o menor teste de utilidade. Só então discuto a solução e acompanho o resultado.",
+      "Rastrear, construir, capturar. Não é vender sem trabalhar. É parar de gastar todo o trabalho numa coisa que ninguém precisava daquele jeito. Vibe coder constrói. Vibe Seller joga o Gambito de Valor."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-18#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-18 — Manifesto Gambito de Valor, conta @sistemabritto.\nPúblico: ponte. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-18#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Mecanismo completo com sacrifício definido, sem promessa de renda fácil."
+  },
+  {
+    "id": "GV4-19",
+    "theme": "Open source com custo real",
+    "audience": "dono",
+    "pillar": "VIBE CODAR",
+    "stage": "Descoberta",
+    "structure": "CRESA",
+    "visual": "Tela de licença ao lado de lista de infraestrutura, atualização e suporte.",
+    "headline": "Grátis em qual parte da conta?",
+    "hooks": [
+      "Um CRM open source pode reduzir gasto com licença. Mas não transforma a operação em custo zero.",
+      "Sem licença não significa sem custo de operação."
+    ],
+    "beats": [
+      "Antes de trocar, compara as funções que sua equipe realmente usa: canais, histórico, permissões e integrações.",
+      "O erro é chamar duas ferramentas de equivalentes só porque as telas parecem parecidas.",
+      "Escolha uma tarefa para testar e inclua migração, hospedagem e manutenção na conta. A melhor opção é a que serve ao seu processo, não a que ganhou a discussão do feed."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta INFRA. Eu te mando o checklist de backup, acesso e custo de operação.",
+    "reward": "INFRA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-19#INFRA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-19 — Open source com custo real, conta @sistemabritto.\nPúblico: dono. Gatilho: INFRA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist de backup, acesso e custo de operação: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-19#INFRA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sem afirmar equivalência total ao concorrente nem endosso de terceiros."
+  },
+  {
+    "id": "GV4-20",
+    "theme": "Aprender a construir não escolhe a oferta",
+    "audience": "prestador",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Colocar uma folha “eu consigo fazer” sobre outra “alguém precisa”; destacar interseção.",
+    "headline": "Saber fazer ainda deixa uma pergunta aberta",
+    "hooks": [
+      "Eu já vinha do marketing quando comecei a construir com IA. Ganhei uma capacidade nova, não uma oferta pronta.",
+      "Você aprendeu a construir. O comprador entendeu o que comprar?"
+    ],
+    "beats": [
+      "Agora dava para fazer mais coisas. Só que a pergunta continuava sendo: para quem isso resolve um problema importante? Saber vender não responde sozinho, e saber construir também não.",
+      "O Gambito de Valor junta as duas conversas. Investigar a demanda orienta a construção; a demonstração ajuda a discutir a oferta. Não é uma competição entre quem programa e quem vende."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-20#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-20 — Aprender a construir não escolhe a oferta, conta @sistemabritto.\nPúblico: prestador. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-20#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Mantém origem pessoal sem hierarquia universal entre profissões."
+  },
+  {
+    "id": "GV4-21",
+    "theme": "Indicação com processo",
+    "audience": "dono",
+    "pillar": "MONETIZAR",
+    "stage": "Pré-conversão",
+    "structure": "COBA",
+    "visual": "Cartão INDICAÇÃO entrando num funil com responsável, contexto e próximo passo.",
+    "headline": "Sua indicação entra onde?",
+    "hooks": [
+      "Receber cliente por indicação é ótimo. O problema é não ter um processo quando ele chega.",
+      "Indicação boa também precisa de um próximo passo."
+    ],
+    "beats": [
+      "Quem indicou? O que a pessoa espera? Quem responde e registra o próximo passo? Um canal valioso também pode perder continuidade dentro da operação.",
+      "Na Consultoria a Laser, a gente pode mapear esse caminho e documentar o que precisa mudar. Não é substituir indicação por anúncio: é dar estrutura ao que já traz gente até você."
+    ],
+    "cta": "Quer organizar prioridades e sair com o PRD do seu projeto? Comenta LASER para conhecer a Consultoria a Laser. É uma consultoria paga; a implementação é uma próxima etapa.",
+    "reward": "LASER",
+    "url": "https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-21",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-21 — Indicação com processo, conta @sistemabritto.\nPúblico: dono. Gatilho: LASER; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as condições e os horários da Consultoria a Laser, uma oferta paga de diagnóstico e PRD: https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-21\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Retira insulto “você teve sorte” e alegação de que indicação não escala."
+  },
+  {
+    "id": "GV4-22",
+    "theme": "Pedir ajuda específica",
+    "audience": "dono",
+    "pillar": "VIBE CODAR",
+    "stage": "Consideração",
+    "structure": "AIDA",
+    "visual": "Mostrar pedido vago “não funciona” e trocar por entrada/saída/erro, sem credenciais.",
+    "headline": "Esse pedido de ajuda costuma travar junto",
+    "hooks": [
+      "Quando você pede “arruma meu sistema”, a outra pessoa ainda precisa descobrir o que está quebrado.",
+      "O suporte resolve melhor o que consegue reproduzir."
+    ],
+    "beats": [
+      "Mostra a tarefa esperada, o que aconteceu e um exemplo seguro. Se houver erro, envia a mensagem sem senhas ou dados de clientes.",
+      "Esse pequeno recorte ajuda a separar configuração, infraestrutura e desenvolvimento. Dá para pedir suporte com mais clareza sem prometer que qualquer problema se resolve numa tarde."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta INFRA. Eu te mando o checklist de backup, acesso e custo de operação.",
+    "reward": "INFRA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-22#INFRA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-22 — Pedir ajuda específica, conta @sistemabritto.\nPúblico: dono. Gatilho: INFRA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist de backup, acesso e custo de operação: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-22#INFRA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sai suporte genérico implícito e prazo sem diagnóstico."
+  },
+  {
+    "id": "GV4-23",
+    "theme": "Seguidores versus oportunidades",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Descoberta",
+    "structure": "CRESA",
+    "visual": "Tela com seguidores coberta por cartão: CLIQUE / CONVERSA / OPORTUNIDADE.",
+    "headline": "O crescimento que o contador não explica",
+    "hooks": [
+      "Seu perfil ganhou seguidores. Como você descobre se isso aproximou algum cliente?",
+      "Seu perfil ganhou seguidores. O caminho até a compra está visível?"
+    ],
+    "beats": [
+      "O número anima, e pode ser um bom sinal de distribuição. Mas ele não conta o que aconteceu depois.",
+      "O erro é usar seguidor como se fosse oportunidade comercial.",
+      "Olhe o caminho: conteúdo, recompensa, clique e conversa qualificada. Onde os dados faltarem, marque a lacuna. Sem isso, você não sabe se precisa de outro tema ou de uma ponte melhor."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta FUNIL. Eu te mando o checklist para encontrar onde a conversa deixa de avançar.",
+    "reward": "FUNIL",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-23#FUNIL",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-23 — Seguidores versus oportunidades, conta @sistemabritto.\nPúblico: dono. Gatilho: FUNIL; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist para encontrar onde a conversa deixa de avançar: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-23#FUNIL\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sem alegar vendas orgânicas ou zero mídia paga não comprovados."
+  },
+  {
+    "id": "GV4-24",
+    "theme": "Preço com contexto",
+    "audience": "prestador",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "AAA",
+    "visual": "Três cartões: CUSTO / VALOR / RISCO.",
+    "headline": "A pergunta do preço precisa de companhia",
+    "hooks": [
+      "“Quanto vale resolver isso?” ajuda a discutir preço. Mas não fecha a conta sozinha.",
+      "Preço baixo não corrige uma proposta sem escopo."
+    ],
+    "beats": [
+      "Você também precisa saber o que vai entregar, quanto custa manter e qual risco está assumindo. O valor percebido orienta a conversa; escopo e custos impedem você de vender uma promessa que não sustenta. Começa por um resultado verificável, não por multiplicar o preço no escuro."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-24#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-24 — Preço com contexto, conta @sistemabritto.\nPúblico: prestador. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-24#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Retira experiência inventada de duas propostas e aumento de preço sem mudar nada."
+  },
+  {
+    "id": "GV4-25",
+    "theme": "Comprar a própria proposta",
+    "audience": "dono",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "AAA",
+    "visual": "Circular três trechos ausentes numa proposta fictícia.",
+    "headline": "Você consegue decidir com essa proposta?",
+    "hooks": [
+      "Antes de aprovar um projeto de IA, procura três respostas na proposta.",
+      "Antes de comparar preços de sistemas, compare o que será aceito como pronto."
+    ],
+    "beats": [
+      "Qual problema ela resolve? Como vocês vão testar a entrega? Quem fica responsável depois? Se só tem lista de tecnologias e prazo, peça essas respostas antes de comparar preço. Você não precisa dominar o código para exigir clareza sobre o que está comprando."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-25#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-25 — Comprar a própria proposta, conta @sistemabritto.\nPúblico: dono. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-25#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Troca julgamento pessoal sobre cobrar por um critério útil ao decisor."
+  },
+  {
+    "id": "GV4-26",
+    "theme": "Retrabalho que dá para observar",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Mover o mesmo cartão entre duas pessoas duas vezes; legenda SIMULAÇÃO.",
+    "headline": "Por que essa tarefa voltou?",
+    "hooks": [
+      "Uma tarefa que volta para a mesma pessoa pode mostrar mais sobre o processo do que uma reunião inteira.",
+      "A tarefa repetida pode esconder um custo que ninguém registrou."
+    ],
+    "beats": [
+      "Pega um exemplo recente de retrabalho. Faltou informação na entrada? Mudou a regra? Ninguém sabia quem aprovava?",
+      "Registra a causa e observa se se repete antes de automatizar. Talvez a primeira solução seja um campo obrigatório ou uma definição de responsabilidade. O ganho começa em enxergar a volta, não em inventar uma porcentagem."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta MAPA. Eu te mando as três perguntas e a ficha para escolher o primeiro gargalo.",
+    "reward": "MAPA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-26#MAPA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-26 — Retrabalho que dá para observar, conta @sistemabritto.\nPúblico: dono. Gatilho: MAPA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as três perguntas e a ficha para escolher o primeiro gargalo: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-26#MAPA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sai alegação de 30% do tempo descoberto em cinco minutos."
+  },
+  {
+    "id": "GV4-27",
+    "theme": "Descrever e testar",
+    "audience": "ponte",
+    "pillar": "VIBE CODAR",
+    "stage": "Descoberta",
+    "structure": "DDC",
+    "visual": "Comparar “faça um CRM” com um critério de aceite de uma tarefa.",
+    "headline": "O pedido parece claro. Para quem?",
+    "hooks": [
+      "“Cria um CRM para mim” e “registra esse contato sem duplicar” são pedidos de tamanhos bem diferentes.",
+      "Um prompt melhora quando você consegue explicar como vai testar a resposta."
+    ],
+    "beats": [
+      "No primeiro, a IA precisa adivinhar quase tudo. No segundo, você consegue explicar uma entrada, uma regra e um resultado esperado. Isso deixa o teste mais concreto.",
+      "Construir com IA não dispensa conhecimento, revisão ou segurança. Mas aprender a descrever o problema já muda a qualidade da conversa. Qual tarefa você consegue explicar sem falar o nome da ferramenta?"
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-27#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-27 — Descrever e testar, conta @sistemabritto.\nPúblico: ponte. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-27#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sem dizer que um prompt vale mais que formação técnica."
+  },
+  {
+    "id": "GV4-28",
+    "theme": "Preço baixo e escopo",
+    "audience": "prestador",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "CRESA",
+    "visual": "Preço fixo num papel; adicionar pedidos até o papel sair do quadro.",
+    "headline": "O desconto não foi a única concessão",
+    "hooks": [
+      "Você baixou o preço, mas combinou o que ficou de fora?",
+      "Vender antes de construir não é prometer qualquer coisa."
+    ],
+    "beats": [
+      "Quando a proposta está vaga, cada pedido novo parece pequeno. No fim, a entrega já não é a que você imaginou.",
+      "O erro é negociar só o número e deixar o escopo aberto.",
+      "Registre o que entra, o que não entra e como uma mudança será tratada. Isso não garante margem, mas evita uma parte da discussão que poderia ter sido resolvida antes da venda."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta PROVA. Eu te mando a ficha para testar utilidade antes de prometer um resultado.",
+    "reward": "PROVA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-28#PROVA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-28 — Preço baixo e escopo, conta @sistemabritto.\nPúblico: prestador. Gatilho: PROVA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão a ficha para testar utilidade antes de prometer um resultado: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-28#PROVA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sem história pessoal não documentada nem promessa de acabar com objeção de preço."
+  },
+  {
+    "id": "GV4-29",
+    "theme": "Bastidor com mensagem",
+    "audience": "ponte",
+    "pillar": "VIBE CODAR",
+    "stage": "Descoberta",
+    "structure": "AAA",
+    "visual": "Manter um erro verdadeiro de fala e a retomada; não encenar como espontâneo.",
+    "headline": "O take que eu não precisava esconder",
+    "hooks": [
+      "Eu errei essa fala. O que eu não posso é deixar a ideia incompreensível para quem assiste.",
+      "Nem toda gravação sai de primeira. Esta aqui é um exemplo."
+    ],
+    "beats": [
+      "No bastidor, meu critério é simples: dá para entender o problema, a demonstração e o próximo passo? Nem todo erro precisa sumir. E nenhum efeito substitui uma mensagem clara. O processo serve para eu gravar com frequência sem transformar cada vídeo num projeto gigante."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta CONTEUDO. Eu te mando dez perguntas e uma ficha para transformar dúvidas em vídeos.",
+    "reward": "CONTEUDO",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-29#CONTEUDO",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-29 — Bastidor com mensagem, conta @sistemabritto.\nPúblico: ponte. Gatilho: CONTEUDO; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão dez perguntas e uma ficha para transformar dúvidas em vídeos: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-29#CONTEUDO\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "CTA de conteúdo não leva mais a servidor. Só usar erro real disponível."
+  },
+  {
+    "id": "GV4-30",
+    "theme": "Pergunta repetida e conhecimento",
+    "audience": "dono",
+    "pillar": "RASTREAR",
+    "stage": "Consideração",
+    "structure": "CRESA",
+    "visual": "Empilhar três perguntas iguais anonimizadas e transformar em resposta revisada.",
+    "headline": "Sua equipe já respondeu isso. Onde ficou?",
+    "hooks": [
+      "Se todo atendimento começa do zero, talvez a primeira automação seja organizar o que vocês já sabem.",
+      "Seu bot sabe onde buscar a resposta certa?"
+    ],
+    "beats": [
+      "Tem pergunta que a equipe responde várias vezes e cada pessoa explica de um jeito.",
+      "O erro é ligar um agente a um conhecimento desatualizado e esperar consistência.",
+      "Separe as dúvidas recorrentes, aprove as respostas e diga quando precisa chamar uma pessoa. Depois teste com exemplos reais anonimizados. A IA entra sobre uma base que alguém consegue revisar."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta FUNIL. Eu te mando o checklist para encontrar onde a conversa deixa de avançar.",
+    "reward": "FUNIL",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-30#FUNIL",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-30 — Pergunta repetida e conhecimento, conta @sistemabritto.\nPúblico: dono. Gatilho: FUNIL; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist para encontrar onde a conversa deixa de avançar: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-30#FUNIL\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Inclui revisão e encaminhamento humano, não promessa de bot que resolve tudo."
+  },
+  {
+    "id": "GV4-31",
+    "theme": "Consultoria antes de contratar",
+    "audience": "dono",
+    "pillar": "MONETIZAR",
+    "stage": "Pré-conversão",
+    "structure": "AIDA",
+    "visual": "Um PRD sem dados privados com prioridade, escopo e aceite destacados.",
+    "headline": "O que você leva antes da implementação?",
+    "hooks": [
+      "Você não precisa contratar um projeto inteiro para começar a organizar a decisão.",
+      "Antes do Sprint, você consegue explicar o que precisa entrar no projeto?"
+    ],
+    "beats": [
+      "Na Consultoria a Laser, a gente olha o problema e documenta um PRD: prioridade, escopo, dependências e como avaliar a entrega.",
+      "Isso ajuda a conversar com sua equipe ou seguir para um Sprint ou Implementação. São etapas diferentes. O valor pago na consultoria entra como crédito no projeto, conforme a condição da oferta."
+    ],
+    "cta": "Quer organizar prioridades e sair com o PRD do seu projeto? Comenta LASER para conhecer a Consultoria a Laser. É uma consultoria paga; a implementação é uma próxima etapa.",
+    "reward": "LASER",
+    "url": "https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-31",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-31 — Consultoria antes de contratar, conta @sistemabritto.\nPúblico: dono. Gatilho: LASER; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as condições e os horários da Consultoria a Laser, uma oferta paga de diagnóstico e PRD: https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-31\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Sai post genérico de preço por hora; entra objeção concreta à oferta vigente."
+  },
+  {
+    "id": "GV4-32",
+    "theme": "Ferramentas pelo trabalho",
+    "audience": "dono",
+    "pillar": "VIBE CODAR",
+    "stage": "Descoberta",
+    "structure": "COBA",
+    "visual": "Três cartões de tarefas, sem logotipos: REGISTRAR / RESPONDER / MEDIR.",
+    "headline": "A lista de ferramentas começa antes dos nomes",
+    "hooks": [
+      "Quer uma lista de ferramentas? Eu começaria por uma lista do que a empresa precisa fazer.",
+      "Mais ferramentas ou menos tarefas esquecidas?"
+    ],
+    "beats": [
+      "Registrar a oportunidade, responder com contexto e medir o próximo passo. Agora veja quais ferramentas atuais já cobrem essas tarefas e onde existe uma lacuna.",
+      "Essa comparação evita montar uma coleção de aplicativos sem um fluxo entre eles. Depois faz sentido escolher nomes, testar compatibilidade e calcular custo. A ferramenta tem trabalho a cumprir."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta INFRA. Eu te mando o checklist de backup, acesso e custo de operação.",
+    "reward": "INFRA",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-32#INFRA",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-32 — Ferramentas pelo trabalho, conta @sistemabritto.\nPúblico: dono. Gatilho: INFRA; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist de backup, acesso e custo de operação: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-32#INFRA\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Não promete lista pessoal/gratuita/sem afiliados que não foi verificada."
+  },
+  {
+    "id": "GV4-33",
+    "theme": "Promessa da isca",
+    "audience": "dono",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "CRESA",
+    "visual": "Cartão “vou te dar um checklist” abrindo uma página de venda; fechar e mostrar o checklist.",
+    "headline": "O clique pode estar cobrando a promessa",
+    "hooks": [
+      "Você promete um material no vídeo e manda uma página de venda na mensagem?",
+      "O comentário pediu um material. A mensagem entregou o quê?"
+    ],
+    "beats": [
+      "A pessoa comentou para receber uma coisa. Se encontra outra, precisa decidir de novo se confia naquele caminho.",
+      "O erro não é ter uma oferta. É trocar a recompensa pela oferta.",
+      "Entregue o material anunciado, ajude a pessoa a usar e só depois apresente um próximo passo coerente. Isso é uma hipótese de melhoria para testar, não uma explicação automática para toda baixa conversão."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta FUNIL. Eu te mando o checklist para encontrar onde a conversa deixa de avançar.",
+    "reward": "FUNIL",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-33#FUNIL",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-33 — Promessa da isca, conta @sistemabritto.\nPúblico: dono. Gatilho: FUNIL; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão o checklist para encontrar onde a conversa deixa de avançar: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-33#FUNIL\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Corrige o principal gap do lote original; sem inventar vendas atribuídas por post."
+  },
+  {
+    "id": "GV4-34",
+    "theme": "Diário do ciclo de conteúdo",
+    "audience": "ponte",
+    "pillar": "MONETIZAR",
+    "stage": "Consideração",
+    "structure": "COBA",
+    "visual": "Painel com colunas PUBLICADO / ENTREGUE / CLICADO; ocultar dados pessoais.",
+    "headline": "O número que eu não vou comemorar sozinho",
+    "hooks": [
+      "Minha meta é publicar pelo menos quatro Reels por dia. Mas eu não vou avaliar o ciclo só pelo volume.",
+      "Quatro vídeos por dia precisam de processo, não só de disposição."
+    ],
+    "beats": [
+      "Vou separar o que foi publicado de verdade, quais recompensas foram entregues e quais próximos passos tiveram sinal. Roteiro pronto não conta como vídeo no ar.",
+      "Depois eu comparo temas e caminhos com as limitações dos dados. Se uma campanha não estiver rastreada, ela aparece como lacuna, não como zero vendas. Quero frequência que também produza aprendizado."
+    ],
+    "cta": "Para aplicar isso na sua empresa, comenta CONTEUDO. Eu te mando dez perguntas e uma ficha para transformar dúvidas em vídeos.",
+    "reward": "CONTEUDO",
+    "url": "https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-34#CONTEUDO",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-34 — Diário do ciclo de conteúdo, conta @sistemabritto.\nPúblico: ponte. Gatilho: CONTEUDO; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão dez perguntas e uma ficha para transformar dúvidas em vídeos: https://nexus.sistemabritto.com.br/api/shares/hT98uG_BRgB8OPS8FBK_w3j8ccEsZqYB8Trc6TH3s6M/view?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-34#CONTEUDO\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Prospectivo: não afirma que já publicou 35 nem que crença causou resultado."
+  },
+  {
+    "id": "GV4-35",
+    "theme": "Convite sem diagnóstico gratuito implícito",
+    "audience": "dono",
+    "pillar": "MONETIZAR",
+    "stage": "Pré-conversão",
+    "structure": "AAA",
+    "visual": "Escolher um único cartão entre vários problemas e colocar “PRÓXIMA DECISÃO”.",
+    "headline": "Qual decisão está parada na sua empresa?",
+    "hooks": [
+      "Se você tem várias ideias de IA e não sabe qual vale executar primeiro, a próxima etapa pode ser uma conversa de escopo.",
+      "Quando o gargalo está claro, a conversa sobre implementação muda."
+    ],
+    "beats": [
+      "Na Consultoria a Laser, eu te ajudo a organizar o problema e sair com o PRD do projeto. É uma oferta paga, com condições e horários na página. Não inclui implementar tudo, nem promete venda garantida. O objetivo é decidir com mais clareza antes de construir."
+    ],
+    "cta": "Quer organizar prioridades e sair com o PRD do seu projeto? Comenta LASER para conhecer a Consultoria a Laser. É uma consultoria paga; a implementação é uma próxima etapa.",
+    "reward": "LASER",
+    "url": "https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-35",
+    "openreply_prompt": "Prepare em RASCUNHO a campanha GV4-35 — Convite sem diagnóstico gratuito implícito, conta @sistemabritto.\nPúblico: dono. Gatilho: LASER; confirme a normalização suportada.\nEscopo somente media_id=PENDENTE. Nunca usar todos os posts como substituto. Verifique colisões, inclusive o gatilho 17, sem alterar campanhas anteriores.\nResposta pública após processamento válido: “Vou te mandar os detalhes por DM.” Não afirmar entrega sem confirmação.\nPrimeira DM: Aqui estão as condições e os horários da Consultoria a Laser, uma oferta paga de diagnóstico e PRD: https://www.sistemabritto.com.br/sessao-de-arquitetura?utm_source=instagram&utm_medium=comment_dm&utm_campaign=gambito_v4&utm_content=GV4-35\nApós a entrega, pergunta opcional: “Você decide sobre isso na sua empresa ou implementa para clientes?”\nNão exigir seguir o perfil. Não ativar sequência automática nem mensagens em massa.\nConfirme conta, token, webhook, worker, elegibilidade e limites reais; deduplique por evento/pessoa.\nQA com conta autorizada: comentário → uma resposta → uma DM → URL correta e recompensa acessível. UTM não é, por si só, evidência de clique ou venda.\nVincule o media_id depois da publicação. Só ative com autorização e escopo conferido; não publique o vídeo.\nRetorne campaign_id, estado, escopo, textos, links e evidência do teste. Sem teste real: NÃO VALIDADO.",
+    "status": "draft_review",
+    "campaign_id": null,
+    "media_id": null,
+    "revision": "Convite explícito, sem ameaçar prazo ou prometer contato gratuito que vira checkout."
+  }
+]

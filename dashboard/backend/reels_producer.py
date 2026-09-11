@@ -30,6 +30,8 @@ def publication_counts(data, now):
     source = data.get("sources", {}).get("instagram", {})
     media = source.get("data", {}).get("media")
     stamp = data.get("collected_at")
+    if not isinstance(stamp, str):
+        return None
     try:
         collected = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
         age = (now - collected).total_seconds()
@@ -68,7 +70,7 @@ def inspect(now):
             for hid, interval, status, stamp in rows:
                 if status in ("fail", "timeout", "error"):
                     issues.append(f"Heartbeat {hid}: {status}")
-            approvals = conn.execute("SELECT COUNT(*) FROM approvals WHERE status='pending'").fetchone()[0]
+            approvals = conn.execute("SELECT COUNT(*) FROM pending_approvals WHERE status='pending'").fetchone()[0]
     except sqlite3.Error:
         issues.append("Banco operacional indisponível")
         approvals = None

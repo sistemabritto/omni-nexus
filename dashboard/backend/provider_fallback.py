@@ -173,7 +173,18 @@ DEFAULT_COOLDOWN_SECONDS = 60   # 1 min — faster rotation through the NVIDIA c
 # 11+ min with zero attempt-failed log lines). Cap each attempt so a hang
 # gets cut and the chain rotates quickly; the overall deadline below still
 # respects the caller's timeout_seconds as a TOTAL budget.
-PER_ATTEMPT_TIMEOUT_CAP = 180
+#
+# Raised 180→280 on 2026-09-11: a killed attempt doesn't resume, it restarts
+# the whole subprocess from scratch on the next model — so for a genuinely
+# multi-turn tool-heavy agent (goal-planner sweeping goals, Step 4 reading
+# `.claude/agents/*.md`), 180s wasn't a hang-cutter, it was cutting real work
+# mid-flight. Confirmed live: goal-planner killed twice at ~119s (second
+# attempt, after the first burned ~180s) while omniroute logs showed its own
+# message count climbing steadily (3→22+ in under 3 minutes) — genuine
+# progress, not a hang. 280 keeps a firm ceiling (a truly hung call still
+# gets cut, chain still rotates) while giving real multi-turn work a
+# realistic shot at finishing in one attempt instead of restarting cold.
+PER_ATTEMPT_TIMEOUT_CAP = 280
 
 
 def set_cooldown(key: str, duration_seconds: float = DEFAULT_COOLDOWN_SECONDS):

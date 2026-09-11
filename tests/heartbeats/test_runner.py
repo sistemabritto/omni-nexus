@@ -161,9 +161,19 @@ def test_step7_timeout_hard_kill(monkeypatch):
     assert "timeout" in result["error"].lower() or "Killed" in result["error"]
 
 
-def test_step7_success_path():
-    """Successful subprocess should return status=success."""
+def test_step7_success_path(monkeypatch):
+    """Successful subprocess should return status=success.
+
+    HEARTBEAT_PROVIDER_FALLBACK=0 pela mesma razão de test_step7_timeout_hard_kill
+    acima: sem isso, step7 roteia por invoke_with_fallback, que espera a saída
+    no formato NDJSON do opencode (o cli_command do provider ativo em CI) — o
+    texto plano que _FastProc devolve não parseia como esse formato e as 4
+    tentativas da cadeia falham por um motivo que nada tem a ver com o que
+    este teste mede (o caminho nativo, mockado por subprocess.Popen).
+    """
     from heartbeat_runner import step7_invoke_claude
+
+    monkeypatch.setenv("HEARTBEAT_PROVIDER_FALLBACK", "0")
 
     class _FastProc:
         pid = 1234
@@ -185,9 +195,16 @@ def test_step7_success_path():
     assert "Agent decided" in result["output"]
 
 
-def test_step7_nonzero_exit_is_fail():
-    """Non-zero exit code should return status=fail."""
+def test_step7_nonzero_exit_is_fail(monkeypatch):
+    """Non-zero exit code should return status=fail.
+
+    HEARTBEAT_PROVIDER_FALLBACK=0 — mesma razão de test_step7_success_path:
+    sem isso este teste passa "por acidente" (a cadeia de fallback já falha
+    antes de tocar no Popen mockado), não porque mede o que diz medir.
+    """
     from heartbeat_runner import step7_invoke_claude
+
+    monkeypatch.setenv("HEARTBEAT_PROVIDER_FALLBACK", "0")
 
     class _FailProc:
         pid = 1234

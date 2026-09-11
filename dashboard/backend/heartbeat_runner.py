@@ -249,6 +249,38 @@ def _load_trigger_payload(trigger_id: str | None, conn) -> dict | None:
         return None
 
 
+def pick_orphan_goal_for_sweep(conn) -> int | None:
+    """Deterministic pick for goal-planner's interval/manual sweep (the
+    catch-up path for a `goal_created` dispatch that never fired or that
+    failed mid-run — see memory `goals-decomposicao-quebrada-2026-09-11`).
+
+    Returns the oldest active, top-level Goal that has neither tickets nor
+    sub-goals yet — i.e. one goal-planner's own idempotency check (Step 2 of
+    .claude/agents/goal-planner.md) would still treat as undecomposed — or
+    None if there is nothing pending.
+
+    This used to be delegated to the LLM itself (decision_prompt asking it to
+    GET /api/goals?status=active, sort oldest, pick one) under a ~180s
+    per-attempt timeout budget. The one real execution of that prompt did not
+    reliably follow it — it picked a goal other than the oldest and produced
+    a placeholder ticket instead of a real decomposition. Selecting WHICH
+    goal is due is not judgment (nothing here requires reading a goal's
+    content), so it belongs in Python — same principle as
+    `.claude/rules/esteira-de-conteudo.md`'s "modelo só onde há julgamento".
+    The LLM still decides HOW to decompose the goal it's handed.
+    """
+    row = conn.execute(
+        """SELECT id FROM goals
+           WHERE parent_goal_id IS NULL
+             AND status = 'active'
+             AND id NOT IN (SELECT DISTINCT goal_id FROM tickets WHERE goal_id IS NOT NULL)
+             AND id NOT IN (SELECT DISTINCT parent_goal_id FROM goals WHERE parent_goal_id IS NOT NULL)
+           ORDER BY created_at ASC
+           LIMIT 1"""
+    ).fetchone()
+    return row["id"] if row else None
+
+
 # ── Step 6: Assemble context ──────────────────────────────────────────────────
 
 def step6_assemble_context(
@@ -522,7 +554,11 @@ def step8_persist(run_id: str, heartbeat_id: str, result: dict, trigger_id: str 
            ON CONFLICT(run_id) DO UPDATE SET
                ended_at=excluded.ended_at,
                duration_ms=excluded.duration_ms,
+               tokens_in=excluded.tokens_in,
+               tokens_out=excluded.tokens_out,
+               cost_usd=excluded.cost_usd,
                status=excluded.status,
+               prompt_preview=excluded.prompt_preview,
                error=excluded.error""",
         (
             run_id, heartbeat_id, trigger_id,
@@ -934,6 +970,21 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
 
                 # Step 6
                 trigger_payload = _load_trigger_payload(trigger_id, conn)
+
+                # goal-planner sweep (Python-side, see pick_orphan_goal_for_sweep
+                # docstring): an interval/manual wake carries no goal_id — a real
+                # goal_created payload always takes precedence and is left alone.
+                if hb["agent"] == "goal-planner" and not (trigger_payload or {}).get("goal_id"):
+                    swept_goal_id = pick_orphan_goal_for_sweep(conn)
+                    if swept_goal_id is None:
+                        print(f"[heartbeat_runner] goal-planner sweep: no orphaned goal pending, skipping without Claude", flush=True)
+                        result = {"status": "success", "error": None, "agent": hb["agent"],
+                                  "duration_ms": 0, "output": '{"action":"skip","reason":"no orphaned goal pending"}'}
+                        step8_persist(run_id, heartbeat_id, result, trigger_id, triggered_by, "", conn)
+                        return
+                    trigger_payload = {"goal_id": swept_goal_id, "sweep": True}
+                    print(f"[heartbeat_runner] goal-planner sweep: picked orphaned goal #{swept_goal_id}", flush=True)
+
                 full_prompt = step6_assemble_context(identity, decision_ctx, hb.get("goal_id"), trigger_payload)
 
                 # Self-healing review loop (Step 6, ADR SPEC 2c): read

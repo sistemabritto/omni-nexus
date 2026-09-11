@@ -144,20 +144,51 @@ def generate_pulse() -> tuple[str, bool]:
         conn and conn.close()
         return ("\n".join(lines), has_critical)
 
-    # ── Heartbeats hoje ──
-    if _has_table(conn, "heartbeat_runs"):
+    # ── Heartbeats hoje, separado por infra vs. agente ──
+    # Um 98% agregado esconde o que importa: heartbeats de sistema
+    # (integrations-health, nexus-orchestrator, confirmar-publicacoes,
+    # reels-producer — handler in-process, zero LLM, quase nunca falham)
+    # rodam de 15 em 15 / 30 em 30 min e dominam a contagem. Um heartbeat
+    # de agente (goal-planner, pixel-growth-6h, nex-sales-4h) que falhou a
+    # ÚNICA execução do dia pesa 1 em ~150 no agregado — vira ruído
+    # estatístico quando devia ser a manchete. Confirmado ao vivo em
+    # 10-11/09/2026: goal-planner ficou 24h com sua única execução em
+    # 'fail' e o Pulse agregado seguiu mostrando 98%/100% o tempo todo.
+    if _has_table(conn, "heartbeat_runs") and _has_table(conn, "heartbeats"):
         hb_stats = _safe_query(
             conn,
-            "SELECT status, COUNT(*) as cnt FROM heartbeat_runs WHERE started_at > ? GROUP BY status",
+            """SELECT
+                   CASE WHEN h.agent = 'system' OR h.handler IS NOT NULL
+                        THEN 'infra' ELSE 'agente' END AS bucket,
+                   r.status, COUNT(*) as cnt
+               FROM heartbeat_runs r
+               JOIN heartbeats h ON h.id = r.heartbeat_id
+               WHERE r.started_at > ?
+               GROUP BY bucket, r.status""",
             (today_utc,),
         )
-        hb = {r["status"]: r["cnt"] for r in hb_stats}
-        ok = hb.get("success", 0)
-        fail = sum(hb.get(s, 0) for s in ("fail", "timeout", "error"))
-        running = hb.get("running", 0)
-        rate = f"{(ok / max(1, ok + fail) * 100):.0f}%" if (ok + fail) > 0 else "—"
-        lines.append(f"❤️ Heartbeats: <b>{ok} ok</b> / {fail} fail / {running} run | {rate}")
-        if fail >= 3:
+        buckets = {"infra": {}, "agente": {}}
+        for r in hb_stats:
+            buckets[r["bucket"]][r["status"]] = r["cnt"]
+
+        def _fmt(bucket: dict) -> tuple[str, int, int]:
+            ok = bucket.get("success", 0)
+            fail = sum(bucket.get(s, 0) for s in ("fail", "timeout", "error"))
+            running = bucket.get("running", 0)
+            rate = f"{(ok / max(1, ok + fail) * 100):.0f}%" if (ok + fail) > 0 else "—"
+            return f"{ok} ok / {fail} fail / {running} run | {rate}", ok, fail
+
+        infra_line, _, infra_fail = _fmt(buckets["infra"])
+        agente_line, agente_ok, agente_fail = _fmt(buckets["agente"])
+        lines.append(f"🐍 Heartbeats infra: {infra_line}")
+        lines.append(f"❤️ Heartbeats agente: <b>{agente_line}</b>")
+        # Um agente é a manchete: qualquer falha aqui é crítica, mesmo 1
+        # em 1 — é o oposto do critério de infra (só alerta em >=3), porque
+        # infra roda dezenas de vezes ao dia e um blip isolado é ruído,
+        # enquanto um heartbeat de agente pode rodar só 1x/dia.
+        if agente_fail >= 1:
+            has_critical = True
+        if infra_fail >= 3:
             has_critical = True
     else:
         lines.append("❤️ Heartbeats: tabela não existe")
@@ -176,6 +207,26 @@ def generate_pulse() -> tuple[str, bool]:
         lines.append(f"📝 Tickets abertos: <b>{open_tickets}</b>" + (f" ({urgent} urgentes)" if urgent else ""))
     else:
         lines.append("📝 Tickets: tabela não existe")
+
+    # ── Goals ativos ──
+    # Antes desta seção o Pulse nunca mencionava Goals — dava pra passar
+    # meses com uma meta parada e o único jeito de saber era abrir /goals
+    # na mão. Conta simples e determinística: quantas ativas, quantas
+    # vencidas (due_date no passado, sem heartbeat próprio pra isso — o
+    # deadline-check já alerta em tempo real, aqui é só o resumo do dia).
+    if _has_table(conn, "goals"):
+        active_goals = _safe_scalar(conn, "SELECT COUNT(*) FROM goals WHERE status='active'")
+        overdue_goals = _safe_scalar(
+            conn,
+            "SELECT COUNT(*) FROM goals WHERE status='active' AND due_date IS NOT NULL AND due_date < date('now')",
+        )
+        if active_goals > 0:
+            suffix = f" (<b>{overdue_goals} vencida(s)</b>)" if overdue_goals > 0 else ""
+            lines.append(f"🎯 Goals ativos: <b>{active_goals}</b>{suffix}")
+            if overdue_goals > 0:
+                has_critical = True
+        else:
+            lines.append("🎯 Goals: nenhum ativo")
 
     # ── Aprovações pendentes ──
     if _has_table(conn, "approvals"):

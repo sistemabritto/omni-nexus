@@ -61,7 +61,6 @@ sempre; o `flush=True` em `run_adw` é redundante mas fica.
 |---------|--------|--------|
 | 07:00 | Good Morning (briefing) | `good_morning.py` |
 | 21:00 | End of Day | `end_of_day.py` |
-| 21:00 | Daily Backup | `backup.py` |
 | 21:15 | Memory Sync | `memory_sync.py` |
 | 04:00 | Uso Modelos DIA (cost telemetry) | `uso_modelos_dia.py` |
 | 05:30 | Métricas de Crescimento | `daily_growth_metrics.py` — lê o analytics do próprio site (pageviews por UTM, cliques de CTA, pipeline de leads) e grava a série em `metricas_crescimento`. Roda antes da esteira das 06:00 pra medir o que ontem produziu, não hoje. Confirmado rodando e gravando dado real em 28/07/2026 |
@@ -69,6 +68,33 @@ sempre; o `flush=True` em `run_adw` é redundante mas fica.
 | Sunday 09:00 | Memory Lint | `memory_lint.py` |
 | A cada 15 min | Derivar Redes Pendentes | `derivar_redes_pendentes.py` — recupera o artigo agendado que o Ghost publicou sozinho e ninguém derivou (ver `esteira-de-conteudo.md` §0) |
 | Friday 08:00 | Weekly Review | `weekly_review.py` — reactivated; checks overdue items weekly |
+
+## Backup — aposentado o Daily Backup local/S3, ficam Brain Repo + R2
+
+`Daily Backup` (`backup.py`) e `Backup Watchdog` (`backup_watchdog.py`) foram
+removidos do `scheduler.py` em 11/09/2026, por decisão do Felipe. Não é bug
+de código, é redundância: o mesmo dado (memória, config, workspace) que o
+Daily Backup tentava exportar num zip já sai coberto por dois caminhos
+melhores, e manter os três só somava confusão sem ganhar cobertura:
+
+- **Brain Repo** (`/brain-repo` no dashboard, `docs/dashboard/brain-repo.md`)
+  — mirror contínuo de `memory/`, `workspace/`, `customizations/`,
+  `config-safe/` pro GitHub privado (`sistemabritto/nexus-brain`), via file
+  watcher (não é agendado, roda a cada mudança), com scan de segredos antes
+  de cada commit. Já estava conectado e sincronizando havia tempo — só
+  ninguém tinha checado.
+- **`vps-backup.sh`** (cron do host, não deste repo) — snapshot completo da
+  VPS pro Cloudflare R2 (`r2:swissnode-backups`): todos os volumes Docker,
+  dumps lógicos de Postgres/MySQL, specs de stack do Swarm, com verificação
+  de checksum por arquivo. Continua rodando, é a cobertura de
+  disaster-recovery de infra que nem Brain Repo nem o Daily Backup nunca
+  cobriram.
+
+O Daily Backup nunca teve S3 configurado de verdade
+([[backup-diario-quebrado-2026-08-27]]) e escrevia um zip de 4GB+/dia em
+`/workspace/backups` — volume que só existia pra isso e que já tinha
+enchido disco antes, mesma classe de problema do backup recursivo do
+Hermes ([[hermes-recursive-backup]]).
 
 ## Falha de rotina alerta, não só loga
 

@@ -8,7 +8,7 @@ User decision: visibility/CRM materials target business owners and decision-make
 - Existing Nexus public share: `JmqUbtpIsv8eU8Gif-9XzmuU9w2O7S95M_g1pCxYMQ4`.
 - Existing volume-relative file: `reports/[C]guia-ser-mencionado-por-ia-v2.html`. Filename retained for link compatibility; visible content identifies v3.
 - CTA labels: `guia-ia-v3-sessao-principal`, `guia-ia-v3-sessao-final`.
-- Destination: `/sessao-de-arquitetura` with campaign `visibilidade-ia-arquitetura-v3` and content `guia-ia-v3`.
+- Destination: `/sessao-de-start` with campaign `visibilidade-ia-arquitetura-v3` and content `guia-ia-v3`.
 - Existing checkout `35xvemn` is shared through `site/lib/architecture-session.ts`; no new payment product created.
 - Site commit: `ea9084a`, with session page, classroom bridge, bio links hierarchy and four configuration/attribution tests.
 

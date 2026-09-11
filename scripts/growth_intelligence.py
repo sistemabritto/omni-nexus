@@ -60,7 +60,7 @@ def site_queries(start,end):
         page='/aula-vps-crm-do-zero' if cohort=='classroom_cohort' else '/links'
         metric=f",count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='{page}' and c.cta_label='{label}' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) architecture_click_sessions"
         queries[cohort]=queries[cohort].removesuffix(' from entry e')+metric+' from entry e'
-    queries['architecture_cohort']=f"with entry as (select session_id,min(created_at) entered from public.pageviews where {span()} and path='/sessao-de-arquitetura' group by 1) select count(*) entered_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/sessao-de-arquitetura' and c.cta_label='arquitetura-checkout' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) checkout_click_sessions from entry e"
+    queries['architecture_cohort']=f"with entry as (select session_id,min(created_at) entered from public.pageviews where {span()} and path='/sessao-de-start' group by 1) select count(*) entered_sessions,count(*) filter(where exists(select 1 from public.cta_clicks c where c.session_id=e.session_id and c.page='/sessao-de-start' and c.cta_label='arquitetura-checkout' and c.created_at>=e.entered and c.created_at<'{end.isoformat()}')) checkout_click_sessions from entry e"
     return queries
 
 def collect_site(start,end):

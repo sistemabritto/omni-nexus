@@ -56,7 +56,7 @@ pré-frame é só pra fisgar seguidor, não pra vender).
    - Público frio, quer alcance/seguidor novo → **pré-frame** (testar
      demonstração e colaboração; a amostra não prova superioridade causal)
    - Público que já segue → **doutrinação** (a maioria do calendário)
-   - Campanha ativa da Consultoria a Laser → **pré-conversão** (matar
+   - Campanha ativa da Sessão de Start → **pré-conversão** (matar
      objeção específica, ver Aba 3 da matriz de temas)
 3. **Escolha o pilar** (RASTREAR/VIBE CODAR/MONETIZAR) pela tabela
    fugir→chegar em `posicionamento-sistema-britto.md`.

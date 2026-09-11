@@ -37,7 +37,7 @@ concretas e ficha completa ao fechar; não fazer questionário burocrático.
 
 ## Oferta e recompensa
 
-Consultoria a Laser é o nome atual; rota /sessao-de-arquitetura. A skill mais
+Sessão de Start é o nome atual; rota /sessao-de-start. A skill mais
 recente registra R$150 (normal R$300), três primeiras agendas por semana,
 ciclo domingo 00h e crédito total no Sprint/Implementação. Preservar esses
 termos, mas conferir a disponibilidade real antes de anunciar "restam X".

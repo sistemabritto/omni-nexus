@@ -19,6 +19,8 @@
 ##   FACEBOOK_APP_SECRET    → do Meta app (Basic settings)
 ##   SMTP_* → mesmas credenciais Gmail já usadas em N8N_SMTP_* / SMTP_* do
 ##     resto do workspace (smtp.gmail.com, workflowapistudio@gmail.com)
+##   EMAIL_SERVER → URL SMTP completa para o magic link do NextAuth, por
+##     exemplo smtp://workflowapistudio%40gmail.com:<senha-url-encoded>@smtp.gmail.com:587
 ##
 ## Bug CORRIGIDO na origem em 25/08/2026 (ver ticket 3497e698): a
 ## excarplex/openreply:latest antiga não empacotava /app/app/generated/prisma
@@ -88,6 +90,7 @@ services:
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@openreply-postgres:5432/openreply
       - REDIS_URL=redis://openreply-redis:6379
       - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_SERVER=${EMAIL_SERVER:-}
       - EMAIL_FROM=OpenReply <workflowapistudio@gmail.com>
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
@@ -139,6 +142,7 @@ services:
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@openreply-postgres:5432/openreply
       - REDIS_URL=redis://openreply-redis:6379
       - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_SERVER=${EMAIL_SERVER:-}
       - EMAIL_FROM=OpenReply <workflowapistudio@gmail.com>
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587

@@ -183,6 +183,7 @@ memory/raw-transcripts/
 /projects/
 /social/
 /strategy/
+/tmp/
 
 # ── Local backups & reload triggers ──
 *.bak.telegram

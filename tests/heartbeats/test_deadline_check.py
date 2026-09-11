@@ -35,7 +35,7 @@ def db(tmp_path, monkeypatch):
     conn.executescript(
         """
         CREATE TABLE goals (id INTEGER PRIMARY KEY, title TEXT, status TEXT, due_date TEXT);
-        CREATE TABLE tickets (id TEXT PRIMARY KEY, title TEXT, status TEXT, due_date TEXT);
+        CREATE TABLE tickets (id TEXT PRIMARY KEY, title TEXT, status TEXT, due_date TEXT, updated_at TEXT);
         """
     )
     conn.commit()
@@ -54,7 +54,7 @@ def test_no_overdue_items_does_not_alert(db):
     with patch("notifications.send_telegram_alert") as mock_alert:
         result = deadline_check.tick()
     mock_alert.assert_not_called()
-    assert result == {"overdue_goals": 0, "overdue_tickets": 0, "alerted": False}
+    assert result == {"overdue_goals": 0, "overdue_tickets": 0, "stale_blocked_tickets": 0, "alerted": False}
 
 
 def test_overdue_goal_triggers_alert(db):
@@ -121,6 +121,63 @@ def test_future_due_date_does_not_alert(db):
     with patch("notifications.send_telegram_alert") as mock_alert:
         deadline_check.tick()
     mock_alert.assert_not_called()
+
+
+def test_stale_blocked_ticket_without_due_date_triggers_alert(db):
+    """A blocked ticket with no due_date (the common case — an
+    auto-generated diagnostic, not a deadline) must still surface once it's
+    sat unaddressed past _STALE_BLOCKED_DAYS — this is the gap
+    _overdue_tickets alone leaves open."""
+    conn = _conn(db)
+    conn.execute(
+        "INSERT INTO tickets (id, title, status, due_date, updated_at) "
+        "VALUES ('t1', 'Funil: 87% de perda', 'blocked', NULL, datetime('now', '-10 days'))"
+    )
+    conn.commit()
+    conn.close()
+
+    with patch("notifications.send_telegram_alert", return_value=True) as mock_alert:
+        result = deadline_check.tick()
+
+    mock_alert.assert_called_once()
+    body = mock_alert.call_args[0][0]
+    assert "Funil: 87% de perda" in body
+    assert result["stale_blocked_tickets"] == 1
+    assert result["alerted"] is True
+
+
+def test_recently_blocked_ticket_does_not_alert(db):
+    """A ticket blocked yesterday hasn't earned a nudge yet."""
+    conn = _conn(db)
+    conn.execute(
+        "INSERT INTO tickets (id, title, status, due_date, updated_at) "
+        "VALUES ('t1', 'Bloqueado ontem', 'blocked', NULL, datetime('now', '-1 days'))"
+    )
+    conn.commit()
+    conn.close()
+
+    with patch("notifications.send_telegram_alert") as mock_alert:
+        result = deadline_check.tick()
+    mock_alert.assert_not_called()
+    assert result["stale_blocked_tickets"] == 0
+
+
+def test_stale_blocked_ticket_with_due_date_is_not_double_counted(db):
+    """A blocked ticket that DOES have a due_date is already covered by
+    _overdue_tickets — _stale_blocked_tickets must not also pick it up and
+    list it twice in the same alert."""
+    conn = _conn(db)
+    conn.execute(
+        "INSERT INTO tickets (id, title, status, due_date, updated_at) "
+        "VALUES ('t1', 'Vencido com prazo', 'blocked', '2020-01-01', datetime('now', '-10 days'))"
+    )
+    conn.commit()
+    conn.close()
+
+    with patch("notifications.send_telegram_alert", return_value=True):
+        result = deadline_check.tick()
+    assert result["overdue_tickets"] == 1
+    assert result["stale_blocked_tickets"] == 0
 
 
 def test_missing_db_returns_error_without_raising(monkeypatch, tmp_path):

@@ -286,7 +286,7 @@ def test_artigo_do_blog_nao_vai_para_instagram():
     """No Instagram o link não é clicável no feed: republicar artigo lá vira
     post que não converte e ocupa o espaço do conteúdo visual nativo."""
     assert "instagram" not in bridge.REDES
-    assert set(bridge.REDES) == {"x", "linkedin", "threads"}
+    assert set(bridge.REDES) == {"linkedin", "threads"}
 
 
 def test_suporte_a_instagram_continua_existindo_no_gate():
@@ -309,8 +309,12 @@ def test_threads_leva_o_link_no_texto(post_publicado, api_falsa):
     assert "http" in texto, f"Threads foi ao ar sem link: {texto!r}"
 
 
-def test_x_continua_levando_o_link(post_publicado, api_falsa):
-    assert "http" in bridge.distribuir("p1", dry_run=True)["redes"]["x"]["preview"]
+def test_x_saiu_da_ponte_do_blog(post_publicado, api_falsa):
+    """X saiu de REDES em 11/09/2026: API de postagem paga por cota
+    ("credits depleted" bloqueou a esteira toda em 24/08/2026) e o público do
+    Felipe não está lá. X continua servindo só como fonte de pesquisa de
+    trending (`pautas_do_x`), fora desta ponte."""
+    assert "x" not in bridge.distribuir("p1", dry_run=True)["redes"]
 
 
 # ── janelas de horário ───────────────────────────────────────────────────

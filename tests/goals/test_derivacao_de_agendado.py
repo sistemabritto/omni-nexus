@@ -74,8 +74,8 @@ def evo(monkeypatch):
 # ── idempotência ─────────────────────────────────────────────────────────
 
 def test_reconhece_rede_ja_derivada(evo):
-    evo.approvals = [_aprovacao("art1", "x"), _aprovacao("art1", "linkedin")]
-    assert bridge.redes_ja_derivadas("art1") == {"x", "linkedin"}
+    evo.approvals = [_aprovacao("art1", "threads"), _aprovacao("art1", "linkedin")]
+    assert bridge.redes_ja_derivadas("art1") == {"threads", "linkedin"}
 
 
 def test_conta_derivacao_ja_decidida_tambem(evo):
@@ -84,13 +84,13 @@ def test_conta_derivacao_ja_decidida_tambem(evo):
     Reabrir o que o humano recusou é insistir num texto que ele leu e não
     quis — pior que não derivar.
     """
-    evo.approvals = [_aprovacao("art1", "x", status="rejected"),
+    evo.approvals = [_aprovacao("art1", "linkedin", status="rejected"),
                      _aprovacao("art1", "threads", status="published")]
-    assert bridge.redes_ja_derivadas("art1") == {"x", "threads"}
+    assert bridge.redes_ja_derivadas("art1") == {"linkedin", "threads"}
 
 
 def test_nao_confunde_artigo_com_outro(evo):
-    evo.approvals = [_aprovacao("outro", "x")]
+    evo.approvals = [_aprovacao("outro", "linkedin")]
     assert bridge.redes_ja_derivadas("art1") == set()
 
 
@@ -115,7 +115,7 @@ def test_api_indisponivel_nao_bloqueia_derivacao(evo, monkeypatch):
 
 
 def test_distribuir_pula_rede_ja_derivada(evo, monkeypatch):
-    evo.approvals = [_aprovacao("art1", "x")]
+    evo.approvals = [_aprovacao("art1", "linkedin")]
     monkeypatch.setattr(bridge, "buscar_post",
                         lambda _id: {"id": "art1", "title": "T", "status": "published",
                                      "url": "https://blog/x", "excerpt": "e"})
@@ -123,8 +123,8 @@ def test_distribuir_pula_rede_ja_derivada(evo, monkeypatch):
     monkeypatch.setattr(bridge, "midia_do_post", lambda post: ([], ""))
 
     r = bridge.distribuir("art1")
-    assert "x" in r["pulados"]
-    assert set(r["redes"]) == {"linkedin", "threads"}
+    assert "linkedin" in r["pulados"]
+    assert set(r["redes"]) == {"threads"}
 
 
 def test_rede_ja_derivada_nao_chama_o_modelo(evo, monkeypatch):

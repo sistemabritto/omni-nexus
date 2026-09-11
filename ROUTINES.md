@@ -18,7 +18,6 @@ Routines are automated workflows that run on a schedule via the ADW Runner.
 | Memory Sync | `memory_sync.py` | @clawdia | Daily 21:15 |
 | Weekly Review | `weekly_review.py` | @clawdia | Friday 08:00 |
 | Memory Lint | `memory_lint.py` | @clawdia | Sunday 09:00 |
-| Daily Backup | `backup.py` | systematic | Daily 21:00 |
 
 > **Memory Sync** follows the LLM Wiki pattern: extracts knowledge from daily logs, meetings, and git changes, then **propagates updates** across related memory files (e.g., a role change updates people/, glossary.md, and CLAUDE.md). Updates `memory/index.md` (catalog) and `memory/log.md` (operation log) after each run.
 
@@ -196,7 +195,7 @@ make eod          # End of Day
 make memory       # Memory Sync
 make memory-lint  # Memory Lint
 make weekly       # Weekly Review
-make backup-daily # Daily Backup
+make backup-daily # Daily Backup (manual só — não é mais agendado; ver .claude/rules/routines.md §Backup)
 
 # Any routine (core or custom) via dynamic runner
 make run R=fin-pulse        # Financial Pulse

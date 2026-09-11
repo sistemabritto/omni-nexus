@@ -256,11 +256,23 @@ def setup_schedule():
     # vencido sem isto.
     schedule.every().friday.at("08:00").do(run_adw, "Weekly Review", "weekly_review.py")
     schedule.every().sunday.at("09:00").do(run_adw, "Memory Lint", "memory_lint.py")
-    schedule.every().day.at("21:00").do(run_adw, "Daily Backup", "backup.py")
-    # 20:00, uma hora antes do backup: avisa se o artefato mais recente (local
-    # ou S3) está com mais de 48h — o backup "✓" silencioso enganou por dias
-    # entre 24/07 e 28/07, e este watchdog é o que torna a falha audível.
-    schedule.every().day.at("20:00").do(run_adw, "Backup Watchdog", "backup_watchdog.py")
+    # REMOVIDO (11/09/2026): "Daily Backup" (backup.py) e "Backup Watchdog"
+    # (backup_watchdog.py) — aposentados por decisão do Felipe. Eram
+    # redundantes com o que já existe de melhor: o Brain Repo (mirror
+    # contínuo de memory/workspace/config-safe/customizations pro GitHub
+    # privado via file watcher, com scan de segredos — ver
+    # docs/dashboard/brain-repo.md) e o vps-backup.sh (snapshot completo da
+    # VPS — volumes Docker, dumps de Postgres/MySQL, stacks do Swarm — pro
+    # R2, diário, com verificação de checksum, que continua rodando).
+    #
+    # O Daily Backup nunca teve S3 configurado de verdade (ver
+    # [[backup-diario-quebrado-2026-08-27]] na memória) e escrevia um zip de
+    # 4GB+ por dia em /workspace/backups — volume que só existia pra isso e
+    # que já tinha enchido disco antes (mesma classe de problema do backup
+    # recursivo do Hermes, [[hermes-recursive-backup]]). vps-backup.sh já
+    # cobre o mesmo dado (varre todos os volumes Docker, exceto os que
+    # terminam em `_backups`) com muito mais rigor. Manter os dois só somava
+    # confusão sem ganhar cobertura nenhuma.
     # REMOVIDO: "Uso Modelos DIA" (uso_modelos_dia.py) — fazia 12 chamadas/dia
     # a modelos NVIDIA só para pingar com prompt artificial, sem produzir
     # lead, conteúdo ou decisão. Custo e quota desperdiçados. A Saúde dos

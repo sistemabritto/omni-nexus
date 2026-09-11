@@ -13,13 +13,13 @@ def main():
     now=time.time()
     report={'time':now,'disk_free_gib':round(disk.free/2**30,1),'disk_used_percent':round(disk.used/disk.total*100,1),
             'memory_available_gib':round(memory['MemAvailable']/2**20,1),'load':os.getloadavg(),'services':{},'warnings':[]}
-    for name in ['evonexus_omniroute','evonexus_redis','hermes_hermes','evonexus_evonexus_telegram']:
+    for name in ['omniroute_omniroute','omniroute_redis','hermes_hermes','evonexus_evonexus_telegram']:
         spec=json.loads(output('docker','service','inspect',name))[0]
         desired=spec.get('Spec',{}).get('Mode',{}).get('Replicated',{}).get('Replicas',0)
         tasks=output('docker','service','ps','--filter','desired-state=running','--format','{{.CurrentState}}',name).splitlines()
         report['services'][name]={'desired':desired,'tasks':tasks}
         if desired and not any(t.startswith('Running') for t in tasks):report['warnings'].append(name+' has no running task')
-        if name=='evonexus_omniroute':
+        if name=='omniroute_omniroute':
             # Do not interfere with a starting task, an upstream outage, or a deliberate scale-down.
             stranded=desired>0 and not tasks
             count=previous.get('stranded_checks',0)+1 if stranded else 0

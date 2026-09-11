@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Run inside Hermes to align existing profiles; never print credentials."""
+"""Run inside Hermes (instância no mesmo Swarm/network_public, não local) to
+align existing profiles; never print credentials."""
 import json,shutil
 from datetime import datetime,timezone
 from pathlib import Path
@@ -14,7 +15,7 @@ def main():
         shutil.copy2(path,backup/(profile+'.yaml'))
         candidates=[x for x in cfg.get('custom_providers',[]) if x.get('name')=='omniroute']
         if not candidates:raise RuntimeError('Missing configured omniroute provider: '+profile)
-        provider=candidates[0];provider['base_url']='http://evonexus_omniroute:20128/v1'
+        provider=candidates[0];provider['base_url']='http://omniroute:20128/v1'
         key=provider.get('api_key') or cfg.get('model',{}).get('api_key') or dotenv_values(path.parent/'.env').get('OPENAI_API_KEY')
         if not key:raise RuntimeError('Missing existing credential: '+profile)
         cfg['model'].update({'provider':'custom:omniroute','default':'Britto-Core',

@@ -149,15 +149,16 @@ def test_post_nao_publicado_nao_distribui(monkeypatch):
     assert "ignorado" in out
 
 
-def test_ponte_do_blog_cobre_so_as_tres_redes_de_texto(monkeypatch):
+def test_ponte_do_blog_cobre_so_linkedin_e_threads(monkeypatch):
     """Instagram, TikTok e YouTube não pertencem a este gatilho: são a trilha
-    de vídeo, com produção própria (decisão do Felipe, 25/07/2026). Aqui não
-    aparecem nem como "pulado" — não fazem parte do fluxo."""
+    de vídeo, com produção própria (decisão do Felipe, 25/07/2026). X saiu em
+    11/09/2026 — API de postagem paga por cota, sem ROI, público não está lá.
+    Nenhum deles aparece nem como "pulado" — não fazem parte do fluxo."""
     monkeypatch.setattr(bridge, "buscar_post", lambda _id: {
         "status": "published", "title": "T", "custom_excerpt": "R", "url": "https://e.com/p"})
     monkeypatch.setattr(bridge, "adaptar", lambda post, rede: "texto")
     out = bridge.distribuir("qualquer", dry_run=True)
-    assert set(out["redes"]) == {"x", "linkedin", "threads"}
+    assert set(out["redes"]) == {"linkedin", "threads"}
     assert out["pulados"] == {}
     for rede_de_video in ("instagram", "tiktok", "youtube"):
         assert rede_de_video not in out["redes"]

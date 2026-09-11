@@ -1,5 +1,11 @@
 # VPS recovery image tags are local to swissnode. Merge after the main stack:
 # docker stack deploy -c evonexus-vps.stack.yml -c agent-recovery.override.yml evonexus
+#
+# O bloco `omniroute` que vivia aqui (imagem vps-tuned-20260909 + tuning de
+# stream/timeout/recursos) foi incorporado direto em omniroute-vps.stack.yml
+# em 11/09/2026, quando o OmniRoute virou stack própria. Não precisa mais
+# deste override para ele — a imagem/tuning real agora é a fonte única
+# naquele arquivo. Ver o cabeçalho dele para o histórico.
 version: "3.8"
 services:
   evonexus_telegram:
@@ -19,39 +25,3 @@ services:
     image: evo-nexus-dashboard:harness-fix-20260909
     environment:
       BACKUP_RETAIN_LOCAL: "3"
-  omniroute:
-    image: omniroute:vps-tuned-20260909
-    environment:
-      REDIS_URL: redis://evonexus_redis:6379/1
-      NODE_OPTIONS: --max-old-space-size=2560
-      RATE_LIMIT_MAX_WAIT_MS: "300000"
-      RATE_LIMIT_MAX_QUEUE_DEPTH: "32"
-      STREAM_RECOVERY_ENABLED: "true"
-      STREAM_RECOVERY_MIDSTREAM_ENABLED: "false"
-      STREAM_READINESS_TIMEOUT_MS: "180000"
-      STREAM_READINESS_MAX_TIMEOUT_MS: "600000"
-      STREAM_IDLE_TIMEOUT_MS: "180000"
-      FETCH_TIMEOUT_MS: "300000"
-      SSE_HEARTBEAT_INTERVAL_MS: "15000"
-    stop_grace_period: 300s
-    healthcheck:
-      test: ["CMD", "node", "/app/healthcheck.mjs"]
-      interval: 30s
-      timeout: 10s
-      start_period: 90s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: "3"
-          memory: 4G
-        reservations:
-          cpus: "0.5"
-          memory: 1G
-      update_config:
-        failure_action: rollback
-        monitor: 90s
-      restart_policy:
-        condition: any
-        delay: 10s
-        max_attempts: 0

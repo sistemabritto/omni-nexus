@@ -39,6 +39,8 @@ jobs:
             dockerfile: Dockerfile.swarm.dashboard
           - image: evo-nexus-media-worker
             dockerfile: Dockerfile.media-worker
+          - image: omniroute
+            dockerfile: scripts/Dockerfile.omniroute-runtime
 
     steps:
       - name: Checkout

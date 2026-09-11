@@ -68,7 +68,7 @@ def test_toda_rede_leva_a_capa_do_artigo(post_com_capa):
     porque post sem imagem é válido para o Postiz.
     """
     resultado = bridge.distribuir("abc123", dry_run=True)
-    assert set(resultado["redes"]) == {"x", "linkedin", "threads"}
+    assert set(resultado["redes"]) == {"linkedin", "threads"}
     for rede, dados in resultado["redes"].items():
         assert dados["midia"] == [post_com_capa["feature_image"]], f"{rede} saiu sem imagem"
 

@@ -33,8 +33,16 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
-# Artigo do blog vai para X, LinkedIn e Threads — as três redes onde texto com
-# link tem para onde levar.
+# Artigo do blog vai para LinkedIn e Threads — as redes onde texto com link
+# tem para onde levar.
+#
+# X saiu da lista em 11/09/2026 (decisão do Felipe): a API de postagem do X é
+# paga por cota ("credits depleted" bloqueou a esteira inteira em 24/08/2026 —
+# ver memory/`pipeline-social-parada-2026-09-11.md`) e o público do Felipe não
+# está lá. X continua servindo como fonte de pesquisa de trending
+# (`pautas_do_x` em `weekly_content_research.py`, via XAI_API_KEY/Perplexity)
+# — isso é leitura, não passa pela cota de escrita e não é afetado por esta
+# mudança.
 #
 # Instagram, TikTok e YouTube NÃO pertencem a esta ponte (decisão do Felipe,
 # 25/07/2026): são a trilha de vídeo vertical, com produção própria, e serão
@@ -42,7 +50,7 @@ import requests
 # viraria post que não converte ocupando o espaço do que funciona. O suporte a
 # essas plataformas segue existindo e testado no gate de publicação — só não é
 # alimentado a partir do blog.
-REDES = ("x", "linkedin", "threads")
+REDES = ("linkedin", "threads")
 
 LIMITES = {"x": 280, "linkedin": 3000, "threads": 500, "instagram": 2200}
 

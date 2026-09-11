@@ -358,7 +358,7 @@ def _omniroute_media_credentials() -> tuple[str, str]:
     cfg = read_json(PROVIDERS_PATH, {})
     provider = cfg.get("providers", {}).get("omnirouter", {})
     base = (provider.get("default_base_url") or provider.get("env_vars", {}).get("OPENAI_BASE_URL")
-            or "http://evonexus_omniroute:20128/v1").rstrip("/")
+            or "http://omniroute:20128/v1").rstrip("/")
     key = _get_api_key("omnirouter", cfg)
     if not key:
         raise RuntimeError("Credencial OmniRoute ausente para mídia")

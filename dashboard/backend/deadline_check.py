@@ -9,6 +9,17 @@ Before this, nothing proactively surfaced a Goal or Ticket past its
 due_date — the human only found out by opening /goals or /kanban. Weekly
 Review (scheduler.py) covers this once a week; this closes the gap between
 runs with a cheap, LLM-free check every few hours.
+
+Extended 2026-09-11 (auditoria heartbeats/goals): a `blocked` ticket
+waiting on a human decision has NO due_date most of the time — it's an
+auto-generated diagnostic ("Funil: X% de perda...") or an approval gate,
+not a deadline. `_overdue_tickets` alone never re-surfaces those, so once
+the one Telegram card that created them scrolls off, nothing nudges again.
+Confirmed live: a funnel ticket sat 19 days untouched (created 2026-08-23,
+only auto-flagged blocked on 2026-09-10 by an unrelated health check).
+`_stale_blocked_tickets` closes that gap using the same re-alert-every-run
+philosophy as the due_date check below — no dedup table, because a
+repeated nudge for a still-unaddressed blocker is the point.
 """
 
 from __future__ import annotations
@@ -23,6 +34,7 @@ WORKSPACE = Path(__file__).resolve().parent.parent.parent
 DB_PATH = WORKSPACE / "dashboard" / "data" / "evonexus.db"
 
 _MAX_ITEMS_PER_ALERT = 8
+_STALE_BLOCKED_DAYS = 3
 
 
 def _overdue_goals(conn: sqlite3.Connection) -> list[sqlite3.Row]:
@@ -42,7 +54,25 @@ def _overdue_tickets(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     ).fetchall()
 
 
-def _build_alert(goals: list[sqlite3.Row], tickets: list[sqlite3.Row]) -> str:
+def _stale_blocked_tickets(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    """`blocked` tickets with no due_date fall outside `_overdue_tickets`
+    entirely — this catches them by how long they've sat blocked instead.
+    `updated_at` is the last status-change timestamp (see
+    routes/tickets.py), so this is "days since last touched", not "days
+    since created" — a ticket someone commented on recently isn't stale
+    even if it's been open a while.
+    """
+    return conn.execute(
+        "SELECT id, title, updated_at FROM tickets "
+        "WHERE status = 'blocked' AND due_date IS NULL "
+        "AND datetime(updated_at) < datetime('now', ?) "
+        "ORDER BY updated_at ASC",
+        (f"-{_STALE_BLOCKED_DAYS} days",),
+    ).fetchall()
+
+
+def _build_alert(goals: list[sqlite3.Row], tickets: list[sqlite3.Row],
+                  stale_blocked: list[sqlite3.Row] | None = None) -> str:
     """Monta o alerta. Título é texto que o humano escreveu, então é escapado.
 
     A mensagem vai com parse_mode=HTML. Uma única Meta chamada
@@ -51,6 +81,7 @@ def _build_alert(goals: list[sqlite3.Row], tickets: list[sqlite3.Row]) -> str:
     """
     from notifications import _esc
 
+    stale_blocked = stale_blocked or []
     lines = [f"⏰ <b>{len(goals)} Meta(s) e {len(tickets)} Ticket(s) vencidos</b>"]
     if goals:
         lines.append("\n🎯 Metas:")
@@ -64,6 +95,12 @@ def _build_alert(goals: list[sqlite3.Row], tickets: list[sqlite3.Row]) -> str:
             lines.append(f"  • {_esc(str(t['title']))} — venceu {_esc(str(t['due_date']))}")
         if len(tickets) > _MAX_ITEMS_PER_ALERT:
             lines.append(f"  … e mais {len(tickets) - _MAX_ITEMS_PER_ALERT}")
+    if stale_blocked:
+        lines.append(f"\n🔒 Bloqueados há mais de {_STALE_BLOCKED_DAYS} dias, sem prazo, aguardando decisão:")
+        for t in stale_blocked[:_MAX_ITEMS_PER_ALERT]:
+            lines.append(f"  • {_esc(str(t['title']))} — desde {_esc(str(t['updated_at'])[:10])}")
+        if len(stale_blocked) > _MAX_ITEMS_PER_ALERT:
+            lines.append(f"  … e mais {len(stale_blocked) - _MAX_ITEMS_PER_ALERT}")
     return "\n".join(lines)
 
 
@@ -82,16 +119,20 @@ def tick() -> dict:
     try:
         goals = _overdue_goals(conn)
         tickets = _overdue_tickets(conn)
+        stale_blocked = _stale_blocked_tickets(conn)
     finally:
         conn.close()
 
     alerted = False
-    if goals or tickets:
+    if goals or tickets or stale_blocked:
         from notifications import send_telegram_alert
-        alerted = send_telegram_alert(_build_alert(goals, tickets))
+        alerted = send_telegram_alert(_build_alert(goals, tickets, stale_blocked))
 
     log.info(
-        "deadline_check.tick: overdue_goals=%d overdue_tickets=%d alerted=%s",
-        len(goals), len(tickets), alerted,
+        "deadline_check.tick: overdue_goals=%d overdue_tickets=%d stale_blocked=%d alerted=%s",
+        len(goals), len(tickets), len(stale_blocked), alerted,
     )
-    return {"overdue_goals": len(goals), "overdue_tickets": len(tickets), "alerted": alerted}
+    return {
+        "overdue_goals": len(goals), "overdue_tickets": len(tickets),
+        "stale_blocked_tickets": len(stale_blocked), "alerted": alerted,
+    }

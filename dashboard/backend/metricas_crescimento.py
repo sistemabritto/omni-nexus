@@ -59,6 +59,23 @@ VISITANTES = "visitantes"
 CLIQUES_CTA = "cliques_cta"
 LEADS = "leads"
 LEADS_FECHADOS = "leads_fechados"
+# LEADS/LEADS_FECHADOS são ESTOQUE: contagem atual do pipeline por estágio no
+# EvoCRM, foto do momento — não quantos entraram na janela medida. Achado ao
+# vivo em 11/09/2026: o pipeline "Leads do Site" é dominado por 52 itens
+# estáticos de uma lista de reconexão histórica importada em 29/07/2026, então
+# LEADS travava em ~52 toda semana e `weekly_funnel_review.py` comparava isso
+# (estoque) contra cliques_cta (fluxo) — maçã com laranja, sempre "100% de
+# perda" mesmo sem nenhum problema real no funil. LEADS/LEADS_FECHADOS
+# continuam gravados como estavam (nome estável, ver comentário acima) porque
+# ainda respondem "quantos estão hoje em cada estágio" — pergunta legítima,
+# só não é a que a revisão semanal do funil deveria estar fazendo.
+#
+# LEADS_NOVOS/LEADS_FECHADOS_NOVOS são FLUXO: quantos pipeline_items foram
+# CRIADOS (leads_novos) ou ENTRARAM no estágio Fechado (leads_fechados_novos)
+# dentro da janela medida — o que "revisão semanal do funil" deveria comparar
+# contra cliques_cta. Ver site_analytics.coletar().
+LEADS_NOVOS = "leads_novos"
+LEADS_FECHADOS_NOVOS = "leads_fechados_novos"
 VISITAS_FUNIL = "visitas_funil"
 # Clique em CTA atribuído ao artigo que trouxe a visita. A `origem` aqui é o
 # slug da campanha — que `utm.py` monta a partir do post —, então esta é a
@@ -188,7 +205,8 @@ def resumo(*, conn: sqlite3.Connection | None = None) -> dict:
     conn = conn or conectar()
     try:
         atual = {}
-        for m in (VISITAS, VISITANTES, CLIQUES_CTA, LEADS, LEADS_FECHADOS, VISITAS_FUNIL):
+        for m in (VISITAS, VISITANTES, CLIQUES_CTA, LEADS, LEADS_FECHADOS,
+                  LEADS_NOVOS, LEADS_FECHADOS_NOVOS, VISITAS_FUNIL):
             atual[m] = ultimo(m, conn=conn)
 
         # Origem do tráfego no dia mais recente que temos.

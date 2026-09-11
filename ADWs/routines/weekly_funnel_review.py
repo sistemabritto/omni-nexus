@@ -49,11 +49,20 @@ QUEDA_MINIMA_PCT = 25
 BASE_MINIMA = 20
 
 # O funil, na ordem. Cada par consecutivo é uma transição que pode vazar.
+#
+# "leads_novos"/"leads_fechados_novos", não "leads"/"leads_fechados": os dois
+# últimos são ESTOQUE (contagem atual do pipeline no EvoCRM), não quem entrou
+# na janela. Achado ao vivo em 11/09/2026: o pipeline "Leads do Site" carrega
+# 52 itens estáticos de uma lista de reconexão histórica importada em
+# 29/07/2026, e "leads" travava em ~52 toda semana — comparado contra
+# cliques_cta (fluxo real), a revisão sempre acusava perda grande mesmo sem
+# problema nenhum no funil daquela semana. Ver metricas_crescimento.py e
+# site_analytics.coletar() para onde o par _novos é calculado.
 ETAPAS = [
     ("visitas", "chegou no site"),
     ("cliques_cta", "clicou em algum CTA"),
-    ("leads", "virou lead"),
-    ("leads_fechados", "fechou"),
+    ("leads_novos", "virou lead"),
+    ("leads_fechados_novos", "fechou"),
 ]
 
 

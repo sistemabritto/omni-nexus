@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import logging
 import os
+import re
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -64,6 +66,26 @@ def _get(caminho: str, token: str, **params) -> dict:
         raise SiteIndisponivel(f"{caminho} devolveu corpo não-JSON") from exc
 
 
+def _janela_em_dias(janela: str) -> int:
+    m = re.match(r"^(\d+)d$", (janela or "").strip())
+    return int(m.group(1)) if m else 7
+
+
+def _dentro_da_janela(item: dict, campo: str, corte: datetime) -> bool:
+    """`created_at`/`entered_at` do endpoint já vêm em ISO 8601 (ver
+    `pages/api/admin/leads.ts::handler`, que converte o unix timestamp do
+    EvoCRM). Item sem o campo (nunca deveria acontecer, mas a API é externa)
+    não conta como novo — melhor subcontar que estourar a coleta inteira."""
+    bruto = item.get(campo)
+    if not bruto:
+        return False
+    try:
+        quando = datetime.fromisoformat(str(bruto).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return quando >= corte
+
+
 def coletar(*, janela: str = "7d") -> list[dict]:
     """Lê o site e devolve medições prontas para gravar.
 
@@ -72,7 +94,8 @@ def coletar(*, janela: str = "7d") -> list[dict]:
     um mês inteiro de história a cada medição.
     """
     from metricas_crescimento import (CLIQUES_CTA, CLIQUES_POR_ARTIGO, LEADS,
-                                      LEADS_FECHADOS, VISITANTES, VISITAS,
+                                      LEADS_FECHADOS, LEADS_FECHADOS_NOVOS,
+                                      LEADS_NOVOS, VISITANTES, VISITAS,
                                       VISITAS_FUNIL)
 
     token = _token()
@@ -121,7 +144,8 @@ def coletar(*, janela: str = "7d") -> list[dict]:
     medicoes.append({"metrica": VISITAS_FUNIL, "valor": total_funil})
 
     # Leads: o número que de fato importa. O endpoint devolve o pipeline
-    # inteiro com contagem por estágio.
+    # inteiro com contagem por estágio (estoque) E a lista achatada de itens
+    # com created_at/entered_at (o que dá pra medir fluxo).
     try:
         leads = _get("/api/admin/leads", token)
         medicoes.append({"metrica": LEADS, "valor": leads.get("total") or 0})
@@ -132,6 +156,26 @@ def coletar(*, janela: str = "7d") -> list[dict]:
                                  "valor": est.get("count") or 0})
             if nome == "fechado":
                 medicoes.append({"metrica": LEADS_FECHADOS, "valor": est.get("count") or 0})
+
+        # Fluxo da janela, não estoque — achado ao vivo em 11/09/2026 (ver
+        # comentário em metricas_crescimento.py junto de LEADS_NOVOS): o
+        # pipeline "Leads do Site" carrega 52 itens estáticos de uma lista de
+        # reconexão histórica, e LEADS/LEADS_FECHADOS acima travam nesse
+        # estoque toda semana. `leads_novos` conta quem foi CRIADO na janela;
+        # `leads_fechados_novos` conta quem ENTROU no estágio Fechado na
+        # janela (aproximação: item currently em Fechado com entered_at
+        # recente — não dá pra saber por quanto tempo passou por estágio
+        # intermediário sem histórico de transição, que a API não expõe).
+        corte = datetime.now(timezone.utc) - timedelta(days=_janela_em_dias(janela))
+        itens = leads.get("leads") or []
+        novos = sum(1 for it in itens if _dentro_da_janela(it, "created_at", corte))
+        fechados_novos = sum(
+            1 for it in itens
+            if (it.get("stage") or "").strip().lower() == "fechado"
+            and _dentro_da_janela(it, "entered_at", corte)
+        )
+        medicoes.append({"metrica": LEADS_NOVOS, "valor": novos})
+        medicoes.append({"metrica": LEADS_FECHADOS_NOVOS, "valor": fechados_novos})
     except SiteIndisponivel as exc:
         # Analytics sem leads ainda vale a coleta — perder tudo porque um dos
         # dois endpoints falhou seria trocar dado parcial por dado nenhum.

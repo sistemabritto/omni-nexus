@@ -1201,7 +1201,7 @@ PUBLIC_PATHS = {
     "/api/agents/active",
 }
 
-from routes._helpers import valid_approval_bridge_token
+from routes._helpers import valid_approval_bridge_token, valid_site_alert_token
 
 
 def _try_api_token_auth():
@@ -1286,6 +1286,13 @@ def auth_middleware():
     if path.startswith("/api/approvals/") and valid_approval_bridge_token(request.headers.get("Authorization")):
         return None
 
+    # Site externo (Vercel, fora da rede do Nexus) reportando falha de lead —
+    # ver routes/alerts.py. Mesmo raciocínio do bridge de approvals acima:
+    # token dedicado (SITE_ALERT_TOKEN), escopado só a este path, e a própria
+    # rota confere de novo (defesa em profundidade, não depende só daqui).
+    if path == "/api/alerts/site" and valid_site_alert_token(request.headers.get("Authorization")):
+        return None
+
     # Try API token auth first (Bearer header) for headless agents / CLI tools
     if not current_user.is_authenticated:
         if _try_api_token_auth():
@@ -1324,6 +1331,7 @@ from routes.shares import bp as shares_bp
 from routes.heartbeats import bp as heartbeats_bp
 from routes.goals import bp as goals_bp
 from routes.tickets import bp as tickets_bp
+from routes.alerts import bp as alerts_bp
 from routes.media_jobs import bp as media_jobs_bp
 from routes.integrations_core_postiz import bp as integrations_core_postiz_bp
 from routes.approvals import bp as approvals_bp
@@ -1407,6 +1415,7 @@ app.register_blueprint(shares_bp)
 app.register_blueprint(heartbeats_bp)
 app.register_blueprint(goals_bp)
 app.register_blueprint(tickets_bp)
+app.register_blueprint(alerts_bp)
 app.register_blueprint(media_jobs_bp)
 app.register_blueprint(integrations_core_postiz_bp)
 app.register_blueprint(approvals_bp)

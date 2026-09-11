@@ -55,6 +55,28 @@ def valid_approval_bridge_token(auth_header: str | None) -> bool:
     return bool(provided) and secrets.compare_digest(provided, expected)
 
 
+def valid_site_alert_token(auth_header: str | None) -> bool:
+    """Constant-time check against SITE_ALERT_TOKEN.
+
+    Credencial dedicada para `POST /api/alerts/site` — deliberadamente NÃO
+    DASHBOARD_API_TOKEN, pelo mesmo motivo de `valid_approval_bridge_token`
+    acima: o site (Vercel, fora da rede do Nexus) só precisa reportar "essa
+    persistência de lead falhou", não precisa de acesso admin a tickets,
+    goals, config etc. Mesmo padrão: usado tanto no before_request de app.py
+    (deixar a requisição chegar à rota) quanto dentro da própria rota
+    (rejeitar um DASHBOARD_API_TOKEN válido que passou pelo login normal, se
+    algum dia alguém tentar usar o token errado aqui).
+    """
+    expected = os.environ.get("SITE_ALERT_TOKEN", "").strip()
+    if not expected:
+        return False
+    header = auth_header or ""
+    if not header.startswith("Bearer "):
+        return False
+    provided = header[len("Bearer "):].strip()
+    return bool(provided) and secrets.compare_digest(provided, expected)
+
+
 def parse_frontmatter(text: str) -> dict:
     """Extract key-value pairs from YAML-style --- frontmatter."""
     m = re.match(r"^---\s*\n(.*?)\n---", text, re.DOTALL)

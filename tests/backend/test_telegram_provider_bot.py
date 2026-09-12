@@ -24,6 +24,22 @@ class TelegramProviderBotMemoryTests(unittest.TestCase):
         self.assertIn("media_id", prompt)
         self.assertIn("NÃO VALIDADO", prompt)
 
+    def test_campaign_request_loads_openreply_skill(self) -> None:
+        from unittest.mock import patch
+        with patch.object(bot, "fetch_url_context", return_value=""), patch.object(bot, "fetch_mempalace_context", return_value=""):
+            prompt = bot.build_prompt("123", "cria uma campanha com gatilho 08 pro proximo reel que eu vou postar")
+        self.assertIn("Pedido de campanha OpenReply", prompt)
+        self.assertIn("pendingNextReel=true", prompt)
+        self.assertIn("Criar ou duplicar uma campanha via SQL direto", prompt)
+
+    def test_dm_as_substring_of_admin_does_not_trigger_campaign_skill(self) -> None:
+        """'dm' como substring de 'admin'/'administrar' não pode disparar o
+        bloco de campanha — só a palavra isolada conta."""
+        from unittest.mock import patch
+        with patch.object(bot, "fetch_url_context", return_value=""), patch.object(bot, "fetch_mempalace_context", return_value=""):
+            prompt = bot.build_prompt("123", "preciso administrar o servidor amanha, tem um gatilho de deploy travado")
+        self.assertNotIn("Pedido de campanha OpenReply", prompt)
+
     def test_build_prompt_includes_recent_memory_and_current_message(self) -> None:
         bot.append_chat_memory("123", "user", "Quero usar NVIDIA", speaker="Felipe")
         bot.append_chat_memory("123", "assistant", "provider: nvidia", speaker="Magneto")

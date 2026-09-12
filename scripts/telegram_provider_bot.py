@@ -888,6 +888,39 @@ def build_prompt(chat_id: str, prompt_text: str, *, speaker: str | None = None) 
         contract = ROOT / ".claude/skills/social-reels-scripts/references/coproducao-magneto.md"
         if contract.is_file():
             parts.extend(["Contrato de coprodução de conteúdo:", contract.read_text(encoding="utf-8"), ""])
+    # Comando de voz/texto pra criar campanha de comentário-pra-DM (gatilho de
+    # palavra-chave no Instagram). Injeta o procedimento inteiro, verbatim —
+    # não confie no modelo achar o SKILL.md sozinho num run de poucos turnos.
+    # "campanha"/"gatilho"/"trigger" sozinhos são comuns demais (falariam de
+    # campanha de marketing genérica); exigir também uma palavra do domínio
+    # OpenReply reduz falso positivo sem perder o pedido real.
+    if (
+        any(word in clean_prompt.lower() for word in ("campanha", "gatilho", "trigger"))
+        and (
+            any(word in clean_prompt.lower() for word in ("openreply", "comentario", "comentário", "direct", "reel"))
+            # "dm" isolado, não substring — "admin"/"administrar" contêm "dm" e
+            # são comuns neste workspace, não podem disparar isto por acidente.
+            or re.search(r"\bdm\b", clean_prompt.lower())
+        )
+    ):
+        campaign_skill = ROOT / ".claude/skills/custom-int-openreply/SKILL.md"
+        if campaign_skill.is_file():
+            parts.extend([
+                "Pedido de campanha OpenReply (comentário -> DM no Instagram) detectado. "
+                "Siga o procedimento abaixo à risca (SSH + docker exec + psql direto no "
+                "Postgres dedicado do OpenReply — não precisa de credencial de app, o acesso "
+                "SSH já está configurado). Se o usuário NÃO citou um reel específico (URL, "
+                "'esse reel', 'o de tal assunto'), crie com pendingNextReel=true (postId/postUrl "
+                "NULL) — assim nenhum comentário se perde entre agora e a postagem; o worker do "
+                "OpenReply amarra sozinho ao primeiro reel novo. Se o usuário citou um reel "
+                "específico ou pediu pra duplicar/vincular a um já postado, ache-o e amarre "
+                "direto (postId/postUrl preenchidos, pendingNextReel=false). Antes de criar, "
+                "confira colisão de gatilho. No fim, responda confirmando nome da campanha, "
+                "gatilho, se ficou pendente do próximo reel ou já amarrada a qual URL, e o link "
+                "rastreado gerado — sem isso o usuário não tem como conferir o que foi feito.",
+                campaign_skill.read_text(encoding="utf-8"),
+                "",
+            ])
     if any(word in clean_prompt.lower() for word in ("instagram", "tráfego", "trafego", "lead", "funil", "venda", "blog", "bio", "métrica", "metrica")):
         from growth_context import load_context
         parts.extend(["Métricas de aquisição coletadas:", load_context(), ""])

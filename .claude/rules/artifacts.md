@@ -94,6 +94,82 @@ custaram um deploy quebrado cada (URL relativa, e o gate de autenticação
 global de `app.py` tendo sua própria lista de caminhos públicos, separada do
 decorator da rota).
 
+## Um share por canal — nunca reaproveite a mesma URL entre campanhas
+
+A UTM do CTA (`to=...`) é escrita no arquivo em tempo de publicação — a CSP
+mata todo JavaScript, então não existe leitura de referrer nem de query string
+de entrada pra montar a UTM de saída dinamicamente. Ela nasce fixa no HTML.
+
+Isso significa: **reaproveitar o mesmo token de share em dois canais diferentes
+mistura a atribuição dos dois**, silenciosamente. Aconteceu em 12/09/2026 —
+`[C]guia-ser-mencionado-por-ia-v2.html` já rodava com `utm_source=instagram`
+(105 views, cliques reais registrados) quando surgiu a necessidade de mandar o
+mesmo guia por um disparo de WhatsApp. Mandar o link de sempre teria feito
+todo clique do WhatsApp contar como Instagram no painel de crescimento — o
+mesmo tipo de erro que `medicao-de-crescimento.md` já documentou pra outros
+pontos do funil.
+
+**A regra:** cada canal/campanha que usa o mesmo conteúdo ganha seu **próprio
+arquivo e seu próprio share**, com a UTM do canal já embutida nos CTAs:
+
+1. Copie o HTML pra um novo caminho (`[C]nome-do-guia-<canal>.html`) — nunca
+   escreva por cima do arquivo original, ele continua servindo o canal antigo.
+2. Nos `href` de clique, troque só os pares de UTM (`utm_source`, `utm_medium`,
+   `utm_campaign`) pelos do canal novo; mantenha `utm_content` se o ativo
+   (o guia/isca) é o mesmo — é isso que permite comparar depois "o mesmo
+   material converteu melhor vindo de onde".
+3. `POST /api/shares` com o caminho novo → token novo.
+4. **O self-link tem uma dependência circular**: os `href` de clique do
+   próprio arquivo apontam pro token do PRÓPRIO share
+   (`/api/shares/<TOKEN>/click?...`), e o token só existe depois do passo 3.
+   Publique primeiro com um placeholder óbvio no lugar do token
+   (`__TOKEN_PLACEHOLDER__`), crie o share, pegue o token de volta, faça
+   `sed`/substituição no arquivo trocando o placeholder pelo token real, e
+   sobrescreva o mesmo caminho — o share serve o arquivo ao vivo, não tira
+   snapshot no `POST`, então essa segunda escrita já atualiza o link existente
+   sem precisar de outro `POST`.
+5. Confirme os dois pontos antes de considerar pronto: `GET .../view` devolve
+   200, e `GET .../click?to=...` devolve `302` com o `Location` já carregando
+   a UTM do canal novo (não a do original).
+
+## Material com marca própria — o pageview precisa cair no painel único
+
+Quando um share vai ser divulgado publicamente (isca de tráfego pago/orgânico,
+material de campanha), expor `nexus.workflowapi.com.br` na barra de endereço
+do lead é errado duas vezes: mostra a ferramenta interna em vez da marca, e
+qualquer medição de visita fica presa no `/shares` do Nexus — um painel que
+ninguém confere no dia a dia — em vez do painel único de crescimento (`/admin`
+do site, mesma tabela `pageviews` que todo o resto do funil usa).
+
+**Achado ao vivo em 12/09/2026:** um `rewrite` puro do `next.config.js`
+apontando direto pro domínio do Nexus resolve a barra de endereço, mas é
+proxy cego — a página nunca passa pelo `_app.tsx` do site (é quem chama
+`/api/track` em toda navegação normal), então a visita simplesmente não é
+medida em lugar nenhum que alguém olhe.
+
+**A correção, e o padrão pra replicar em qualquer guia novo** (ver
+`sistemabritto/site`, `pages/api/guia-ia-proxy.ts` + `next.config.js`):
+
+1. `next.config.js` reescreve o path público (`/guia-x`) pra uma rota
+   **interna** da API do site (`/api/guia-x-proxy`), nunca direto pro domínio
+   externo — só passando pelo nosso próprio código dá pra fazer o passo 2.
+2. Essa rota de API busca o conteúdo do share no servidor (`fetch` do
+   `/api/shares/<token>/view`), grava um pageview em `pageviews` (mesmos
+   campos que `pages/api/track.ts` usa: `session_id`, `path`, `referrer`,
+   `utm_*`) lendo a UTM da querystring de entrada, e só depois devolve o
+   HTML. A gravação é best-effort — falhar em medir nunca pode impedir o
+   lead de ler o material.
+3. **Repasse o header `Content-Security-Policy` da resposta do Nexus.** Um
+   proxy que só copia o corpo e ignora os headers perde essa defesa — o share
+   existe justamente pra bloquear todo JS (inclusive prompt injection lendo a
+   sessão do superadmin). `upstream.headers.get('content-security-policy')` →
+   `res.setHeader(...)`.
+4. Sem `session_id` persistente entre páginas (a página não roda JS, não tem
+   `sessionStorage`) — cada visita gera o próprio `session_id` só pra
+   satisfazer o schema. O clique dentro do guia continua medido à parte, pelo
+   `/api/shares/<token>/click` do Nexus — não duplica esse tracking, só fecha
+   o buraco do lado do pageview.
+
 ## Quando NÃO usar share
 
 - Conteúdo que vai para o blog → Ghost (`custom-int-ghost`).

@@ -106,28 +106,42 @@ heartbeats:
       "alerts": [<list of critical items, if any>]}.
 
   # goal-planner — decomposes a human-authored top-level Goal into tickets.
-  # Event-driven only: wakes on goal_created (fired by POST /api/goals when a
-  # Goal with no parent_goal_id is created), not on an interval. interval_seconds
-  # is a required field but never fires a job since "interval" isn't in
-  # wake_triggers. See .claude/agents/goal-planner.md.
+  # Wakes on goal_created (fired by POST /api/goals when a Goal with no
+  # parent_goal_id is created) AND on interval (6h) — the interval wake is
+  # the catch-up sweep for a goal_created dispatch that was silently dropped
+  # (heartbeat not yet enabled/existing at Goal-creation time) or interrupted
+  # mid-run (e.g. a redeploy). heartbeat_runner.py's pick_orphan_goal_for_sweep
+  # picks the goal deterministically in Python — the model never has to
+  # enumerate goals itself. See .claude/agents/goal-planner.md and memory
+  # goals-decomposicao-quebrada-2026-09-11 for why this shape was chosen.
   - id: goal-planner
     agent: goal-planner
-    interval_seconds: 86400  # unused placeholder — no "interval" wake trigger
+    interval_seconds: 21600  # 6h — drives the catch-up sweep, see above
     max_turns: 15
-    timeout_seconds: 300
+    timeout_seconds: 900
     lock_timeout_seconds: 1800
     wake_triggers:
       - goal_created
+      - interval
       - manual
     enabled: false
     goal_id: null
     required_secrets: []
     decision_prompt: >
-      You are goal-planner. A top-level Goal was just created — its id is in the
-      Trigger payload above. Decompose it into 2-6 concrete, assignable tickets
-      per your agent instructions (.claude/agents/goal-planner.md), or skip if it
-      already has tickets (idempotency) or there is no goal_id in the trigger
-      payload.
+      You are goal-planner. The Goal to decompose is always given in the Trigger
+      payload above as goal_id — either a human-authored Goal just created
+      (goal_created wake), or the oldest previously-undecomposed Goal that
+      heartbeat_runner.py's Python-side sweep already picked for you on an
+      interval/manual wake (pick_orphan_goal_for_sweep — selection is deterministic
+      code, not your job). Decompose that Goal into 2-6 concrete, assignable
+      tickets per your agent instructions (.claude/agents/goal-planner.md), or skip
+      if it already has tickets/sub-goals (idempotency, Step 2).
+
+      You have the full configured timeout for this run (currently 900s) — there
+      is no tight budget, so take the turns you need: call POST /api/tickets once
+      per ticket and confirm each call succeeded before moving to the next. Do not
+      summarize or stop early; finish creating every ticket you decided on, then
+      respond with the final JSON.
 
   # project-planner — proposes Projects for a human-authored Mission.
   # Event-driven only: wakes on mission_created. See .claude/agents/project-planner.md.

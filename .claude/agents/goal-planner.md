@@ -41,8 +41,20 @@ Decision Context** section with the goal that woke you:
 GET /api/goals/{goal_id}
 ```
 
-If there is no trigger payload (a manual/interval wake with nothing queued),
-there is nothing to do — respond `action: "skip"`.
+A real `goal_created` payload always carries a `goal_id`. An interval/manual
+wake with nothing queued in the payload is not necessarily idle, though: on
+that path, `heartbeat_runner.py`'s `pick_orphan_goal_for_sweep(conn)` already
+picked the oldest active, top-level Goal that has neither tickets nor
+sub-goals yet, and injected it into the payload as
+`{"goal_id": <id>, "sweep": true}` before this prompt was even built — this
+closes the gap when a `goal_created` dispatch was silently dropped (heartbeat
+not yet enabled at Goal-creation time — see memory
+`goals-decomposicao-quebrada-2026-09-11`) or a run died mid-flight (e.g. a
+redeploy) with nothing to retry it. Selecting which Goal is due is Python's
+job, never yours — treat a payload with `"sweep": true` exactly like any
+other `goal_id` payload from here on. Only if the payload truly has no
+`goal_id` at all (nothing pending for the sweep to find) is there nothing to
+do — respond `action: "skip"`.
 
 ### Step 2 — Idempotency check (AC2 — never duplicate)
 
@@ -149,11 +161,23 @@ create several new ones. If you skipped (Step 1 or Step 2), respond
 ## Heartbeat Configuration
 
 `config/heartbeats.yaml` entry (also mirrored in `config/heartbeats.example.yaml`):
-`id: goal-planner`, `agent: goal-planner`, `wake_triggers: [goal_created]`,
-`enabled: false` by default (workspace safety convention — Felipe enables
-after reviewing the first dry run). It has no ticket inbox of its own, so it
-is listed in `heartbeat_runner.STATE_MONITOR_AGENTS` — without that, the
-empty-inbox cost guard would skip it before it ever saw the trigger payload.
+`id: goal-planner`, `agent: goal-planner`,
+`wake_triggers: [goal_created, interval, manual]`, `enabled: false` by
+default (workspace safety convention — Felipe enables after reviewing the
+first dry run). It has no ticket inbox of its own, so it is listed in
+`heartbeat_runner.STATE_MONITOR_AGENTS` — without that, the empty-inbox cost
+guard would skip it before it ever saw the trigger payload. `interval` is
+what drives the sweep described in Step 1 above — without it, a Goal whose
+`goal_created` dispatch was dropped or interrupted would stay orphaned
+forever, since nothing else ever re-fires for it.
+
+The `decision_prompt` no longer describes the sweep's own selection logic (it
+used to, and told the model to run its own `GET /api/goals?status=active`
+under a tight time budget — unreliable in practice, see the memory cited in
+Step 1). It only needs to tell you: decompose whatever `goal_id` is in the
+Trigger payload, or skip if there truly is none, and that the full configured
+`timeout_seconds` is available — no reason to rush or cut a decomposition
+short.
 
 ## Anti-patterns — NEVER
 

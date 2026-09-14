@@ -10,7 +10,9 @@
 ## VPS ao vivo) ao mesmo tempo. Ver ticket 3497e698 no Nexus.
 ##
 ## Secrets (Env da stack no Portainer, nunca aqui):
-##   POSTGRES_PASSWORD    → openssl rand -hex 24 (dedicado a este banco)
+##   SHARED_POSTGRES_PASSWORD → mesma senha de POSTGRES_PASSWORD da stack
+##     evonexus (serviço postgres_postgres) — não é secret novo, é o valor já
+##     existente lá, copiado pro Env desta stack (ver nota de 14/09/2026 abaixo)
 ##   NEXTAUTH_SECRET       → openssl rand -base64 32
 ##   CRON_SECRET            → openssl rand -base64 32
 ##   ENCRYPTION_KEY         → openssl rand -hex 32 (64 hex chars)
@@ -36,35 +38,24 @@
 ## o Dockerfile lá para o raciocínio completo. GH Action builda e publica em
 ## excarplex/openreply em push na main. PR aberta no upstream:
 ## github.com/diwenne/openreply/pull/33.
+##
+## Postgres dedicado REMOVIDO em 14/09/2026: as 17 tabelas do banco `openreply`
+## foram validadas linha a linha e migradas pro `postgres_postgres` (a mesma
+## instância Postgres compartilhada que outros apps do workspace já usam) —
+## era um Postgres inteiro só pra um app pequeno, redundância sem motivo. O
+## serviço `postgres` deste arquivo e o volume `openreply_postgres_data` foram
+## removidos do Swarm nesse dia. NÃO reintroduza o serviço `postgres` aqui:
+## se este arquivo for reaplicado com `docker stack deploy`, ele recriaria um
+## Postgres vazio com esse nome e as duas services abaixo, apontando pra ele
+## via `DATABASE_URL`, voltariam a escrever num banco zerado — perda de dados
+## silenciosa. `DATABASE_URL` das duas services agora aponta pro Postgres
+## compartilhado; `SHARED_POSTGRES_PASSWORD` é a senha do `postgres_postgres`
+## (mesma stack `evonexus`), configurada no Env da stack `openreply` no
+## Portainer — nunca aqui.
 
 version: "3.7"
 
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      - POSTGRES_DB=openreply
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    networks:
-      network_public:
-        aliases:
-          - openreply-postgres
-    volumes:
-      - openreply_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          memory: 512M
-
   redis:
     image: redis:alpine
     networks:
@@ -87,7 +78,7 @@ services:
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - CRON_SECRET=${CRON_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@openreply-postgres:5432/openreply
+      - DATABASE_URL=postgresql://postgres:${SHARED_POSTGRES_PASSWORD}@postgres_postgres:5432/openreply
       - REDIS_URL=redis://openreply-redis:6379
       - RESEND_API_KEY=${RESEND_API_KEY:-}
       - EMAIL_SERVER=${EMAIL_SERVER:-}
@@ -108,7 +99,6 @@ services:
         aliases:
           - openreply-web
     depends_on:
-      - postgres
       - redis
     deploy:
       placement:
@@ -139,7 +129,7 @@ services:
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - CRON_SECRET=${CRON_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@openreply-postgres:5432/openreply
+      - DATABASE_URL=postgresql://postgres:${SHARED_POSTGRES_PASSWORD}@postgres_postgres:5432/openreply
       - REDIS_URL=redis://openreply-redis:6379
       - RESEND_API_KEY=${RESEND_API_KEY:-}
       - EMAIL_SERVER=${EMAIL_SERVER:-}
@@ -163,7 +153,6 @@ services:
         aliases:
           - openreply-worker
     depends_on:
-      - postgres
       - redis
     deploy:
       placement:
@@ -173,9 +162,6 @@ services:
         limits:
           cpus: "1"
           memory: "1024M"
-
-volumes:
-  openreply_postgres_data:
 
 networks:
   network_public:

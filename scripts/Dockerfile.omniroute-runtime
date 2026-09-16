@@ -1,4 +1,5 @@
-ARG BASE_IMAGE=diegosouzapw/omniroute@sha256:92c768c56e2de32c51a0621ef182835018b00b288c9bb235c5c5e4514658c1a1
+# 3.8.50 (v3.8.50, 26/08/2026): fixes de admissão para agentes concorrentes (#11244).
+ARG BASE_IMAGE=diegosouzapw/omniroute@sha256:085c57adf499a8aaa9f35ccde95c0df9c11bd9ecd18d6c9edbf3b68b8079ba9d
 FROM ${BASE_IMAGE}
 USER root
 # The shipped standalone image contains only ioredis/package.json.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Version-checked mechanical patch for Telegram .oga uploads (Hermes 0.21.1)."""
+"""Version-checked mechanical patch for Telegram .oga uploads (Hermes 0.21.x)."""
 import ast
 from pathlib import Path
 p=Path('/opt/hermes/tools/transcription_cloud.py')

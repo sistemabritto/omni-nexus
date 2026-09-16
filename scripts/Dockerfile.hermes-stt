@@ -1,3 +1,6 @@
-FROM nousresearch/hermes-agent@sha256:4a8b2b1940ff4370b910dce1c327c52f6abcc5ed1c1eb1748611ab967bb3e624
+FROM nousresearch/hermes-agent@sha256:da8ac38dbdddce70cc724e1eff04cc0732787531cbdb00c45fb059b13918229d
 COPY scripts/patch-hermes-stt.py /tmp/patch-hermes-stt.py
 RUN /opt/hermes/.venv/bin/python /tmp/patch-hermes-stt.py
+
+RUN cd /opt/hermes && npm update browserslist baseline-browser-mapping @xmldom/xmldom colord sanitize-html --ignore-scripts --no-fund
+RUN cd /opt/hermes && npm install --workspace web --save-dev vitest@4.1.11 --ignore-scripts --no-fund

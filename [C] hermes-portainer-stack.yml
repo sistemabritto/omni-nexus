@@ -1,6 +1,6 @@
 services:
   hermes:
-    image: nousresearch/hermes-agent:latest
+    image: hermes-agent:0.21.2-repaired-20260912
     command: gateway run
     stop_grace_period: 90s
     volumes:

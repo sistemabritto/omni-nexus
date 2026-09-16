@@ -124,21 +124,25 @@ def _security_headers(response):
     """Global security headers — pentest findings #3/#4/#6 (2026-09-16).
 
     A single after_request hook instead of per-route: every response,
-    API or static, gets these. HSTS is prod-only (issuing it over plain
-    HTTP is a no-op at best and a foot-gun during local dev at worst).
-    Cloudflare's "Always Use HTTPS" toggle needs to be confirmed
-    separately — this header only affects clients that already reached
-    us over TLS at least once.
+    API or static, gets these. HSTS used to be gated on _is_production(),
+    which sounded safe ("no-op on plain HTTP") but backfired: the real
+    VPS deploy sets none of EVONEXUS_ENV/FLASK_ENV/ENV, so _is_production()
+    is False there too and the header silently never shipped — confirmed
+    live (missing from curl -I against nexus.sistemabritto.com.br) right
+    after this fix went out. Sending it unconditionally is correct anyway:
+    a browser ignores Strict-Transport-Security on a plain-HTTP response
+    per spec, so there's no dev-mode footgun to guard against. Cloudflare's
+    "Always Use HTTPS" toggle still needs separate confirmation — this
+    header only affects clients that already reached us over TLS once.
     """
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     # Belt-and-suspenders with the CSP's frame-ancestors 'self': browsers
     # that don't parse CSP frame-ancestors still get the legacy header.
     response.headers.setdefault("X-Frame-Options", "DENY")
-    if _is_production():
-        response.headers.setdefault(
-            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
-        )
+    response.headers.setdefault(
+        "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+    )
     # index.html is served via send_file, which sets Accept-Ranges and
     # Content-Disposition as if it were a downloadable/range-seekable
     # file — it's neither, it's always the same SPA shell document.

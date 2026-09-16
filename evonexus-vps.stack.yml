@@ -57,6 +57,13 @@ services:
     environment:
       - DASHBOARD_API_TOKEN=${DASHBOARD_API_TOKEN}
       - DASHBOARD_API_USER=${DASHBOARD_API_USER:-admin}
+      ## routes/shares.py::_public_base_url() prefers this over
+      ## request.host_url — without it, share links came back on
+      ## nexus.workflowapi.com.br (the old domain the proxy chain still
+      ## resolves Host to internally) instead of the domain actually
+      ## being shared, nexus.sistemabritto.com.br. Found live 2026-09-16
+      ## while several lead-magnet shares looked "down" to Felipe.
+      - NEXUS_PUBLIC_URL=${NEXUS_PUBLIC_URL:-https://nexus.sistemabritto.com.br}
       ## Validates the Telegram bot's approval-decision calls
       ## (/api/approvals/*/decision) — dedicated credential, deliberately
       ## separate from DASHBOARD_API_TOKEN (goal-ticket-unification Vault V1).

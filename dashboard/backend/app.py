@@ -106,7 +106,46 @@ except AttributeError:
     # Flask <2.2 exposed this through app.config; keep compatibility.
     app.config["JSON_AS_ASCII"] = False
 
-CORS(app, origins=_cors_allowed_origins(), supports_credentials=True)
+
+# Scoped to /api/* only: flask-cors's global CORS(app, ...) form attaches
+# Access-Control-* headers to EVERY response, including the SPA/static
+# files served by serve_frontend below — a browser never needs CORS
+# headers to load same-origin HTML/CSS/JS, so those headers on static
+# assets (access-control-allow-credentials: true in particular) are pure
+# leftover attack surface with no functional purpose. Pentest finding #4
+# (2026-09-16). origins=[] in production when CORS_ALLOWED_ORIGINS is
+# unset means flask-cors never reflects an arbitrary Origin — verified
+# live: an Origin that isn't in the allowlist gets no ACAO header at all.
+CORS(app, resources={r"/api/*": {"origins": _cors_allowed_origins(), "supports_credentials": True}})
+
+
+@app.after_request
+def _security_headers(response):
+    """Global security headers — pentest findings #3/#4/#6 (2026-09-16).
+
+    A single after_request hook instead of per-route: every response,
+    API or static, gets these. HSTS is prod-only (issuing it over plain
+    HTTP is a no-op at best and a foot-gun during local dev at worst).
+    Cloudflare's "Always Use HTTPS" toggle needs to be confirmed
+    separately — this header only affects clients that already reached
+    us over TLS at least once.
+    """
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # Belt-and-suspenders with the CSP's frame-ancestors 'self': browsers
+    # that don't parse CSP frame-ancestors still get the legacy header.
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    if _is_production():
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+    # index.html is served via send_file, which sets Accept-Ranges and
+    # Content-Disposition as if it were a downloadable/range-seekable
+    # file — it's neither, it's always the same SPA shell document.
+    if response.mimetype == "text/html":
+        response.headers.pop("Accept-Ranges", None)
+        response.headers.pop("Content-Disposition", None)
+    return response
 
 # --------------- Rate limiting (in-memory, single-process Flask) ---------------
 # Vault audit §2.S1 CRITICAL: all public endpoints require rate limiting.
@@ -1197,9 +1236,14 @@ PUBLIC_PATHS = {
     "/api/auth/needs-onboarding",
     "/api/config/workspace-status",
     "/api/version",
-    "/api/version/check",
     "/api/agents/active",
 }
+# /api/version/check was public until 2026-09-16 (pentest finding #5): it
+# carries `release_notes` (GitHub release body, harmless — it's the public
+# EvolutionAPI/evo-nexus repo) but the only caller is Sidebar.tsx, which
+# only renders after login. Nothing legitimate needs this pre-auth, so it
+# moved behind the normal auth check instead of growing a bespoke
+# anonymous-session mechanism for zero real UI benefit.
 
 from routes._helpers import valid_approval_bridge_token, valid_site_alert_token
 
@@ -1255,7 +1299,17 @@ def auth_middleware():
     # Public API paths (exact match or prefix match for docs/webhooks/shares)
     if (
         path in PUBLIC_PATHS
-        or path.startswith("/api/docs")
+        # docs/ mixes public product documentation (getting-started, guides,
+        # agents, skills, routines, integrations, reference) with
+        # docs/operations/ — internal incident/ops writeups that name real
+        # infra (VPS hostnames, SSH aliases) and at least one live Nexus
+        # share token. Pentest finding #1 (2026-09-16): confirmed docs/
+        # is deliberately public (routes/docs.py's own docstring says so,
+        # and it's the OSS project's user-facing doc site), so the fix is
+        # carving operations/ out of that public surface rather than
+        # gating all of /api/docs — see routes/docs.py's _build_tree()
+        # for the matching exclusion from the tree listing itself.
+        or (path.startswith("/api/docs") and not path.startswith("/api/docs/operations"))
         or path.startswith("/api/triggers/webhook/")
         or path.startswith("/api/instagram/webhook")
         # /click é o redirect de CTA que um artefato público usa (sem JS,
@@ -1558,11 +1612,34 @@ def delete_social_account(platform, index):
 
 # --------------- Serve React build ---------------
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+FRONTEND_DIST_RESOLVED = FRONTEND_DIST.resolve()
+
+# Pentest finding #6 (2026-09-16): the SPA fallback used to 200 index.html
+# for literally anything that wasn't a real file under dist/ — including
+# /.env, /.git/config and other dotfile probes, since those never exist
+# on disk and always fell through to the "serve index.html" branch below.
+# Matched against the full request path (not just the basename) so
+# /.git/config and /some/nested/.env are caught too, not just top-level.
+_SENSITIVE_PATH_RE = re.compile(
+    r"(^|/)(\.env(\..*)?|\.git(/.*)?|\.htaccess|[^/]*\.bak)$", re.IGNORECASE
+)
+
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve_frontend(path):
-    full = FRONTEND_DIST / path
+    if _SENSITIVE_PATH_RE.search(path):
+        return {"error": "Not found"}, 404
+    # Resolve before the is_file() check, not after: FRONTEND_DIST / path
+    # with a path like "../../../../etc/passwd" would otherwise let
+    # Path.is_file()'s underlying stat() follow the ".." components
+    # straight out of dist/ before send_from_directory's own safe_join
+    # ever runs.
+    full = (FRONTEND_DIST / path).resolve()
+    try:
+        full.relative_to(FRONTEND_DIST_RESOLVED)
+    except ValueError:
+        return {"error": "Not found"}, 404
     if full.is_file():
         return send_from_directory(str(FRONTEND_DIST), path)
     index = FRONTEND_DIST / "index.html"

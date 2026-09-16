@@ -20,8 +20,8 @@ ADW_DIR := ADWs/routines
 # ── Setup ──────────────────────────────────
 
 docs-build:         ## 📄 Regenerate docs/llms-full.txt and sync to site
-	@$(PYTHON) -c "from pathlib import Path; docs=Path('docs'); parts=['# EvoNexus Documentation\n\nComplete reference.\n']; [parts.append(f.read_text()) for f in sorted(docs.rglob('*.md'))]; Path('docs/llms-full.txt').write_text('\n\n---\n\n'.join(parts)); print(f'Generated docs/llms-full.txt ({len(parts)-1} docs)')"
-	@rm -rf site/public/docs && cp -r docs/ site/public/docs/ && echo "Synced docs → site/public/docs/"
+	@$(PYTHON) -c "from pathlib import Path; docs=Path('docs'); md=[f for f in sorted(docs.rglob('*.md')) if f.relative_to(docs).parts[0] != 'operations']; parts=['# EvoNexus Documentation\n\nComplete reference.\n']; [parts.append(f.read_text()) for f in md]; Path('docs/llms-full.txt').write_text('\n\n---\n\n'.join(parts)); print(f'Generated docs/llms-full.txt ({len(parts)-1} docs, docs/operations/ excluded)')"
+	@rm -rf site/public/docs && cp -r docs/ site/public/docs/ && rm -rf site/public/docs/operations && echo "Synced docs → site/public/docs/ (docs/operations/ excluded — internal ops notes, not product docs)"
 
 setup:              ## 🔧 Interactive setup wizard (prerequisites, config, folders)
 	$(PYTHON) setup.py

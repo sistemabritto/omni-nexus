@@ -1,9 +1,21 @@
-"""Public documentation endpoint — serves markdown docs from docs/ folder."""
+"""Public documentation endpoint — serves markdown docs from docs/ folder.
+
+docs/ mixes two audiences: product documentation for anyone running this
+OSS project (getting-started, guides, agents, skills, routines,
+integrations, reference, providers), and docs/operations/ — internal
+incident and ops writeups (real VPS hostnames, SSH aliases, live share
+tokens) that were never meant to leave this workspace. Pentest finding #1
+(2026-09-16) confirmed docs/operations/ was reachable, unauthenticated,
+through this same public endpoint. OPERATIONS_DIR_NAME is excluded from
+the tree for anonymous callers and requires auth for its content — see
+app.py's before_request for the matching route-level gate.
+"""
 
 import re
 from pathlib import Path
 
 from flask import Blueprint, Response, jsonify, send_from_directory, abort
+from flask_login import current_user
 
 from routes._helpers import WORKSPACE
 
@@ -11,6 +23,7 @@ bp = Blueprint("docs", __name__)
 
 DOCS_DIR = WORKSPACE / "docs"
 IMGS_DIR = DOCS_DIR / "imgs"
+OPERATIONS_DIR_NAME = "operations"
 
 # Ordering for top-level files in "Getting Started"
 _TOP_LEVEL_ORDER = ["introduction.md", "getting-started.md", "architecture.md"]
@@ -53,8 +66,13 @@ def _slug(name: str) -> str:
     return name.replace(" ", "-").lower()
 
 
-def _build_tree() -> list[dict]:
-    """Scan docs/ and build a section tree."""
+def _build_tree(include_operations: bool = False) -> list[dict]:
+    """Scan docs/ and build a section tree.
+
+    include_operations=False (the default, and always the case for
+    anonymous callers) skips docs/operations/ entirely — even its
+    section title and content_preview snippets would leak infra details.
+    """
     if not DOCS_DIR.is_dir():
         return []
 
@@ -84,7 +102,11 @@ def _build_tree() -> list[dict]:
 
     # 2) Subdirectories → one section each, in logical order
     _SECTION_ORDER = ["guides", "dashboard", "agents", "skills", "routines", "integrations", "real-world", "reference"]
-    subdirs = [d for d in DOCS_DIR.iterdir() if d.is_dir() and d.name != "imgs"]
+    subdirs = [
+        d for d in DOCS_DIR.iterdir()
+        if d.is_dir() and d.name != "imgs"
+        and (include_operations or d.name != OPERATIONS_DIR_NAME)
+    ]
     order_map_dirs = {name: i for i, name in enumerate(_SECTION_ORDER)}
     subdirs.sort(key=lambda d: (order_map_dirs.get(d.name, 999), d.name))
     for subdir in subdirs:
@@ -143,7 +165,7 @@ def _build_tree() -> list[dict]:
 @bp.route("/api/docs")
 def doc_tree():
     """Return the documentation tree structure."""
-    return jsonify({"sections": _build_tree()})
+    return jsonify({"sections": _build_tree(include_operations=current_user.is_authenticated)})
 
 
 @bp.route("/api/docs/imgs/<path:filename>")
@@ -161,7 +183,18 @@ def doc_image(filename: str):
 
 @bp.route("/api/docs/llms-full.txt")
 def llms_full():
-    """Serve pre-generated llms-full.txt for LLM consumption."""
+    """Serve pre-generated llms-full.txt for LLM consumption.
+
+    Pentest item #7 (2026-09-16) flagged this as a bundle reference that
+    404s — it doesn't: App.tsx calls exactly this path
+    (`${apiBase}/api/docs/llms-full.txt`) and the route above matches it.
+    Decision: kept the route as-is, public like the rest of /api/docs/*
+    (see app.py's before_request). What did need fixing is upstream —
+    `make docs-build` (Makefile) used to concatenate ALL of docs/**/*.md,
+    including docs/operations/ (internal ops notes), into this public
+    file. Fixed there; this route doesn't need its own operations/ guard
+    because the file it serves no longer contains that content.
+    """
     txt_path = DOCS_DIR / "llms-full.txt"
     if txt_path.is_file():
         return send_from_directory(str(DOCS_DIR), "llms-full.txt", mimetype="text/plain; charset=utf-8")
@@ -189,6 +222,13 @@ def doc_content(filepath: str):
         abort(403)
     if not target.is_file() or target.suffix != ".md":
         abort(404)
+
+    # Defense in depth: app.py's before_request already blocks anonymous
+    # /api/docs/operations/* before it reaches here, but this view
+    # shouldn't rely solely on that — an internal caller or future route
+    # change must not accidentally reopen it.
+    if not current_user.is_authenticated and filepath.split("/", 1)[0] == OPERATIONS_DIR_NAME:
+        abort(401)
 
     content = target.read_text(encoding="utf-8", errors="replace")
 

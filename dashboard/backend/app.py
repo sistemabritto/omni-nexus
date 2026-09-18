@@ -139,7 +139,14 @@ def _security_headers(response):
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     # Belt-and-suspenders with the CSP's frame-ancestors 'self': browsers
     # that don't parse CSP frame-ancestors still get the legacy header.
-    response.headers.setdefault("X-Frame-Options", "DENY")
+    #
+    # The public share view (/api/shares/<token>/view) is itself embedded in a
+    # same-origin <iframe> by ShareView.tsx — DENY would blank it out, so that
+    # one route needs SAMEORIGIN. Everything else keeps DENY.
+    _xfo = "SAMEORIGIN" if (
+        request.path.startswith("/api/shares/") and request.path.endswith("/view")
+    ) else "DENY"
+    response.headers.setdefault("X-Frame-Options", _xfo)
     response.headers.setdefault(
         "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
     )

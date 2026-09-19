@@ -653,6 +653,36 @@ class HeartbeatTriggerEvent(db.Model):
 
 # --------------- Goal Cascade models (Feature 1.2) ---------------
 
+class Company(db.Model):
+    __tablename__ = "companies"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    cnpj = db.Column(db.String(18), unique=True, nullable=True)
+    name = db.Column(db.String(200), nullable=False)
+    slug = db.Column(db.String(200), unique=True, nullable=False)
+    domain = db.Column(db.String(300))
+    status = db.Column(db.String(20), nullable=False, default="active")
+    created_at = db.Column(db.String(30), nullable=False)
+    updated_at = db.Column(db.String(30), nullable=False)
+
+    projects = db.relationship("GoalProject", backref="company", lazy="dynamic")
+
+    def to_dict(self, include_projects=False):
+        d = {
+            "id": self.id,
+            "cnpj": self.cnpj,
+            "name": self.name,
+            "slug": self.slug,
+            "domain": self.domain,
+            "status": self.status,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+        if include_projects:
+            d["projects"] = [p.to_dict() for p in self.projects]
+        return d
+
+
 class Mission(db.Model):
     __tablename__ = "missions"
 
@@ -697,6 +727,7 @@ class GoalProject(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     slug = db.Column(db.String(200), unique=True, nullable=False)
     mission_id = db.Column(db.Integer, db.ForeignKey("missions.id", ondelete="CASCADE"), nullable=True)
+    company_id = db.Column(db.Integer, db.ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
     title = db.Column(db.String(500), nullable=False)
     description = db.Column(db.Text)
     workspace_folder_path = db.Column(db.String(500))
@@ -712,6 +743,7 @@ class GoalProject(db.Model):
             "id": self.id,
             "slug": self.slug,
             "mission_id": self.mission_id,
+            "company_id": self.company_id,
             "title": self.title,
             "description": self.description,
             "workspace_folder_path": self.workspace_folder_path,

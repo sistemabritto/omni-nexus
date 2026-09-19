@@ -164,12 +164,14 @@ const translations = {
 
     nav: {
       groups: {
-        main: 'Principal',
-        operations: 'Operações',
-        data: 'Dados',
-        system: 'Sistema',
-        admin: 'Admin',
+        cockpit: 'Cockpit',
+        projetos: 'Projetos',
+        agentes: 'Agentes',
+        inteligencia: 'Inteligência',
+        workspace: 'Workspace',
+        configuracoes: 'Configurações',
       },
+      intelligenceHub: 'Inteligência',
       overview: 'Visão geral',
       agents: 'Agentes',
       skills: 'Habilidades',

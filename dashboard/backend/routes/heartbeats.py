@@ -415,6 +415,47 @@ def reindex_heartbeats():
         return jsonify({"error": str(exc)}), 500
 
 
+# ── Reconcile (YAML → DB, mata o drift de enabled) ───────────────────────────
+
+@bp.route("/api/heartbeats/reconcile", methods=["POST"])
+def reconcile_heartbeats():
+    """Alinha o banco ao config/heartbeats.yaml (fonte de verdade).
+
+    Diferente do /reindex (que preserva `enabled` da UI), o reconcile APLICA o
+    `enabled` do YAML — é isso que mata o drift "yaml true / db false" que
+    deixou goal-planner mudo (ver [C]cascade-evergreen-plan.md, Bloco A1).
+    ?dry_run=true só devolve o diff sem gravar.
+    """
+    denied = _require("manage")
+    if denied:
+        return denied
+
+    dry_run = request.args.get("dry_run", "false").lower() == "true"
+    try:
+        import sys
+        backend_dir = Path(__file__).resolve().parent.parent
+        if str(backend_dir) not in sys.path:
+            sys.path.insert(0, str(backend_dir))
+        from hb_reconcile import reconcile
+        result = reconcile(dry_run=dry_run)
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"error": f"Reconcile falhou: {exc}"}), 500
+
+    # Se mudou estado (create/update), re-registra interval jobs pra o dispatcher
+    # enxergar na hora (mesma guarda do PATCH: nunca sob TESTING).
+    if not dry_run and not current_app.config.get("TESTING"):
+        if result.get("created") or result.get("updated"):
+            try:
+                from heartbeat_dispatcher import register_interval_jobs
+                register_interval_jobs()
+            except Exception:
+                pass
+
+    audit(current_user, "update", "heartbeats",
+          f"reconciled heartbeats from YAML (dry_run={dry_run})")
+    return jsonify(result)
+
+
 # ── Approval Queue ──────────────────────────────────────────────────────────
 #
 # REMOVIDO em 2026-07-25. Este blueprint registrava GET /api/approvals lendo a

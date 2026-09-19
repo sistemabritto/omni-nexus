@@ -343,6 +343,81 @@ def _resolve_provider_chain(config: dict) -> list[dict]:
     return DEFAULT_PROVIDER_CHAIN
 
 
+# ── Routing policy by role (Bloco F) ──────────────────────────────────────────
+# Reordena a cadeia de providers por "combo" de acordo com o papel do agente
+# (grind→Codex, review→Claude, barato→free, auto-loop→Drael). NÃO substitui a
+# cadeia padrão — só move os providers do combo para a frente; os demais
+# providers da cadeia ativa ficam como tail, então o fallback nunca é perdido.
+
+ROUTING_CONFIG = WORKSPACE / "config" / "routing.yaml"
+
+
+def _read_routing_policy() -> dict:
+    """Load config/routing.yaml. Missing/invalid file or kill-switch → {} (combos off)."""
+    if os.environ.get("HEARTBEAT_ROUTING_POLICY", "1").lower() in ("0", "false", "no"):
+        return {}
+    try:
+        import yaml  # lazy — provider_fallback não depende do yaml no import
+    except ImportError:
+        return {}
+    if not ROUTING_CONFIG.is_file():
+        return {}
+    try:
+        data = yaml.safe_load(ROUTING_CONFIG.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001 — arquivo corrompido não derruba o heartbeat
+        return {}
+    if not data.get("enabled", True):
+        return {}
+    return data
+
+
+def _combo_provider_ids(agent: str) -> list[str]:
+    """Ordered provider_ids for the agent's role-combo (empty if none applies)."""
+    agent = (agent or "").strip()
+    if not agent:
+        return []
+    policy = _read_routing_policy()
+    if not policy:
+        return []
+    roles = policy.get("roles") or {}
+    combos = policy.get("combos") or {}
+    combo_name = roles.get(agent) or policy.get("default_combo")
+    if not combo_name:
+        return []
+    ids = combos.get(combo_name) or []
+    return [p for p in ids if isinstance(p, str)]
+
+
+def _reorder_chain_by_combo(chain: list[dict], agent: str) -> list[dict]:
+    """Reorder/inject the agent's combo providers at the front (in combo order);
+    keep the rest of the active chain as tail so fallback is never lost.
+
+    A cadeia ativa do OmniRoute tem apenas 'omnirouter' — sem este passo o combo
+    nunca injetaria Codex/Claude/free. Por isso os providers do combo são
+    construídos de config/providers.json quando faltam na cadeia (a chave/base_url
+    são resolvidos depois, em _get_api_key, com os mesmos placeholders [REDACTED]
+    que já valem pra cadeia ativa).
+    """
+    order = _combo_provider_ids(agent)
+    if not order:
+        return chain
+    config = _read_providers_config()
+    providers = config.get("providers", {})
+    by_id = {p["provider_id"]: p for p in chain}
+    front = []
+    for pid in order:
+        if pid in by_id:
+            front.append(by_id.pop(pid))
+        elif pid in providers:
+            try:
+                front.append(_build_provider_entry(pid, providers))
+            except Exception:  # noqa: BLE001 — entry malformado não derruba o combo
+                continue
+    if not front:
+        return chain
+    return front + list(by_id.values())
+
+
 def _build_provider_entry(provider_id: str, providers: dict) -> dict:
     prov = providers.get(provider_id, {})
     env_vars = {k: v for k, v in prov.get("env_vars", {}).items()
@@ -794,6 +869,7 @@ class FallbackEngine:
         force_model: str | None = None,
         cwd: Path | None = None,
         per_attempt_timeout_cap: int | None = None,
+        routing_key: str | None = None,
     ) -> Iterator[FallbackAttempt]:
         config = _read_providers_config()
         attempt_num = 0
@@ -817,6 +893,15 @@ class FallbackEngine:
             # 29/07/2026 depurando cortes_virais.py/corte_editorial.py.
             if not chain and force_provider in config.get("providers", {}):
                 chain = [_build_provider_entry(force_provider, config["providers"])]
+
+        # Bloco F: reordena a cadeia pelo combo do papel do agente (só quando
+        # não há force_provider — um pin explícito sempre vence). routing_key
+        # existe porque o OpenClaude zera `agent` após embutir a persona no prompt.
+        if not force_provider:
+            try:
+                chain = _reorder_chain_by_combo(chain, (routing_key or agent))
+            except Exception as _route_exc:  # noqa: BLE001 — rota não derruba a execução
+                print(f"[fallback] routing policy erro (ignorado): {_route_exc}", flush=True)
 
         for provider_entry in chain:
             provider_id = provider_entry["provider_id"]
@@ -977,6 +1062,7 @@ def invoke_with_fallback(
     force_model: str | None = None,
     cwd: Path | None = None,
     per_attempt_timeout_cap: int | None = None,
+    routing_key: str | None = None,
 ) -> dict:
     """Invoke CLI with automatic 429 fallback. Returns the first successful result.
 
@@ -1004,7 +1090,7 @@ def invoke_with_fallback(
         return _invoke_with_fallback_locked(
             prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
             agent=agent, force_provider=force_provider, force_model=force_model, cwd=cwd,
-            per_attempt_timeout_cap=per_attempt_timeout_cap,
+            per_attempt_timeout_cap=per_attempt_timeout_cap, routing_key=routing_key,
         )
     holder = f"agent={agent or 'none'}"
     try:
@@ -1012,7 +1098,7 @@ def invoke_with_fallback(
             return _invoke_with_fallback_locked(
                 prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
                 agent=agent, force_provider=force_provider, force_model=force_model,
-                per_attempt_timeout_cap=per_attempt_timeout_cap,
+                per_attempt_timeout_cap=per_attempt_timeout_cap, routing_key=routing_key,
             )
     except TimeoutError as exc:
         print(f"[fallback] {exc}", flush=True)
@@ -1033,6 +1119,7 @@ def _invoke_with_fallback_locked(
     force_model: str | None = None,
     cwd: Path | None = None,
     per_attempt_timeout_cap: int | None = None,
+    routing_key: str | None = None,
 ) -> dict:
     engine = FallbackEngine()
     last_result = None
@@ -1040,7 +1127,7 @@ def _invoke_with_fallback_locked(
     for attempt in engine.attempts(
         prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
         agent=agent, force_provider=force_provider, force_model=force_model, cwd=cwd,
-        per_attempt_timeout_cap=per_attempt_timeout_cap,
+        per_attempt_timeout_cap=per_attempt_timeout_cap, routing_key=routing_key,
     ):
         result = attempt.run()
         result["provider_id"] = attempt.provider_id

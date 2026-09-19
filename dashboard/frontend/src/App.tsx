@@ -21,6 +21,7 @@ const Routines = lazyDefault(() => import('./pages/Routines'))
 const Skills = lazyDefault(() => import('./pages/Skills'))
 const SkillDetail = lazyDefault(() => import('./pages/SkillDetail'))
 const Costs = lazyDefault(() => import('./pages/Costs'))
+const Intelligence = lazyDefault(() => import('./pages/Intelligence'))
 const Integrations = lazyDefault(() => import('./pages/Integrations'))
 const Templates = lazyDefault(() => import('./pages/Templates'))
 const Scheduler = lazyDefault(() => import('./pages/Scheduler'))
@@ -255,6 +256,7 @@ function AppContent() {
               <Route path="/skills" element={<Skills />} />
               <Route path="/skills/:name" element={<SkillDetail />} />
               <Route path="/costs" element={<Costs />} />
+              <Route path="/inteligencia" element={<Intelligence />} />
               <Route path="/integrations" element={<Integrations />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/scheduler" element={<Scheduler />} />

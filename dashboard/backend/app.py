@@ -677,6 +677,47 @@ with app.app_context():
         _conn.commit()
     # --- End completed_at/started_at + projects.status CHECK constraint ---
 
+    # --- multitenant (P4 revamp): companies table + projects.company_id ---
+    # create_all já criou a tabela companies (via models.Company) em bancos
+    # novos; em bancos antigos só roda o CREATE IF NOT EXISTS abaixo. A coluna
+    # company_id precisa ser ALTER ANTES do índice (ordem importa no SQLite).
+    _cur.execute("""
+        CREATE TABLE IF NOT EXISTS companies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cnpj TEXT UNIQUE,
+            name TEXT NOT NULL,
+            slug TEXT UNIQUE NOT NULL,
+            domain TEXT,
+            status TEXT NOT NULL DEFAULT 'active',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )""")
+    _conn.commit()
+    _proj_cols = {row[1] for row in _cur.execute("PRAGMA table_info(projects)").fetchall()}
+    if "company_id" not in _proj_cols:
+        _cur.execute("ALTER TABLE projects ADD COLUMN company_id INTEGER REFERENCES companies(id) ON DELETE SET NULL")
+        _conn.commit()
+    _cur.execute("CREATE INDEX IF NOT EXISTS idx_projects_company ON projects(company_id)")
+    # Backfill: empresa raiz (idempotente) + projetos órfãos apontam pra ela —
+    # nada muda para quem já opera com 1 CNPJ; a separação só existe quando
+    # há 2ª empresa.
+    _root = _cur.execute(
+        "SELECT id FROM companies WHERE slug='sistema-britto'"
+    ).fetchone()
+    if not _root:
+        import datetime as _dt
+        _now_iso = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        _cur.execute(
+            "INSERT INTO companies (cnpj, name, slug, status, created_at, updated_at) "
+            "VALUES ('ROOT','Sistema Britto','sistema-britto','active',?,?)",
+            (_now_iso, _now_iso),
+        )
+        _root = _cur.execute("SELECT id FROM companies WHERE slug='sistema-britto'").fetchone()
+    _root_id = _root[0]
+    _cur.execute("UPDATE projects SET company_id=? WHERE company_id IS NULL", (_root_id,))
+    _conn.commit()
+    # --- End multitenant P4 ---
+
     # --- goal-ticket-unification: drop legacy goal_tasks-driven rollup trigger ---
     # current_value now has a single source of truth (tickets — see
     # heartbeat_outcome._recompute_goal_from_tickets). The CREATE TRIGGER
@@ -1396,6 +1437,7 @@ from routes.shares import bp as shares_bp
 from routes.heartbeats import bp as heartbeats_bp
 from routes.goals import bp as goals_bp
 from routes.tickets import bp as tickets_bp
+from routes.reels import bp as reels_bp
 from routes.alerts import bp as alerts_bp
 from routes.media_jobs import bp as media_jobs_bp
 from routes.integrations_core_postiz import bp as integrations_core_postiz_bp
@@ -1480,6 +1522,7 @@ app.register_blueprint(shares_bp)
 app.register_blueprint(heartbeats_bp)
 app.register_blueprint(goals_bp)
 app.register_blueprint(tickets_bp)
+app.register_blueprint(reels_bp)
 app.register_blueprint(alerts_bp)
 app.register_blueprint(media_jobs_bp)
 app.register_blueprint(integrations_core_postiz_bp)

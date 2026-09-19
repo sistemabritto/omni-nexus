@@ -23,6 +23,7 @@ import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from datetime import datetime
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -1233,6 +1234,270 @@ def unblock_ticket(ticket_id: str, reply_text: str, author: str) -> str:
             f"Sua resposta foi anexada — {ticket.get('assignee_agent')} retoma na próxima rodada.")
 
 
+# ── Cockpit Magneto (Bloco D) ─────────────────────────────────────────────────
+# Comandos diretos de operação que NÃO passam pelo LLM: /status /meta /aprovar
+# /arquivar. Todos vão pela REST do dashboard (EVONEXUS_API_URL +
+# DASHBOARD_API_TOKEN) — o serviço telegram não monta o volume do DB.
+
+def _nexus_api(method: str, path: str, body: dict | None = None, timeout: int = 20) -> tuple[int, dict]:
+    """Chamada genérica à REST do dashboard. Retorna (status_code, json)."""
+    base_url = os.environ.get("EVONEXUS_API_URL", "").strip().rstrip("/")
+    token = os.environ.get("DASHBOARD_API_TOKEN", "").strip()
+    if not base_url or not token:
+        return 0, {"error": "EVONEXUS_API_URL/DASHBOARD_API_TOKEN não configurados neste serviço."}
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    payload = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(f"{base_url}{path}", data=payload, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status, (json.loads(resp.read().decode("utf-8") or "{}"))
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", "ignore")
+        try:
+            return exc.code, json.loads(raw)
+        except Exception:  # noqa: BLE001
+            return exc.code, {"error": raw[:300]}
+    except Exception as exc:  # noqa: BLE001
+        return 0, {"error": str(exc)}
+
+
+def cmd_status() -> str:
+    """Painel da cascata: metas ativas, tickets por agente, bloqueios, custo 7d."""
+    code, goals = _nexus_api("GET", "/api/goals?status=active")
+    code_t, tickets = _nexus_api("GET", "/api/tickets?limit=200")
+    if code == 0:
+        return goals.get("error", "sem resposta do Nexus")
+    lines = ["📊 <b>Status da operação</b>", ""]
+    acts = goals if isinstance(goals, list) else []
+    if not acts:
+        lines.append("🎯 Sem metas ativas. Crie com /meta.")
+    else:
+        lines.append(f"🎯 <b>Metas ativas ({len(acts)})</b>")
+        for g in acts[:8]:
+            cv, tv = g.get("current_value") or 0, g.get("target_value") or 0
+            pct = f"{int(cv/tv*100)}%" if tv else "?"
+            lines.append(f"• #{g.get('id')} {str(g.get('title'))[:52]} — {pct} (due {g.get('due_date') or '-'})")
+        if len(acts) > 8:
+            lines.append(f"… +{len(acts)-8}")
+    tk = tickets if isinstance(tickets, list) else []
+    blocked = [t for t in tk if t.get("status") == "blocked"]
+    inprog = [t for t in tk if t.get("status") == "in_progress"]
+    openn = [t for t in tk if t.get("status") == "open"]
+    review = [t for t in tk if t.get("status") == "review"]
+    lines.append("")
+    lines.append(f"🎫 Fila: {len(openn)} abertos · {len(inprog)} em curso · {len(review)} em review · {len(blocked)} bloqueados")
+    if blocked:
+        lines.append("\n🔒 Bloqueados (precisa de você):")
+        for t in blocked[:5]:
+            lines.append(f"• {str(t.get('title'))[:48]} — #{t.get('id','')[:8]} (@{t.get('assignee_agent')})")
+            lines.append(f"  ⤵️ reply: #tkt:{t.get('id')}")
+    _, rr = _nexus_api("GET", "/api/reels")
+    if isinstance(rr, dict) and rr.get("summary"):
+        lines.append("")
+        lines.append(rr["summary"])
+    return "\n".join(lines)[:4000]
+
+
+def cmd_meta(args: str) -> str:
+    """/meta <título> [métrica <valor> <due YYYY-MM-DD>] → cria Goal e dispara goal-planner."""
+    args = args.strip()
+    if not args:
+        return ("Uso: /meta <título> [métrica <valor> <due YYYY-MM-DD>]\n"
+                "Ex.: /meta 100 leads em setembro leads 100 2026-09-30\n"
+                "Cria a Meta e o goal-planner já quebra em tickets sozinho.")
+    # parse: título até a palavra 'métrica' (se existir)
+    parts = re.split(r"\bmétrica\b", args, maxsplit=1)
+    title = parts[0].strip()
+    metric_type, target_value, due_date = "count", 1.0, None
+    if len(parts) > 1 and parts[1].strip():
+        toks = parts[1].split()
+        target_value = 1.0
+        if toks and (toks[0].isdigit() or (toks[0].replace('.', '', 1).isdigit())):
+            target_value = float(toks[0])
+            toks = toks[1:]
+        if toks and re.fullmatch(r"\d{4}-\d{2}-\d{2}", toks[-1]):
+            due_date = toks[-1]; toks = toks[:-1]
+        metric_type = toks[0] if toks else "count"
+    # project_id obrigatório: usa o 1º projeto ativo
+    code_p, projs = _nexus_api("GET", "/api/projects?status=active")
+    plist = projs if isinstance(projs, list) else []
+    if not plist:
+        code_p, projs = _nexus_api("GET", "/api/projects")
+        plist = projs if isinstance(projs, list) else []
+    if not plist:
+        return "Sem nenhum projeto no Nexus — crie um primeiro (ou use /status)."
+    project_id = plist[0].get("id")
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60] or "meta"
+    code, res = _nexus_api("POST", "/api/goals", {
+        "slug": slug, "title": title, "project_id": project_id,
+        "metric_type": metric_type, "target_value": target_value,
+        "due_date": due_date, "status": "active",
+    })
+    if code in (200, 201):
+        gid = res.get("id")
+        return (f"✅ Meta criada: #{gid} {res.get('title')}\n"
+                f"(projeto #{project_id} · {metric_type} {target_value:g}"
+                + (f" · due {due_date}" if due_date else "")
+                + ")\nO goal-planner está quebrando em tickets agora — /status mostra em instantes.")
+    return f"⚠️ Não consegui criar a meta (HTTP {code}): {res.get('error', str(res)[:200])}"
+
+
+def cmd_aprovar(args: str) -> str:
+    """/aprovar <id> ou /aprovar <id> <aprovada|rejeitada|ajuste:critica>"""
+    m = re.match(r"^\s*(\d+)\s*(.*)$", args.strip())
+    if not m:
+        return "Uso: /aprovar <id> [aprovada|rejeitada|ajuste: <o que mudar>]"
+    approval_id = int(m.group(1))
+    rest = m.group(2).strip()
+    decision = "approve"
+    feedback = ""
+    if rest.lower().startswith("rejeit"):
+        decision = "reject"
+    elif rest.lower().startswith("ajuste"):
+        decision = "revise"
+        feedback = re.sub(r"^ajuste[:\s]+", "", rest, flags=re.I).strip()
+    resp = decide_approval_via_api(approval_id, decision, "magneto-cockpit", feedback=feedback)
+    return resp.get("toast", "Decisão registrada.")
+
+
+def cmd_arquivar(args: str) -> str:
+    """/arquivar <goal-id> → cancela a meta (deixa rastro, não apaga)."""
+    m = re.match(r"^\s*(\d+)\s*$", args.strip())
+    if not m:
+        return "Uso: /arquivar <id-da-meta>"
+    gid = int(m.group(1))
+    code, res = _nexus_api("PATCH", f"/api/goals/{gid}", {"status": "cancelled"})
+    if code in (200, 204):
+        return f"🗃️ Meta #{gid} arquivada (cancelled)."
+    return f"⚠️ Não arquivou (HTTP {code}): {res.get('error', str(res)[:160])}"
+
+
+def _classify_reel_verdict(text: str) -> tuple[str, str] | None:
+    """Classifica a fala/texto do Felipe sobre um reel: (decision, feedback).
+
+    'approve' | 'reject' | 'revise' — None quando não dá pra decidir (o bot
+    pede pra reformular em vez de chutar).
+    """
+    if not text:
+        return None
+    t = text.lower().strip()
+    m_aj = re.search(r"\bajust[ea]\s*:?\s*(.+)$", t)
+    if m_aj:
+        return "revise", m_aj.group(1).strip()[:400]
+    # rejeição primeiro: "não aprovado", "não gostei", "nao"
+    if re.search(r"\b(n[aã]o|rejeit|rejetei|rejete|drop|tira|troca|refaz|recusa)\b", t):
+        return "reject", t[:400]
+    if re.search(r"\b(aprovou?|aprovei?|pode|manda|grava|show|legal|bom|ok)\b", t):
+        return "approve", ""
+    return None
+
+
+def handle_cockpit_command(token: str, chat_id: str, text: str) -> bool:
+    """True se tratou o comando (e respondeu); False se não é comando de cockpit."""
+    msg = lambda t, extra=None: api(token, "sendMessage", dict({"chat_id": chat_id, "text": t}, **(extra or {})))
+    if text.startswith("/status"):
+        msg(cmd_status(), {"parse_mode": "HTML"})
+        log(f"cockpit /status chat={chat_id}")
+        return True
+    if text.startswith("/meta"):
+        msg(cmd_meta(text[len("/meta"):]))
+        log(f"cockpit /meta chat={chat_id}")
+        return True
+    if text.startswith("/aprovar"):
+        msg(cmd_aprovar(text[len("/aprovar"):]))
+        log(f"cockpit /aprovar chat={chat_id}")
+        return True
+    if text.startswith("/arquivar"):
+        msg(cmd_arquivar(text[len("/arquivar"):]))
+        log(f"cockpit /arquivar chat={chat_id}")
+        return True
+    if text.startswith("/reels"):
+        code, res = _nexus_api("GET", "/api/reels")
+        if code == 0:
+            msg(res.get("error", "sem resposta do Nexus"))
+        else:
+            msg(res.get("summary", "🎬 nada"), {"parse_mode": "HTML"})
+        log(f"cockpit /reels chat={chat_id}")
+        return True
+    if text.startswith("/reel"):
+        hint = text[len("/reel"):].strip()
+        code, res = _nexus_api("POST", "/api/reels/generate", {"theme_hint": hint} if hint else None, timeout=330)
+        if code in (200, 201) and res.get("ok"):
+            n = int(res.get("reel", {}).get("seq") or 0)
+            msg(f"🎬 Gerando roteiro do reel {n:03d}… card chega em instantes.")
+        else:
+            msg(f"⚠️ {res.get('error') or res.get('reason') or 'falha ao gerar reel'}")
+        log(f"cockpit /reel chat={chat_id} hint={bool(hint)}")
+        return True
+    if text.startswith("/postei"):
+        m_post = re.search(r"(\d+)", text[len("/postei"):])
+        if not m_post:
+            msg("Uso: /postei <número-do-reel> [url-do-post-no-IG]")
+            log(f"cockpit /postei sem id chat={chat_id}")
+            return True
+        args = text[len("/postei"):].strip()
+        ig_url = None
+        m_url = re.search(r"https?://\S+", args)
+        if m_url:
+            ig_url = m_url.group(0)
+        code, res = _nexus_api("POST", f"/api/reels/{m_post.group(1)}/mirror", {"ig_url": ig_url}, timeout=120)
+        if code in (200,) and res.get("ok"):
+            if res.get("skipped"):
+                msg(f"🪞 Reel {m_post.group(1)} marcado como postado. {res['skipped']}")
+            else:
+                msg(f"🪞 Reel {m_post.group(1)} espelhado p/ Shorts+TikTok ({res.get('mirrored',0)}/{res.get('of',0)}).")
+        else:
+            msg(f"⚠️ {res.get('error') or 'falha ao espelhar'}")
+        log(f"cockpit /postei {m_post.group(1)} chat={chat_id}")
+        return True
+    return False
+
+
+def build_daily_report() -> tuple[str, bool]:
+    """Relatório diário consolidado (fecha o Goal 5 — observabilidade no WhatsApp/Magneto).
+
+    Agrega: metas ativas, fila (por status), gates pendentes, agentes ligados,
+    falhas de heartbeat nas últimas 24h e custo 7d por heartbeat. Retorna
+    (texto_HTML, tem_falha).
+    """
+    _, goals = _nexus_api("GET", "/api/goals?status=active")
+    _, tickets = _nexus_api("GET", "/api/tickets?limit=200")
+    _, hbs = _nexus_api("GET", "/api/heartbeats")
+    acts = goals if isinstance(goals, list) else []
+    tk = tickets if isinstance(tickets, list) else []
+    hbsl = hbs.get("heartbeats", []) if isinstance(hbs, dict) else (hbs if isinstance(hbs, list) else [])
+    blocked = [t for t in tk if t.get("status") == "blocked"]
+    review = [t for t in tk if t.get("status") == "review"]
+    openn = [t for t in tk if t.get("status") == "open"]
+    inprog = [t for t in tk if t.get("status") == "in_progress"]
+    on = [h for h in hbsl if h.get("enabled")]
+    fails = []
+    for h in hbsl:
+        rr = h.get("recent_runs") or []
+        for r in rr[:1]:
+            if r.get("status") in ("fail", "timeout"):
+                fails.append((h.get("id"), r.get("status")))
+
+    L = [f"📅 <b>Relatório do dia — {datetime.now().strftime('%d/%m %H:%M')}</b>", ""]
+    L.append(f"🎯 Metas ativas: <b>{len(acts)}</b>")
+    for g in acts[:6]:
+        cv, tv = g.get("current_value") or 0, g.get("target_value") or 0
+        pct = f"{int(cv/tv*100)}%" if tv else "?"
+        L.append(f"  • #{g.get('id')} {str(g.get('title'))[:50]} — {pct}")
+    L.append(f"\n🎫 Fila: {len(openn)} abertos · {len(inprog)} em curso · {len(review)} review · {len(blocked)} 🔒 bloqueados")
+    if blocked:
+        L.append("\n🔒 Precisa de você:")
+        for t in blocked[:6]:
+            L.append(f"  • {str(t.get('title'))[:44]} — reply: #tkt:{t.get('id')}")
+    L.append(f"\n🤖 Agentes ativos: <b>{len(on)}</b> ({', '.join(str(h.get('id')) for h in on[:10])}{'…' if len(on) > 10 else ''})")
+    if fails:
+        L.append(f"\n⚠️ Falhas recentes de heartbeat: {', '.join(f'{a}({s})' for a, s in fails[:8])}")
+    cost7 = sum(h.get("cost_7d") or 0 for h in hbsl)
+    if cost7 > 0:
+        L.append(f"💰 Custo 7d (heartbeats): US${cost7:.2f}")
+    return "\n".join(L)[:4000], bool(fails or blocked)
+
+
 # Quantos 409 seguidos antes de avisar. Três porque o intervalo entre eles é de
 # ~8s: avisar no primeiro transformaria a sobreposição de dois segundos de um
 # redeploy em alerta, e esperar vinte deixaria três minutos de cliques perdidos
@@ -1272,8 +1537,23 @@ def main() -> int:
 
     offset = load_offset()
     conflitos_409 = 0
+    _daily_report_date = None  # Bloco D: fecha o Goal 5 — 1 relatório consolidado/dia
     while True:
         try:
+            # Report diário consolidado (Goal 5 — observabilidade no Magneto).
+            # Uma vez por dia BRT; idempotente pela data. Não bloqueia o polling.
+            if os.environ.get("TELEGRAM_DAILY_REPORT", "1").lower() not in ("0", "no", "false"):
+                _now_brt = datetime.now()
+                if _now_brt.day != (_daily_report_date or 0):
+                    try:
+                        _txt, _has_issue = build_daily_report()
+                        _dr_chat = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+                        if _dr_chat:
+                            api(token, "sendMessage", {"chat_id": _dr_chat, "text": _txt, "parse_mode": "HTML"})
+                        _daily_report_date = _now_brt.day
+                        log(f"daily-report enviado (issue={_has_issue}, chat={bool(_dr_chat)})")
+                    except Exception as exc:  # noqa: BLE001 — report nunca derruba o polling
+                        log(f"daily-report falhou: {exc}")
             payload = {
                 "timeout": 25, "limit": 20,
                 "allowed_updates": ["message", "edited_message", "callback_query"],
@@ -1487,6 +1767,37 @@ def main() -> int:
                     log(f"ticket-unblock chat={chat_id} ticket={m_tkt.group(1)[:8]} "
                         f"audio={bool(audio_id)}")
                     continue
+                # Ponte de reels (P1 revamp): reply ao card do reels-copilot
+                # (#reel:<id>) com texto ou ÁUDIO aprova/rejeita/ajusta o roteiro.
+                m_reel = re.search(r"#reel:([0-9a-fA-F-]+)", reply_src)
+                if m_reel and not text.startswith("/"):
+                    _rid = m_reel.group(1)
+                    _verdict = text
+                    _audio_reel = message_audio_file_id(message)
+                    if not _verdict and _audio_reel:
+                        api(token, "sendChatAction", {"chat_id": chat_id, "action": "typing"}, timeout=10)
+                        try:
+                            _verdict = handle_audio_message(token, chat_id, _audio_reel)
+                        except Exception as exc:  # noqa: BLE001
+                            api(token, "sendMessage", {"chat_id": chat_id,
+                                "text": f"Não consegui transcrever o áudio: {exc}\nManda por texto: #reel:{_rid} ok|nao|ajuste:…",
+                                "reply_to_message_id": message.get("message_id")})
+                            log(f"reel-audio-fail chat={chat_id}: {exc}")
+                            continue
+                    _decided = _classify_reel_verdict(_verdict)
+                    if _decided is None:
+                        api(token, "sendMessage", {"chat_id": chat_id,
+                            "text": "Não entendi a decisão — fala \"aprovou\", \"não\", ou \"ajuste: …\".",
+                            "reply_to_message_id": message.get("message_id")})
+                        log(f"reel-verdict-claro chat={chat_id} reel={_rid[:8]}")
+                        continue
+                    _decision, _feedback = _decided
+                    code, res = _nexus_api("POST", f"/api/reels/{_rid}/decide",
+                                            {"decision": _decision, "feedback": _feedback}, timeout=330)
+                    api(token, "sendMessage", {"chat_id": chat_id,
+                        "text": res.get("toast", f"HTTP {code}"), "reply_to_message_id": message.get("message_id")})
+                    log(f"reel-decide chat={chat_id} reel={_rid[:8]} decision={_decision}")
+                    continue
                 audio_file_id = message_audio_file_id(message)
                 if audio_file_id:
                     api(token, "sendChatAction", {"chat_id": chat_id, "action": "typing"}, timeout=10)
@@ -1533,6 +1844,13 @@ def main() -> int:
                     continue
                 if not text:
                     continue
+                # Cockpit Magneto (Bloco D): comandos diretos sem passar pelo LLM.
+                if text.startswith("/"):
+                    try:
+                        if handle_cockpit_command(token, chat_id, text):
+                            continue
+                    except Exception as exc:  # noqa: BLE001 — cockpit não derruba o chat
+                        log(f"cockpit error: {exc}")
                 if text.startswith("/start"):
                     api(token, "sendMessage", {"chat_id": chat_id, "text": "EvoNexus online. Pode mandar."})
                     continue

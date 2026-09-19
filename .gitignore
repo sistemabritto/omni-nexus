@@ -200,3 +200,7 @@ scripts/ghost_integration_test.py
 
 # Estado local do OpenCode (node_modules, goal-state) — não vai pro repositório
 .opencode/
+
+# Locais: débito técnico em edição + stack OpenSEO com segredos em texto puro
+TECH_DEBT.md
+openseo-vps.stack.yml

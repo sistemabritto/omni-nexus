@@ -25,6 +25,14 @@ ENV_PATH = WORKSPACE / ".env"
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 GRAPH_BASE = "https://graph.facebook.com/v25.0"
+GRAPH_BASE_IG = "https://graph.instagram.com/v23.0"
+
+
+def _graph_base(token: str) -> str:
+    """Instagram-Login tokens (IGAA…) live on graph.instagram.com; Facebook
+    Login tokens (EAA…) on graph.facebook.com. Using the wrong host yields
+    OAuthException 190 ('Cannot parse access token')."""
+    return GRAPH_BASE_IG if token.startswith("IG") else GRAPH_BASE
 
 
 def _read_env() -> dict:
@@ -71,7 +79,7 @@ def _get_ig_accounts() -> list[dict]:
 def _graph_get(path: str, params: dict, token: str) -> dict:
     """Make a GET request to Graph API."""
     params["access_token"] = token
-    url = f"{GRAPH_BASE}/{path}?{urllib.parse.urlencode(params)}"
+    url = f"{_graph_base(token)}/{path}?{urllib.parse.urlencode(params)}"
     with urllib.request.urlopen(url, timeout=30) as resp:
         return json.loads(resp.read())
 
@@ -80,17 +88,17 @@ def _graph_post(path: str, data: dict, token: str) -> dict:
     """Make a POST request to Graph API."""
     data["access_token"] = token
     body = urllib.parse.urlencode(data).encode()
-    req = urllib.request.Request(f"{GRAPH_BASE}/{path}", data=body, method="POST")
+    req = urllib.request.Request(f"{_graph_base(token)}/{path}", data=body, method="POST")
     with urllib.request.urlopen(req, timeout=30) as resp:
         return json.loads(resp.read())
 
 
 def _graph_post_json(path: str, payload: dict, token: str) -> dict:
-    """Make a POST request with JSON body to Graph API."""
+    """Make a POST request with JSON body."""
     payload["access_token"] = token
     body = json.dumps(payload).encode()
     req = urllib.request.Request(
-        f"{GRAPH_BASE}/{path}",
+        f"{_graph_base(token)}/{path}",
         data=body,
         headers={"Content-Type": "application/json"},
         method="POST",
@@ -675,7 +683,7 @@ def instagram_insights(account_idx):
         result = _graph_get(
             f"{account['account_id']}/insights",
             {
-                "metric": "impressions,reach,profile_views,follower_count",
+                "metric": "reach,profile_views,follower_count,online_followers",
                 "period": "day",
             },
             account["access_token"],

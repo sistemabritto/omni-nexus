@@ -10,11 +10,12 @@
         "CLAUDE_CODE_USE_OPENAI": "1",
         "OPENAI_BASE_URL": "http://evonexus_omniroute:20128/v1",
         "OPENAI_API_KEY": "REDACTED",
-        "OPENAI_MODEL": "Britto-Core"
+        "OPENAI_MODEL": "Britto-Drael"
       },
       "default_base_url": "http://evonexus_omniroute:20128/v1",
-      "default_model": "Britto-Core",
+      "default_model": "Britto-Drael",
       "model_chain": [
+        "Britto-Drael",
         "Britto-Core",
         "Britto-Coding",
         "Britto-Heavy",

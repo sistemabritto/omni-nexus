@@ -1,0 +1,66 @@
+# Roteamento OmniRoute por papel (Bloco F da spec cascade-evergreen).
+#
+# Cada agente (heartbeat) roda um "combo" = ordem priorizada de providers.
+# O engine (provider_fallback.FallbackEngine) já faz o fallback por 429/quota/
+# timeout entre modelos e providers; aqui a gente só DEFINE a ordem por papel
+# para que trabalho pesado vá pro Codex, revisão vá pro Claude Code, o
+# auto-loop vá pro Drael e o barato vá pros free — respeitando os 6 shards
+# assinados (Codex×5, Claude Pro×1, Drael Max×1 + free).
+#
+# Kill-switch: HEARTBEAT_ROUTING_POLICY=0 volta ao chain puro do
+# providers.json (combos ignorados). Se este arquivo não existir, mesmo
+# comportamento (combos ignorados).
+#
+# Os provider_ids têm que bater com config/providers.json (não com os nomes
+# amigáveis dos combos) — é o providers.json quem resolve chave/base_url.
+
+enabled: true
+
+# Combo padrão quando o agente não tem papel mapeitado abaixo.
+default_combo: DR-AUTOROUTE
+
+combos:
+  # Grind: Codex primeiro (5 assinaturas para diluir o burst), Drael como
+  # intermediário, Claude como última chance premium.
+  CX-WORKHORSE: [codex_auth, omnirouter, anthropic]
+
+  # Revisão cruzada (lentes raven + oath): Claude Code primeiro (razãoão da
+  # assinatura Pro é review), Codex em 2º, Drael em último.
+  CC-REVIEWER: [anthropic, codex_auth, omnirouter]
+
+  # Auto-loop do EvoNexus (Drael Max é o provider ativo — mantê-lo 1º).
+  DR-AUTOROUTE: [omnirouter, anthropic, codex_auth]
+
+  # Barato-first: free models (NVIDIA/openrouter) antes de gastar assinatura.
+  # Usar para heartbeats de observação / varredura / digest, não para criação.
+  FREE-SHARD: [nvidia, openrouter, omnirouter, codex_auth, anthropic]
+
+# Mapeia slug de agente -> combo. Agentes não mapeitados usam default_combo.
+roles:
+  # Criação/planejamento pesado (grind)
+  goal-planner: CX-WORKHORSE
+  project-planner: CX-WORKHORSE
+  goal-suggester: CX-WORKHORSE
+  pixel-social-media: CX-WORKHORSE
+  quill-writer: CX-WORKHORSE
+  mako-marketing: CX-WORKHORSE
+  reels-copilot: CX-WORKHORSE
+  bolt-executor: CX-WORKHORSE
+  atlas-planner: CX-WORKHORSE
+
+  # Revisão / crítica / verificação
+  raven-critic: CC-REVIEWER
+  oath-verifier: CC-REVIEWER
+  mirror-retro-strategy: CC-REVIEWER
+  mirror-retro: CC-REVIEWER
+
+  # Varreduras baratas (estado, varredura de zumbis, digest)
+  stale-ticket-sweep: FREE-SHARD
+  sage-offer-watch: FREE-SHARD
+  prod-dashboard: FREE-SHARD
+  sage-strategy-digest: FREE-SHARD
+  pulse-daily: FREE-SHARD
+  data-metrics-pulse: FREE-SHARD
+
+  # Auto-loop padrão (o ativo hoje)
+  # (agentes sem papel explicito caem em DR-AUTOROUTE)

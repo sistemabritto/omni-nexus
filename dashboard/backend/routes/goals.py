@@ -9,7 +9,7 @@ from typing import Optional
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user
-from models import db, Mission, GoalProject, Goal, GoalTask, has_permission, audit
+from models import db, Mission, GoalProject, Goal, GoalTask, Company, has_permission, audit
 from routes._helpers import raw_conn
 
 bp = Blueprint("goals", __name__)
@@ -137,6 +137,69 @@ def delete_mission(mission_id: int):
     return jsonify({"status": "ok"})
 
 
+# --------------- Companies (multitenant P4) ---------------
+
+@bp.route("/api/companies")
+def list_companies():
+    denied = _require("view")
+    if denied:
+        return denied
+    companies = Company.query.order_by(Company.id.asc()).all()
+    return jsonify([c.to_dict() for c in companies])
+
+
+@bp.route("/api/companies", methods=["POST"])
+def create_company():
+    denied = _require("manage")
+    if denied:
+        return denied
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    slug_in = (data.get("slug") or "").strip()
+    cnpj = (data.get("cnpj") or "").strip() or None
+    domain = (data.get("domain") or "").strip() or None
+    if not name:
+        return jsonify({"error": "name is required"}), 400
+    slug = slug_in or "-".join(ch for ch in name.lower() if ch.isalnum() or ch == " ") .replace(" ", "-")
+    if Company.query.filter_by(slug=slug).first():
+        return jsonify({"error": f"Company slug '{slug}' already exists"}), 409
+    if cnpj and Company.query.filter_by(cnpj=cnpj).first():
+        return jsonify({"error": f"Company with CNPJ {cnpj} already exists"}), 409
+    now = _now()
+    c = Company(
+        cnpj=cnpj,
+        name=name,
+        slug=slug,
+        domain=domain,
+        status="active",
+        created_at=now,
+        updated_at=now,
+    )
+    db.session.add(c)
+    db.session.commit()
+    audit(current_user, "create", "goals", f"Created company #{c.id}: {c.name}")
+    # Cascade: a new company starts empty — the first mission/project is created
+    # by the user (or /meta) with company_id. No auto-replication of the
+    # operational template yet; that's the /empresa Magneto command (P4 fase 2).
+    return jsonify(c.to_dict()), 201
+
+
+@bp.route("/api/companies/<int:company_id>", methods=["PATCH"])
+def patch_company(company_id: int):
+    denied = _require("manage")
+    if denied:
+        return denied
+    c = Company.query.get_or_404(company_id)
+    data = request.get_json() or {}
+    for field in ("cnpj", "name", "domain", "status"):
+        if field in data:
+            setattr(c, field, data[field])
+    c.updated_at = _now()
+    db.session.commit()
+    audit(current_user, "update", "goals", f"Updated company #{c.id}: {c.name}")
+    return jsonify(c.to_dict())
+
+
 # --------------- Projects ---------------
 
 @bp.route("/api/projects")
@@ -145,9 +208,12 @@ def list_projects():
     if denied:
         return denied
     mission_id = request.args.get("mission_id", type=int)
+    company_id = request.args.get("company_id", type=int)
     q = GoalProject.query
     if mission_id:
         q = q.filter_by(mission_id=mission_id)
+    if company_id:
+        q = q.filter_by(company_id=company_id)
     projects = q.order_by(GoalProject.id.asc()).all()
     include_goals = request.args.get("include_goals", "false").lower() == "true"
     return jsonify([p.to_dict(include_goals=include_goals) for p in projects])
@@ -176,6 +242,7 @@ def create_project():
     p = GoalProject(
         slug=data["slug"],
         mission_id=data.get("mission_id"),
+        company_id=data.get("company_id"),
         title=data["title"],
         description=data.get("description"),
         workspace_folder_path=data.get("workspace_folder_path"),
@@ -209,7 +276,7 @@ def patch_project(project_id: int):
     p = GoalProject.query.get_or_404(project_id)
     data = request.get_json() or {}
     old_status = p.status
-    for field in ("title", "description", "mission_id", "workspace_folder_path", "status"):
+    for field in ("title", "description", "mission_id", "company_id", "workspace_folder_path", "status"):
         if field in data:
             setattr(p, field, data[field])
     p.updated_at = _now()

@@ -113,6 +113,12 @@ services:
       ## Provider API Keys (needed for fallback chain)
       - NVIDIA_API_KEY=${NVIDIA_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      ## A4 — orquestrador deixa de rodar os agentes um a um: com 2 no ar ao
+      ## mesmo tempo, duas metas avançam em paralelo sem travar a fila inteira.
+      - ORCHESTRATOR_MAX_INFLIGHT=${ORCHESTRATOR_MAX_INFLIGHT:-2}
+      ## A5 — varredor de zumbis: ticket in_progress sem movimento há 60min vai
+      ## pra blocked (60 > timeout máx. de run 480s + checkout, sem falso positivo).
+      - STALE_TICKET_MINUTES=${STALE_TICKET_MINUTES:-60}
 
     deploy:
       placement:

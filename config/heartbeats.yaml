@@ -2,8 +2,8 @@ heartbeats:
 - id: atlas-4h
   agent: atlas-project
   interval_seconds: 14400
-  max_turns: 10
-  timeout_seconds: 300
+  max_turns: 6
+  timeout_seconds: 420
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -26,34 +26,781 @@ heartbeats:
     now (follow up on a stuck lead, comment/triage a ticket, escalate) or is there
     nothing urgent? Respond with JSON: {"action": "work"|"skip", "reason": "<1 sentence>",
     "tasks": [<list of pipeline item ids or ticket ids to touch, if action=work>]}.'
-- id: zara-2h
-  agent: zara-cs
-  interval_seconds: 7200
-  max_turns: 15
-  timeout_seconds: 300
+- id: autopilot-bolt-executor
+  agent: bolt-executor
+  interval_seconds: 900
+  max_turns: 8
+  timeout_seconds: 480
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '1'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `bolt-executor`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-clawdia-assistant
+  agent: clawdia-assistant
+  interval_seconds: 1800
+  max_turns: 6
+  timeout_seconds: 420
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
   - new_task
   - manual
   enabled: false
+  goal_id: '4'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `clawdia-assistant`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-compass-planner
+  agent: compass-planner
+  interval_seconds: 1800
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '2'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `compass-planner`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-dex-data
+  agent: dex-data
+  interval_seconds: 1800
+  max_turns: 8
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '4'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `dex-data`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-grid-tester
+  agent: grid-tester
+  interval_seconds: 1800
+  max_turns: 8
+  timeout_seconds: 480
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '1'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `grid-tester`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-hawk-debugger
+  agent: hawk-debugger
+  interval_seconds: 1800
+  max_turns: 8
+  timeout_seconds: 480
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '5'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `hawk-debugger`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-helm-conductor
+  agent: helm-conductor
+  interval_seconds: 900
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '5'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `helm-conductor`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-mako-marketing
+  agent: mako-marketing
+  interval_seconds: 3600
+  max_turns: 8
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '4'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `mako-marketing`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-oath-verifier
+  agent: oath-verifier
+  interval_seconds: 1200
+  max_turns: 4
+  timeout_seconds: 300
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '1'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `oath-verifier`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-oracle
+  agent: oracle
+  interval_seconds: 900
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '2'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `oracle`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-pixel-social-media
+  agent: pixel-social-media
+  interval_seconds: 3600
+  max_turns: 8
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '4'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `pixel-social-media`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-quill-writer
+  agent: quill-writer
+  interval_seconds: 3600
+  max_turns: 8
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '4'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `quill-writer`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-raven-critic
+  agent: raven-critic
+  interval_seconds: 1800
+  max_turns: 4
+  timeout_seconds: 300
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '4'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `raven-critic`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-sage-strategy
+  agent: sage-strategy
+  interval_seconds: 1500
+  max_turns: 8
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: true
+  goal_id: '2'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `sage-strategy`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-scout-explorer
+  agent: scout-explorer
+  interval_seconds: 900
+  max_turns: 8
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '1'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `scout-explorer`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-scroll-docs
+  agent: scroll-docs
+  interval_seconds: 1800
+  max_turns: 8
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '1'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `scroll-docs`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-vault-security
+  agent: vault-security
+  interval_seconds: 1800
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '5'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `vault-security`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: autopilot-zara-cs
+  agent: zara-cs
+  interval_seconds: 1800
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: '4'
+  required_secrets: []
+  decision_prompt: 'You are running as a proactive EvoNexus heartbeat for agent `zara-cs`.
+
+
+    Your job now is to work the highest-priority ticket assigned to you before Felipe
+    travels on 2026-06-18.
+
+
+    Use the inbox context already injected into this heartbeat. If the inbox is empty,
+    return JSON {"action":"skip","reason":"no assigned open tickets"}.
+
+
+    If there are assigned tickets:
+
+    1. Pick exactly one highest-priority ticket from the inbox preview.
+
+    2. State the ticket id and title you selected.
+
+    3. Work on the task using the local repo/files/tools available to you.
+
+    4. Produce or update the required artifact in the workspace when the ticket asks
+    for one.
+
+    5. End with concise JSON: {"action":"work","ticket_id":"<id>","status":"done|partial|blocked","summary":"<what
+    changed>","next_step":"<if any>"}.
+
+
+    Do not wait for user approval unless a secret, external account action, or irreversible
+    publish step is required. For publish/sending actions, prepare everything and
+    clearly mark the final manual approval gate.'
+- id: confirmar-publicacoes
+  agent: system
+  interval_seconds: 1800
+  max_turns: 0
+  timeout_seconds: 120
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - manual
+  enabled: true
   goal_id: null
   required_secrets: []
-  decision_prompt: 'You are Zara, the customer success agent. Check the support queue
-    via the Nexus REST API: GET http://evonexus-dashboard:8080/api/tickets with header
-    "Authorization: Bearer $DASHBOARD_API_TOKEN" (do NOT use localhost:8080 or local
-    sqlite files). Look for tickets with status "open" or "pending" assigned to you.
-    Pick the highest-priority ticket (by urgency label, then oldest created_at). Decide:
-    should you work on it now or is the queue empty/nothing actionable? Respond with
-    JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "ticket_id": "<id or
-    null>"}.
-
-    '
+  decision_prompt: ''
+  handler: publicacoes.tick
 - id: flux-6h
   agent: flux-finance
   interval_seconds: 21600
-  max_turns: 10
-  timeout_seconds: 300
+  max_turns: 8
+  timeout_seconds: 420
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -72,6 +819,41 @@ heartbeats:
     is there something urgent requiring action or escalation to Felipe via Telegram?
     Respond with JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "alerts":
     [<list of critical items, if any>]}.'
+- id: goal-planner
+  agent: goal-planner
+  interval_seconds: 86400
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - goal_created
+  - manual
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  decision_prompt: 'You are goal-planner. A top-level Goal was just created — its
+    id is in the Trigger payload above. Decompose it into 2-6 concrete, assignable
+    tickets per your agent instructions (.claude/agents/goal-planner.md), or skip
+    if it already has tickets (idempotency) or there is no goal_id in the trigger
+    payload.
+
+    '
+- id: goal-suggester
+  agent: goal-suggester
+  interval_seconds: 3600
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - project_created
+  - manual
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  decision_prompt: Propor Goals para um Project recém-criado, sempre via POST /api/approvals
+    (gate_type=goal_suggestion) para aprovação humana no Magneto. Cada Goal criado
+    dispara o goal-planner automaticamente (goal_created). Se o Project já tem Goals,
+    skip.
 - id: integrations-health
   agent: system
   interval_seconds: 1800
@@ -86,11 +868,11 @@ heartbeats:
   required_secrets: []
   decision_prompt: ''
   handler: plugin_integration_health.tick
-- id: confirmar-publicacoes
-  agent: system
-  interval_seconds: 1800
-  max_turns: 0
-  timeout_seconds: 120
+- id: mirror-retro-strategy
+  agent: mirror-retro
+  interval_seconds: 21600
+  max_turns: 8
+  timeout_seconds: 420
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -98,8 +880,19 @@ heartbeats:
   enabled: true
   goal_id: null
   required_secrets: []
-  decision_prompt: ''
-  handler: publicacoes.tick
+  decision_prompt: 'Você é o reavaliador da estratégia do Sistema Britto, acordando
+    na varredura evergreen. Para cada Mission -> Project -> Goal ativo: compare current_value
+    vs target_value e a velocidade dos últimos tickets (resolvidos x bloqueados x
+    estagnados) via REST http://evonexus-dashboard:8080 (header Authorization: Bearer
+    $DASHBOARD_API_TOKEN; GET /api/goals?status=active, GET /api/tickets). Depois:
+    (a) Goal atingido (current_value >= target_value): proponha marcar achieved via
+    POST /api/approvals (gate_type=decomposition, payload achamento). (b) Goal estagnado
+    (>=2 dias sem ticket resolvido e due_date próxima): COMENTE no ticket do goal
+    o diagnóstico (POST /api/tickets/<id>/comments) e/ou crie ticket de correção.
+    (c) Rumo errado (meta travada >1 semana ou off-track): abra POST /api/approvals
+    (gate_type=decomposition) propondo EDITAR ou ARQUIVAR a missão — não execute,
+    o Felipe decide no Magneto. Nunca edite missão direto. Responda SOMENTE JSON:
+    {"action":"work"|"skip","reason":"<1 frase>","comments":[{"ticket_id":...,"text":...}],"approvals_opened":[...]}'
 - id: nexus-orchestrator
   agent: system
   interval_seconds: 900
@@ -118,7 +911,7 @@ heartbeats:
   agent: pixel-social-media
   interval_seconds: 21600
   max_turns: 8
-  timeout_seconds: 600
+  timeout_seconds: 420
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -133,46 +926,131 @@ heartbeats:
     to you (GET /api/tickets?assignee_agent=pixel-social-media&goal_id=<id>) — those
     are the content/growth Goals you own. For each, count YOUR tickets in status open/in_progress
     linked to it. If that count is below 3 and the Goal is not achieved/cancelled/past
-    its due_date, propose up to 3 new, concrete content tickets (specific titles, not
-    generic "create a post") via POST /api/tickets with assignee_agent=pixel-social-media
+    its due_date, propose up to 3 new, concrete content tickets (specific titles,
+    not generic "create a post") via POST /api/tickets with assignee_agent=pixel-social-media
     and goal_id set — check existing titles first so you never propose a near-duplicate.
     PRIORITY when choosing WHAT to top up: an ISCA (comentário→DM no Instagram) beats
-    a generic post — load the mkt-iscas-desafio skill and propose the next missing isca
-    number from its 01–21 map before falling back to a pauta; title the ticket with the
-    isca number (e.g. "[isca 07] <gatilho>"). Never set publish_intent here or publish
-    anything directly — that stays gated behind the existing Telegram approval + Postiz
-    confirmation flow. If every Goal you own already has enough queued work, action=skip.
-    Respond with JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "goals_topped_up":
-    [<list of goal ids you created tickets for, if any>]}.
+    a generic post — load the mkt-iscas-desafio skill and propose the next missing
+    isca number from its 01–21 map before falling back to a pauta; title the ticket
+    with the isca number (e.g. "[isca 07] <gatilho>"). Never set publish_intent here
+    or publish anything directly — that stays gated behind the existing Telegram approval
+    + Postiz confirmation flow. If every Goal you own already has enough queued work,
+    action=skip. Respond with JSON: {"action": "work"|"skip", "reason": "<1 sentence>",
+    "goals_topped_up": [<list of goal ids you created tickets for, if any>]}.
 
     '
+- id: project-planner
+  agent: project-planner
+  interval_seconds: 3600
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - mission_created
+  - manual
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  decision_prompt: Propor Projects para uma Mission recém-criada, sempre via POST
+    /api/approvals (gate_type=project_suggestion) para aprovação humana no Magneto.
+    Leia o seu .md completo para o protocolo. Se a Mission já tem Projects, skip.
 - id: reels-producer
   agent: system
   interval_seconds: 1800
   max_turns: 0
   timeout_seconds: 60
   lock_timeout_seconds: 120
-  wake_triggers: [interval, manual]
-  enabled: false # enable after deployment and verified Telegram delivery
+  wake_triggers:
+  - interval
+  - manual
+  enabled: false
   handler: reels_producer.tick
   required_secrets: []
-  decision_prompt: 'Monitor determinístico de publicações verificadas e briefs de coprodução Magneto.'
-- id: goal-planner
-  agent: goal-planner
+  decision_prompt: Monitor determinístico de publicações verificadas e briefs de coprodução
+    Magneto.
+- id: sage-offer-watch
+  agent: sage-strategy
   interval_seconds: 86400
-  max_turns: 15
-  timeout_seconds: 300
+  max_turns: 8
+  timeout_seconds: 420
   lock_timeout_seconds: 1800
   wake_triggers:
-  - goal_created
+  - interval
   - manual
   enabled: true
   goal_id: null
   required_secrets: []
-  decision_prompt: 'You are goal-planner. A top-level Goal was just created — its
-    id is in the Trigger payload above. Decompose it into 2-6 concrete, assignable
-    tickets per your agent instructions (.claude/agents/goal-planner.md), or skip
-    if it already has tickets (idempotency) or there is no goal_id in the trigger
-    payload.
+  decision_prompt: 'Você é Sage em modo ''offer-watch''. Monitore conversão por funil
+    lendo as métricas de crescimento (workspace/reports e GET /api/metricas, se exposto)
+    e a taxa de clique por funil (whatsapp|socialjobs|vps|zapclub|sistema). Se UM
+    funil cair por <=2 semanas seguidas, abra UM ticket ''propor oferta nova <funil>''
+    (POST /api/tickets, priority=high, assignee_agent=nex-sales, publish_intent=false,
+    requires_human_approval) apontando a página-alvo sistemabritto.com.br/<funil>
+    com o dado que motivou (número com origem). Sem dado inventado; sem publicar nada.
+    Se nenhum funil decai, skip. Responda SOMENTE JSON: {"action":"work"|"skip","reason":"<1
+    frase>","ticket_id":"<id ou null>"}'
+- id: stale-ticket-sweep
+  agent: system
+  interval_seconds: 1800
+  max_turns: 0
+  timeout_seconds: 120
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - manual
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  handler: stale_ticket_sweep.tick
+  decision_prompt: ''
+- id: reels-copilot
+  agent: system
+  interval_seconds: 10800
+  max_turns: 0
+  timeout_seconds: 900
+  lock_timeout_seconds: 10800
+  wake_triggers:
+  - interval
+  - manual
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  handler: reels_copilot.tick
+  decision_prompt: ''
+- id: ops-watchdog
+  agent: system
+  interval_seconds: 900
+  max_turns: 0
+  timeout_seconds: 300
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - manual
+  enabled: true
+  goal_id: null
+  required_secrets: []
+  handler: ops_watchdog.tick
+  decision_prompt: ''
+- id: zara-2h
+  agent: zara-cs
+  interval_seconds: 7200
+  max_turns: 6
+  timeout_seconds: 420
+  lock_timeout_seconds: 1800
+  wake_triggers:
+  - interval
+  - new_task
+  - manual
+  enabled: false
+  goal_id: null
+  required_secrets: []
+  decision_prompt: 'You are Zara, the customer success agent. Check the support queue
+    via the Nexus REST API: GET http://evonexus-dashboard:8080/api/tickets with header
+    "Authorization: Bearer $DASHBOARD_API_TOKEN" (do NOT use localhost:8080 or local
+    sqlite files). Look for tickets with status "open" or "pending" assigned to you.
+    Pick the highest-priority ticket (by urgency label, then oldest created_at). Decide:
+    should you work on it now or is the queue empty/nothing actionable? Respond with
+    JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "ticket_id": "<id or
+    null>"}.
 
     '

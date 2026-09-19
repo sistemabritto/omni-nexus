@@ -42,11 +42,15 @@ AGENTS_DIR = WORKSPACE / ".claude" / "agents"
 # goal-planner is here for the same reason: it decomposes Goals, not tickets —
 # its own ticket inbox is always empty, so without this it would never run.
 STATE_MONITOR_AGENTS = {
-    "atlas-project", "flux-finance", "goal-planner",
+    "atlas-project", "flux-finance",     "goal-planner",
     # ai-hierarchy-suggestions: same zero-inbox, event-only shape as
     # goal-planner, one rung each higher in the Mission -> Project -> Goal
     # -> Ticket chain.
     "project-planner", "goal-suggester",
+    # mirror-retro (reavaliador evergreen): varre Mission/Project/Goal e
+    # comenta nos tickets — seu próprio inbox de tickets é sempre vazio, então
+    # sem isto o cost-guard o pularia antes de ver qualquer Goal ativo.
+    "mirror-retro",
     # growth-content-heartbeat: pixel-social-media's growth heartbeat exists
     # specifically to top up a Goal's content-ticket queue WHEN IT'S LOW —
     # the exact case an empty inbox would otherwise cost-guard away.
@@ -334,6 +338,13 @@ na própria resposta.
   aprovação, uma decisão dele). Preencha `blocked_reason` e `needs`.
 - `skip` — a inbox está vazia ou nada é acionável agora.
 
+## Regra de status (revisão cruzada sempre-on)
+- ENTREGÁVEL NÃO-TRIVIAL (artigo, post, plano, relatório, isca, oferta, mudança de
+  estratégia) → `new_status:"review"`, NUNCA "resolved": ele passa pelo painel de
+  revisão (mérito + evidência) antes de fechar. É assim que o time se corrige sozinho.
+- Tarefa mecânica trivial (corrigir um erro claro, renomear, apagar duplicado) → pode
+  ir direto "resolved".
+
 ## Responda SOMENTE com este JSON — nada antes, nada depois, tudo em uma linha:
 
 {{"action": "work"|"skip"|"blocked", "ticket_id": "<id da inbox ou null>", "result": "<resultado concreto em pt-BR>", "new_status": "in_progress"|"review"|"resolved"|null, "blocked_reason": "<por que travou, se blocked>", "needs": "<o que precisa do Felipe, se blocked>", "publish_intent": true|false|null, "publish_target": "instagram"|"linkedin"|null, "publish_content": "<texto EXATO a publicar ou null>", "publish_media": ["<URL HTTPS de mídia>"]|null}}
@@ -391,6 +402,9 @@ def step7_invoke_claude(
                 # OpenClaude-backed providers, which can misparse the expanded
                 # agent markdown as CLI options.
                 agent="",
+                # Bloco F: rota por papel usa o slug do agente (independente do
+                # agent="" acima, que o OpenClaude zera após embutir a persona).
+                routing_key=agent,
             )
             # Preserve the step7 contract; provider_fallback already returns
             # status/output/error/duration_ms/tokens_*/cost_usd and adds

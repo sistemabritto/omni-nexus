@@ -349,6 +349,14 @@ def start_dispatcher_thread():
     """Start a background thread that runs the heartbeat schedule loop."""
     def _loop():
         import time
+        # A1: YAML é fonte de verdade — alinhar DB→YAML ANTES de registrar os
+        # jobs, senão um heartbeat com enabled=true no YAML mas false no banco
+        # (drift do "preserva UI") ficaria mudo até alguém reconciliar na mão.
+        try:
+            from hb_reconcile import run_reconcile_on_boot
+            run_reconcile_on_boot()
+        except Exception as exc:  # noqa: BLE001 — reconcile no boot nunca derruba o dispatcher
+            print(f"[dispatcher] hb_reconcile on boot failed (non-fatal): {exc}", flush=True)
         register_interval_jobs()
         while True:
             schedule.run_pending()

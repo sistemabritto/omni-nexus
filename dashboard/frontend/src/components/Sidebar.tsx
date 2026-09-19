@@ -4,12 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
 import {
-  LayoutDashboard, Bot, Clock, Zap, Layout,
-  Brain, Plug, DollarSign, FolderOpen, Cpu,
-  Users, ScrollText, LogOut, Menu, X, Shield, BookOpen, Library, Database,
-  ArrowUpCircle, ChevronDown, Webhook, HardDriveDownload, Settings, Share2, Heart, Target, Activity, Package,
-  Puzzle, Terminal, Columns3, FolderKanban, CheckCircle2, Video, Newspaper,
-  Workflow,
+  LayoutDashboard, Bot, Clock, Layout,
+  Users, ScrollText, LogOut, Menu, X, Shield, BookOpen,
+  ArrowUpCircle, ChevronDown, Webhook, HardDriveDownload, Settings, Share2, Heart, Target, Activity,
+  Puzzle, Columns3, FolderKanban, CheckCircle2, Video, Newspaper,
+  Workflow, Sparkles, Cpu, FolderOpen,
 } from 'lucide-react'
 import {
   getAllPluginSidebarGroups,
@@ -43,26 +42,10 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    key: 'main',
+    key: 'cockpit',
     collapsible: false,
     items: [
       { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
-    ],
-  },
-  {
-    key: 'operations',
-    collapsible: true,
-    items: [
-      // Ordem pedida pelo Felipe: hierarquia de trabalho primeiro
-      // (Projetos → Metas → Kanban), depois o resto do time. 'Tasks'
-      // removido do menu — as tarefas de trabalho real hoje são tickets,
-      // visíveis no Kanban (goal-ticket-unification); a rota /tasks
-      // continua existindo, só não aparece mais aqui.
-      { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
-      { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
-      { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
-      { to: '/media', labelKey: 'media', icon: Video, resource: 'media_jobs' },
-      { to: '/pautas', labelKey: 'pautas', icon: Newspaper, resource: 'goals' },
       // Fila de jobs de orquestração multi-agente disparados pelo chat/Telegram.
       // Mesmo `resource` do Kanban: quem enxerga ticket enxerga o trabalho que
       // a orquestração produz.
@@ -70,44 +53,62 @@ const navGroups: NavGroup[] = [
       // Fallback de visibilidade/aprovação — antes só existia como mensagem
       // no Telegram (panorama 2026-07-17, item 1).
       { to: '/approvals', labelKey: 'approvals', icon: CheckCircle2, resource: 'goals' },
+      { to: '/pautas', labelKey: 'pautas', icon: Newspaper, resource: 'goals' },
+      { to: '/activity', labelKey: 'activity', icon: Activity, resource: 'scheduler' },
+    ],
+  },
+  {
+    key: 'projetos',
+    collapsible: true,
+    items: [
+      // Hierarquia de trabalho: Missões → Projetos → Metas → Tickets (kanban).
+      // As três vistas são o MESMO grafo em granularidades diferentes
+      // (goal-ticket-unification); o menu só separa por zoom.
+      { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
+      { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
+      { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
+    ],
+  },
+  {
+    key: 'agentes',
+    collapsible: true,
+    items: [
+      // O time: identidade + o que acorda cada um (heartbeat/rotina/trigger).
       { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
-      { to: '/skills', labelKey: 'skills', icon: Zap, resource: 'skills' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
       { to: '/triggers', labelKey: 'triggers', icon: Webhook, resource: 'triggers' },
-      { to: '/activity', labelKey: 'activity', icon: Activity, resource: 'scheduler' },
-      { to: '/templates', labelKey: 'templates', icon: Layout, resource: 'templates' },
     ],
   },
   {
-    key: 'data',
+    key: 'inteligencia',
     collapsible: true,
     items: [
-      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
-      { to: '/shares', labelKey: 'shareLinks', icon: Share2, resource: 'workspace' },
-      { to: '/memory', labelKey: 'memory', icon: Brain, resource: 'memory' },
-      { to: '/mempalace', labelKey: 'mempalace', icon: Library, resource: 'mempalace' },
-      { to: '/knowledge', labelKey: 'knowledge', icon: Database, resource: 'knowledge' },
-      { to: '/costs', labelKey: 'costs', icon: DollarSign, resource: 'costs' },
+      // Hub único: catálogo (skills/MCP/plugins/integrações) + conhecimento
+      // (RAG/memória/mempalace) + custos. /providers fica no menu porque é a
+      // configuração mais mexida (harness→provider→modelo).
+      { to: '/inteligencia', labelKey: 'intelligenceHub', icon: Sparkles, resource: null },
+      { to: '/providers', labelKey: 'providers', icon: Cpu, resource: 'config' },
     ],
   },
   {
-    key: 'system',
+    key: 'workspace',
+    collapsible: true,
+    items: [
+      // Arquivos do negócio: workspace, mídias e shares (links públicos).
+      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
+      { to: '/media', labelKey: 'media', icon: Video, resource: 'media_jobs' },
+      { to: '/shares', labelKey: 'shareLinks', icon: Share2, resource: 'workspace' },
+    ],
+  },
+  {
+    key: 'configuracoes',
     collapsible: true,
     items: [
       { to: '/settings', labelKey: 'settings', icon: Settings, resource: 'config' },
-      { to: '/providers', labelKey: 'providers', icon: Cpu, resource: 'config' },
-      { to: '/integrations', labelKey: 'integrations', icon: Plug, resource: 'integrations' },
-      { to: '/mcp-servers', labelKey: 'mcpServers', icon: Terminal, resource: 'config' },
       { to: '/backups', labelKey: 'backups', icon: HardDriveDownload, resource: 'config' },
-      { to: '/plugins', labelKey: 'plugins', icon: Package, resource: null },
-    ],
-  },
-  {
-    key: 'admin',
-    collapsible: true,
-    adminOnly: true,
-    items: [
+      { to: '/templates', labelKey: 'templates', icon: Layout, resource: 'templates' },
+      // Admins enxergam; demais papéis sem permissão simplesmente não veem.
       { to: '/users', labelKey: 'users', icon: Users, resource: 'users' },
       { to: '/roles', labelKey: 'roles', icon: Shield, resource: 'users' },
       { to: '/audit', labelKey: 'audit', icon: ScrollText, resource: 'audit' },

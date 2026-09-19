@@ -136,11 +136,14 @@ heartbeats:
     its due_date, propose up to 3 new, concrete content tickets (specific titles, not
     generic "create a post") via POST /api/tickets with assignee_agent=pixel-social-media
     and goal_id set — check existing titles first so you never propose a near-duplicate.
-    Never set publish_intent here or publish anything directly — that stays gated behind
-    the existing Telegram approval + Postiz confirmation flow. If every Goal you own
-    already has enough queued work, action=skip. Respond with JSON: {"action": "work"|"skip",
-    "reason": "<1 sentence>", "goals_topped_up": [<list of goal ids you created tickets
-    for, if any>]}.
+    PRIORITY when choosing WHAT to top up: an ISCA (comentário→DM no Instagram) beats
+    a generic post — load the mkt-iscas-desafio skill and propose the next missing isca
+    number from its 01–21 map before falling back to a pauta; title the ticket with the
+    isca number (e.g. "[isca 07] <gatilho>"). Never set publish_intent here or publish
+    anything directly — that stays gated behind the existing Telegram approval + Postiz
+    confirmation flow. If every Goal you own already has enough queued work, action=skip.
+    Respond with JSON: {"action": "work"|"skip", "reason": "<1 sentence>", "goals_topped_up":
+    [<list of goal ids you created tickets for, if any>]}.
 
     '
 - id: reels-producer

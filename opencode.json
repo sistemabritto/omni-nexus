@@ -15,7 +15,7 @@
   },
   "agent": {
     "build": {
-      "steps": 15
+      "steps": 1000
     },
     "autolearn-reviewer": {
       "description": "Reviews past conversations for self-improvement opportunities",

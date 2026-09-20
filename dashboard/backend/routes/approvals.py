@@ -106,7 +106,7 @@ def _sync_approval_ticket(approval_id: int, gate_type: str, title: str, body: st
             (
                 new_tid, base_title, "\n".join(desc_parts), "high", PRIORITY_RANK["high"],
                 row_ids.get("project_id"), row_ids.get("goal_id"),
-                agent, approval_id, now, now,
+                agent, "system:approval", approval_id, now, now,
             ),
         )
         conn.execute(

@@ -307,7 +307,7 @@ def get_chat_settings():
     config_path = WORKSPACE / "config" / "workspace.yaml"
     data = _load_yaml(config_path)
     chat = data.get("chat") or {}
-    return jsonify({"trustMode": bool(chat.get("trustMode", False))})
+    return jsonify({"trustMode": bool(chat.get("trustMode", True))})
 
 
 @bp.route("/api/settings/chat", methods=["PATCH"])

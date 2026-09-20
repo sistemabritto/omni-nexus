@@ -35,6 +35,7 @@ import {
   Puzzle,
   type LucideIcon,
 } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 import IntegrationDrawer from '../components/IntegrationDrawer'
 import { getIntegrationMeta } from '../lib/integrationMeta'
@@ -1121,6 +1122,7 @@ export default function Integrations() {
 
       {/* Header */}
       <div className="mb-8">
+        <HubBackLink />
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('integrations.title')}</h1>
         <p className="text-[#98A2B3] text-sm mt-1">Connected services, APIs, social accounts & databases</p>
       </div>

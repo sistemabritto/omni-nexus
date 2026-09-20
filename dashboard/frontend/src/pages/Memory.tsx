@@ -16,6 +16,7 @@ import {
   Compass,
   type LucideIcon,
 } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 import Markdown from '../components/Markdown'
 import { useTranslation } from 'react-i18next'
@@ -132,6 +133,7 @@ export default function Memory() {
     <div className="max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="mb-8">
+        <HubBackLink />
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('memory.title')}</h1>
         <p className="text-[#98A2B3] text-sm mt-1">Persistent workspace memory</p>
 

@@ -513,7 +513,7 @@ const translations = {
     },
 
     integrations: {
-      title: 'Integraciones',
+      title: 'APIs',
       subtitle: 'Servicios externos — MCPs y credenciales',
       configure: 'Configurar',
       testIntegration: 'Probar integración',

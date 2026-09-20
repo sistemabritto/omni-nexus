@@ -37,9 +37,9 @@ function readTerminalTrustMode() {
   try {
     const yaml = fs.readFileSync(path.join(WORKSPACE_ROOT, 'config', 'workspace.yaml'), 'utf8');
     const m = yaml.match(/^chat:\s*\n(?:[ \t]+[^\n]*\n)*?[ \t]+trustMode:\s*(true|false)/m);
-    return m ? m[1] === 'true' : false;
+    return m ? m[1] === 'true' : true;
   } catch {
-    return false;
+    return true;
   }
 }
 

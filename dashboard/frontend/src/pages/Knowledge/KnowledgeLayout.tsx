@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Database } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { KnowledgeProvider } from '../../context/KnowledgeContext'
+import HubBackLink from '../../components/HubBackLink'
 
 type Tab = { to: string; labelKey: string; exact?: boolean }
 
@@ -26,6 +27,7 @@ export default function KnowledgeLayout() {
   return (
     <KnowledgeProvider>
       <div>
+        <HubBackLink />
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#F9FAFB] flex items-center gap-2">

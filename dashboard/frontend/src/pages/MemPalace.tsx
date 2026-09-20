@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Library, Search, FolderPlus, Play, Trash2, RefreshCw, Download, Database, Layers, Grid3X3 } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
@@ -183,6 +184,7 @@ export default function MemPalace() {
     return (
       <div>
         <div className="mb-8">
+          <HubBackLink />
           <h1 className="text-2xl font-bold text-[#F9FAFB]">{t('mempalace.title')}</h1>
           <p className="text-[#98A2B3] mt-1">Semantic search powered by MemPalace</p>
         </div>
@@ -196,6 +198,7 @@ export default function MemPalace() {
   return (
     <div>
       <div className="mb-8">
+        <HubBackLink />
         <h1 className="text-2xl font-bold text-[#F9FAFB]">{t('mempalace.title')}</h1>
         <p className="text-[#98A2B3] mt-1">Semantic search powered by MemPalace</p>
       </div>

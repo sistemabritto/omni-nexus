@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DollarSign, Zap, Activity, Calculator, Image, Target, type LucideIcon } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 import { useTranslation } from 'react-i18next'
 import {
@@ -210,6 +211,7 @@ export default function Costs() {
     return (
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-8">
+          <HubBackLink />
           <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('costs.title')}</h1>
           <p className="text-[#98A2B3] text-sm mt-1">AI usage cost analysis</p>
         </div>
@@ -230,6 +232,7 @@ export default function Costs() {
   if (!data) {
     return (
       <div className="text-center py-16">
+        <HubBackLink />
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
           <DollarSign size={32} className="text-[#3F3F46]" />
         </div>
@@ -248,6 +251,7 @@ export default function Costs() {
     <div className="max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="mb-8">
+        <HubBackLink />
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('costs.title')}</h1>
         <p className="text-[#98A2B3] text-sm mt-1">AI usage cost analysis</p>
       </div>

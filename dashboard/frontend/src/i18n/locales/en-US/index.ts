@@ -523,7 +523,7 @@ const translations = {
     },
 
     integrations: {
-      title: 'Integrations',
+      title: 'APIs',
       subtitle: 'External services — MCPs and credentials',
       configure: 'Configure',
       testIntegration: 'Test integration',

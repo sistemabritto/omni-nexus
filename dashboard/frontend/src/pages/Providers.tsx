@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 import { useTranslation } from 'react-i18next'
 
@@ -381,6 +382,7 @@ export default function Providers() {
     <div className="max-w-[1200px] mx-auto font-[Inter,-apple-system,sans-serif]">
       {/* Header */}
       <div className="mb-6">
+        <HubBackLink />
         <h1 className="text-xl font-bold text-white tracking-tight">{t('providers.title')}</h1>
         <p className="text-[#98A2B3] text-sm mt-1">Configure and activate AI providers for your workspace</p>
       </div>

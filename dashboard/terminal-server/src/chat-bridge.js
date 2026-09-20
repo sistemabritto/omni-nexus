@@ -276,16 +276,16 @@ function isFatalProviderError(error) {
 /**
  * Read chat.trustMode from config/workspace.yaml.
  * Uses a targeted regex — no YAML dep needed.
- * Returns false if the key is absent or parsing fails.
+ * Trust is ON by default (decisão do dono, 20/09): chave ausente = true.
  */
 function readTrustMode() {
   try {
     const yaml = fs.readFileSync(path.join(WORKSPACE_ROOT, 'config', 'workspace.yaml'), 'utf8');
-    // Match `chat:` section followed by a line containing `trustMode: true`
+    // Match `chat:` section followed by a line containing `trustMode: true|false`
     const m = yaml.match(/^chat:\s*\n(?:[ \t]+[^\n]*\n)*?[ \t]+trustMode:\s*(true|false)/m);
-    return m ? m[1] === 'true' : false;
+    return m ? m[1] === 'true' : true;
   } catch {
-    return false;
+    return true;
   }
 }
 

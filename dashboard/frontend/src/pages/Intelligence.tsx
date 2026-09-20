@@ -3,9 +3,10 @@ import { Cpu, Zap, Terminal, Package, Plug, Database, Brain, Library, DollarSign
 import { useAuth } from '../context/AuthContext'
 
 // Hub "Inteligência" (revamp 19/09): uma porta só para tudo que dá cérebro à
-// operação. Cada aba é o redirect p/ a página completa já existente — as rotas
-// antigas (/providers, /skills…) continuam válidas e com deep-link; a sidebar
-// mostra os principais e o resto fica aqui, tirando item do menu.
+// operação. Cada card navega p/ a página completa já existente (a própria
+// página tem botão de volta p/ cá); as rotas antigas (/providers, /skills…)
+// continuam válidas e com deep-link; a sidebar mostra os principais e o
+// resto fica aqui, tirando item do menu.
 
 const TABS = [
   { id: 'providers', path: '/providers', icon: Cpu, label: 'Provedores (harness→provider→modelo)' },
@@ -19,7 +20,7 @@ const CATALOG = [
   { id: 'skills', path: '/skills', icon: Zap, label: 'Skills' },
   { id: 'mcp', path: '/mcp-servers', icon: Terminal, label: 'MCP Servers' },
   { id: 'plugins', path: '/plugins', icon: Package, label: 'Plugins' },
-  { id: 'integrations', path: '/integrations', icon: Plug, label: 'Integrações' },
+  { id: 'integrations', path: '/integrations', icon: Plug, label: 'APIs' },
 ]
 
 export default function Intelligence() {
@@ -27,7 +28,7 @@ export default function Intelligence() {
   const { hasPermission } = useAuth()
 
   const cardClass = (enabled: boolean) =>
-    `group flex flex-col gap-2 rounded-xl border p-4 transition-colors ${
+    `group flex flex-col gap-2 rounded-xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/50 ${
       enabled
         ? 'border-[#344054] bg-[#182230]/60 hover:border-[#00FFA7]/50 hover:bg-[#182230] cursor-pointer'
         : 'border-[#344054]/40 bg-[#0f1522]/40 opacity-60 cursor-not-allowed'
@@ -36,7 +37,7 @@ export default function Intelligence() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-xl font-semibold text-white mb-1">
-        Integrações
+        Inteligência
       </h1>
       <p className="text-sm text-[#98A2B3] mb-6">
         Tudo que dá cérebro à operação — provedores, conhecimento, memória e integrações.

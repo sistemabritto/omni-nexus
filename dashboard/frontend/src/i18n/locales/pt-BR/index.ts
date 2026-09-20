@@ -189,7 +189,7 @@ const translations = {
       routines: 'Rotinas',
       activity: 'Atividade',
       scheduler: 'Serviços',
-      integrations: 'Integrações',
+      integrations: 'APIs',
       providers: 'Provedores',
       audit: 'Auditoria',
       backups: 'Backups',

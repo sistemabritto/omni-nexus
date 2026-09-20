@@ -24,6 +24,7 @@ import {
   Terminal, Package, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Copy,
   RefreshCw, Loader2, Globe,
 } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 
 interface McpServer {
@@ -225,6 +226,7 @@ export default function McpServers() {
 
   return (
     <div className="max-w-3xl mx-auto">
+      <HubBackLink />
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

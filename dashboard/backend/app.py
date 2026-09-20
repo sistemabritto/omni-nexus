@@ -443,6 +443,9 @@ with app.app_context():
     if "blocked_reason" not in _ticket_cols:
         _cur.execute("ALTER TABLE tickets ADD COLUMN blocked_reason TEXT")
         _conn.commit()
+    if "approval_id" not in _ticket_cols:
+        _cur.execute("ALTER TABLE tickets ADD COLUMN approval_id INTEGER")
+        _conn.commit()
     # --- End ticket approval columns ---
 
     # --- core-backend-audit H3: lock_token proves ownership of a checkout ---

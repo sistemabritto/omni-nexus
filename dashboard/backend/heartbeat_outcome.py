@@ -827,6 +827,19 @@ def _maybe_park_for_publish(ticket_id: str, agent: str, outcome: dict, title: st
         )
         conn.commit()
 
+    # W1: este ticket DO CONTEÚDO é a superfície do gate no Kanban — vincula o
+    # approval_id para o helper de decisão fechar/cleanup espelhado.
+    try:
+        conn.execute(
+            "UPDATE tickets SET approval_id = ? WHERE id = ? AND approval_id IS NULL",
+            (approval_id, ticket_id),
+        )
+        conn.commit()
+    except Exception as _link_exc:  # noqa: BLE001 — coluna nova; sem ela o gate segue vivo
+        import logging
+        logging.getLogger(__name__).warning(
+            "park: vínculo approval_id falhou (coluna ausente?): %s", _link_exc)
+
     return {
         "kind": "result", "agent": agent, "ticket_title": title,
         "new_status": "blocked", "summary": "Aguardando aprovação humana para publicar (Telegram).",

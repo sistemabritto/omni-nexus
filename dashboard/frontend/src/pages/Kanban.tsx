@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   ArrowDown,
@@ -80,10 +80,13 @@ function formatAge(iso: string): string {
 export default function Kanban() {
   const navigate = useNavigate()
   const toast = useToast()
+  const [searchParams] = useSearchParams()
+  // Deep-link de busca (?q=): /approvals redireciona para cá com ?q=🔐
+  // (W1 — aprovações viraram tickets). Seed da busca, não estado reativo.
   const [tickets, setTickets] = useState<TicketItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => searchParams.get('q') || '')
   const [updating, setUpdating] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
 

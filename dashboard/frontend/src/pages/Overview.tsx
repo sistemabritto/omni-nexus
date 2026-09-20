@@ -33,8 +33,7 @@ import CockpitReference from '../components/CockpitReference'
 // continua leve. As rotas standalone (/orquestracao etc.) seguem existindo p/
 // links diretos; aqui é o hub de uma página só.
 const OrchestrationPage = lazy(() => import('./Orchestration'))
-const ApprovalsPage = lazy(() => import('./Approvals'))
-const PautasPage = lazy(() => import('./Pautas'))
+// W1: Approvals e Pautas saíram do cockpit — hoje são tickets no Kanban.
 const ActivityPage = lazy(() => import('./Activity'))
 
 interface OverviewData {
@@ -290,15 +289,16 @@ const QUICK_ACTIONS = [
 
 // --- Cockpit tabs: um hub por domínio, na MESMA página (ui-ux-pro-max:
 //     nav-hierarchy + deep-linking). ?tab= faz o deep-link p/ a aba. ---
-type CockpitTab = 'visao' | 'orquestracao' | 'aprovacoes' | 'pautas' | 'atividade'
+type CockpitTab = 'visao' | 'orquestracao' | 'atividade'
 
+// W1 (2026-09-20): as abas `aprovacoes` e `pautas` saíram — gates de
+// aprovação e a fila de pautas agora vivem COMO tickets no Kanban
+// (filtro 🔐 / [Pauta]), não mais como páginas paralelas do cockpit.
 // Mesmo mapeamento de permissão das rotas: quem não tem o recurso não vê a
 // aba (mesmo comportamento do sidebar antigo).
 const COCKPIT_TABS: { key: CockpitTab; labelKey: string; resource: string | null }[] = [
   { key: 'visao', labelKey: 'overview.tabs.visao', resource: null },
   { key: 'orquestracao', labelKey: 'nav.orchestration', resource: 'tickets' },
-  { key: 'aprovacoes', labelKey: 'nav.approvals', resource: 'goals' },
-  { key: 'pautas', labelKey: 'nav.pautas', resource: 'goals' },
   { key: 'atividade', labelKey: 'nav.activity', resource: 'scheduler' },
 ]
 
@@ -356,8 +356,6 @@ export default function Overview() {
         <PageTabBar ariaLabel={t('overview.title')} active={activeTab} onSelect={setTab} extraClass="mb-6" tabs={visibleTabs.map((x) => ({ key: x.key, label: t(x.labelKey) }))} />
         <Suspense fallback={<CockpitTabSkeleton />}>
           {activeTab === 'orquestracao' && <OrchestrationPage embedded />}
-          {activeTab === 'aprovacoes' && <ApprovalsPage embedded />}
-          {activeTab === 'pautas' && <PautasPage embedded />}
           {activeTab === 'atividade' && <ActivityPage embedded />}
         </Suspense>
       </div>

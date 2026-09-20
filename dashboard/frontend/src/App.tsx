@@ -42,12 +42,10 @@ const HeartbeatsList = lazyDefault(() => import('./pages/Heartbeats'))
 const HeartbeatDetail = lazyNamed(() => import('./pages/Heartbeats'), 'HeartbeatDetail')
 const Activity = lazyDefault(() => import('./pages/Activity'))
 const Goals = lazyDefault(() => import('./pages/Goals'))
-const Pautas = lazyDefault(() => import('./pages/Pautas'))
 const Media = lazyDefault(() => import('./pages/Media'))
 const Orchestration = lazyDefault(() => import('./pages/Orchestration'))
 const ProjectsOverview = lazyDefault(() => import('./pages/ProjectsOverview'))
 const Kanban = lazyDefault(() => import('./pages/Kanban'))
-const Approvals = lazyDefault(() => import('./pages/Approvals'))
 const Plugins = lazyDefault(() => import('./pages/Plugins'))
 const PluginDetail = lazyDefault(() => import('./pages/PluginDetail'))
 const McpServers = lazyDefault(() => import('./pages/McpServers'))
@@ -274,7 +272,9 @@ function AppContent() {
               {hasPermission('users', 'manage') && <Route path="/roles" element={<Roles />} />}
               {hasPermission('workspace', 'manage') && <Route path="/shares" element={<ShareLinks />} />}
               <Route path="/goals" element={<Goals />} />
-              <Route path="/pautas" element={<Pautas />} />
+              {/* W1 (2026-09-20): pautas e aprovações viraram tickets do Kanban —
+                  as rotas antigas redirecionam em vez de manter páginas paralelas. */}
+              <Route path="/pautas" element={<Navigate to="/kanban" replace />} />
               <Route path="/orquestracao" element={<Orchestration />} />
               {hasPermission('media_jobs', 'view') && <Route path="/media" element={<Media />} />}
               <Route path="/projects" element={<ProjectsOverview />} />
@@ -287,7 +287,7 @@ function AppContent() {
               {hasPermission('tickets', 'view') && <Route path="/kanban" element={<Kanban />} />}
               {hasPermission('tickets', 'view') && <Route path="/issues" element={<Navigate to="/topics" replace />} />}
               {hasPermission('tickets', 'view') && <Route path="/tickets/:id" element={<TicketDetail />} />}
-              {hasPermission('goals', 'view') && <Route path="/approvals" element={<Approvals />} />}
+              {hasPermission('goals', 'view') && <Route path="/approvals" element={<Navigate to="/kanban?q=%F0%9F%94%90" replace />} />}
               {hasPermission('knowledge', 'view') && (
                 <>
                   {/* Top-level Knowledge shell: only Connections + Settings */}

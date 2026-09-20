@@ -55,12 +55,15 @@ const navSections: NavSection[] = [
   {
     // Missões → Projetos → Metas → Tickets: 3 vistas do MESMO grafo em zooms
     // diferentes (unificação em 1 árvore é o plano revamp P2). Ficam sem
-    // título, entre Cockpit e a seção Inteligência.
+    // título, entre Cockpit e a seção Inteligência. Materiais vai no fim do
+    // bloco — abaixo do Kanban, logo acima do título Inteligência (decisão
+    // do dono, 20/09): é material de trabalho, não "cérebro".
     key: 'projetos',
     items: [
       { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
       { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
       { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
+      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
     ],
   },
   {
@@ -68,12 +71,11 @@ const navSections: NavSection[] = [
     title: 'Inteligência',
     items: [
       // Tudo que dá cérebro à operação: agentes + o que acorda cada um +
-      // materiais + o hub de integrações (APIs).
+      // o hub de integrações (APIs).
       { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
       { to: '/triggers', labelKey: 'triggers', icon: Webhook, resource: 'triggers' },
-      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
       { to: '/inteligencia', labelKey: 'integrations', icon: Plug, resource: null },
     ],
   },

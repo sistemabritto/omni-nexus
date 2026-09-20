@@ -189,7 +189,7 @@ const translations = {
       routines: 'Rotinas',
       activity: 'Atividade',
       scheduler: 'Serviços',
-      integrations: 'APIs',
+      integrations: 'Integrações',
       providers: 'Provedores',
       audit: 'Auditoria',
       backups: 'Backups',
@@ -515,7 +515,7 @@ const translations = {
     },
 
     integrations: {
-      title: 'Integrações',
+      title: 'APIs',
       subtitle: 'Serviços externos — MCPs e credenciais',
       configure: 'Configurar',
       testIntegration: 'Testar integração',

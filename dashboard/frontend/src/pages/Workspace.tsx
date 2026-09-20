@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle, Copy, Check, PanelLeftOpen } from 'lucide-react'
 import { api } from '../lib/api'
 import FileTree from '../components/workspace/FileTree'
+import FolderView from '../components/workspace/FolderView'
 import FileToolbar, { type EditorMode } from '../components/workspace/FileToolbar'
 import FilePreview from '../components/workspace/FilePreview'
 import FileEditor from '../components/workspace/FileEditor'
@@ -803,11 +804,12 @@ export default function Workspace() {
           )}
 
           {selectedPath && isDir && (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                Selecione um arquivo para visualizar
-              </p>
-            </div>
+            <FolderView
+              dirPath={selectedPath}
+              refreshTrigger={refreshTrigger}
+              onOpenFile={(p) => handleSelect(p, false)}
+              onOpenDir={(p) => handleSelect(p, true)}
+            />
           )}
         </div>
       </div>

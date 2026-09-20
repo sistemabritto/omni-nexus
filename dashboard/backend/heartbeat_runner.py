@@ -1023,6 +1023,17 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                 if _is_mention_wake and isinstance(trigger_payload, dict) and trigger_payload.get("ticket_id"):
                     _mentioned_ticket = trigger_payload["ticket_id"]
                     _mentioner = trigger_payload.get("mentioner", "alguém")
+                    _cmd_read = (
+                        f'curl -sS -H "Authorization: Bearer $DASHBOARD_API_TOKEN" '
+                        f'"$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}"'
+                    )
+                    _body = '{"author":"agent:<teu-slug>","body":"<seu feedback aqui>"}'
+                    _cmd_post = (
+                        f'curl -sS -X POST -H "Authorization: Bearer $DASHBOARD_API_TOKEN" \\n'
+                        f'  -H "Content-Type: application/json" \\n'
+                        f'  "$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}/comments" \\n'
+                        f'  -d \'{_body}\' '
+                    )
                     full_prompt += f"""
 
 ---
@@ -1037,19 +1048,17 @@ Faça EXATAMENTE isto, em ordem, via Bash (as variáveis de ambiente já estão 
 ambiente — `$EVONEXUS_API_URL` e `$DASHBOARD_API_TOKEN`):
 
 1) Ler o ticket completo (descrição + TODOS os comentários):
-   curl -sS -H "Authorization: Bearer $DASHBOARD_API_TOKEN" "$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}"
+   {_cmd_read}
 
 2) Analisar no SEU papel (crítica / verificação / QA / o que for teu domínio).
 
 3) Postar SEU feedback como NOVO comentário neste MESMO ticket (pt-BR, concreto,
-   acionável — cite o que falta/exagera/falha, por quê, e evidência):
-   curl -sS -X POST -H "Authorization: Bearer $DASHBOARD_API_TOKEN" \\
-     -H "Content-Type: application/json" \\
-     "$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}/comments" \\
-     -d '{{"author":"agent:<teu-slug>","body":"<seu feedback aqui>"}}'
+   acionável — cite o que falta/exagera/falha, por quê, e evidência). Troque
+   `<teu-slug>` e `<seu feedback aqui>` no corpo:
+   {_cmd_post}
 
-Se o POST retornar 201/200, o feedback foi postado. Se der erro de auth/URL, rode
-`echo $EVONEXUS_API_URL` e `echo ${DASHBOARD_API_TOKEN:0:6}...` para conferir.
+Se o POST retornar 201/200, o feedback foi postado. Se der erro, rode
+`echo $EVONEXUS_API_URL` e confira se o token está no ambiente.
 
 Ao final responda o JSON do outcome com action:"work", ticket_id:null e result =
 uma linha em pt-BR resuminDO o que você apontou no comentário."""

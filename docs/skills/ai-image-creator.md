@@ -173,7 +173,7 @@ Use `--provider omniroute`. The gateway must proxy `POST /v1/images/generations`
 
 All of these can also be configured from the dashboard: **Integrations → AI Image Creator**.
 
-Add these to your `.env` file (used by the workspace) or directly to your shell profile. See [env-variables.md](env-variables.md) for full reference.
+Add these to your `.env` file (used by the workspace) or directly to your shell profile. See [env-variables.md](../reference/env-variables.md) for full reference.
 
 ---
 

@@ -1,6 +1,13 @@
 # Settings
 
-The **Settings** page (`/settings`) is the central configuration hub for the workspace. It replaces the old Config page and provides three tabs.
+The **Settings** page (`/settings`) is the central configuration hub for the workspace. It is reached from the gear icon in the sidebar footer (next to your name and the logout button) and provides six tabs:
+
+- **Workspace** — edit `config/workspace.yaml` fields (below)
+- **Backups** — create/restore workspace backups, download ZIPs, S3 status, plus an in-place `.env` editor for integration keys
+- **Docs** — this documentation, embedded in-page
+- **Users** — user management (admin)
+- **Roles** — custom roles and permission matrix (admin)
+- **Audit** — audit trail (admin)
 
 ## Workspace Tab
 
@@ -17,25 +24,7 @@ Edit `config/workspace.yaml` fields:
 
 Changes are saved to `config/workspace.yaml` using a read-merge-write pattern that preserves other YAML keys.
 
-## Routines Tab
-
-View and manage all scheduled routines from `config/routines.yaml`:
-
-- **Toggle switch** — enable or disable any routine instantly
-- **Inline schedule edit** — click the time/interval to edit, press Enter to save
-- **Grouped by frequency** — daily, weekly, and monthly sections
-- **Agent badges** — shows which agent owns each routine
-- **Reload scheduler** — after changes, the scheduler is automatically notified via sentinel file
-
-Routine creation and deletion are handled by agents (via the `create-routine` skill), not the UI.
-
-## Reference Tab
-
-Read-only views of key configuration files:
-
-- **CLAUDE.md** — rendered workspace instructions
-- **Makefile targets** — all available `make` commands
-- **Commands** — slash command definitions
+Routine management lives on the dedicated **Routines** page (Inteligência section): per-routine metrics (runs, success rate, duration, tokens, cost), execution history, and a **Run Now** button. Schedules themselves are edited in `config/routines.yaml`; routine creation and deletion are handled by agents (via the `create-routine` skill), not the UI.
 
 ## API Reference
 
@@ -45,16 +34,16 @@ GET  /api/settings/workspace                          — read workspace config
 PUT  /api/settings/workspace                          — update workspace fields
 ```
 
-### Routines
+### Environment (.env editor, used by Backups tab)
 ```
-GET  /api/settings/routines                           — list all routines
-PATCH /api/settings/routines/<freq>/<slug>/toggle     — toggle enabled
-PUT  /api/settings/routines/<freq>/<slug>             — update schedule/fields
-```
-
-### Scheduler
-```
-POST /api/settings/scheduler/reload                   — trigger scheduler reload
+GET  /api/config/env                                  — read current .env entries
+PUT  /api/config/env                                  — write .env entries
 ```
 
-All write endpoints require authentication and `config:manage` permission.
+### Chat / Trust mode
+```
+GET   /api/settings/chat                              — read chat settings (trustMode)
+PATCH /api/settings/chat                              — update trustMode (see providers.md#trust-mode)
+```
+
+All write endpoints require authentication and `config:manage` permission; the Users, Roles and Audit tabs additionally require their respective `users`, `roles`/`audit` permissions.

@@ -1,8 +1,8 @@
 # AI Providers
 
-The **Providers** page lets you choose which LLM backend powers EvoNexus, configure its credentials, and test the connection — all from the dashboard. It lives under **System → Providers** in the sidebar and requires the `config:manage` permission.
+The **Providers** page lets you choose which LLM backend powers EvoNexus, configure its credentials, and test the connection — all from the dashboard. It lives under **Inteligência → APIs hub** (the card labeled *Provedores*) and requires the `config:view` permission.
 
-EvoNexus uses Anthropic's `claude` CLI by default. To run on any other backend (OpenRouter, OpenAI, Gemini, AWS Bedrock, Google Vertex AI, Codex Auth), it switches to [OpenClaude](https://www.npmjs.com/package/@gitlawb/openclaude) — a drop-in binary that speaks the same CLI protocol but dispatches to the provider of your choice via environment variables.
+EvoNexus uses Anthropic's `claude` CLI by default. To run on any other backend (OpenRouter, OpenAI, Gemini, NVIDIA NIM, OmniRoute, AWS Bedrock, Google Vertex AI, Codex Auth), it switches to [OpenClaude](https://www.npmjs.com/package/@gitlawb/openclaude) — a drop-in binary that speaks the same CLI protocol but dispatches to the provider of your choice via environment variables.
 
 ## Supported Providers
 
@@ -30,7 +30,7 @@ The Providers page shows a banner at the top indicating whether `claude` and `op
 
 ## Activating a Provider
 
-1. Open **System → Providers** in the sidebar
+1. Open **Providers** (Inteligência hub → card *Provedores*) in the dashboard
 2. Click **Configure** on the provider you want to use
 3. Fill in the required fields (API key, base URL, model, region — depending on provider). Secrets are masked in the form and in every API response; placeholders like `sk-...` guide the format
 4. Click **Save & Activate**
@@ -59,12 +59,18 @@ Heartbeats and other background invocations don't call the active provider blind
 
 Each provider card has a **Test** button that runs `<binary> --version` with the configured env vars merged into the environment, then reports success or failure inline. This is a sanity check — it verifies that the binary is installed, in `$PATH`, and that the env var injection works. It does **not** validate that your API key actually authenticates against the remote service (use the terminal after activating for that).
 
+## Trust Mode
+
+The Providers page also carries the **Trust** toggle for the terminal (saved via `PATCH /api/settings/chat`). When **on**, spawned Claude Code sessions run with `--dangerously-skip-permissions`, so tools (file edits, bash, etc.) execute without per-action confirmation. When **off**, the standard permission prompts apply.
+
+Trust mode is **on by default**: both the backend (`dashboard/backend/routes/settings.py`) and the terminal bridges (`chat-bridge.js`, `claude-bridge.js`) treat a missing setting as `true` — only an explicit `false` turns it off. The same default applies across the web terminal, the agent chat, and background runs.
+
 ## Security: Allowlists and Secret Masking
 
 Both the Python runner (`ADWs/runner.py`) and the JS terminal bridge (`dashboard/terminal-server/src/claude-bridge.js`) enforce two allowlists when reading `config/providers.json`:
 
 - **CLI allowlist** — only `claude` and `openclaude` are accepted as spawn targets. Any other value falls back to `claude`.
-- **Env var allowlist** — only the 13 variables listed in [env-variables.md](../reference/env-variables.md#ai-provider-configuration) are injected. Anything else is silently dropped.
+- **Env var allowlist** — only the variables listed in `ALLOWED_ENV_VARS` (see [env-variables.md](../reference/env-variables.md#ai-provider-configuration)) are injected. Anything else is silently dropped.
 
 The REST API that backs the Providers page masks secrets (`*_KEY`, `*_SECRET`, `*_TOKEN`) as `first6****last4` on every response. When you open the config modal, the form starts empty for those fields — type a new value to replace, or leave empty to keep the current one. Values containing `****` are treated as masked placeholders and skipped on save (so a round-trip through the UI doesn't accidentally overwrite a real secret with the mask string).
 

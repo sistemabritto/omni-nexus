@@ -1,0 +1,64 @@
+# Grafo do OmniNexus: foca em CÓDIGO + SKILLS + SPECS (o que os agentes precisam
+# entender). Binários, mídia, caches e dependências ficam de fora.
+# (.gitignore já é respeitado; aqui só reforço e adiciono o que ele não cobre.)
+
+# ── caches / build ──────────────────────────────────────────────
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/dist/
+**/.next/
+**/.turbo/
+*.pyc
+*.db
+*.db-shm
+*.db-wal
+
+# ── dependências / runtimes binários ────────────────────────────
+**/node_modules/
+media_worker/chrome-headless-shell/
+.venv/
+**/.venv/
+
+# ── mídia / fontes / binários que não são código ────────────────
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.svg
+*.ico
+*.mp4
+*.webm
+*.mov
+*.mp3
+*.wav
+*.woff2
+*.woff
+*.ttf
+*.otf
+*.pak
+*.wasm
+*.so
+*.bin
+*.sqlite*
+
+# ── logs / dados operacionais (ruidosos, mudam o tempo todo) ────
+*.log
+*.jsonl
+logs/
+ADWs/logs/
+**/.temp/
+
+# ── lockfiles (dependência, não arquitetura) ────────────────────
+uv.lock
+**/package-lock.json
+**/yarn.lock
+
+# ── workspace: mantém specs/estratégia, mas exclui dados pesados ─
+# workspace/ está quase todo no .gitignore; só quero os .md de estratégia/plano.
+workspace/learning/
+workspace/reports/
+workspace/media/
+workspace/social/assets/

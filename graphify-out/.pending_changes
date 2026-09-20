@@ -1,0 +1,7 @@
+dashboard/frontend/src/components/CockpitReference.tsx
+dashboard/frontend/src/i18n/locales/en-US/index.ts
+dashboard/frontend/src/i18n/locales/es/index.ts
+dashboard/frontend/src/i18n/locales/pt-BR/index.ts
+dashboard/frontend/src/pages/Overview.tsx
+dashboard/frontend/src/pages/Providers.tsx
+dashboard/frontend/src/pages/Settings.tsx

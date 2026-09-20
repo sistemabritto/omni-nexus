@@ -98,6 +98,7 @@ Duas frentes:
 | 15 | **[Fila de orquestração persistente](docs/DIVERGENCIA-DO-UPSTREAM.md#4-fila-de-orquestração-persistente-novidade-da-rc01)** | Comando de orquestração levava minutos e sumia sem rastro se o processo reiniciasse | Job persistido em banco, por estágios, com checkpoint entre eles | Você acompanha em `/orquestracao` e cancela no meio se mudar de ideia |
 | 16 | **[Self-healing do cache do gateway](docs/DIVERGENCIA-DO-UPSTREAM.md#3-self-healing-do-cache-lkgp)** | Modelo aposentado ficava preso no cache do OmniRoute e travava toda resposta | Rotina de 15 em 15 min que só limpa em erro permanente, nunca em pico de uso | Provider morre e o sistema se recupera sozinho |
 | 17 | **[1.322 testes automatizados](#-a-suíte-de-testes--cada-teste-é-uma-cicatriz)** | Cada bug corrigido voltava depois | Suíte que documenta o **porquê** de cada regra | Nenhuma correção de produção é perdida |
+| 18 | **[Motor que não desiste (resilient_invoke)](#-o-motor-que-não-desiste--busy-timeout-e-retries-organizados)** | Uma crise transitória (outro heartbeat segurando o lock do workspace, read timeout da rede) fazia o Magneto desistir na hora e as rotinas "fantasma" falharem todo dia às 7h | Retry com backoff exponencial e orçamento de tempo compartilhado entre Telegram e rotinas; a resposta parcial não é jogada fora | `good-morning`/`end-of-day`/`backup` param de falhar em cascata; o Magneto avisa quando tenta de novo, em vez de só dar erro |
 
 ---
 
@@ -338,14 +339,28 @@ No EvoNexus original, o canal do Telegram usa o modo nativo do Claude Code — q
 | **Trocar de provider no chat** | `/provider omnirouter` · `/provider status` · `/provider default` |
 | Sessão nova | `/new` |
 | Áudio → texto | Transcrição via Whisper na API da Groq |
-| Imagens | Descreve e responde sobre fotos enviadas |
+| Imagens | Descreve e responde sobre fotos enviados |
 | URLs | Baixa e resume links colados |
 | Memória por chat | Histórico local por conversa, com identificação de quem falou |
 | Fallback | Percorre a cadeia de providers se o primário falha |
+| **Mensagem viva** | O ack é uma bolha editável: mostra tempo decorrido, avisa quando tenta de novo e exibe o texto parcial (providers ndjson) crescendo — não mais "Recebido…" morto |
+| **Não desiste** | Crise transitória (lock ocupado, timeout de rede) → espera com backoff e tenta de novo dentro do orçamento (`TELEGRAM_RETRY_BUDGET`); só desiste se esgotar, e entrega o que já tinha chegado |
 
 **Benefício direto:** o bot **sobrevive a redeploys sem re-login** e você escolhe o custo por conversa — o dia a dia no modelo barato, o trabalho pesado com um comando.
 
 **E é onde os gates chegam:** aprovar artigo, aprovar post de rede, aprovar Projeto sugerido, aprovar Meta sugerida. A empresa inteira cabe no bolso.
+
+### O motor que não desiste — busy, timeout e retries organizados
+
+O problema não era a cadeia de providers (o `invoke_with_fallback` já gira providers/modelos quando um dá 429). Era a crise **externa ao provider**: o workspace fica *busy* quando heartbeat/rotina concorrente segura o `flock` de Bash, e rede oscila com read timeout. Antes, qualquer uma dessas crises devolvia falha e o caller **desistia**: o Magneto respondia "Falhei ao orquestrar: sistema ocupado" e as rotinas matinais (`good-morning` às 07:00) morriam em cascata porque os heartbeats `autopilot-*` acordavam primeiro e seguravam o lock — 120s de espera, depois falha, todo santo dia. As "rotinas fantasma".
+
+A correção é um motor compartilhado — `resilient_invoke()` em `dashboard/backend/provider_fallback.py` — com três regras:
+
+1. **Classificar antes de retry.** Só falha transitória (`busy`, read timeout, rede, 529) volta pra fila. Auth (401/403), 429 já exaustos e erro de conteúdo são fatais — girar a cadeia de novo não resolve.
+2. **Backoff exponencial com teto e orçamento de tempo.** Busy espera pouco (o lock costuma liberar rápido); timeout espera mais. `retry_budget_seconds` é o relógio; `max_retries`, o teto de tentativas. Sem nenhum dos dois = chamada única, 100% compatível com callers antigos.
+3. **Status e streaming de volta para o humano.** `on_stdout_line` passa cada linha do subprocess ao caller em tempo real (é assim que o Magneto mostra a resposta crescer); `on_status(nº_tentativa, motivo)` avisa quando o retry dispara. E se a crise final apanhou, **o texto parcial que chegou não é descartado** — ele vai junto com o aviso de resposta incompleta.
+
+Callers conectados: o Magneto (`scripts/telegram_provider_bot.py`) e as rotinas (`ADWs/runner.py`, com `ADW_RETRY_MAX`/`ADW_RETRY_BUDGET`). O backup diário ganhou retry próprio p/ falha transitória de upload e teto dobrado (300→600s), porque um zip grande + S3 lento estourava o timeout no meio do PUT.
 
 ---
 

@@ -315,41 +315,191 @@ def create_openreply_campaign(row: dict) -> dict:
         return {"ok": False, "status": "failed", "error": str(exc)[:200]}
 
 
-# ── Card Magneto ─────────────────────────────────────────────────────────────
+# ── Ficha de criativo (artefato) + card Magneto ───────────────────────────────
 
 
-def build_card(row: dict) -> str:
+def _creative_html(row: dict) -> str:
+    """Ficha de criativo — HTML auto-contido (padrão .claude/rules/artifacts.md):
+    um arquivo só, CSS inline, tema claro/escuro. Sem texto que não cabe no card."""
+    import html as _h
+
+    esc = lambda v: _h.escape(str(v or ""))  # noqa: E731
+    n = int(row["seq"])
+    bait = int(row.get("bait_number") or 0) or 1
+    return f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[C] Reel {n:03d} — {esc(row.get('headline'))}</title>
+<style>
+:root {{
+  --bg:#fafafa; --fg:#1a1a2e; --muted:#6b6b7b; --line:#e6e6ef;
+  --accent:#6366f1; --accent2:#8b5cf6; --card:#fff; --ok:#16a34a; --warn:#d97706;
+}}
+@media (prefers-color-scheme: dark) {{
+  :root {{
+    --bg:#0f0f1a; --fg:#ececf1; --muted:#8f8f9f; --line:#26263a;
+    --accent:#818cf8; --accent2:#a78bfa; --card:#17172b; --ok:#4ade80; --warn:#fbbf24;
+  }}
+}}
+* {{ box-sizing:border-box; }}
+body {{ margin:0; background:var(--bg); color:var(--fg); line-height:1.65;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }}
+.wrap {{ max-width:820px; margin:0 auto; padding:44px 20px 88px; }}
+.badge {{ display:inline-block; background:var(--accent); color:#fff; border-radius:999px;
+  padding:3px 12px; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; margin-bottom:14px; }}
+h1 {{ font-size:1.55rem; margin:0 0 6px; line-height:1.3; }}
+.meta {{ color:var(--muted); font-size:.9rem; margin-bottom:26px; }}
+.card {{ background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:18px 20px; margin-bottom:16px; }}
+.card h2 {{ font-size:.8rem; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--muted); margin:0 0 8px; }}
+.script {{ white-space:pre-wrap; font-size:.98rem; }}
+.cta {{ color:var(--accent); font-weight:600; }}
+.bait {{ display:flex; gap:14px; align-items:baseline; }}
+.bait .num {{ font-size:2rem; font-weight:800; color:var(--accent2); min-width:44px; }}
+.status {{ font-size:.85rem; padding:2px 10px; border-radius:6px; background:color-mix(in srgb, var(--ok) 15%, transparent); color:var(--ok); }}
+.status.warn {{ background:color-mix(in srgb, var(--warn) 15%, transparent); color:var(--warn); }}
+.footer {{ color:var(--muted); font-size:.8rem; margin-top:30px; border-top:1px solid var(--line); padding-top:14px; }}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">Ficha de criativo · Reel {n:03d}</span>
+  <h1>{esc(row.get('headline'))}</h1>
+  <div class="meta">Tema: {esc(row.get('theme'))} · Funil: {esc(row.get('funnel_stage') or '?')} · Avatar: {esc(row.get('avatar') or '?')}</div>
+
+  <div class="card"><h2>Hook falado</h2><div>{esc(row.get('hook_spoken'))}</div></div>
+  <div class="card"><h2>Hook visual</h2><div>{esc(row.get('hook_visual'))}</div></div>
+  <div class="card"><h2>Roteiro (~45s)</h2><div class="script">{esc(row.get('script_md'))}</div></div>
+  <div class="card"><h2>CTA</h2><div class="cta">{esc(row.get('cta'))}</div></div>
+
+  <div class="card">
+    <h2>Isca do Desafio (01–21)</h2>
+    <div class="bait"><span class="num">{bait:02d}</span><span>{esc(row.get('bait_text') or '—')}</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Campanha OpenReply</h2>
+    <div>{"✅ Campanha ativa — gatilho «" + f"{n:02d}" + "» (comentário → DM)" if row.get("openreply_status") == "created" else "⚠️ Não criada automaticamente (" + esc(row.get("openreply_status") or "falha") + ") — ativar manual"}</div>
+    <div style="margin-top:6px"><span class="status {'warn' if row.get('status') not in ('approved','review') else ''}">{esc(row.get('status') or '?').upper()}</span></div>
+  </div>
+
+  <div class="footer">Gerado pelo reels-copilot no OmniNexus · {esc(row.get('created_at', '')[:16])} BRT<br>ID: <code>{esc(row.get('id'))}</code></div>
+</div>
+</body>
+</html>"""
+
+
+def publish_creative_share(row: dict) -> str | None:
+    """Gera a ficha de criativo em workspace/social/reels/ e devolve o link do
+    share (reaproveita o share existente do caminho — regra artifacts.md).
+    None se o API/token não estiver disponível (fallback p/ card completo)."""
+    import urllib.request
+    import urllib.error
+    import urllib.parse
+
+    n = int(row["seq"])
+    path_rel = f"workspace/social/reels/{n:03d}-ficha-criativo.html"
+    full = WORKSPACE / "workspace" / "social" / "reels" / f"{n:03d}-ficha-criativo.html"
+    try:
+        full.parent.mkdir(parents=True, exist_ok=True)
+        full.write_text(_creative_html(row), encoding="utf-8")
+    except OSError as exc:
+        log.warning("reel %d: não gravou ficha (%s)", n, exc)
+        return None
+
+    base_url = os.environ.get("EVONEXUS_API_URL", "").strip().rstrip("/")
+    token = os.environ.get("DASHBOARD_API_TOKEN", "").strip()
+    if not base_url or not token:
+        return None
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+
+    def _req(method: str, url: str, payload: dict | None = None):
+        data = json.dumps(payload).encode() if payload is not None else None
+        req = urllib.request.Request(url, data=data, method=method,
+                                     headers={**headers, **({"Content-Type": "application/json"} if payload is not None else {})})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    try:
+        try:
+            existing = _req("GET", f"{base_url}/api/shares/by-path?path={urllib.parse.quote(path_rel)}")
+            url = existing.get("url") if isinstance(existing, dict) and existing.get("url") else None
+            if url:
+                log.info("reel %d: ficha reusing share existente", n)
+                return url
+        except urllib.error.HTTPError:
+            pass  # share ainda não existe — cria abaixo
+        share = _req("POST", f"{base_url}/api/shares", {"path": path_rel, "expires_in": None})
+        return share.get("url")
+    except Exception as exc:  # noqa: BLE001 — sem link não é fim do mundo (fallback no card)
+        log.warning("reel %d: share não criado (%s)", n, exc)
+        return None
+
+
+def build_card(row: dict, share_url: str | None = None) -> str:
     from notifications import _esc
 
     n = int(row["seq"])
-    lines = [
-        f"🎬 <b>Reel {n:03d} — pronto p/ gravar</b>",
+    marker = f"#reel:{row['id']}"
+    lines = [f"🎬 <b>Reel {n:03d} — pronto p/ gravar</b>"]
+    if share_url:
+        # Card curto: a ficha completa mora no link (robusto, sem estourar os
+        # 4096 chars nem depender de HTML impecável). O marcador #reel:<id>
+        # mantém a ponte de decisão por reply funcionando.
+        lines += [
+            "",
+            _esc(str(row["headline"])),
+            "",
+            f"📄 <a href=\"{_esc(share_url)}\">Abrir ficha de criativo</a>",
+            "",
+            f"Responda por ÁUDIO: aprovou / não + motivo / ajuste.",
+            f"Texto: {marker} ok | {marker} nao | {marker} ajuste: {_esc('<o que mudar>')}",
+        ]
+        return "\n".join(lines)
+
+    # Fallback: sem link (API fora) — card completo com texto sanado p/ HTML.
+    lines += [
         f"TEMA: {_esc(str(row['theme']))}",
         f"FUNIL: {str(row.get('funnel_stage') or '?')} · AVATAR: {_esc(str(row.get('avatar') or '?'))}",
-        f"",
+        "",
         f"<b>HEADLINE:</b> {_esc(str(row['headline']))}",
         f"<b>HOOK FALADO:</b> {_esc(str(row['hook_spoken']))}",
         f"<b>HOOK VISUAL:</b> {_esc(str(row['hook_visual']))}",
-        f"",
+        "",
         f"<b>ROTEIRO (~45s):</b>\n{_esc(str(row['script_md']))[:1500]}",
-        f"",
+        "",
         f"<b>CTA:</b> {_esc(str(row['cta']))}",
         f"<b>ISCA {int(row['bait_number'] or 0):02d}:</b> {_esc(str(row.get('bait_text') or ''))}",
-        f"",
+        "",
     ]
     if row.get("openreply_status") == "created":
         lines.append(f"✅ OpenReply: campanha ativa, gatilho \"{n:02d}\" (comentário → DM)")
     else:
         lines.append(f"⚠️ OpenReply: não criou automaticamente ({row.get('openreply_status')}) — ativar manual")
     lines.append("— responda por ÁUDIO: aprovou / não + motivo / ajuste")
-    lines.append(f"Texto: #reel:{row['id']} ok | #reel:{row['id']} nao | #reel:{row['id']} ajuste:<o que mudar>")
-    return "\n".join(lines)
+    lines.append(f"Texto: {marker} ok | {marker} nao | {marker} ajuste: {_esc('<o que mudar>')}")
+    card = "\n".join(lines)
+    # Telegram aceita 4096 chars; sem o link a ficha inteira vem aqui — corta o
+    # roteiro antes de estourar (a ficha completa segue no .md do artefato).
+    if len(card) > 3950:
+        excess = len(card) - 3950
+        idx = next((i for i, l in enumerate(lines) if l.startswith("<b>ROTEIRO")), -1)
+        if idx >= 0:
+            body = lines[idx]
+            keep = max(0, len(body) - excess - 3)
+            lines[idx] = body[:keep] + "… [cortado — veja arquivo no workspace]"
+        card = "\n".join(lines)
+    return card[:4096]
 
 
 def send_reel_card(row: dict) -> bool:
     try:
         from notifications import send_telegram_alert
-        return send_telegram_alert(build_card(row))
+        share_url = publish_creative_share(row)
+        return send_telegram_alert(build_card(row, share_url))
     except Exception as exc:  # noqa: BLE001
         log.warning("reels_copilot card fail: %s", exc)
         return False

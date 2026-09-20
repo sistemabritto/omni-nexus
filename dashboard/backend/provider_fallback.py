@@ -771,6 +771,7 @@ class FallbackAttempt:
     agent: str = ""
     env_overrides: dict = field(default_factory=dict)
     cwd: "Path | None" = None
+    on_stdout_line: "callable | None" = field(default=None, repr=False)
     _result: dict | None = field(default=None, repr=False)
 
     def run(self) -> dict:
@@ -784,6 +785,7 @@ class FallbackAttempt:
             provider_id=self.provider_id,
             model=self.model,
             cwd=self.cwd,
+            on_stdout_line=self.on_stdout_line,
         )
         return self._result
 
@@ -877,6 +879,7 @@ def _invoke_cli(
     provider_id: str | None = None,
     model: str | None = None,
     cwd: Path | None = None,
+    on_stdout_line: "callable | None" = None,
 ) -> dict:
     cli_bin = shutil.which(cli_command)
     if not cli_bin:
@@ -967,7 +970,8 @@ def _invoke_cli(
         }
     try:
         return _invoke_cli_run(cmd, run_env, timeout_seconds, cwd or WORKSPACE,
-                                output_mode=output_mode, stdin_input=stdin_input)
+                                output_mode=output_mode, stdin_input=stdin_input,
+                                on_stdout_line=on_stdout_line)
     finally:
         lk.release()
 
@@ -1037,9 +1041,16 @@ def _parse_opencode_ndjson(output: str) -> dict:
 
 
 def _invoke_cli_run(cmd: list, run_env: dict, timeout_seconds: int, workspace: Path,
-                     output_mode: str = "envelope", stdin_input: str | None = None) -> dict:
-    """Inner run — assume the per-model inflight lock is already held.
+                    output_mode: str = "envelope", stdin_input: str | None = None,
+                    on_stdout_line: "callable | None" = None) -> dict:
+    """Inner run — assumes the per-model inflight lock is already held.
     Holds the subprocess, parses tokens, applies backoff on 429, returns dict.
+
+    `on_stdout_line`: called live with each decoded stdout line AS IT ARRIVES
+    (before the process ends). Lets a human-facing caller (Magneto) show the
+    agent's partial text / a "working…" ticker while it thinks, instead of a
+    dead silence until the whole run finishes. Best-effort — a callback that
+    raises is swallowed so it can never kill the run.
 
     `stdin_input`: when the prompt is passed via stdin instead of argv (see
     PROMPT_ARG_SAFE_BYTES in `_invoke_cli` — a prompt embedding a full video
@@ -1059,6 +1070,11 @@ def _invoke_cli_run(cmd: list, run_env: dict, timeout_seconds: int, workspace: P
         try:
             for line in iter(stream.readline, ""):
                 sink.append(line)
+                if on_stdout_line is not None:
+                    try:
+                        on_stdout_line(line.rstrip("\n"))
+                    except Exception:  # noqa: BLE001 — callback nunca derruba a run
+                        pass
         except (OSError, ValueError):
             pass
         finally:
@@ -1193,6 +1209,7 @@ class FallbackEngine:
         cwd: Path | None = None,
         per_attempt_timeout_cap: int | None = None,
         routing_key: str | None = None,
+        on_stdout_line: "callable | None" = None,
     ) -> Iterator[FallbackAttempt]:
         config = _read_providers_config()
         attempt_num = 0
@@ -1297,6 +1314,7 @@ class FallbackEngine:
                     agent=agent,
                     env_overrides=env_overrides,
                     cwd=cwd,
+                    on_stdout_line=on_stdout_line,
                 )
                 self._attempts_log.append(attempt)
                 yield attempt
@@ -1404,6 +1422,7 @@ def invoke_with_fallback(
     cwd: Path | None = None,
     per_attempt_timeout_cap: int | None = None,
     routing_key: str | None = None,
+    on_stdout_line: "callable | None" = None,
 ) -> dict:
     """Invoke CLI with automatic 429 fallback. Returns the first successful result.
 
@@ -1432,6 +1451,7 @@ def invoke_with_fallback(
             prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
             agent=agent, force_provider=force_provider, force_model=force_model, cwd=cwd,
             per_attempt_timeout_cap=per_attempt_timeout_cap, routing_key=routing_key,
+            on_stdout_line=on_stdout_line,
         )
     holder = f"agent={agent or 'none'}"
     try:
@@ -1440,6 +1460,7 @@ def invoke_with_fallback(
                 prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
                 agent=agent, force_provider=force_provider, force_model=force_model,
                 per_attempt_timeout_cap=per_attempt_timeout_cap, routing_key=routing_key,
+                on_stdout_line=on_stdout_line,
             )
     except TimeoutError as exc:
         print(f"[fallback] {exc}", flush=True)
@@ -1461,6 +1482,7 @@ def _invoke_with_fallback_locked(
     cwd: Path | None = None,
     per_attempt_timeout_cap: int | None = None,
     routing_key: str | None = None,
+    on_stdout_line: "callable | None" = None,
 ) -> dict:
     engine = FallbackEngine()
     last_result = None
@@ -1469,6 +1491,7 @@ def _invoke_with_fallback_locked(
         prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
         agent=agent, force_provider=force_provider, force_model=force_model, cwd=cwd,
         per_attempt_timeout_cap=per_attempt_timeout_cap, routing_key=routing_key,
+        on_stdout_line=on_stdout_line,
     ):
         result = attempt.run()
         result["provider_id"] = attempt.provider_id
@@ -1511,3 +1534,120 @@ def _invoke_with_fallback_locked(
         }
 
     return last_result
+
+
+# ── Resilient retry: "não desiste" ──────────────────────────────────────────────
+#
+# invoke_with_fallback já gira a cadeia de providers DENTRO de uma chamada, mas
+# quando a CRISE é externa ao provider (workspace busy — outro agentic run segura
+# o flock; ou read-timeout transitório da rede) a chamada inteira devolve
+# "busy"/"timeout" e o caller historicamente SÓ DESISTIA: o Magneto respondia
+# "Falhei ao orquestrar: sistema ocupado…" e as rotinas (good-morning/end-of-day)
+# falhavam todo dia às 07:00 porque os heartbeats autopilot-* seguravam o lock.
+#
+# resilient_invoke é o wrapper que transforma isso em POLIVÊNCIA: ele repete a
+# chamada de fallback inteira enquanto houver vereda (busy → espera o lock
+# liberar; timeout/transiente → backoff), dentro de um ORÇAMENTO total de
+# segundos (retry_budget). Cada volta chama on_status(nº_tentativa, motivo) para
+# o caller mostrar vida ao humano. Nunca devolve "busy" nu — só devolve quando
+# esgotou o budget OU obteve sucesso/falha de verdade (auth, 429 exaustão).
+_RETRYABLE_PATTERNS = (
+    r"busy", r"held the lock", r"sistema ocupado",
+    r"timed?\s*out", r"timeout",
+    r"read operation timed", r"network is unreachable", r"name or service not known",
+    r"connection (reset|refused|aborted|closed)", r"temporary failure in name resolution",
+    r"\b529\b", r"service temporarily overloaded",
+)
+
+
+def _is_retryable_failure(result: dict) -> bool:
+    """True se a falha é de NATUREZA TRANSITÓRIA (vale tentar de novo).
+
+    "busy" sempre é. Demais falhas só quando o texto bate num padrão de rede /
+    sobrecarga transitória. Erros de auth (401/403), 429 já exaustos e erros de
+    conteúdo são FATAIS para o retry — girar a cadeia de novo não resolve, então
+    devolvemos direto ao caller.
+    """
+    status = (result.get("status") or "").lower()
+    if status == "busy":
+        return True
+    if status == "success":
+        return False
+    blob = f"{result.get('error') or ''} {result.get('output') or ''}".lower()
+    return any(re.search(p, blob) for p in _RETRYABLE_PATTERNS)
+
+
+def resilient_invoke(
+    prompt: str,
+    *,
+    max_turns: int = 10,
+    timeout_seconds: int = 1800,
+    agent: str = "",
+    force_provider: str | None = None,
+    force_model: str | None = None,
+    cwd: Path | None = None,
+    per_attempt_timeout_cap: int | None = None,
+    routing_key: str | None = None,
+    retry_budget_seconds: int | float | None = None,
+    max_retries: int | None = None,
+    backoff_base_seconds: float = 20.0,
+    backoff_cap_seconds: float = 180.0,
+    on_stdout_line: "callable | None" = None,
+    on_status: "callable | None" = None,
+) -> dict:
+    """invoke_with_fallback + retry organizado: NÃO desiste numa primeira crise.
+
+    Sem retry_budget/max_retries (padrão) é idêntico a uma chamada única —
+    comportamento 100% compatível p/ callers antigos (heartbeats etc.).
+
+    Com budget: repete enquanto `_is_retryable_failure` for True e ainda haja
+    tempo/tentativas. `on_status(tentativa, status, detalhe)` é chamado a cada
+    nova tentativa após a 1ª (chance do caller avisar o humano "tento de novo").
+    O sleep entre tentativas é exponencial (base→cap) — quem segurava o lock
+    (heartbeat) quase sempre termina antes do próximo round, sem martelar.
+    """
+    start = time.time()
+    attempt_no = 0
+
+    while True:
+        attempt_no += 1
+        result = invoke_with_fallback(
+            prompt=prompt, max_turns=max_turns, timeout_seconds=timeout_seconds,
+            agent=agent, force_provider=force_provider, force_model=force_model,
+            cwd=cwd, per_attempt_timeout_cap=per_attempt_timeout_cap,
+            routing_key=routing_key, on_stdout_line=on_stdout_line,
+        )
+
+        # Sucesso ou falha NÃO-retryável → devolve já.
+        if result.get("status") == "success":
+            if attempt_no > 1:
+                print(f"[resilient] SUCCESS na tentativa #{attempt_no}", flush=True)
+            return result
+        if not _is_retryable_failure(result):
+            return result
+
+        # Falha retryável — decide se tenta de novo.
+        retries_done = attempt_no - 1
+        elapsed = time.time() - start
+        time_done = (retry_budget_seconds is not None
+                     and elapsed >= float(retry_budget_seconds))
+        # max_retries N = até N+1 tentativas no total (1 inicial + N extras)
+        retries_hit_cap = max_retries is not None and retries_done >= max_retries
+        no_ceiling = retry_budget_seconds is None and max_retries is None and retries_done == 0
+        if time_done or retries_hit_cap or no_ceiling:
+            print(f"[resilient] encerrando ({attempt_no}x, {elapsed:.0f}s) — devolve a última falha",
+                  flush=True)
+            return result
+
+        delay = min(backoff_cap_seconds, backoff_base_seconds * (2 ** retries_done))
+        # busy merece menos espera que timeout: o lock costuma liberar em ~segundos
+        if result.get("status") == "busy":
+            delay = min(delay, backoff_base_seconds)
+        reason = result.get("status")
+        print(f"[resilient] tentativa #{attempt_no} falhou ({reason}) — retry em {delay:.0f}s", flush=True)
+        if on_status is not None:
+            try:
+                on_status(attempt_no + 1, reason, (result.get("error") or "")[:200])
+            except Exception:  # noqa: BLE001 — status nunca derruba a run
+                pass
+        time.sleep(delay)

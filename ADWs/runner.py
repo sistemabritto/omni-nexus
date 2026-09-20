@@ -7,6 +7,7 @@ import subprocess
 import os
 import sys
 import json
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -265,12 +266,39 @@ def run_claude(prompt: str, log_name: str = "unnamed", timeout: int = 600, agent
             provider_label = "[fallback]"
             console.print(f"  [step]▶[/step] {log_name} [dim]{agent_label} {provider_label}[/dim]", end="")
             start_time = datetime.now()
-            result = invoke_with_fallback(
-                prompt=prompt,
-                max_turns=max_turns,
-                timeout_seconds=timeout,
-                agent=agent or "",
-            )
+
+            # Retry organizado p/ crises TRANSITÓRIAS: o workspace fica busy quando
+            # heartbeat/rotina concorrente segura o flock (os autopilot-* às 07:00
+            # derrubavam good-morning/end-of-day todo dia: esperavam 120s e morriam
+            # com "sistema ocupado"). Aí a rotina inteira falhava e virava "rotina
+            # fantasma". A cada "busy"/timeout transitório, espera com backoff
+            # exponencial e tenta de novo até RETRY_MAX (p/ ADW_RETRY_BUDGET em s).
+            retry_max = int(os.environ.get("ADW_RETRY_MAX", "3"))
+            retry_budget = float(os.environ.get("ADW_RETRY_BUDGET", "1800"))
+            result = None
+            for _resilient_attempt in range(retry_max + 1):
+                result = invoke_with_fallback(
+                    prompt=prompt,
+                    max_turns=max_turns,
+                    timeout_seconds=timeout,
+                    agent=agent or "",
+                )
+                status = (result.get("status") or "").lower()
+                if status == "success":
+                    break
+                blob = f"{result.get('error') or ''}".lower()
+                transient = (status == "busy" or any(k in blob for k in (
+                    "timed out", "network is unreachable", "connection reset",
+                    "read operation timed", "temporarily overloaded",
+                )))
+                if not transient or _resilient_attempt >= retry_max:
+                    break
+                delay = min(180.0, 30.0 * (2 ** _resilient_attempt))
+                if status == "busy":
+                    delay = 20.0  # lock costuma liberar rápido; não martelar
+                console.print(f"\r  [warning]⚠[/warning] {log_name} [dim]({status}) — tenta de novo em {delay:.0f}s ({_resilient_attempt+1}/{retry_max})[/dim]")
+                time.sleep(delay)
+
             duration = (datetime.now() - start_time).total_seconds()
             stdout = result.get("output", "") or ""
             stderr = result.get("error", "") or ""

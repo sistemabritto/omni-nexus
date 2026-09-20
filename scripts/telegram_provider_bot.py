@@ -1014,7 +1014,30 @@ def _extract_reply_text(result: dict) -> str:
     return output
 
 
-def invoke_orchestrator(prompt: str) -> tuple[str, str]:
+def _stream_text_so_far(raw_lines: list) -> str:
+    """Partial assistant text from the NDJSON stream seen so far (opencode).
+
+    Reads only the `text` events that already arrived — this is what lets
+    Magneto show the answer growing live instead of silence until the end.
+    Empty for envelope-format providers (claude/codex print one blob at once).
+    """
+    parts: list = []
+    for line in raw_lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if event.get("type") == "text":
+            t = (event.get("part") or {}).get("text")
+            if t:
+                parts.append(t)
+    return "\n".join(parts).strip()
+
+
+def invoke_orchestrator(prompt: str, *, on_progress=None) -> tuple[str, str]:
     """Run the message through the same agentic-CLI fallback engine the
     heartbeats use — real tool-use (Bash, Agent/Task spawning of any
     .claude/agents/*.md specialist), routed through the active provider
@@ -1027,31 +1050,81 @@ def invoke_orchestrator(prompt: str) -> tuple[str, str]:
     providers.json's own active_provider regardless. Pinning Magneto to a
     provider looked like it worked (the confirmation message named it) while
     every real reply kept coming from whatever active_provider actually was.
+
+    `on_progress`: called as (phase, detail). phase ∈ {"attempt","stream"} —
+    "attempt" = engine starting/falling back (detail=reason), "stream" = the
+    partial assistant text so far. Used by run_orchestrated_reply to keep the
+    ack message alive and growing. Best-effort; never raises back.
+
+    Resiliência: agora usa resilient_invoke — antes UMA crise externa (workspace
+    busy com outro heartbeat segurando o lock; read-timeout transitório) fazia o
+    bot desistir na hora com "Falhei ao orquestrar". Agora ele espera e tenta de
+    novo dentro do budget (TELEGRAM_RETRY_BUDGET, default 2h) e só devolve a
+    falha se esgotar — e ainda devolve o texto parcial que chegou, quando houver.
     """
     # Length alone can't tell a pin apart from an active_provider that simply
     # has no fallback_providers configured — ask the override directly.
     pinned = _telegram_provider_override(read_json(PROVIDERS_PATH, {}))
-    result = invoke_with_fallback(
-        prompt=prompt,
-        agent="",  # no fixed persona — the model self-dispatches to any of
-                   # the 38 specialist agents via the Agent/Task tool, same
-                   # as a normal interactive Claude Code session would.
+    from provider_fallback import resilient_invoke  # local: mantém o import top leve
+
+    stream_lines: list = []
+    last_stream_len = [0]
+
+    def _on_stdout_line(line: str) -> None:
+        if not line.strip():
+            return
+        stream_lines.append(line)
+        if on_progress is None:
+            return
+        text = _stream_text_so_far(stream_lines)
+        # limita chamadas: só reporta quando o texto cresceu 300+ chars
+        if len(text) - last_stream_len[0] >= 300 or (text and not last_stream_len[0]):
+            last_stream_len[0] = len(text)
+            try:
+                on_progress("stream", text)
+            except Exception:  # noqa: BLE001 — progress nunca derruba a run
+                pass
+
+    def _on_status(next_attempt: int, status: str, detail: str) -> None:
+        if on_progress is None:
+            return
+        try:
+            on_progress("attempt", f"tentativa #{next_attempt} ({status})")
+        except Exception:  # noqa: BLE001
+            pass
+
+    result = resilient_invoke(
+        prompt,
         max_turns=TELEGRAM_MAX_TURNS,
         timeout_seconds=TELEGRAM_TIMEOUT,
         force_provider=pinned,
         per_attempt_timeout_cap=TELEGRAM_PER_ATTEMPT_TIMEOUT_CAP,
+        retry_budget_seconds=float(os.environ.get("TELEGRAM_RETRY_BUDGET", str(TELEGRAM_TIMEOUT * 4))),
+        backoff_base_seconds=float(os.environ.get("TELEGRAM_RETRY_BACKOFF", "30")),
+        backoff_cap_seconds=240,
+        on_stdout_line=_on_stdout_line,
+        on_status=_on_status,
     )
-    if result.get("status") == "busy":
-        raise RuntimeError(
-            "sistema ocupado com outra execução (heartbeat ou outro chat) — tenta de novo em instantes"
-        )
-    if result.get("status") != "success":
-        raise RuntimeError(result.get("error") or f"status={result.get('status')}")
-    text = _extract_reply_text(result)
-    if not text:
-        raise RuntimeError("orchestrator returned empty response")
-    used = f"{result.get('provider_id') or '?'}:{result.get('model') or 'default'}"
-    return text, used
+    if result.get("status") == "success":
+        text = _extract_reply_text(result)
+        used = f"{result.get('provider_id') or '?'}:{result.get('model') or 'default'}"
+        return text, used
+    # Não teve sucesso — mas pode ter texto parcial útil no meio da crise.
+    partial = _stream_text_so_far(stream_lines)
+    err = result.get("error") or f"status={result.get('status')}"
+    total = result.get("total_attempts")
+    if partial:
+        # entrega o que chegou em vez de jogar fora por causa da crise final
+        log(f"orchestrator-falhou-com-parcial chat? attempts={total} parcial={len(partial)}ch: {err[:300]}")
+        return f"{partial}\n\n— ⚠️ resposta incompleta: {err}", "partial"
+    raise RuntimeError(f"{err} após {total or '?'} tentativa(s)")
+
+
+def _fmt_elapsed(seconds: float) -> str:
+    m, s = divmod(int(seconds), 60)
+    if m:
+        return f"{m}m{s:02d}s"
+    return f"{s}s"
 
 
 def _typing_loop(token: str, chat_id: str, stop_event: threading.Event) -> None:
@@ -1071,34 +1144,101 @@ def run_orchestrated_reply(
     memory_user_text: str,
     speaker: str | None,
 ) -> None:
-    """Background task: ack, keep 'typing' alive, run the orchestrator, reply.
+    """Background task: ack vivo, streaming parcial, retry sem desistir, reply.
 
     Serialized per chat_id (a lock, not the executor) so one chat's messages
     never interleave while other chats keep running concurrently — this is
     what lets the poll loop submit long agentic runs without stalling.
+
+    O ack NÃO é mais um "Recebido…" morto: é uma mensagem editável que mostra
+    tempo decorrido, quando o motor tenta de novo após uma crise, e o texto
+    parcial assim que ele começa a chegar (providers ndjson). No fim, vira a
+    resposta (edit) ou é substituída por ela.
     """
     with _chat_lock(chat_id):
-        try:
-            api(token, "sendMessage", {"chat_id": chat_id, "text": "Recebido, trabalhando nisso..."})
-        except Exception:
-            pass
+        state = {
+            "msg_id": None,
+            "started": time.time(),
+            "last_edit": 0.0,
+            "last_stream": "",
+            "note": "",
+        }
+
+        def _ack_text() -> str:
+            base = "⏳ Trabalhando nisso…"
+            if state["note"]:
+                base += f"\n\n💬 {state['note']}"
+            stream = state["last_stream"]
+            body = f"\n\n_📝 escrevendo…_\n{stream[-2000:]}" if stream else ""
+            return f"{base} _({_fmt_elapsed(time.time() - state['started'])})_{body}"[:3900]
+
+        def _touch(force=False):
+            now = time.time()
+            if not force and now - state["last_edit"] < 6:
+                return
+            if state["msg_id"] is None:
+                try:
+                    r = api(token, "sendMessage", {"chat_id": chat_id, "text": _ack_text()})
+                    state["msg_id"] = (r.get("result") or {}).get("message_id")
+                except Exception:
+                    state["msg_id"] = False
+                state["last_edit"] = now
+                return
+            if not state["msg_id"]:
+                return
+            try:
+                api(token, "editMessageText",
+                    {"chat_id": chat_id, "message_id": state["msg_id"], "text": _ack_text()})
+                state["last_edit"] = now
+            except Exception:
+                pass
+
+        def _on_progress(phase: str, detail: str):
+            if phase == "stream":
+                state["last_stream"] = detail
+            elif phase == "attempt":
+                state["note"] = f"Aconteceu uma instabilidade ({detail}). Não desisti — tentando de novo."
+            _touch(force=phase != "stream")
+
+        _touch(force=True)
         stop_typing = threading.Event()
         typing_thread = threading.Thread(target=_typing_loop, args=(token, chat_id, stop_typing), daemon=True)
         typing_thread.start()
+        start = time.time()
         try:
-            answer, used = invoke_orchestrator(prompt)
+            answer, used = invoke_orchestrator(prompt, on_progress=_on_progress)
         except Exception as exc:
             log(f"orchestration-failed chat={chat_id} type={type(exc).__name__} detail={redact_secrets(str(exc))[:1500]}")
-            answer = f"Falhei ao orquestrar: {exc}"
+            partial = state["last_stream"]
+            answer = (f"{partial}\n\n" if partial else "") + \
+                     f"⚠️ Não consegui terminar mesmo tentando de novo: {str(exc)[:700]}"
             used = "error"
         finally:
             stop_typing.set()
             typing_thread.join(timeout=2)
-        log(f"orchestrated-reply chat={chat_id} via {used}")
-        api(token, "sendMessage", {"chat_id": chat_id, "text": answer[:3900]})
-        if used != "error":
+
+        dur = time.time() - start
+        log(f"orchestrated-reply chat={chat_id} via {used} ({dur:.0f}s)")
+
+        # Tenta transformar o ack na resposta (mesma bolha = sensação de
+        # conversa contínua); se a mensagem já sumiu/estourou limite, manda nova.
+        sent_final = False
+        if state["msg_id"]:
+            try:
+                api(token, "editMessageText",
+                    {"chat_id": chat_id, "message_id": state["msg_id"],
+                     "text": f"{answer[:3900]}\n\n_· {used} · {_fmt_elapsed(dur)}_"})
+                sent_final = True
+            except Exception:
+                sent_final = False
+        if not sent_final:
+            api(token, "sendMessage", {"chat_id": chat_id,
+                                       "text": f"{answer[:3900]}\n\n_· {used} · {_fmt_elapsed(dur)}_"})
+        if used not in ("error", "partial"):
             append_chat_memory(chat_id, "user", memory_user_text, speaker=speaker)
             append_chat_memory(chat_id, "assistant", answer, speaker="Magneto")
+        elif used == "partial":
+            append_chat_memory(chat_id, "user", memory_user_text, speaker=speaker)
 
 
 def load_offset() -> int | None:

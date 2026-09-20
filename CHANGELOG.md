@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.1] - 2026-09-20
+
+Resiliência e cockpit enxuto. O sistema **para de desistir**: um motor de retry compartilhado (`resilient_invoke`) cobre crises transitórias (workspace *busy*, read timeout de rede) com backoff exponencial e orçamento de tempo; o Magneto ganha **mensagem viva** (ack editável com tempo decorrido, aviso de retry e texto parcial crescendo) e entrega a resposta parcial quando a crise final apanha. As "rotinas fantasma" (`good-morning`/`end-of-day` às 07:00, `backup` diário) param de falhar em cascata. O menu de Configurações perde o que era ruído (Notificações, Confiança, Referência) e ganha o que faltava (Backups, Usuários, Papéis, Auditoria).
+
+### Added
+
+- **`resilient_invoke()` + `_is_retryable_failure()`** (`dashboard/backend/provider_fallback.py`) — wrapper de retry sobre `invoke_with_fallback`: só falha transitória (`busy`, read timeout, rede, 529) volta pra fila; backoff exponencial (base→cap, busy espera menos); teto por `retry_budget_seconds` ou `max_retries`; sem os dois = chamada única (compatível). `on_status(tentativa, motivo)` avisa cada retry; sem teto, uma crise não é mais um "falhei" instantâneo.
+- **Streaming ao vivo no motor** — `on_stdout_line` atravessa `attempts()` → `FallbackAttempt.run()` → `_invoke_cli()` → `_invoke_cli_run()` e entrega cada linha do subprocess assim que chega. É o que permite ao Magneto mostrar a resposta crescer antes do fim da run.
+- **Magneto mensagem viva** (`scripts/telegram_provider_bot.py`) — o ack "Recebido, trabalhando nisso…" virou uma bolha editável: tempo decorrido, nota quando o motor tenta de novo e texto parcial (eventos `text` do NDJSON) exibido ao chegar. A resposta final **edita** a mesma bolha (conversa contínua); se a mensagem sumiu, manda nova. Falha final com texto parcial devolve o parcial + aviso de incompleto, em vez de descarte.
+- **Retry nas rotinas** (`ADWs/runner.py`) — a branch de fallback agora repete a chamada em falha transitória até `ADW_RETRY_MAX` (default 3) / `ADW_RETRY_BUDGET` (default 1800s), com backoff (busy → 20s fixo; timeout → exponencial). Resolve as rotinas "fantasma": `good-morning` falhava todo dia 07:00 porque os heartbeats `autopilot-*` seguravam o flock e a rotina morria após 120s de espera.
+- **Backup diário com retry próprio** (`ADWs/routines/backup.py`) — 3 tentativas com backoff em falha transitória de upload/disco e teto 300→600s (um ZIP grande estourava o timeout no meio do PUT pro S3). Histórico: 10/11 execuções de setembro falhando sempre a ~301s.
+- **Configurações reorganizada** (`Settings.tsx`) — abas: Workspace · Backups · Usuários · Papéis · Auditoria. Saíram Notificações (flag órfã em localStorage), Confiança e Referência. Rotinas saiu da página (tem rota própria em Agentes → Rotinas); Backups entrou por aqui (era página sem casa no menu). Usuários/Papéis/Auditoria reutilizam as páginas standalone como abas (mesmas rotas `users`/`roles`/`audit` continuam no sidebar).
+- **Confiança movida para Providers** — o toggle "always on" (`/api/settings/chat` trustMode) ficou discreto na status bar da página de Providers, junto do que controla (os agentes/provedores), em vez de uma aba inteira de Configurações.
+- **Referência condensada no cockpit** (`components/CockpitReference.tsx`) — card recolhido por padrão no Overview: CLAUDE.md com visualização markdown e editor inline (`PUT /api/workspace/file`). Substitui a antiga aba Settings → Referência sem perder a editabilidade.
+- **`tests/backend/test_resilient_invoke.py`** — 18 testes: classificação transitório×fatal, backoff exponencial/cap/busy, orçamento por tempo×tentativas, `on_status`, compatibilidade de chamada única, callback de stdout propagado até `_invoke_cli_run`.
+
+### Changed
+
+- **i18n (pt-BR/en-US/es)** — chaves `settings.tabs.*` atualizadas para o novo conjunto (backups/users/roles/audit, `trust` mantida p/ o toggle de Providers) e novo bloco `cockpit.reference*`.
+- **README** — seção "O motor que não desiste" documenta o padrão de resiliência; tabela de upgrades ganha item 18.
+
 ## [0.33.0] - 2026-04-25
 
 Plugin contract release. Five PRs merged in one day to unblock the EvoNexus Plugin Nutri (and any future plugin needing per-endpoint role enforcement, public token-bound portals, or safe uninstall). Plus a UX fix so `409 CONFLICT` from plugin install actually says *why* it conflicted.

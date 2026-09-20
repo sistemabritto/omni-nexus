@@ -5,6 +5,7 @@ import {
   Package, Plus, Search, RefreshCw, Loader2, AlertTriangle,
   CheckCircle, Star,
 } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 import PluginCard, { type Plugin } from '../components/PluginCard'
 import PluginInstallModal from '../components/PluginInstallModal'
@@ -201,6 +202,7 @@ export default function Plugins() {
 
   return (
     <div className="max-w-[1400px] mx-auto">
+      <HubBackLink />
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

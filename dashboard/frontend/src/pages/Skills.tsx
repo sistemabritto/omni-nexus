@@ -16,6 +16,7 @@ import {
   Activity,
   type LucideIcon,
 } from 'lucide-react'
+import HubBackLink from '../components/HubBackLink'
 import { api } from '../lib/api'
 import { useTranslation } from 'react-i18next'
 
@@ -170,6 +171,7 @@ export default function Skills() {
     <div className="max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="mb-8">
+        <HubBackLink />
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('skills.title')}</h1>
         <p className="text-[#98A2B3] text-sm mt-1">Specialized capabilities and domain knowledge</p>
       </div>

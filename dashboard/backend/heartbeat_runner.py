@@ -1026,22 +1026,34 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                     full_prompt += f"""
 
 ---
-## ⚠️ Você foi MENCIONADO no ticket {_mentioned_ticket}
+## ⚠️ Você foi MENCIONADO no ticket {_mentioned_ticket} (o entregável É o comentário)
 
-`{_mentioner}` te citou num comentário desse ticket pedindo tua leitura/feedback.
-Este é o objetivo desta execução — NÃO é "trabalhar sua inbox".
+`{_mentioner}` te citou num comentário deste ticket pedindo teu feedback. Não é
+"trabalhar sua inbox" — é LER este ticket e responder DE VOLTA nele. Seu comentário
+postado é o entregável desta execução. O ticket é do responsável: NÃO faça checkout
+(não mude status), apenas comente.
 
-Passos:
-1. LEIA o ticket completo (cabeçalho + descrição + TODOS os comentários):
-   `GET /api/tickets/{_mentioned_ticket}` (usa o Bearer token do ambiente).
-2. Faça sua análise no seu papel (crítica, verificação, QA, o que for seu domínio).
-3. Poste SEU feedback como NOVO comentário no MESMO ticket:
-   `POST /api/tickets/{_mentioned_ticket}/comments` com body em pt-BR, autor = teu slug.
-   Seja concreto e acionável — cite o que precisa mudar, por quê, e evidência.
-4. NÃO faça checkout deste ticket (ele é do responsável). Responde `ticket_id: null`.
+Faça EXATAMENTE isto, em ordem, via Bash (as variáveis de ambiente já estão no seu
+ambiente — `$EVONEXUS_API_URL` e `$DASHBOARD_API_TOKEN`):
 
-Responda `action:"work"` com `result:` = resumo curto em pt-BR do feedback que
-você postou (o que apontou / validou / bloqueou)."""
+1) Ler o ticket completo (descrição + TODOS os comentários):
+   curl -sS -H "Authorization: Bearer $DASHBOARD_API_TOKEN" "$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}"
+
+2) Analisar no SEU papel (crítica / verificação / QA / o que for teu domínio).
+
+3) Postar SEU feedback como NOVO comentário neste MESMO ticket (pt-BR, concreto,
+   acionável — cite o que falta/exagera/falha, por quê, e evidência):
+   curl -sS -X POST -H "Authorization: Bearer $DASHBOARD_API_TOKEN" \\
+     -H "Content-Type: application/json" \\
+     "$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}/comments" \\
+     -d '{{"author":"agent:<teu-slug>","body":"<seu feedback aqui>"}}'
+
+Se o POST retornar 201/200, o feedback foi postado. Se der erro de auth/URL, rode
+`echo $EVONEXUS_API_URL` e `echo ${DASHBOARD_API_TOKEN:0:6}...` para conferir.
+
+Ao final responda o JSON do outcome com action:"work", ticket_id:null e result =
+uma linha em pt-BR resuminDO o que você apontou no comentário."""
+
 
                 # Self-healing review loop (Step 6, ADR SPEC 2c): read
                 # active_provider PRE-run (not provider_id, which only

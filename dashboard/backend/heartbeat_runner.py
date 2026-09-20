@@ -601,6 +601,12 @@ def step8_persist(run_id: str, heartbeat_id: str, result: dict, trigger_id: str 
         "triggered_by": triggered_by,
         "ts": now,
         "error": result.get("error"),
+        # Observability: prompt_preview in heartbeat_runs is truncated to 1000
+        # chars and there is no output column, so a `success` + `no_output` run
+        # was otherwise invisible — we couldn't tell "block never reached the
+        # prompt" from "agent answered in prose without emitting outcome JSON".
+        # Persist the tail of the raw agent output here (no schema change needed).
+        "output_tail": (str(result.get("output") or "")[-4000:]) or None,
     }
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
@@ -1023,45 +1029,53 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                 if _is_mention_wake and isinstance(trigger_payload, dict) and trigger_payload.get("ticket_id"):
                     _mentioned_ticket = trigger_payload["ticket_id"]
                     _mentioner = trigger_payload.get("mentioner", "alguém")
+                    _agent_slug = hb["agent"]
                     _cmd_read = (
                         f'curl -sS -H "Authorization: Bearer $DASHBOARD_API_TOKEN" '
                         f'"$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}"'
                     )
                     _body = '{"author":"agent:<teu-slug>","body":"<seu feedback aqui>"}'
                     _cmd_post = (
-                        f'curl -sS -X POST -H "Authorization: Bearer $DASHBOARD_API_TOKEN" \\n'
-                        f'  -H "Content-Type: application/json" \\n'
-                        f'  "$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}/comments" \\n'
-                        f'  -d \'{_body}\' '
+                        f'curl -sS -X POST -H "Authorization: Bearer $DASHBOARD_API_TOKEN" '
+                        f'-H "Content-Type: application/json" '
+                        f'"$EVONEXUS_API_URL/api/tickets/{_mentioned_ticket}/comments" '
+                        f"-d '{_body}'"
                     )
                     full_prompt += f"""
 
 ---
-## ⚠️ Você foi MENCIONADO no ticket {_mentioned_ticket} (o entregável É o comentário)
+## ⚠️ MODO MENÇÃO — o SEU entregável desta execução É um comentário postado via curl
 
-`{_mentioner}` te citou num comentário deste ticket pedindo teu feedback. Não é
-"trabalhar sua inbox" — é LER este ticket e responder DE VOLTA nele. Seu comentário
-postado é o entregável desta execução. O ticket é do responsável: NÃO faça checkout
-(não mude status), apenas comente.
+`{_mentioner}` te citou num comentário do ticket {_mentioned_ticket} pedindo teu
+feedback. **Esta execução NÃO é "trabalhar sua inbox" e NÃO é gerar um arquivo de
+crítica.** O único entregável é um comentário novo postado DE VOLTA nesse ticket.
+Se você terminar sem ter rodado o POST abaixo, a execução é considerada fracassada.
 
-Faça EXATAMENTE isto, em ordem, via Bash (as variáveis de ambiente já estão no seu
-ambiente — `$EVONEXUS_API_URL` e `$DASHBOARD_API_TOKEN`):
+**Sobreponha (ignore NESTA execução)** qualquer instrução do teu prompt de agente que
+mande "leia sua pasta de memória primeiro", "salve a crítica em workspace/development/
+reviews/[C]critique-*.md" ou "responda no formato de output de crítica". Nada disso
+vale aqui: não leia memória, não escreva arquivo .md, não mude status do ticket.
+Você tem poucos turns — vá direto ao ponto.
 
-1) Ler o ticket completo (descrição + TODOS os comentários):
-   {_cmd_read}
+Faça EXATAMENTE isto, em ordem, usando a ferramenta Bash (as variáveis já estão no
+seu ambiente: `$EVONEXUS_API_URL` e `$DASHBOARD_API_TOKEN`):
 
-2) Analisar no SEU papel (crítica / verificação / QA / o que for teu domínio).
+PASSO 1 — Ler o ticket (descrição + TODOS os comentários já vêm embutidos na resposta):
+    {_cmd_read}
 
-3) Postar SEU feedback como NOVO comentário neste MESMO ticket (pt-BR, concreto,
-   acionável — cite o que falta/exagera/falha, por quê, e evidência). Troque
-   `<teu-slug>` e `<seu feedback aqui>` no corpo:
-   {_cmd_post}
+PASSO 2 — Postar seu feedback como NOVO comentário neste MESMO ticket. Escreva o corpo
+em pt-BR, concreto e acionável: cite o que está certo/falha/exagera, por quê, e a
+evidência. No corpo do POST, substitua `<teu-slug>` por `{_agent_slug}` e
+`<seu feedback aqui>` pelo texto real da sua crítica antes de rodar:
+    {_cmd_post}
 
-Se o POST retornar 201/200, o feedback foi postado. Se der erro, rode
-`echo $EVONEXUS_API_URL` e confira se o token está no ambiente.
+O POST deve devolver HTTP 201 com um JSON de comentário — isso significa que o
+feedback foi postado. Se der erro (401/403/400), rode
+`echo $EVONEXUS_API_URL` e `echo $DASHBOARD_API_TOKEN` para conferir o ambiente e
+tente de novo.
 
-Ao final responda o JSON do outcome com action:"work", ticket_id:null e result =
-uma linha em pt-BR resuminDO o que você apontou no comentário."""
+Ao final, responda APENAS o JSON do outcome (uma linha):
+    {{"action":"work","ticket_id":null,"result":"<uma linha em pt-BR resumindo o que você apontou no comentário>"}}"""
 
 
                 # Self-healing review loop (Step 6, ADR SPEC 2c): read

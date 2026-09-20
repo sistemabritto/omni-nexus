@@ -54,7 +54,7 @@ export default function RestoreConfirm({ snapshot, onConfirm, onBack }: RestoreC
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#5a6b7f] mb-1.5 tracking-[0.08em] uppercase">
+              <label className="block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase">
                 {t('restore.confirm.typeToConfirmPart1')}
                 <span className="text-[#e2e8f0]">{workspaceName}</span>
                 {t('restore.confirm.typeToConfirmPart2')}
@@ -72,7 +72,7 @@ export default function RestoreConfirm({ snapshot, onConfirm, onBack }: RestoreC
             <div className="flex gap-3 pt-2">
               <button
                 onClick={onBack}
-                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#5a6b7f] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('restore.back')}
               </button>

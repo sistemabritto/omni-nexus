@@ -58,7 +58,7 @@ export default function NotificationBell() {
       <button
         ref={buttonRef}
         onClick={() => setOpen(v => !v)}
-        className="relative p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+        className="relative p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
         title="Notifications"
       >
         <Bell size={16} />
@@ -81,7 +81,7 @@ export default function NotificationBell() {
             {notifications.length > 0 && (
               <button
                 onClick={dismissAll}
-                className="text-xs text-[#667085] hover:text-[#D0D5DD] transition-colors"
+                className="text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
               >
                 Clear all
               </button>
@@ -91,7 +91,7 @@ export default function NotificationBell() {
           {/* List */}
           <div className="flex-1 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-[#667085]">
+              <div className="px-4 py-8 text-center text-sm text-[#98A2B3]">
                 No notifications
               </div>
             ) : (
@@ -109,12 +109,12 @@ export default function NotificationBell() {
                       <div className="flex items-center gap-1.5">
                         {n.event === 'agent_awaiting'
                           ? <BellRing size={12} className="text-[#00FFA7] shrink-0" />
-                          : <CheckCircle2 size={12} className="text-[#667085] shrink-0" />}
+                          : <CheckCircle2 size={12} className="text-[#98A2B3] shrink-0" />}
                         <span className="text-sm font-semibold text-[#D0D5DD] truncate">
                           @{n.agentName}
                         </span>
                       </div>
-                      <p className="text-xs text-[#667085] mt-0.5 truncate">
+                      <p className="text-xs text-[#98A2B3] mt-0.5 truncate">
                         {n.event === 'agent_awaiting'
                           ? `${toolLabel(n)} — needs approval${inputPreview(n) ? `: ${inputPreview(n)}` : ''}`
                           : 'finished turn'}
@@ -122,9 +122,9 @@ export default function NotificationBell() {
                     </div>
 
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-[10px] text-[#667085]">{relativeTime(n.createdAt)}</span>
+                      <span className="text-[10px] text-[#98A2B3]">{relativeTime(n.createdAt)}</span>
                       <button
-                        className="text-[#667085] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#D0D5DD]"
+                        className="text-[#98A2B3] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#D0D5DD]"
                         onClick={(e) => { e.stopPropagation(); dismiss(n.id) }}
                         aria-label="Dismiss"
                       >

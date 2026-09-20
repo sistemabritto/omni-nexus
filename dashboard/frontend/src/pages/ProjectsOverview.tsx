@@ -104,7 +104,7 @@ export default function ProjectsOverview() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#667085] text-sm">Loading projects...</div>
+        <div className="text-[#98A2B3] text-sm">Loading projects...</div>
       </div>
     )
   }
@@ -125,13 +125,13 @@ export default function ProjectsOverview() {
           <FolderKanban size={20} className="text-[#00FFA7]" />
           <div>
             <h1 className="text-white font-semibold text-lg">{t('nav.projects')}</h1>
-            <p className="text-xs text-[#667085]">Clique num projeto pra abrir em Goals</p>
+            <p className="text-xs text-[#98A2B3]">Clique num projeto pra abrir em Goals</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={load}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#667085] hover:text-white border border-[#21262d] rounded-lg hover:border-[#344054] transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#98A2B3] hover:text-white border border-[#21262d] rounded-lg hover:border-[#344054] transition-colors"
           >
             <RefreshCw size={12} /> Refresh
           </button>
@@ -162,18 +162,18 @@ export default function ProjectsOverview() {
               onClick={() => navigate(`/goals?project=${project.id}`)}
               className="text-left bg-[#161b22] border border-[#21262d] rounded-xl p-5 hover:border-[#00FFA7]/40 transition-colors"
             >
-              <div className="flex items-center gap-1.5 text-[10px] text-[#667085] mb-2">
+              <div className="flex items-center gap-1.5 text-[10px] text-[#98A2B3] mb-2">
                 <Target size={10} />
                 <span className="truncate">{missionTitle}</span>
               </div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-white font-semibold text-sm">{project.title}</span>
-                <span className="text-[10px] text-[#667085] bg-[#21262d] px-2 py-0.5 rounded-full">{project.slug}</span>
+                <span className="text-[10px] text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full">{project.slug}</span>
               </div>
               {project.description && (
-                <p className="text-xs text-[#667085] mb-3 line-clamp-2">{project.description}</p>
+                <p className="text-xs text-[#98A2B3] mb-3 line-clamp-2">{project.description}</p>
               )}
-              <div className="flex items-center justify-between text-[11px] text-[#667085] mb-1.5">
+              <div className="flex items-center justify-between text-[11px] text-[#98A2B3] mb-1.5">
                 <span>{goalCount} goal{goalCount === 1 ? '' : 's'}</span>
                 {totalTarget > 0 && <span className="text-[#00FFA7] font-mono">{pct(totalCurrent, totalTarget)}%</span>}
               </div>

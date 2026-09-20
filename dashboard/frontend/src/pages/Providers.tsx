@@ -128,7 +128,7 @@ function ModelCombobox({ value, onChange, options, placeholder, inputClassName }
           type="button"
           onClick={() => setOpen(o => !o)}
           tabIndex={-1}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-[#5a6b7f] hover:text-[#e2e8f0] transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-[#98A2B3] hover:text-[#e2e8f0] transition-colors"
           aria-label="Toggle model list"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={`transition-transform ${open ? 'rotate-180' : ''}`}>
@@ -153,7 +153,7 @@ function ModelCombobox({ value, onChange, options, placeholder, inputClassName }
               >
                 <div className="font-mono text-xs">{m.id}</div>
                 {m.description && (
-                  <div className={`text-[10px] mt-0.5 ${isActive ? 'text-[#00FFA7]/70' : 'text-[#5a6b7f]'}`}>
+                  <div className={`text-[10px] mt-0.5 ${isActive ? 'text-[#00FFA7]/70' : 'text-[#98A2B3]'}`}>
                     {m.description}
                   </div>
                 )}
@@ -164,7 +164,7 @@ function ModelCombobox({ value, onChange, options, placeholder, inputClassName }
       )}
       {open && filtered.length === 0 && (
         <div className="absolute z-[60] top-full left-0 right-0 mt-1 rounded-lg bg-[#0b1018] border border-[#1e2a3a] shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
-          <div className="px-3 py-2.5 text-[11px] text-[#5a6b7f]">
+          <div className="px-3 py-2.5 text-[11px] text-[#98A2B3]">
             Nenhum modelo corresponde — {q ? 'ajuste a busca' : 'use o texto livre'}
           </div>
         </div>
@@ -375,33 +375,33 @@ export default function Providers() {
   const hasActive = activeProvider !== 'none' && providers.some(p => p.id === activeProvider)
 
   const inp = "w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20 font-mono"
-  const lbl = "block text-[11px] font-semibold text-[#5a6b7f] mb-1.5 tracking-[0.08em] uppercase"
+  const lbl = "block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase"
 
   return (
     <div className="max-w-[1200px] mx-auto font-[Inter,-apple-system,sans-serif]">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-white tracking-tight">{t('providers.title')}</h1>
-        <p className="text-[#5a6b7f] text-sm mt-1">Configure and activate AI providers for your workspace</p>
+        <p className="text-[#98A2B3] text-sm mt-1">Configure and activate AI providers for your workspace</p>
       </div>
 
       {/* Status bar */}
       {!loading && (
         <div className="flex items-center gap-5 mb-6 px-4 py-3 rounded-lg border border-[#152030] bg-[#0b1018]">
-          <div className="flex items-center gap-4 text-[11px] tracking-wide uppercase text-[#5a6b7f]">
+          <div className="flex items-center gap-4 text-[11px] tracking-wide uppercase text-[#98A2B3]">
             <span className="flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full ${claudeInstalled ? 'bg-[#00FFA7]' : 'bg-[#ef4444]'}`} />
               claude {claudeInstalled ? '' : '(missing)'}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${openclaudeInstalled ? 'bg-[#00FFA7]' : 'bg-[#5a6b7f]'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${openclaudeInstalled ? 'bg-[#00FFA7]' : 'bg-[#98A2B3]'}`} />
               openclaude {openclaudeInstalled ? '' : '(missing)'}
             </span>
           </div>
           {/* Confiança — antes morava em Configurações; agora fica junto do que
               ela controla (os provedores/agentes). Discreta de propósito: é um
               interruptor, não uma seção. */}
-          <div className="ml-auto flex items-center gap-4 text-[11px] tracking-wide uppercase text-[#5a6b7f]">
+          <div className="ml-auto flex items-center gap-4 text-[11px] tracking-wide uppercase text-[#98A2B3]">
             <label className="flex items-center gap-2 cursor-pointer select-none" title="When on, agents run Write/Edit/Bash without asking for approval">
               <span>{t('settings.tabs.trust')}</span>
               <Toggle on={!!trustMode} onChange={handleTrust} disabled={savingTrust || trustMode === null} />
@@ -423,7 +423,7 @@ export default function Providers() {
       ) : (
         <div className="space-y-2">
           {providers.map((prov) => {
-            const color = PROVIDER_COLORS[prov.id] || '#5a6b7f'
+            const color = PROVIDER_COLORS[prov.id] || '#98A2B3'
             const isInstalled = prov.cli_command === 'claude' ? claudeInstalled : openclaudeInstalled
             const isActive = prov.is_active && activeProvider === prov.id
 
@@ -441,7 +441,7 @@ export default function Providers() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold text-white truncate">{prov.name}</h3>
-                      <code className="text-[9px] px-1.5 py-0.5 rounded bg-[#152030] text-[#5a6b7f] border border-[#1e2a3a] shrink-0">
+                      <code className="text-[9px] px-1.5 py-0.5 rounded bg-[#152030] text-[#98A2B3] border border-[#1e2a3a] shrink-0">
                         {prov.cli_command}
                       </code>
                       {!isInstalled && (
@@ -478,13 +478,13 @@ export default function Providers() {
 
                     {/* Configure */}
                     <button onClick={() => openConfig(prov)}
-                      className="text-[11px] px-3 py-1.5 rounded-md text-[#5a6b7f] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors">
+                      className="text-[11px] px-3 py-1.5 rounded-md text-[#98A2B3] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors">
                       Configure
                     </button>
 
                     {/* Test */}
                     <button onClick={() => handleTest(prov.id)} disabled={testing === prov.id}
-                      className="text-[11px] px-3 py-1.5 rounded-md text-[#5a6b7f] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors disabled:opacity-40">
+                      className="text-[11px] px-3 py-1.5 rounded-md text-[#98A2B3] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors disabled:opacity-40">
                       {testing === prov.id ? <RefreshCw size={11} className="animate-spin" /> : 'Test'}
                     </button>
 
@@ -529,17 +529,17 @@ export default function Providers() {
             <div className="w-full max-w-lg mx-4 rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
               <div className="flex items-center justify-between px-6 py-4 border-b border-[#152030]">
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PROVIDER_COLORS[prov.id] || '#5a6b7f' }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PROVIDER_COLORS[prov.id] || '#98A2B3' }} />
                   <h2 className="text-sm font-semibold text-white">{prov.name}</h2>
                 </div>
-                <button onClick={() => setConfigOpen(null)} className="p-1 rounded text-[#5a6b7f] hover:text-white transition-colors">
+                <button onClick={() => setConfigOpen(null)} className="p-1 rounded text-[#98A2B3] hover:text-white transition-colors">
                   <X size={16} />
                 </button>
               </div>
 
               <div className="px-6 py-5 space-y-4">
                 {editableVars.length === 0 ? (
-                  <p className="text-sm text-[#5a6b7f]">No configuration needed. Uses native Claude Code authentication.</p>
+                  <p className="text-sm text-[#98A2B3]">No configuration needed. Uses native Claude Code authentication.</p>
                 ) : (
                   editableVars.map(([key]) => {
                     const isModelField = key.includes('MODEL')
@@ -556,7 +556,7 @@ export default function Providers() {
                           {ENV_VAR_LABELS[key] || key}
                           <span className="ml-1 text-[#3d4f65] font-normal normal-case tracking-normal">({key})</span>
                           {isModelField && currentList?.loading && (
-                            <span className="ml-2 text-[#5a6b7f]"><RefreshCw size={10} className="inline animate-spin" /> carregando…</span>
+                            <span className="ml-2 text-[#98A2B3]"><RefreshCw size={10} className="inline animate-spin" /> carregando…</span>
                           )}
                         </label>
 
@@ -618,8 +618,8 @@ export default function Providers() {
 
                 {prov.default_model && (
                   <p className="text-[10px] text-[#3d4f65]">
-                    Default model: <code className="text-[#5a6b7f]">{prov.default_model}</code>
-                    {prov.default_base_url && <> | URL: <code className="text-[#5a6b7f]">{prov.default_base_url}</code></>}
+                    Default model: <code className="text-[#98A2B3]">{prov.default_model}</code>
+                    {prov.default_base_url && <> | URL: <code className="text-[#98A2B3]">{prov.default_base_url}</code></>}
                   </p>
                 )}
 
@@ -639,12 +639,12 @@ export default function Providers() {
 
               <div className="flex items-center justify-between px-6 py-4 border-t border-[#152030]">
                 <button onClick={() => handleTest(prov.id)} disabled={testing === prov.id}
-                  className="text-[11px] px-3 py-1.5 rounded-md text-[#5a6b7f] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors disabled:opacity-40">
+                  className="text-[11px] px-3 py-1.5 rounded-md text-[#98A2B3] border border-[#1e2a3a] hover:text-[#8a9aae] hover:border-[#2e3a4a] transition-colors disabled:opacity-40">
                   {testing === prov.id ? <RefreshCw size={11} className="animate-spin" /> : 'Test connection'}
                 </button>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setConfigOpen(null)}
-                    className="text-[11px] px-4 py-1.5 rounded-md text-[#5a6b7f] border border-[#1e2a3a] hover:text-[#8a9aae] transition-colors">
+                    className="text-[11px] px-4 py-1.5 rounded-md text-[#98A2B3] border border-[#1e2a3a] hover:text-[#8a9aae] transition-colors">
                     Cancel
                   </button>
                   <button onClick={handleSave} disabled={saving}
@@ -664,18 +664,18 @@ export default function Providers() {
           <div className="w-full max-w-lg mx-4 rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#152030]">
               <h2 className="text-sm font-semibold text-white">Connect to OpenAI</h2>
-              <button onClick={() => { setAuthModal(false); setDevicePolling(false) }} className="p-1 rounded text-[#5a6b7f] hover:text-white transition-colors">
+              <button onClick={() => { setAuthModal(false); setDevicePolling(false) }} className="p-1 rounded text-[#98A2B3] hover:text-white transition-colors">
                 <X size={16} />
               </button>
             </div>
 
             <div className="flex border-b border-[#152030]">
               <button onClick={() => { setAuthMode('browser'); if (!authUrl) startBrowserAuth() }}
-                className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${authMode === 'browser' ? 'text-[#10A37F] border-b-2 border-[#10A37F]' : 'text-[#5a6b7f]'}`}>
+                className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${authMode === 'browser' ? 'text-[#10A37F] border-b-2 border-[#10A37F]' : 'text-[#98A2B3]'}`}>
                 Browser OAuth
               </button>
               <button onClick={() => { setAuthMode('device'); if (!deviceCode) startDeviceAuth() }}
-                className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${authMode === 'device' ? 'text-[#10A37F] border-b-2 border-[#10A37F]' : 'text-[#5a6b7f]'}`}>
+                className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${authMode === 'device' ? 'text-[#10A37F] border-b-2 border-[#10A37F]' : 'text-[#98A2B3]'}`}>
                 Device Auth
               </button>
             </div>
@@ -685,36 +685,36 @@ export default function Providers() {
                 authUrl ? (
                   <>
                     <div className="space-y-3">
-                      <p className="text-xs text-[#5a6b7f]"><span className="text-white font-medium">1.</span> Open this link to login:</p>
+                      <p className="text-xs text-[#98A2B3]"><span className="text-white font-medium">1.</span> Open this link to login:</p>
                       <a href={authUrl} target="_blank" rel="noopener noreferrer"
                         className="block text-center py-2 rounded-md bg-[#10A37F]/10 text-[#10A37F] border border-[#10A37F]/20 hover:bg-[#10A37F]/20 transition-colors text-sm font-medium">
                         Open OpenAI Login
                       </a>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-xs text-[#5a6b7f]"><span className="text-white font-medium">2.</span> Authorize access, then paste the final localhost callback URL here. Do not replace localhost with your domain.</p>
+                      <p className="text-xs text-[#98A2B3]"><span className="text-white font-medium">2.</span> Authorize access, then paste the final localhost callback URL here. Do not replace localhost with your domain.</p>
                       <input type="text" value={callbackUrl} onChange={(e) => setCallbackUrl(e.target.value)}
                         placeholder="http://localhost:1455/auth/callback?code=..."
                         className={inp} autoComplete="off" />
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center justify-center py-8 gap-2 text-[#5a6b7f] text-sm">
+                  <div className="flex items-center justify-center py-8 gap-2 text-[#98A2B3] text-sm">
                     <RefreshCw size={14} className="animate-spin" /> Generating auth link...
                   </div>
                 )
               ) : (
                 deviceCode ? (
                   <div className="space-y-4">
-                    <p className="text-xs text-[#5a6b7f]"><span className="text-white font-medium">1.</span> Open: <a href={deviceCode.verification_url} target="_blank" rel="noopener noreferrer" className="text-[#10A37F] underline">{deviceCode.verification_url}</a></p>
-                    <p className="text-xs text-[#5a6b7f]"><span className="text-white font-medium">2.</span> Enter code:</p>
+                    <p className="text-xs text-[#98A2B3]"><span className="text-white font-medium">1.</span> Open: <a href={deviceCode.verification_url} target="_blank" rel="noopener noreferrer" className="text-[#10A37F] underline">{deviceCode.verification_url}</a></p>
+                    <p className="text-xs text-[#98A2B3]"><span className="text-white font-medium">2.</span> Enter code:</p>
                     <div className="flex items-center justify-center">
                       <code className="text-xl font-bold text-white tracking-[0.15em] bg-[#0f1520] px-5 py-2.5 rounded-lg border border-[#1e2a3a]">{deviceCode.user_code}</code>
                     </div>
-                    {devicePolling && <p className="text-center text-xs text-[#5a6b7f] flex items-center justify-center gap-2"><RefreshCw size={11} className="animate-spin" /> Waiting for authorization...</p>}
+                    {devicePolling && <p className="text-center text-xs text-[#98A2B3] flex items-center justify-center gap-2"><RefreshCw size={11} className="animate-spin" /> Waiting for authorization...</p>}
                   </div>
                 ) : authLoading ? (
-                  <div className="flex items-center justify-center py-8 gap-2 text-[#5a6b7f] text-sm"><RefreshCw size={14} className="animate-spin" /> Starting device auth...</div>
+                  <div className="flex items-center justify-center py-8 gap-2 text-[#98A2B3] text-sm"><RefreshCw size={14} className="animate-spin" /> Starting device auth...</div>
                 ) : null
               )}
 
@@ -728,7 +728,7 @@ export default function Providers() {
 
             <div className="flex items-center justify-between px-6 py-4 border-t border-[#152030]">
               <button onClick={() => { setAuthModal(false); setDevicePolling(false) }}
-                className="text-[11px] px-4 py-1.5 rounded-md text-[#5a6b7f] border border-[#1e2a3a] hover:text-[#8a9aae] transition-colors">
+                className="text-[11px] px-4 py-1.5 rounded-md text-[#98A2B3] border border-[#1e2a3a] hover:text-[#8a9aae] transition-colors">
                 Cancel
               </button>
               {authMode === 'browser' && authUrl && (

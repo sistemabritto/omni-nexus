@@ -70,7 +70,7 @@ const STATUS_STYLES: Record<TicketStatus, string> = {
   blocked: 'bg-red-500/10 text-red-400 border-red-500/20',
   review: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   resolved: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  closed: 'bg-[#21262d] text-[#667085] border-[#21262d]',
+  closed: 'bg-[#21262d] text-[#98A2B3] border-[#21262d]',
   archived: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
 }
 
@@ -401,7 +401,7 @@ export default function TicketDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-[#667085]">
+      <div className="flex items-center justify-center py-24 text-[#98A2B3]">
         <RefreshCw size={18} className="animate-spin mr-2" /> Loading...
       </div>
     )
@@ -409,7 +409,7 @@ export default function TicketDetail() {
 
   if (error || !ticket) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-[#667085]">
+      <div className="flex flex-col items-center justify-center py-24 text-[#98A2B3]">
         <p className="text-sm text-red-400">{error || 'Ticket not found'}</p>
         <button onClick={() => navigate('/topics')} className="mt-3 text-xs text-[#00FFA7] hover:underline">
           Back to Topics
@@ -490,11 +490,11 @@ export default function TicketDetail() {
 
             <button
               onClick={() => navigate('/topics')}
-              className="flex items-center gap-1.5 text-xs text-[#667085] hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-white transition-colors"
             >
               <ArrowLeft size={13} /> Topics
             </button>
-            <span className="text-[#667085]">/</span>
+            <span className="text-[#98A2B3]">/</span>
             <span className="text-xs font-medium text-[#e6edf3] truncate max-w-xs">{ticket.title}</span>
             <span className="ml-auto flex items-center gap-2">
               {ticket.status === 'archived' && (
@@ -503,7 +503,7 @@ export default function TicketDetail() {
               {ticket.status !== 'archived' && (
                 <button
                   onClick={handleArchiveThread}
-                  className="flex items-center gap-1 px-2 py-1 text-[11px] text-[#667085] hover:text-orange-400 border border-[#21262d] hover:border-orange-400/30 rounded-lg transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-[11px] text-[#98A2B3] hover:text-orange-400 border border-[#21262d] hover:border-orange-400/30 rounded-lg transition-colors"
                   title="Archive thread"
                 >
                   <Archive size={11} /> Archive
@@ -514,7 +514,7 @@ export default function TicketDetail() {
 
           {/* AgentChat fills remaining space */}
           {sessionLoading ? (
-            <div className="flex items-center justify-center flex-1 text-[#667085]">
+            <div className="flex items-center justify-center flex-1 text-[#98A2B3]">
               <RefreshCw size={16} className="animate-spin mr-2" /> Initialising session...
             </div>
           ) : threadSessionId ? (
@@ -522,7 +522,7 @@ export default function TicketDetail() {
               {ticket.status === 'archived' && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-[#161b22] border-b border-[#21262d] shrink-0">
                   <span className="text-sm">📦</span>
-                  <span className="text-xs text-[#667085] flex-1">Thread arquivada — read-only.</span>
+                  <span className="text-xs text-[#98A2B3] flex-1">Thread arquivada — read-only.</span>
                   <button
                     onClick={async () => {
                       try {
@@ -551,7 +551,7 @@ export default function TicketDetail() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center flex-1 text-[#667085] flex-col gap-2">
+            <div className="flex items-center justify-center flex-1 text-[#98A2B3] flex-col gap-2">
               <p className="text-sm">Session could not be initialised.</p>
               <button onClick={() => ticket && initThreadSession(ticket)} className="text-xs text-[#00FFA7] hover:underline">
                 Retry
@@ -570,7 +570,7 @@ export default function TicketDetail() {
       {/* Back */}
       <button
         onClick={() => navigate('/topics')}
-        className="flex items-center gap-1.5 text-xs text-[#667085] hover:text-white mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft size={13} /> Back to Topics
       </button>
@@ -584,13 +584,13 @@ export default function TicketDetail() {
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-[#e6edf3] mb-1">{ticket.title}</h1>
             {ticket.description && (
-              <p className="text-sm text-[#667085]">{ticket.description}</p>
+              <p className="text-sm text-[#98A2B3]">{ticket.description}</p>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleEditTitle}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#667085] hover:text-[#e6edf3] bg-[#161b22] border border-[#21262d] hover:border-[#344054] rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#98A2B3] hover:text-[#e6edf3] bg-[#161b22] border border-[#21262d] hover:border-[#344054] rounded-lg transition-colors"
               title="Edit title"
             >
               <Pencil size={12} /> Edit
@@ -626,7 +626,7 @@ export default function TicketDetail() {
         {/* Metadata grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-t border-[#21262d] pt-4">
           <div>
-            <p className="text-[#667085] mb-1.5">Status</p>
+            <p className="text-[#98A2B3] mb-1.5">Status</p>
             {editStatus ? (
               <select
                 autoFocus
@@ -648,7 +648,7 @@ export default function TicketDetail() {
           </div>
 
           <div>
-            <p className="text-[#667085] mb-1.5">Priority</p>
+            <p className="text-[#98A2B3] mb-1.5">Priority</p>
             {editPriority ? (
               <select
                 autoFocus
@@ -670,18 +670,18 @@ export default function TicketDetail() {
           </div>
 
           <div>
-            <p className="text-[#667085] mb-1.5">Assignee</p>
+            <p className="text-[#98A2B3] mb-1.5">Assignee</p>
             <span className="text-[#e6edf3] font-mono">{ticket.assignee_agent ? `@${ticket.assignee_agent}` : '—'}</span>
           </div>
 
           <div>
-            <p className="text-[#667085] mb-1.5">Lock</p>
+            <p className="text-[#98A2B3] mb-1.5">Lock</p>
             {ticket.locked_at ? (
               <span className="flex items-center gap-1 text-orange-400">
                 <Lock size={11} /> {ticket.locked_by}
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-[#667085]">
+              <span className="flex items-center gap-1 text-[#98A2B3]">
                 <Unlock size={11} /> unlocked
               </span>
             )}
@@ -689,7 +689,7 @@ export default function TicketDetail() {
 
           {parentChain?.goal && (
             <div className="col-span-2 sm:col-span-4">
-              <p className="text-[#667085] mb-1.5">Goal chain</p>
+              <p className="text-[#98A2B3] mb-1.5">Goal chain</p>
               <button
                 onClick={() => navigate(`/goals?project=${parentChain.project?.id ?? ''}`)}
                 className="text-[#e6edf3] hover:text-[#00FFA7] transition-colors text-xs text-left"
@@ -703,7 +703,7 @@ export default function TicketDetail() {
 
           {(ticket.source_agent || ticket.source_session_id) && (
             <div>
-              <p className="text-[#667085] mb-1.5">Source</p>
+              <p className="text-[#98A2B3] mb-1.5">Source</p>
               <span className="text-[#8b949e] font-mono text-[11px]">
                 {ticket.source_agent ? `@${ticket.source_agent}` : ''}
                 {ticket.source_agent && ticket.source_session_id ? ' ' : ''}
@@ -713,18 +713,18 @@ export default function TicketDetail() {
           )}
 
           <div>
-            <p className="text-[#667085] mb-1.5">Created</p>
+            <p className="text-[#98A2B3] mb-1.5">Created</p>
             <span className="text-[#8b949e]">{formatDate(ticket.created_at)}</span>
           </div>
 
           <div>
-            <p className="text-[#667085] mb-1.5">Updated</p>
+            <p className="text-[#98A2B3] mb-1.5">Updated</p>
             <span className="text-[#8b949e]">{formatDate(ticket.updated_at)}</span>
           </div>
 
           {ticket.resolved_at && (
             <div>
-              <p className="text-[#667085] mb-1.5">Resolved</p>
+              <p className="text-[#98A2B3] mb-1.5">Resolved</p>
               <span className="text-[#00FFA7]">{formatDate(ticket.resolved_at)}</span>
             </div>
           )}
@@ -735,11 +735,11 @@ export default function TicketDetail() {
       <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-5 mb-4">
         <h2 className="text-sm font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
           <Activity size={14} className="text-[#00FFA7]" /> Timeline
-          <span className="text-[10px] text-[#667085] font-normal">{timeline.length} items</span>
+          <span className="text-[10px] text-[#98A2B3] font-normal">{timeline.length} items</span>
         </h2>
 
         {timeline.length === 0 ? (
-          <div className="flex flex-col items-center py-8 text-[#667085]">
+          <div className="flex flex-col items-center py-8 text-[#98A2B3]">
             <Activity size={24} className="opacity-30 mb-2" />
             <p className="text-xs">No activity yet</p>
           </div>
@@ -750,21 +750,21 @@ export default function TicketDetail() {
                 <div className="shrink-0 flex items-center justify-center mt-0.5">
                   {item._type === 'comment'
                     ? <div className="w-6 h-6 rounded-full bg-[#00FFA7]/20 flex items-center justify-center"><MessageSquare size={11} className="text-[#00FFA7]" /></div>
-                    : <div className="w-6 h-6 rounded-full bg-[#21262d] flex items-center justify-center"><Activity size={11} className="text-[#667085]" /></div>
+                    : <div className="w-6 h-6 rounded-full bg-[#21262d] flex items-center justify-center"><Activity size={11} className="text-[#98A2B3]" /></div>
                   }
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium text-[#e6edf3]">{(item as ActivityItem).actor || (item as CommentItem).author}</span>
-                    <span className="text-[10px] text-[#667085]">{formatDate(item.created_at)}</span>
+                    <span className="text-[10px] text-[#98A2B3]">{formatDate(item.created_at)}</span>
                   </div>
 
                   {item._type === 'comment' ? (
                     <div className="bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2">
                       <p className="text-sm text-[#e6edf3] whitespace-pre-wrap">{(item as CommentItem).body}</p>
                       {(item as CommentItem).mentions.length > 0 && (
-                        <p className="text-[10px] text-[#667085] mt-1.5 font-mono">
+                        <p className="text-[10px] text-[#98A2B3] mt-1.5 font-mono">
                           mentions: {(item as CommentItem).mentions.map(m => `@${m}`).join(', ')}
                         </p>
                       )}
@@ -796,7 +796,7 @@ export default function TicketDetail() {
               onChange={e => setCommentBody(e.target.value)}
             />
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-[#667085]">Tip: @mention an agent to wake their heartbeat</p>
+              <p className="text-[10px] text-[#98A2B3]">Tip: @mention an agent to wake their heartbeat</p>
               <button
                 type="submit"
                 disabled={submitting || !commentBody.trim()}
@@ -896,19 +896,19 @@ function ConvertToThreadModal({ ticketId, ticketTitle, onClose, onConverted }: C
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-md p-5 shadow-2xl">
         <h2 className="text-base font-semibold text-[#e6edf3] mb-1">Convert to Thread</h2>
-        <p className="text-xs text-[#667085] mb-4">
+        <p className="text-xs text-[#98A2B3] mb-4">
           "{ticketTitle}" will become a persistent chat thread with isolated memory.
         </p>
 
         {loading ? (
-          <div className="flex items-center gap-2 text-xs text-[#667085] py-4">
+          <div className="flex items-center gap-2 text-xs text-[#98A2B3] py-4">
             <RefreshCw size={14} className="animate-spin" /> Loading workspace folders...
           </div>
         ) : (
           <>
             {!useCustom && folders.length > 0 && (
               <div className="mb-3">
-                <label className="text-xs text-[#667085] mb-1.5 block">Working directory</label>
+                <label className="text-xs text-[#98A2B3] mb-1.5 block">Working directory</label>
                 {!showNewFolder && (
                   <select
                     value={selectedFolder}
@@ -943,7 +943,7 @@ function ConvertToThreadModal({ ticketId, ticketTitle, onClose, onConverted }: C
                       </button>
                       <button
                         onClick={() => { setShowNewFolder(false); setNewFolderName(''); setNewFolderError(null) }}
-                        className="p-2 text-[#667085] hover:text-[#e6edf3] rounded-lg transition-colors"
+                        className="p-2 text-[#98A2B3] hover:text-[#e6edf3] rounded-lg transition-colors"
                       >
                         <X size={12} />
                       </button>
@@ -954,14 +954,14 @@ function ConvertToThreadModal({ ticketId, ticketTitle, onClose, onConverted }: C
                   <div className="flex items-center gap-3 mt-1">
                     <button
                       onClick={() => { setShowNewFolder(true); setNewFolderError(null) }}
-                      className="flex items-center gap-1 text-[10px] text-[#667085] hover:text-[#00FFA7] transition-colors"
+                      className="flex items-center gap-1 text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
                     >
                       <FolderPlus size={11} />
                       Nova pasta
                     </button>
                     <button
                       onClick={() => setUseCustom(true)}
-                      className="text-[10px] text-[#667085] hover:text-[#00FFA7] transition-colors"
+                      className="text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
                     >
                       Enter custom path
                     </button>
@@ -972,7 +972,7 @@ function ConvertToThreadModal({ ticketId, ticketTitle, onClose, onConverted }: C
 
             {(useCustom || folders.length === 0) && (
               <div className="mb-3">
-                <label className="text-xs text-[#667085] mb-1.5 block">Working directory path</label>
+                <label className="text-xs text-[#98A2B3] mb-1.5 block">Working directory path</label>
                 <input
                   type="text"
                   value={customPath}
@@ -983,7 +983,7 @@ function ConvertToThreadModal({ ticketId, ticketTitle, onClose, onConverted }: C
                 {folders.length > 0 && (
                   <button
                     onClick={() => setUseCustom(false)}
-                    className="text-[10px] text-[#667085] hover:text-[#00FFA7] mt-1 transition-colors"
+                    className="text-[10px] text-[#98A2B3] hover:text-[#00FFA7] mt-1 transition-colors"
                   >
                     Pick from list
                   </button>
@@ -1005,7 +1005,7 @@ function ConvertToThreadModal({ ticketId, ticketTitle, onClose, onConverted }: C
         <div className="flex items-center gap-2 justify-end">
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-xs text-[#667085] border border-[#21262d] rounded-lg hover:border-[#344054] transition-colors"
+            className="px-3 py-1.5 text-xs text-[#98A2B3] border border-[#21262d] rounded-lg hover:border-[#344054] transition-colors"
           >
             Cancel
           </button>

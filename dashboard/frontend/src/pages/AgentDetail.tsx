@@ -347,11 +347,11 @@ export default function AgentDetail() {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center bg-[#0C111D] gap-4">
         <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#161b22] border border-[#21262d]">
-          <Lock size={28} className="text-[#667085]" />
+          <Lock size={28} className="text-[#98A2B3]" />
         </div>
         <div className="text-center">
           <p className="text-[#e6edf3] font-semibold text-base mb-1">Acesso restrito</p>
-          <p className="text-[#667085] text-sm">Você não tem permissão para acessar este agente.</p>
+          <p className="text-[#98A2B3] text-sm">Você não tem permissão para acessar este agente.</p>
         </div>
         <Link
           to="/agents"
@@ -369,7 +369,7 @@ export default function AgentDetail() {
   if (loading) {
     return (
       <div className="h-full w-full flex items-center justify-center bg-[#0C111D]">
-        <div className="text-[#667085] text-xs uppercase tracking-[0.12em]">loading agent…</div>
+        <div className="text-[#98A2B3] text-xs uppercase tracking-[0.12em]">loading agent…</div>
       </div>
     )
   }
@@ -377,7 +377,7 @@ export default function AgentDetail() {
   if (!content) {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center bg-[#0C111D] gap-3">
-        <p className="text-[#667085] text-sm">Agent not found</p>
+        <p className="text-[#98A2B3] text-sm">Agent not found</p>
         <Link to="/agents" className="text-[11px] uppercase tracking-[0.12em] text-[#00FFA7] hover:underline">
           ← Agents
         </Link>
@@ -394,7 +394,7 @@ export default function AgentDetail() {
       <header className="flex-shrink-0 h-20 flex items-center px-4 lg:px-6 gap-4 border-b border-[#21262d] bg-[#0d1117]">
         <Link
           to="/agents"
-          className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-[#667085] hover:text-[#e6edf3] transition-colors"
+          className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
         >
           <ArrowLeft size={12} />
           Agents
@@ -424,7 +424,7 @@ export default function AgentDetail() {
 
         {/* Memory count — right aligned */}
         <div className="ml-auto flex items-center gap-4">
-          <span className="hidden sm:inline text-[10px] uppercase tracking-[0.12em] text-[#667085]">
+          <span className="hidden sm:inline text-[10px] uppercase tracking-[0.12em] text-[#98A2B3]">
             {memories.length} {memories.length === 1 ? 'memory' : 'memories'}
           </span>
 
@@ -476,7 +476,7 @@ export default function AgentDetail() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 h-10 border-b border-[#21262d]">
-                <span className="text-[10px] uppercase tracking-[0.12em] text-[#667085]">
+                <span className="text-[10px] uppercase tracking-[0.12em] text-[#98A2B3]">
                   {formatName(name)}
                 </span>
                 <button
@@ -531,7 +531,7 @@ export default function AgentDetail() {
                 className={`flex items-center gap-1.5 px-3 h-full text-[11px] transition-colors ${
                   viewMode === 'chat'
                     ? 'text-[#e6edf3] bg-[#0C111D]'
-                    : 'text-[#667085] hover:text-[#e6edf3] hover:bg-[#161b22]'
+                    : 'text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#161b22]'
                 }`}
               >
                 <MessageSquare size={12} style={{ color: viewMode === 'chat' ? agentColor : undefined }} />
@@ -542,7 +542,7 @@ export default function AgentDetail() {
                 className={`flex items-center gap-1.5 px-3 h-full text-[11px] transition-colors ${
                   viewMode === 'terminal'
                     ? 'text-[#e6edf3] bg-[#0C111D]'
-                    : 'text-[#667085] hover:text-[#e6edf3] hover:bg-[#161b22]'
+                    : 'text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#161b22]'
                 }`}
               >
                 <TerminalIcon size={12} style={{ color: viewMode === 'terminal' ? agentColor : undefined }} />
@@ -573,7 +573,7 @@ export default function AgentDetail() {
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); closeTerminalTab(tt.id) }}
-                      className="opacity-0 group-hover:opacity-100 text-[#667085] hover:text-[#ef4444] transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 text-[#98A2B3] hover:text-[#ef4444] transition-opacity"
                     >
                       <X size={11} />
                     </button>
@@ -581,7 +581,7 @@ export default function AgentDetail() {
                 ))}
                 <button
                   onClick={createNewTerminal}
-                  className="flex items-center justify-center h-full px-2.5 text-[#667085] hover:text-[#e6edf3] hover:bg-[#161b22] transition-colors"
+                  className="flex items-center justify-center h-full px-2.5 text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#161b22] transition-colors"
                   title="New terminal"
                 >
                   <Plus size={13} />
@@ -720,11 +720,11 @@ function InfoRail({
         {tab === 'memory' && (
           <div className="px-5 py-4">
             {memories.length === 0 ? (
-              <div className="text-[12px] text-[#667085]">
+              <div className="text-[12px] text-[#98A2B3]">
                 <p className="mb-1">Sem memórias ainda.</p>
                 <p className="text-[11px] text-[#3F3F46]">
                   Adicione arquivos em{' '}
-                  <code className="font-mono text-[#667085]">.claude/agent-memory/{agentSlug}/</code>
+                  <code className="font-mono text-[#98A2B3]">.claude/agent-memory/{agentSlug}/</code>
                 </p>
               </div>
             ) : (
@@ -738,14 +738,14 @@ function InfoRail({
                         className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-[#161b22] text-left transition-colors"
                       >
                         {open ? (
-                          <ChevronDown size={11} className="text-[#667085] flex-shrink-0" />
+                          <ChevronDown size={11} className="text-[#98A2B3] flex-shrink-0" />
                         ) : (
                           <ChevronRight size={11} className="text-[#3F3F46] flex-shrink-0" />
                         )}
                         <span className="font-mono text-[11.5px] text-[#e6edf3] truncate">
                           {mem.name}
                         </span>
-                        <span className="ml-auto font-mono text-[10px] text-[#667085] flex-shrink-0">
+                        <span className="ml-auto font-mono text-[10px] text-[#98A2B3] flex-shrink-0">
                           {formatSize(mem.size)}
                         </span>
                       </button>
@@ -786,7 +786,7 @@ function TabButton({
     <button
       onClick={onClick}
       className="relative h-10 flex items-center gap-2 text-[10.5px] uppercase tracking-[0.14em] font-medium transition-colors"
-      style={{ color: active ? '#e6edf3' : '#667085' }}
+      style={{ color: active ? '#e6edf3' : '#98A2B3' }}
     >
       {label}
       {count !== undefined && (

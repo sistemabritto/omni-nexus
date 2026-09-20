@@ -43,7 +43,7 @@ const STATUS_STYLES: Record<TicketStatus, string> = {
   blocked: 'bg-red-500/10 text-red-400 border-red-500/20',
   review: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   resolved: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  closed: 'bg-[#21262d] text-[#667085] border-[#21262d]',
+  closed: 'bg-[#21262d] text-[#98A2B3] border-[#21262d]',
   archived: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
 }
 
@@ -61,7 +61,7 @@ const PRIORITY_STYLES: Record<TicketPriority, string> = {
   urgent: 'bg-red-500/10 text-red-400 border-red-500/20',
   high: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   medium: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  low: 'bg-[#21262d] text-[#667085] border-[#344054]',
+  low: 'bg-[#21262d] text-[#98A2B3] border-[#344054]',
 }
 
 const PRIORITY_ICON: Record<TicketPriority, React.ReactNode> = {
@@ -125,7 +125,7 @@ function TicketRow({ ticket, selected, onSelect, onClick }: TicketRowProps) {
     >
       <button
         onClick={e => { e.stopPropagation(); onSelect() }}
-        className="text-[#667085] hover:text-[#00FFA7]"
+        className="text-[#98A2B3] hover:text-[#00FFA7]"
       >
         {selected
           ? <CheckSquare size={14} className="text-[#00FFA7]" />
@@ -147,18 +147,18 @@ function TicketRow({ ticket, selected, onSelect, onClick }: TicketRowProps) {
           )}
         </div>
         {ticket.description && (
-          <p className="text-xs text-[#667085] truncate mt-0.5">{ticket.description}</p>
+          <p className="text-xs text-[#98A2B3] truncate mt-0.5">{ticket.description}</p>
         )}
       </div>
 
       <StatusBadge status={ticket.status} />
       <PriorityBadge priority={ticket.priority} />
 
-      <span className="text-xs text-[#667085] max-w-[100px] truncate font-mono">
+      <span className="text-xs text-[#98A2B3] max-w-[100px] truncate font-mono">
         {ticket.assignee_agent ? `@${ticket.assignee_agent}` : '—'}
       </span>
 
-      <span className="text-xs text-[#667085] whitespace-nowrap">
+      <span className="text-xs text-[#98A2B3] whitespace-nowrap">
         {formatDate(ticket.updated_at)}
       </span>
     </div>
@@ -224,14 +224,14 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           <h2 className="text-sm font-semibold text-white flex items-center gap-2">
             <Ticket size={16} className="text-[#00FFA7]" /> New Ticket
           </h2>
-          <button onClick={onClose} className="text-[#667085] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-3">
           <div>
-            <label className="block text-xs text-[#667085] mb-1">Title *</label>
+            <label className="block text-xs text-[#98A2B3] mb-1">Title *</label>
             <input
               className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
               placeholder="Describe the issue or topic..."
@@ -243,7 +243,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           </div>
 
           <div>
-            <label className="block text-xs text-[#667085] mb-1">Description</label>
+            <label className="block text-xs text-[#98A2B3] mb-1">Description</label>
             <textarea
               className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 resize-none transition-colors"
               placeholder="Optional details..."
@@ -255,7 +255,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-[#667085] mb-1">Priority</label>
+              <label className="block text-xs text-[#98A2B3] mb-1">Priority</label>
               <select
                 className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
                 value={form.priority}
@@ -266,7 +266,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
             </div>
 
             <div className="relative">
-              <label className="block text-xs text-[#667085] mb-1">Assign to agent</label>
+              <label className="block text-xs text-[#98A2B3] mb-1">Assign to agent</label>
               <input
                 className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
                 placeholder="Search agent..."
@@ -306,7 +306,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           )}
 
           <div className="flex items-center justify-end gap-2 pt-1">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[#667085] hover:text-white rounded-lg hover:bg-white/5 transition-colors">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white rounded-lg hover:bg-white/5 transition-colors">
               Cancel
             </button>
             <button
@@ -480,14 +480,14 @@ export default function Topics() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#e6edf3]">{t('issues.title')}</h1>
-            <p className="text-sm text-[#667085]">{total} ticket{total !== 1 ? 's' : ''} · work queue</p>
+            <p className="text-sm text-[#98A2B3]">{total} ticket{total !== 1 ? 's' : ''} · work queue</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs text-[#667085] hover:text-white border border-[#21262d] bg-[#161b22] rounded-lg hover:border-[#344054] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs text-[#98A2B3] hover:text-white border border-[#21262d] bg-[#161b22] rounded-lg hover:border-[#344054] transition-colors"
           >
             <Download size={13} /> Export CSV
           </button>
@@ -496,7 +496,7 @@ export default function Topics() {
             className={`flex items-center gap-1.5 px-3 py-2 text-xs border rounded-lg transition-colors ${
               hasFilters
                 ? 'text-[#00FFA7] border-[#00FFA7]/30 bg-[#00FFA7]/5'
-                : 'text-[#667085] hover:text-white border-[#21262d] bg-[#161b22] hover:border-[#344054]'
+                : 'text-[#98A2B3] hover:text-white border-[#21262d] bg-[#161b22] hover:border-[#344054]'
             }`}
           >
             <Filter size={13} />
@@ -513,7 +513,7 @@ export default function Topics() {
           </button>
           <button
             onClick={fetchTickets}
-            className="flex items-center gap-2 px-3 py-2 text-xs border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 rounded-lg transition-colors"
             title="Refresh"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -525,7 +525,7 @@ export default function Topics() {
       {/* Search bar */}
       <div className="mb-4">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
           <input
             className="w-full bg-[#161b22] border border-[#21262d] rounded-lg pl-9 pr-4 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
             placeholder="Search tickets by title, description or comments..."
@@ -533,7 +533,7 @@ export default function Topics() {
             onChange={e => { setQ(e.target.value); setOffset(0) }}
           />
           {q && (
-            <button onClick={() => { setQ(''); setOffset(0) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#667085] hover:text-white">
+            <button onClick={() => { setQ(''); setOffset(0) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-white">
               <X size={14} />
             </button>
           )}
@@ -551,7 +551,7 @@ export default function Topics() {
                   key={s}
                   onClick={() => toggleStatus(s)}
                   className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full border transition-colors ${
-                    selectedStatuses.includes(s) ? STATUS_STYLES[s] : 'text-[#667085] border-[#21262d] hover:border-[#344054]'
+                    selectedStatuses.includes(s) ? STATUS_STYLES[s] : 'text-[#98A2B3] border-[#21262d] hover:border-[#344054]'
                   }`}
                 >
                   {STATUS_ICON[s]}
@@ -569,7 +569,7 @@ export default function Topics() {
                   key={p}
                   onClick={() => togglePriority(p)}
                   className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full border transition-colors ${
-                    selectedPriorities.includes(p) ? PRIORITY_STYLES[p] : 'text-[#667085] border-[#21262d] hover:border-[#344054]'
+                    selectedPriorities.includes(p) ? PRIORITY_STYLES[p] : 'text-[#98A2B3] border-[#21262d] hover:border-[#344054]'
                   }`}
                 >
                   {PRIORITY_ICON[p]}
@@ -590,7 +590,7 @@ export default function Topics() {
           </div>
 
           {hasFilters && (
-            <button onClick={clearFilters} className="text-xs text-[#667085] hover:text-red-400 transition-colors">
+            <button onClick={clearFilters} className="text-xs text-[#98A2B3] hover:text-red-400 transition-colors">
               Clear all filters
             </button>
           )}
@@ -615,7 +615,7 @@ export default function Topics() {
           </button>
           <button
             onClick={() => setSelected(new Set())}
-            className="ml-auto text-xs text-[#667085] hover:text-white"
+            className="ml-auto text-xs text-[#98A2B3] hover:text-white"
           >
             <X size={14} />
           </button>
@@ -632,7 +632,7 @@ export default function Topics() {
       {/* Table */}
       <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-[#21262d] text-[11px] font-medium uppercase tracking-wider text-[#667085]">
+        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-[#21262d] text-[11px] font-medium uppercase tracking-wider text-[#98A2B3]">
           <button onClick={toggleSelectAll} className="flex items-center">
             {selected.size === tickets.length && tickets.length > 0
               ? <CheckSquare size={14} className="text-[#00FFA7]" />
@@ -646,15 +646,15 @@ export default function Topics() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-[#667085] text-sm">
+          <div className="flex items-center justify-center py-16 text-[#98A2B3] text-sm">
             <RefreshCw size={16} className="animate-spin mr-2" /> Loading...
           </div>
         ) : tickets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-[#667085]">
+          <div className="flex flex-col items-center justify-center py-16 text-[#98A2B3]">
             <Ticket size={32} className="mb-3 opacity-30" />
             <p className="text-sm font-medium">No tickets found</p>
             {hasFilters
-              ? <p className="text-xs mt-1 text-[#667085]">Try clearing the filters</p>
+              ? <p className="text-xs mt-1 text-[#98A2B3]">Try clearing the filters</p>
               : <button onClick={() => setShowCreate(true)} className="mt-3 text-xs text-[#00FFA7] hover:underline">Create your first ticket</button>
             }
           </div>
@@ -664,7 +664,7 @@ export default function Topics() {
               <>
                 <div className="px-4 py-2 bg-[#0C111D]/60 border-b border-[#21262d]/50 flex items-center gap-2">
                   <MessageSquare size={12} className="text-[#00FFA7]" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#667085]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3]">
                     Threads
                     {counts !== null && (
                       <span className="ml-1.5 text-[#00FFA7]/70">({counts.threads})</span>
@@ -685,11 +685,11 @@ export default function Topics() {
             {issueRows.length > 0 && (
               <>
                 <div className="px-4 py-2 bg-[#0C111D]/60 border-b border-[#21262d]/50 flex items-center gap-2">
-                  <Ticket size={12} className="text-[#667085]" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#667085]">
+                  <Ticket size={12} className="text-[#98A2B3]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3]">
                     Issues
                     {counts !== null && (
-                      <span className="ml-1.5 text-[#667085]/70">({counts.issues})</span>
+                      <span className="ml-1.5 text-[#98A2B3]/70">({counts.issues})</span>
                     )}
                   </span>
                 </div>
@@ -710,7 +710,7 @@ export default function Topics() {
 
       {/* Pagination */}
       {total > PAGE_SIZE && (
-        <div className="flex items-center justify-between mt-4 text-xs text-[#667085]">
+        <div className="flex items-center justify-between mt-4 text-xs text-[#98A2B3]">
           <span>Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} of {total}</span>
           <div className="flex items-center gap-2">
             <button

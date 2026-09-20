@@ -64,7 +64,7 @@ export default function OracleWelcomeBanner() {
       {/* Dismiss */}
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 p-1.5 rounded-lg text-[#5a6b7f] hover:text-[#e2e8f0] hover:bg-[#152030] transition-colors"
+        className="flex-shrink-0 p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e2e8f0] hover:bg-[#152030] transition-colors"
         aria-label={t('common.close')}
       >
         <X size={14} />

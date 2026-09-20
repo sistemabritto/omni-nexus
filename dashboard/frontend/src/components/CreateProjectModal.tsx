@@ -18,7 +18,7 @@ interface MissionOption {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-3.5">
-      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[#667085] mb-1.5">
+      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[#98A2B3] mb-1.5">
         {label}
       </label>
       {children}
@@ -150,7 +150,7 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
               Novo projeto
             </h3>
           </div>
-          <button onClick={onClose} className="text-[#667085] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -197,7 +197,7 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
               placeholder="workspace/development/features/evo-ai"
               className={inputClass}
             />
-            <p className="text-[10px] text-[#667085] mt-1.5">
+            <p className="text-[10px] text-[#98A2B3] mt-1.5">
               Se preenchido, essa pasta é indexada no MemPalace como uma Room
               (a Missão vira a Wing) pra busca semântica.
             </p>
@@ -215,7 +215,7 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
                   />
                   <button
                     onClick={() => { setCreatingMission(false); setNewMissionTitle('') }}
-                    className="px-3 text-xs text-[#667085] hover:text-white transition-colors shrink-0"
+                    className="px-3 text-xs text-[#98A2B3] hover:text-white transition-colors shrink-0"
                   >
                     Cancelar
                   </button>
@@ -242,7 +242,7 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
                 </div>
               )}
               {missions.length === 0 && !missionsLoading && !creatingMission && (
-                <p className="text-[10px] text-[#667085] mt-1.5">
+                <p className="text-[10px] text-[#98A2B3] mt-1.5">
                   Nenhuma Missão ainda — pode criar o projeto sem uma, ou clicar em "+ Nova".
                 </p>
               )}
@@ -258,7 +258,7 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
         </div>
 
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-[#21262d]">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-[#667085] hover:text-white transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white transition-colors">
             Cancelar
           </button>
           <button

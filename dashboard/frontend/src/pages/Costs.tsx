@@ -104,8 +104,8 @@ function StatCard({
       </div>
 
       <p className="text-3xl font-bold text-[#e6edf3] tracking-tight">{value}</p>
-      <p className="text-sm text-[#667085] mt-1">{label}</p>
-      {subtitle && <p className="text-xs text-[#667085]/60 mt-0.5">{subtitle}</p>}
+      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
+      {subtitle && <p className="text-xs text-[#98A2B3]/60 mt-0.5">{subtitle}</p>}
     </div>
   )
 }
@@ -211,7 +211,7 @@ export default function Costs() {
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('costs.title')}</h1>
-          <p className="text-[#667085] text-sm mt-1">AI usage cost analysis</p>
+          <p className="text-[#98A2B3] text-sm mt-1">AI usage cost analysis</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <SkeletonCard />
@@ -233,7 +233,7 @@ export default function Costs() {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
           <DollarSign size={32} className="text-[#3F3F46]" />
         </div>
-        <p className="text-[#667085] text-lg">No cost data available</p>
+        <p className="text-[#98A2B3] text-lg">No cost data available</p>
         <p className="text-[#3F3F46] text-sm mt-1">Cost data will appear after routines run</p>
       </div>
     )
@@ -249,7 +249,7 @@ export default function Costs() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('costs.title')}</h1>
-        <p className="text-[#667085] text-sm mt-1">AI usage cost analysis</p>
+        <p className="text-[#98A2B3] text-sm mt-1">AI usage cost analysis</p>
       </div>
 
       {/* KPI Cards */}
@@ -293,8 +293,8 @@ export default function Costs() {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={data.daily}>
               <CartesianGrid strokeDasharray="3 3" stroke="#21262d" />
-              <XAxis dataKey="date" tick={{ fill: '#667085', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#667085', fontSize: 11 }} tickFormatter={(v) => `$${v.toFixed(2)}`} />
+              <XAxis dataKey="date" tick={{ fill: '#98A2B3', fontSize: 11 }} />
+              <YAxis tick={{ fill: '#98A2B3', fontSize: 11 }} tickFormatter={(v) => `$${v.toFixed(2)}`} />
               <Tooltip
                 contentStyle={{ background: '#161b22', border: '1px solid #21262d', borderRadius: '12px', color: '#e6edf3' }}
                 formatter={(value: unknown) => [`$${Number(value).toFixed(4)}`, 'Cost']}
@@ -351,7 +351,7 @@ export default function Costs() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#667085] text-[11px] uppercase tracking-wider font-medium">
+              <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
                 <th className="text-left p-4 pb-3">Routine</th>
                 <th className="text-right p-4 pb-3">Runs</th>
                 <th className="text-right p-4 pb-3">Total Cost</th>
@@ -369,7 +369,7 @@ export default function Costs() {
                   <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">
                     <span className="text-[#e6edf3]">${Number(r.total_cost || 0).toFixed(4)}</span>
                   </td>
-                  <td className="p-4 text-right text-[#667085] tabular-nums text-[13px]">${Number(r.avg_cost || 0).toFixed(4)}</td>
+                  <td className="p-4 text-right text-[#98A2B3] tabular-nums text-[13px]">${Number(r.avg_cost || 0).toFixed(4)}</td>
                 </tr>
               ))}
             </tbody>
@@ -388,12 +388,12 @@ export default function Costs() {
           </h2>
         </div>
         {(data.by_heartbeat || []).length === 0 ? (
-          <div className="p-8 text-center text-[#667085] text-sm">No heartbeat runs yet</div>
+          <div className="p-8 text-center text-[#98A2B3] text-sm">No heartbeat runs yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[#667085] text-[11px] uppercase tracking-wider font-medium">
+                <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
                   <th className="text-left p-4 pb-3">Heartbeat</th>
                   <th className="text-left p-4 pb-3">Agent</th>
                   <th className="text-right p-4 pb-3">Runs</th>
@@ -413,7 +413,7 @@ export default function Costs() {
                     <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">
                       <span className="text-[#e6edf3]">${Number(h.total_cost || 0).toFixed(4)}</span>
                     </td>
-                    <td className="p-4 text-right text-[#667085] tabular-nums text-[13px]">${Number(h.avg_cost || 0).toFixed(4)}</td>
+                    <td className="p-4 text-right text-[#98A2B3] tabular-nums text-[13px]">${Number(h.avg_cost || 0).toFixed(4)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -433,14 +433,14 @@ export default function Costs() {
               Gasto por Missão / Projeto (estimado)
             </h2>
             {data.methodology && (
-              <p className="text-xs text-[#667085] mt-2">{data.methodology}</p>
+              <p className="text-xs text-[#98A2B3] mt-2">{data.methodology}</p>
             )}
           </div>
           <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#21262d]/60">
             <div>
-              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[#667085] font-medium">Por Missão</div>
+              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[#98A2B3] font-medium">Por Missão</div>
               {data.by_mission.length === 0 ? (
-                <div className="px-4 pb-4 text-sm text-[#667085]">Sem dados suficientes ainda.</div>
+                <div className="px-4 pb-4 text-sm text-[#98A2B3]">Sem dados suficientes ainda.</div>
               ) : (
                 <table className="w-full text-sm">
                   <tbody>
@@ -458,9 +458,9 @@ export default function Costs() {
               )}
             </div>
             <div>
-              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[#667085] font-medium">Por Projeto</div>
+              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[#98A2B3] font-medium">Por Projeto</div>
               {data.by_project.length === 0 ? (
-                <div className="px-4 pb-4 text-sm text-[#667085]">Sem dados suficientes ainda.</div>
+                <div className="px-4 pb-4 text-sm text-[#98A2B3]">Sem dados suficientes ainda.</div>
               ) : (
                 <table className="w-full text-sm">
                   <tbody>
@@ -479,7 +479,7 @@ export default function Costs() {
             </div>
           </div>
           {data.unallocated_cost > 0 && (
-            <div className="px-4 py-3 border-t border-[#21262d]/60 text-xs text-[#667085]">
+            <div className="px-4 py-3 border-t border-[#21262d]/60 text-xs text-[#98A2B3]">
               ${data.unallocated_cost.toFixed(4)} não alocados (custo de agente sem ticket correspondente vinculado a uma Missão/Projeto).
             </div>
           )}
@@ -496,7 +496,7 @@ export default function Costs() {
               </div>
               Image Generation
             </h2>
-            <div className="flex items-center gap-4 text-[11px] text-[#667085]">
+            <div className="flex items-center gap-4 text-[11px] text-[#98A2B3]">
               <span>{imageCosts.totals.count} images</span>
               <span>{imageCosts.totals.total_tokens.toLocaleString()} tokens</span>
               <span>{formatBytes(imageCosts.totals.total_bytes)}</span>
@@ -509,7 +509,7 @@ export default function Costs() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[#667085] text-[11px] uppercase tracking-wider font-medium">
+                <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
                   <th className="text-left p-4 pb-3">Model</th>
                   <th className="text-left p-4 pb-3">Provider</th>
                   <th className="text-left p-4 pb-3">Output</th>
@@ -528,17 +528,17 @@ export default function Costs() {
                         {e.model.split('/').pop()}
                       </code>
                     </td>
-                    <td className="p-4 text-[#8b949e] text-[13px]">{e.provider} <span className="text-[#667085]">({e.mode})</span></td>
+                    <td className="p-4 text-[#8b949e] text-[13px]">{e.provider} <span className="text-[#98A2B3]">({e.mode})</span></td>
                     <td className="p-4 text-[#e6edf3] text-[13px] font-medium group-hover:text-white truncate max-w-[200px]" title={e.output_file}>
                       {e.output_file.split('/').pop()}
                     </td>
                     <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">{e.token_usage.total_tokens.toLocaleString()}</td>
                     <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">{formatBytes(e.size_bytes)}</td>
-                    <td className="p-4 text-right text-[#667085] tabular-nums text-[13px]">{e.elapsed_seconds.toFixed(1)}s</td>
+                    <td className="p-4 text-right text-[#98A2B3] tabular-nums text-[13px]">{e.elapsed_seconds.toFixed(1)}s</td>
                     <td className="p-4 text-right tabular-nums text-[13px] text-[#00FFA7]">
                       {e.estimated_cost_usd !== undefined ? `$${e.estimated_cost_usd.toFixed(4)}` : '—'}
                     </td>
-                    <td className="p-4 text-right text-[#667085] text-[13px] whitespace-nowrap">{relativeTime(e.timestamp)}</td>
+                    <td className="p-4 text-right text-[#98A2B3] text-[13px] whitespace-nowrap">{relativeTime(e.timestamp)}</td>
                   </tr>
                 ))}
               </tbody>

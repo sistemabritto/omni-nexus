@@ -13,7 +13,7 @@ function StatusBadge({ status }: { status: KnowledgeConnection['status'] }) {
     return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400"><AlertTriangle size={10} /> needs migration</span>
   if (status === 'error')
     return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400"><XCircle size={10} /> error</span>
-  return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/5 text-[#667085]"><Wifi size={10} /> disconnected</span>
+  return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/5 text-[#98A2B3]"><Wifi size={10} /> disconnected</span>
 }
 
 export default function KnowledgeConnections() {
@@ -81,7 +81,7 @@ export default function KnowledgeConnections() {
             <Wifi size={28} className="text-[#00FFA7]" />
           </div>
           <p className="text-[#F9FAFB] font-medium mb-1">No connections yet</p>
-          <p className="text-[#667085] text-sm mb-6">Bring your own Postgres with pgvector to get started.</p>
+          <p className="text-[#98A2B3] text-sm mb-6">Bring your own Postgres with pgvector to get started.</p>
           {canManage && (
             <button
               onClick={() => setShowWizard(true)}
@@ -106,19 +106,19 @@ export default function KnowledgeConnections() {
                   </div>
                   <div className="flex items-center gap-4 mt-1 flex-wrap">
                     {c.host && (
-                      <span className="text-xs text-[#667085]">{c.host}{c.port ? `:${c.port}` : ''}</span>
+                      <span className="text-xs text-[#98A2B3]">{c.host}{c.port ? `:${c.port}` : ''}</span>
                     )}
                     {c.database_name && (
-                      <span className="text-xs text-[#667085]">/{c.database_name}</span>
+                      <span className="text-xs text-[#98A2B3]">/{c.database_name}</span>
                     )}
                     {c.spaces_count != null && (
-                      <span className="text-xs text-[#667085]">{c.spaces_count} space{c.spaces_count !== 1 ? 's' : ''}</span>
+                      <span className="text-xs text-[#98A2B3]">{c.spaces_count} space{c.spaces_count !== 1 ? 's' : ''}</span>
                     )}
                     {c.chunks_count != null && (
-                      <span className="text-xs text-[#667085]">{c.chunks_count.toLocaleString()} chunks</span>
+                      <span className="text-xs text-[#98A2B3]">{c.chunks_count.toLocaleString()} chunks</span>
                     )}
                     {c.schema_version && (
-                      <span className="text-xs text-[#667085]">schema {c.schema_version}</span>
+                      <span className="text-xs text-[#98A2B3]">schema {c.schema_version}</span>
                     )}
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export default function KnowledgeConnections() {
                   )}
                   <button
                     onClick={() => navigate(`/knowledge/connections/${c.id}`)}
-                    className="p-2 text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 rounded-lg transition-colors"
+                    className="p-2 text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 rounded-lg transition-colors"
                     title="View details"
                   >
                     <ArrowRight size={14} />

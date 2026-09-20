@@ -133,7 +133,7 @@ export default function Memory() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('memory.title')}</h1>
-        <p className="text-[#667085] text-sm mt-1">Persistent workspace memory</p>
+        <p className="text-[#98A2B3] text-sm mt-1">Persistent workspace memory</p>
 
         {/* Stats bar */}
         {!loading && data && (
@@ -182,7 +182,7 @@ export default function Memory() {
           {/* Global Memory */}
           {globalFiles.length > 0 && (
             <div>
-              <h2 className="text-xs font-medium text-[#667085] uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h2 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-3 flex items-center gap-2">
                 <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
                   <Brain size={12} className="text-[#00FFA7]" />
                 </div>
@@ -200,21 +200,21 @@ export default function Memory() {
                     <button onClick={() => toggleGlobal(file)} className="w-full flex items-center justify-between p-4 text-left">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04]">
-                          <FileText size={14} className="text-[#667085] group-hover:text-[#e6edf3] transition-colors" />
+                          <FileText size={14} className="text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors" />
                         </div>
                         <div>
                           <span className="text-sm font-medium text-[#e6edf3]">{file.name}</span>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-[#667085]">{file.path}</span>
+                            <span className="text-xs text-[#98A2B3]">{file.path}</span>
                             {file.size > 0 && (
-                              <span className="text-[10px] text-[#667085]/60">{formatSize(file.size)}</span>
+                              <span className="text-[10px] text-[#98A2B3]/60">{formatSize(file.size)}</span>
                             )}
                           </div>
                         </div>
                       </div>
                       {expandedGlobal === file.path
-                        ? <ChevronDown size={16} className="text-[#667085]" />
-                        : <ChevronRight size={16} className="text-[#667085]" />
+                        ? <ChevronDown size={16} className="text-[#98A2B3]" />
+                        : <ChevronRight size={16} className="text-[#98A2B3]" />
                       }
                     </button>
                     {expandedGlobal === file.path && (
@@ -232,7 +232,7 @@ export default function Memory() {
 
           {/* Agent Memory */}
           <div>
-            <h2 className="text-xs font-medium text-[#667085] uppercase tracking-wider mb-3 flex items-center gap-2">
+            <h2 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-3 flex items-center gap-2">
               <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
                 <Bot size={12} className="text-[#00FFA7]" />
               </div>
@@ -277,21 +277,21 @@ export default function Memory() {
                               {meta.label}
                             </span>
                             <span className="flex items-center gap-1 rounded-full bg-[#0d1117] px-2 py-0.5 border border-[#21262d]">
-                              <FileText size={10} className="text-[#667085]" />
+                              <FileText size={10} className="text-[#98A2B3]" />
                               <span className="text-[10px] font-medium text-[#8b949e]">{count} files</span>
                             </span>
                           </div>
                         </div>
                       </div>
                       {expandedAgent === agent
-                        ? <ChevronDown size={16} className="text-[#667085]" />
-                        : <ChevronRight size={16} className="text-[#667085]" />
+                        ? <ChevronDown size={16} className="text-[#98A2B3]" />
+                        : <ChevronRight size={16} className="text-[#98A2B3]" />
                       }
                     </button>
                     {expandedAgent === agent && (
                       <div className="border-t border-[#21262d] relative z-10">
                         {(agentFiles[agent] || []).length === 0 ? (
-                          <div className="p-4 text-sm text-[#667085]">Loading files...</div>
+                          <div className="p-4 text-sm text-[#98A2B3]">Loading files...</div>
                         ) : (
                           (agentFiles[agent] || []).map((file) => {
                             const fileKey = `${agent}/${file.name}`
@@ -303,15 +303,15 @@ export default function Memory() {
                                   className="w-full flex items-center justify-between px-6 py-3 text-left hover:bg-white/[0.03] transition-colors"
                                 >
                                   <div className="flex items-center gap-2">
-                                    <FileText size={12} className="text-[#667085]" />
+                                    <FileText size={12} className="text-[#98A2B3]" />
                                     <span className="text-sm text-[#8b949e]">{file.name}</span>
                                     {file.size > 0 && (
-                                      <span className="text-[10px] text-[#667085]/60">{formatSize(file.size)}</span>
+                                      <span className="text-[10px] text-[#98A2B3]/60">{formatSize(file.size)}</span>
                                     )}
                                   </div>
                                   {expandedFile === fileKey
-                                    ? <ChevronDown size={14} className="text-[#667085]" />
-                                    : <ChevronRight size={14} className="text-[#667085]" />
+                                    ? <ChevronDown size={14} className="text-[#98A2B3]" />
+                                    : <ChevronRight size={14} className="text-[#98A2B3]" />
                                   }
                                 </button>
                                 {expandedFile === fileKey && (

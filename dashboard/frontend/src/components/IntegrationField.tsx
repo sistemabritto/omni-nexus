@@ -43,7 +43,7 @@ export default function IntegrationField({
           <span className="text-xs text-[#EF4444]" aria-hidden="true">*</span>
         )}
         {!required && (
-          <span className="text-xs text-[#667085]">(opcional)</span>
+          <span className="text-xs text-[#98A2B3]">(opcional)</span>
         )}
       </div>
 
@@ -77,7 +77,7 @@ export default function IntegrationField({
             type="button"
             onClick={() => setRevealed((v) => !v)}
             aria-label={revealed ? 'Ocultar valor' : 'Mostrar valor'}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-[#667085] hover:text-[#e6edf3] transition-colors"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
             tabIndex={-1}
           >
             {revealed ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -90,7 +90,7 @@ export default function IntegrationField({
         <p className="mt-1 text-xs text-red-400">Campo obrigatório</p>
       )}
       {hint && !(hasError && required && !value) && (
-        <p className="mt-1 text-xs text-[#667085]">{hint}</p>
+        <p className="mt-1 text-xs text-[#98A2B3]">{hint}</p>
       )}
     </div>
   )

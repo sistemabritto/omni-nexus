@@ -123,7 +123,7 @@ export default function Reports() {
             <ArrowLeft size={14} /> Back
           </button>
           <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{viewItem.name}</h1>
-          <p className="text-[#667085] text-sm mt-1 font-mono">{currentPath}</p>
+          <p className="text-[#98A2B3] text-sm mt-1 font-mono">{currentPath}</p>
         </div>
         <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
           {isHtml ? (
@@ -163,7 +163,7 @@ export default function Reports() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('reports.title')}</h1>
-        <p className="text-[#667085] text-sm mt-1">Browse your workspace files and reports</p>
+        <p className="text-[#98A2B3] text-sm mt-1">Browse your workspace files and reports</p>
       </div>
 
       {/* Breadcrumbs */}
@@ -176,7 +176,7 @@ export default function Reports() {
               className={`px-2 py-0.5 rounded transition-colors ${
                 i === breadcrumbs.length - 1
                   ? 'text-[#e6edf3] font-medium'
-                  : 'text-[#667085] hover:text-[#00FFA7]'
+                  : 'text-[#98A2B3] hover:text-[#00FFA7]'
               }`}
             >
               {bc.name}
@@ -187,7 +187,7 @@ export default function Reports() {
 
       {/* Search */}
       <div className="relative mb-6">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
         <input
           type="text"
           placeholder="Filter files..."
@@ -211,7 +211,7 @@ export default function Reports() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
             <FolderOpen size={32} className="text-[#3F3F46]" />
           </div>
-          <p className="text-[#667085] text-lg">{search ? 'No matches found' : 'Empty directory'}</p>
+          <p className="text-[#98A2B3] text-lg">{search ? 'No matches found' : 'Empty directory'}</p>
         </div>
       ) : (
         <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
@@ -228,8 +228,8 @@ export default function Reports() {
               <div className="flex-1 min-w-0">
                 <span className="text-sm font-medium text-[#e6edf3] group-hover:text-[#00FFA7] transition-colors">{item.name}</span>
               </div>
-              <span className="text-xs text-[#667085]">{item.children_count} items</span>
-              <ChevronRight size={14} className="text-[#3F3F46] group-hover:text-[#667085] transition-colors" />
+              <span className="text-xs text-[#98A2B3]">{item.children_count} items</span>
+              <ChevronRight size={14} className="text-[#3F3F46] group-hover:text-[#98A2B3] transition-colors" />
             </button>
           ))}
 
@@ -253,8 +253,8 @@ export default function Reports() {
                     {item.name}
                   </span>
                 </div>
-                <span className="text-xs text-[#667085] hidden sm:block">{item.size ? formatSize(item.size) : ''}</span>
-                <span className="text-xs text-[#667085] hidden md:block w-20 text-right">{item.modified ? relativeTime(item.modified) : ''}</span>
+                <span className="text-xs text-[#98A2B3] hidden sm:block">{item.size ? formatSize(item.size) : ''}</span>
+                <span className="text-xs text-[#98A2B3] hidden md:block w-20 text-right">{item.modified ? relativeTime(item.modified) : ''}</span>
               </button>
             )
           })}

@@ -27,7 +27,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> =
   running: { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400', dot: 'bg-blue-400 animate-pulse' },
   completed: { bg: 'bg-[#00FFA7]/10 border-[#00FFA7]/20', text: 'text-[#00FFA7]', dot: 'bg-[#00FFA7]' },
   failed: { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400', dot: 'bg-red-400' },
-  cancelled: { bg: 'bg-[#667085]/10 border-[#667085]/20', text: 'text-[#667085]', dot: 'bg-[#667085]' },
+  cancelled: { bg: 'bg-[#667085]/10 border-[#667085]/20', text: 'text-[#98A2B3]', dot: 'bg-[#667085]' },
 }
 
 const TYPE_STYLES: Record<string, string> = {
@@ -203,13 +203,13 @@ export default function Tasks() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#e6edf3]">{t('tasks.title')}</h1>
-            <p className="text-[#667085] mt-0.5 text-sm">One-off scheduled actions</p>
+            <p className="text-[#98A2B3] mt-0.5 text-sm">One-off scheduled actions</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setLoading(true); fetchTasks() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
           >
             <RefreshCw size={16} />
           </button>
@@ -231,20 +231,20 @@ export default function Tasks() {
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               filter === f.value
                 ? 'bg-[#00FFA7]/10 border-[#00FFA7]/20 text-[#00FFA7]'
-                : 'bg-[#161b22] border-[#21262d] text-[#667085] hover:text-[#e6edf3] hover:border-[#344054]'
+                : 'bg-[#161b22] border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054]'
             }`}
           >
             {f.label}
           </button>
         ))}
-        <span className="text-[11px] text-[#667085] ml-2">{total} tasks</span>
+        <span className="text-[11px] text-[#98A2B3] ml-2">{total} tasks</span>
       </div>
 
       {/* Table */}
       {tasks.length === 0 ? (
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-12 text-center">
-          <CalendarClock size={32} className="text-[#667085] mx-auto mb-3" />
-          <p className="text-[#667085] text-sm">No scheduled tasks yet</p>
+          <CalendarClock size={32} className="text-[#98A2B3] mx-auto mb-3" />
+          <p className="text-[#98A2B3] text-sm">No scheduled tasks yet</p>
           <button onClick={openCreate} className="mt-3 text-[#00FFA7] text-sm hover:underline">
             Create your first task
           </button>
@@ -253,7 +253,7 @@ export default function Tasks() {
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#667085] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
                 <th className="text-left p-4 font-medium">Task</th>
                 <th className="text-left p-4 font-medium">Type</th>
                 <th className="text-left p-4 font-medium">Agent</th>
@@ -270,7 +270,7 @@ export default function Tasks() {
                     <td className="p-4">
                       <div className="text-[#e6edf3] font-medium">{task.name}</div>
                       {task.description && (
-                        <div className="text-[#667085] text-xs mt-0.5 truncate max-w-[300px]">{task.description}</div>
+                        <div className="text-[#98A2B3] text-xs mt-0.5 truncate max-w-[300px]">{task.description}</div>
                       )}
                     </td>
                     <td className="p-4">
@@ -284,7 +284,7 @@ export default function Tasks() {
                           {AGENT_LABELS[task.agent] || `@${task.agent}`}
                         </span>
                       ) : (
-                        <span className="text-[#667085]">--</span>
+                        <span className="text-[#98A2B3]">--</span>
                       )}
                     </td>
                     <td className="p-4 text-[#e6edf3] text-xs font-mono">{formatDate(task.scheduled_at)}</td>
@@ -298,34 +298,34 @@ export default function Tasks() {
                       <div className="flex items-center gap-1 justify-end">
                         {task.status === 'pending' && (
                           <>
-                            <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[#00FFA7]/10 text-[#667085] hover:text-[#00FFA7] transition-colors" title="Run Now">
+                            <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[#00FFA7]/10 text-[#98A2B3] hover:text-[#00FFA7] transition-colors" title="Run Now">
                               <Play size={14} />
                             </button>
-                            <button onClick={() => openEdit(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3] transition-colors" title="Edit">
+                            <button onClick={() => openEdit(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Edit">
                               <Pencil size={14} />
                             </button>
-                            <button onClick={() => handleCancel(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#667085] hover:text-red-400 transition-colors" title="Cancel">
+                            <button onClick={() => handleCancel(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Cancel">
                               <X size={14} />
                             </button>
                           </>
                         )}
                         {(task.status === 'completed' || task.status === 'failed') && (
                           <>
-                            <button onClick={() => setViewTask(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3] transition-colors" title="View Result">
+                            <button onClick={() => setViewTask(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="View Result">
                               <Eye size={14} />
                             </button>
-                            <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#667085] hover:text-red-400 transition-colors" title="Delete">
+                            <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Delete">
                               <Trash2 size={14} />
                             </button>
                           </>
                         )}
                         {task.status === 'failed' && (
-                          <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[#00FFA7]/10 text-[#667085] hover:text-[#00FFA7] transition-colors" title="Retry">
+                          <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[#00FFA7]/10 text-[#98A2B3] hover:text-[#00FFA7] transition-colors" title="Retry">
                             <RefreshCw size={14} />
                           </button>
                         )}
                         {task.status === 'cancelled' && (
-                          <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#667085] hover:text-red-400 transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Delete">
                             <Trash2 size={14} />
                           </button>
                         )}
@@ -347,14 +347,14 @@ export default function Tasks() {
               <h2 className="text-lg font-semibold text-[#e6edf3]">
                 {editingTask ? 'Edit Task' : 'New Scheduled Task'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3]">
+              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]">
                 <X size={18} />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1.5">Name *</label>
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Name *</label>
                 <input
                   type="text"
                   value={form.name}
@@ -365,7 +365,7 @@ export default function Tasks() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1.5">Description</label>
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Description</label>
                 <input
                   type="text"
                   value={form.description}
@@ -377,7 +377,7 @@ export default function Tasks() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#667085] mb-1.5">Type *</label>
+                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Type *</label>
                   <select
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}
@@ -389,7 +389,7 @@ export default function Tasks() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#667085] mb-1.5">Agent</label>
+                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Agent</label>
                   <select
                     value={form.agent}
                     onChange={(e) => setForm({ ...form, agent: e.target.value })}
@@ -403,7 +403,7 @@ export default function Tasks() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1.5">
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">
                   {form.type === 'skill' ? 'Skill name + args' : form.type === 'prompt' ? 'Prompt text' : 'Script path (relative to ADWs/routines/)'} *
                 </label>
                 <textarea
@@ -420,7 +420,7 @@ export default function Tasks() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1.5">Scheduled At *</label>
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Scheduled At *</label>
                 <input
                   type="datetime-local"
                   value={form.scheduled_at}
@@ -433,7 +433,7 @@ export default function Tasks() {
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#21262d]">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg border border-[#21262d] text-[#667085] hover:text-[#e6edf3] hover:border-[#344054] transition-colors text-sm"
+                className="px-4 py-2 rounded-lg border border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-colors text-sm"
               >
                 Cancel
               </button>
@@ -456,21 +456,21 @@ export default function Tasks() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
               <div>
                 <h2 className="text-lg font-semibold text-[#e6edf3]">{viewTask.name}</h2>
-                <p className="text-xs text-[#667085] mt-0.5">
+                <p className="text-xs text-[#98A2B3] mt-0.5">
                   {viewTask.status === 'completed' ? 'Completed' : 'Failed'} at {formatDate(viewTask.completed_at)}
                   {viewTask.started_at && viewTask.completed_at && (
                     <> — {Math.round((new Date(viewTask.completed_at).getTime() - new Date(viewTask.started_at).getTime()) / 1000)}s</>
                   )}
                 </p>
               </div>
-              <button onClick={() => setViewTask(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3]">
+              <button onClick={() => setViewTask(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]">
                 <X size={18} />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1">Payload</label>
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1">Payload</label>
                 <pre className="text-xs text-[#e6edf3] bg-[#0d1117] border border-[#21262d] rounded-lg p-3 whitespace-pre-wrap font-mono">{viewTask.payload}</pre>
               </div>
 

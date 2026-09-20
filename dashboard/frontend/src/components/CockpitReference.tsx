@@ -49,13 +49,13 @@ export default function CockpitReference() {
         className="w-full flex items-center justify-between px-5 py-3 text-left"
       >
         <span className="flex items-center gap-2.5 text-sm text-[#8b949e] group">
-          <FileText size={14} className="text-[#5a6b7f] group-hover:text-[#e6edf3] transition-colors" />
+          <FileText size={14} className="text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors" />
           CLAUDE.md
-          <span className="text-[11px] text-[#5a6b7f] hidden sm:inline">
+          <span className="text-[11px] text-[#98A2B3] hidden sm:inline">
             {t('cockpit.referenceHint')}
           </span>
         </span>
-        <ChevronDown size={14} className={`text-[#5a6b7f] transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-[#98A2B3] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <div className="px-5 pb-5">

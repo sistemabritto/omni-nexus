@@ -78,7 +78,7 @@ export default function Audit() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-[#e6edf3]">{t('audit.title')}</h1>
-            <p className="text-sm text-[#667085]">{total} entries</p>
+            <p className="text-sm text-[#98A2B3]">{total} entries</p>
           </div>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function Audit() {
       <div className="bg-[#161b22] rounded-xl border border-[#21262d] overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#21262d] text-[#667085]">
+            <tr className="border-b border-[#21262d] text-[#98A2B3]">
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">When</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">User</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Action</th>
@@ -98,18 +98,18 @@ export default function Audit() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-[#667085]">Loading...</td>
+                <td colSpan={6} className="px-4 py-12 text-center text-[#98A2B3]">Loading...</td>
               </tr>
             ) : entries.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-[#667085]">No audit entries</td>
+                <td colSpan={6} className="px-4 py-12 text-center text-[#98A2B3]">No audit entries</td>
               </tr>
             ) : (
               entries.map((e) => {
                 const style = getActionStyle(e.action)
                 return (
                   <tr key={e.id} className="border-b border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-3 text-[#667085] text-xs whitespace-nowrap" title={new Date(e.created_at).toLocaleString()}>
+                    <td className="px-4 py-3 text-[#98A2B3] text-xs whitespace-nowrap" title={new Date(e.created_at).toLocaleString()}>
                       {timeAgo(e.created_at)}
                     </td>
                     <td className="px-4 py-3 text-[#e6edf3] font-medium">{e.username || '--'}</td>
@@ -121,9 +121,9 @@ export default function Audit() {
                         {e.action}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#667085]">{e.resource || '--'}</td>
-                    <td className="px-4 py-3 text-[#667085] max-w-xs truncate text-xs">{e.detail || '--'}</td>
-                    <td className="px-4 py-3 text-[#667085] text-xs font-mono">{e.ip_address || '--'}</td>
+                    <td className="px-4 py-3 text-[#98A2B3]">{e.resource || '--'}</td>
+                    <td className="px-4 py-3 text-[#98A2B3] max-w-xs truncate text-xs">{e.detail || '--'}</td>
+                    <td className="px-4 py-3 text-[#98A2B3] text-xs font-mono">{e.ip_address || '--'}</td>
                   </tr>
                 )
               })
@@ -135,7 +135,7 @@ export default function Audit() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 text-sm">
-          <span className="text-[#667085]">
+          <span className="text-[#98A2B3]">
             Page {page} of {totalPages}
           </span>
           <div className="flex items-center gap-2">

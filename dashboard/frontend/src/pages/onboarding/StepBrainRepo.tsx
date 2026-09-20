@@ -45,7 +45,7 @@ export default function StepBrainRepo({ onYes, onNo, onBack }: StepBrainRepoProp
                   <Icon size={14} className="text-[#00FFA7] mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-[12px] font-medium text-[#e2e8f0]">{label}</p>
-                    <p className="text-[11px] text-[#5a6b7f]">{desc}</p>
+                    <p className="text-[11px] text-[#98A2B3]">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -54,13 +54,13 @@ export default function StepBrainRepo({ onYes, onNo, onBack }: StepBrainRepoProp
             <div className="flex gap-3 pt-2">
               <button
                 onClick={onBack}
-                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#5a6b7f] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('onboarding.back')}
               </button>
               <button
                 onClick={onNo}
-                className="flex-1 py-3 rounded-lg border border-[#152030] text-[#5a6b7f] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-1 py-3 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('onboarding.brainRepo.notNow')}
               </button>

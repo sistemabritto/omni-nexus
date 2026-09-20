@@ -100,8 +100,8 @@ function statusIcon(status: string, size = 14) {
     case 'cancelled': return <XCircle size={size} className="text-red-400" />
     case 'done': return <CheckCircle2 size={size} className="text-[#00FFA7]" />
     case 'in_progress': return <Clock size={size} className="text-blue-400" />
-    case 'open': return <Circle size={size} className="text-[#667085]" />
-    default: return <Circle size={size} className="text-[#667085]" />
+    case 'open': return <Circle size={size} className="text-[#98A2B3]" />
+    default: return <Circle size={size} className="text-[#98A2B3]" />
   }
 }
 
@@ -153,7 +153,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-lg shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
           <h3 className="text-white font-semibold text-sm">{title}</h3>
-          <button onClick={onClose} className="text-[#667085] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -166,7 +166,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-3">
-      <label className="block text-xs text-[#667085] mb-1">{label}</label>
+      <label className="block text-xs text-[#98A2B3] mb-1">{label}</label>
       {children}
     </div>
   )
@@ -196,7 +196,7 @@ const PRIORITY_ICON: Record<string, React.ReactNode> = {
   urgent: <ArrowUp size={10} className="text-red-400" />,
   high: <ArrowUp size={10} className="text-orange-400" />,
   medium: <Minus size={10} className="text-yellow-400" />,
-  low: <ArrowDown size={10} className="text-[#667085]" />,
+  low: <ArrowDown size={10} className="text-[#98A2B3]" />,
 }
 
 function PriorityBadge({ priority }: { priority: number | string | null | undefined }) {
@@ -223,14 +223,14 @@ function TaskRow({ task, onStatusChange }: { task: GoalTask; onStatusChange: (id
         {statusIcon(task.status, 14)}
       </button>
       <PriorityBadge priority={task.priority} />
-      <span className={`text-xs flex-1 ${task.status === 'done' ? 'line-through text-[#667085]' : 'text-[#D0D5DD]'}`}>
+      <span className={`text-xs flex-1 ${task.status === 'done' ? 'line-through text-[#98A2B3]' : 'text-[#D0D5DD]'}`}>
         {task.title}
       </span>
       {task.assignee_agent && (
-        <span className="text-[10px] text-[#667085] shrink-0">{task.assignee_agent}</span>
+        <span className="text-[10px] text-[#98A2B3] shrink-0">{task.assignee_agent}</span>
       )}
       {task.due_date && (
-        <span className={`text-[10px] shrink-0 ${isOverdue(task.due_date) ? 'text-red-400' : isDueSoon(task.due_date) ? 'text-yellow-400' : 'text-[#667085]'}`}>
+        <span className={`text-[10px] shrink-0 ${isOverdue(task.due_date) ? 'text-red-400' : isDueSoon(task.due_date) ? 'text-yellow-400' : 'text-[#98A2B3]'}`}>
           {task.due_date}
         </span>
       )}
@@ -248,14 +248,14 @@ function TicketRow({ ticket }: { ticket: GoalTicket }) {
     >
       {statusIcon(ticket.status === 'resolved' || ticket.status === 'closed' ? 'done' : ticket.status === 'in_progress' ? 'in_progress' : 'open', 14)}
       <PriorityBadge priority={ticket.priority} />
-      <span className={`text-xs flex-1 ${done ? 'line-through text-[#667085]' : 'text-[#D0D5DD]'}`}>
+      <span className={`text-xs flex-1 ${done ? 'line-through text-[#98A2B3]' : 'text-[#D0D5DD]'}`}>
         {ticket.title}
       </span>
       {ticket.assignee_agent && (
-        <span className="text-[10px] text-[#667085] shrink-0">@{ticket.assignee_agent}</span>
+        <span className="text-[10px] text-[#98A2B3] shrink-0">@{ticket.assignee_agent}</span>
       )}
       {ticket.due_date && (
-        <span className={`text-[10px] shrink-0 ${isOverdue(ticket.due_date) ? 'text-red-400' : isDueSoon(ticket.due_date) ? 'text-yellow-400' : 'text-[#667085]'}`}>
+        <span className={`text-[10px] shrink-0 ${isOverdue(ticket.due_date) ? 'text-red-400' : isDueSoon(ticket.due_date) ? 'text-yellow-400' : 'text-[#98A2B3]'}`}>
           {ticket.due_date}
         </span>
       )}
@@ -289,27 +289,27 @@ function GoalRow({
         className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
-        {expanded ? <ChevronDown size={14} className="text-[#667085] shrink-0" /> : <ChevronRight size={14} className="text-[#667085] shrink-0" />}
+        {expanded ? <ChevronDown size={14} className="text-[#98A2B3] shrink-0" /> : <ChevronRight size={14} className="text-[#98A2B3] shrink-0" />}
         {statusIcon(goal.status)}
-        <span className="text-[8px] tracking-wider uppercase text-[#667085] bg-[#21262d] px-1.5 py-0.5 rounded shrink-0">
+        <span className="text-[8px] tracking-wider uppercase text-[#98A2B3] bg-[#21262d] px-1.5 py-0.5 rounded shrink-0">
           {goal.parent_goal_id ? 'Sub-meta' : 'Meta'}
         </span>
         <span className="text-sm text-[#D0D5DD] flex-1 font-medium">{goal.title}</span>
 
         {/* Progress */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs text-[#667085]">
+          <span className="text-xs text-[#98A2B3]">
             {formatMetric(goal.current_value, goal.metric_type)}/{formatMetric(goal.target_value, goal.metric_type)}
           </span>
           <div className="w-24">
             <ProgressBar current={goal.current_value} target={goal.target_value} size="sm" />
           </div>
-          <span className={`text-xs font-mono ${p >= 100 ? 'text-[#00FFA7]' : 'text-[#667085]'}`}>{p}%</span>
+          <span className={`text-xs font-mono ${p >= 100 ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`}>{p}%</span>
         </div>
 
         {/* Due date */}
         {goal.due_date && (
-          <span className={`text-xs shrink-0 ml-2 ${isOverdue(goal.due_date) && goal.status === 'active' ? 'text-red-400' : isDueSoon(goal.due_date) ? 'text-yellow-400' : 'text-[#667085]'}`}>
+          <span className={`text-xs shrink-0 ml-2 ${isOverdue(goal.due_date) && goal.status === 'active' ? 'text-red-400' : isDueSoon(goal.due_date) ? 'text-yellow-400' : 'text-[#98A2B3]'}`}>
             {goal.due_date}
           </span>
         )}
@@ -317,7 +317,7 @@ function GoalRow({
         {/* Recalculate button */}
         <button
           onClick={(e) => { e.stopPropagation(); onRecalculate(goal.id) }}
-          className="p-1 text-[#667085] hover:text-[#00FFA7] transition-colors ml-1"
+          className="p-1 text-[#98A2B3] hover:text-[#00FFA7] transition-colors ml-1"
           title="Recalculate progress"
         >
           <RefreshCw size={12} />
@@ -330,7 +330,7 @@ function GoalRow({
               shown first, since this is what's actually being worked on. */}
           {tickets.length > 0 && (
             <div className="mb-2">
-              <div className="flex items-center gap-1.5 text-[10px] text-[#667085] mb-1">
+              <div className="flex items-center gap-1.5 text-[10px] text-[#98A2B3] mb-1">
                 <TicketIcon size={11} />
                 {doneTickets}/{tickets.length} tickets done
               </div>
@@ -344,7 +344,7 @@ function GoalRow({
               shown for goals that predate it. Never created going forward. */}
           {tasks.length > 0 && (
             <div className="mb-1">
-              <div className="text-[10px] text-[#667085] mb-1">
+              <div className="text-[10px] text-[#98A2B3] mb-1">
                 {doneTasks}/{tasks.length} tasks done (legado)
               </div>
               {tasks.map((t) => (
@@ -354,13 +354,13 @@ function GoalRow({
           )}
 
           {tickets.length === 0 && tasks.length === 0 && (
-            <p className="text-xs text-[#667085] py-1">
+            <p className="text-xs text-[#98A2B3] py-1">
               Nenhum ticket ainda. <button onClick={() => onCreateTask(goal.id)} className="text-[#00FFA7] hover:underline">Adicionar um</button>
             </p>
           )}
           <button
             onClick={() => onCreateTask(goal.id)}
-            className="flex items-center gap-1 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors mt-1"
+            className="flex items-center gap-1 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors mt-1"
           >
             <Plus size={12} /> Add task
           </button>
@@ -400,15 +400,15 @@ function ProjectCard({
         className="flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-white/5 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
-        {expanded ? <ChevronDown size={16} className="text-[#667085]" /> : <ChevronRight size={16} className="text-[#667085]" />}
+        {expanded ? <ChevronDown size={16} className="text-[#98A2B3]" /> : <ChevronRight size={16} className="text-[#98A2B3]" />}
         <div className="flex-1">
-          <span className="text-[9px] tracking-widest uppercase text-[#667085] font-semibold block">Projeto</span>
+          <span className="text-[9px] tracking-widest uppercase text-[#98A2B3] font-semibold block">Projeto</span>
           <div className="flex items-center gap-2">
             <span className="text-white font-semibold text-sm">{project.title}</span>
-            <span className="text-[10px] text-[#667085] bg-[#21262d] px-2 py-0.5 rounded-full">{project.slug}</span>
+            <span className="text-[10px] text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full">{project.slug}</span>
           </div>
           {project.description && (
-            <p className="text-[11px] text-[#667085] mt-0.5">{project.description}</p>
+            <p className="text-[11px] text-[#98A2B3] mt-0.5">{project.description}</p>
           )}
         </div>
         <div className="flex items-center gap-4 shrink-0">
@@ -416,13 +416,13 @@ function ProjectCard({
             {/* Aggregate across child Goals — Project itself has no metric of
                 its own, this is a rollup, not a distinct target (see the
                 "Projeto" label above: it's a grouping, not a measurable). */}
-            <div className="text-xs text-[#667085]">{active} active · {achieved} achieved</div>
+            <div className="text-xs text-[#98A2B3]">{active} active · {achieved} achieved</div>
             {totalTarget > 0 && (
               <div className="flex items-center gap-2 mt-1">
                 <div className="w-32">
                   <ProgressBar current={totalCurrent} target={totalTarget} />
                 </div>
-                <span className="text-xs text-[#667085] font-mono">{pct(totalCurrent, totalTarget)}% agregado</span>
+                <span className="text-xs text-[#98A2B3] font-mono">{pct(totalCurrent, totalTarget)}% agregado</span>
               </div>
             )}
           </div>
@@ -432,7 +432,7 @@ function ProjectCard({
       {expanded && (
         <div className="px-5 pb-4 pt-2 border-t border-[#21262d]">
           {goals.length === 0 ? (
-            <p className="text-xs text-[#667085] py-2">No goals yet.</p>
+            <p className="text-xs text-[#98A2B3] py-2">No goals yet.</p>
           ) : (
             goals.map((g) => (
               <GoalRow
@@ -446,7 +446,7 @@ function ProjectCard({
           )}
           <button
             onClick={() => onCreateGoal(project.id)}
-            className="flex items-center gap-1 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors mt-2"
+            className="flex items-center gap-1 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors mt-2"
           >
             <Plus size={12} /> Add goal
           </button>
@@ -518,7 +518,7 @@ function CreateMissionModal({ onClose, onCreated }: { onClose: () => void; onCre
         </Field>
       </div>
       <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-[#667085] hover:text-white transition-colors">Cancel</button>
+        <button onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white transition-colors">Cancel</button>
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -596,7 +596,7 @@ function CreateGoalModal({ projectId, onClose, onCreated }: { projectId: number;
         </Field>
       </div>
       <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-[#667085] hover:text-white transition-colors">Cancel</button>
+        <button onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white transition-colors">Cancel</button>
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -655,7 +655,7 @@ function CreateTaskModal({ goalId, onClose, onCreated }: { goalId: number; onClo
         <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
       </Field>
       <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-[#667085] hover:text-white transition-colors">Cancel</button>
+        <button onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white transition-colors">Cancel</button>
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -789,7 +789,7 @@ export default function Goals() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#667085] text-sm">Loading goals...</div>
+        <div className="text-[#98A2B3] text-sm">Loading goals...</div>
       </div>
     )
   }
@@ -810,7 +810,7 @@ export default function Goals() {
           <Target size={20} className="text-[#00FFA7]" />
           <div>
             <h1 className="text-white font-semibold text-lg">{t('goals.title')}</h1>
-            <p className="text-xs text-[#667085]">Mission → Project → Goal → Task hierarchy</p>
+            <p className="text-xs text-[#98A2B3]">Mission → Project → Goal → Task hierarchy</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -822,7 +822,7 @@ export default function Goals() {
           </button>
           <button
             onClick={load}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#667085] hover:text-white border border-[#21262d] rounded-lg hover:border-[#344054] transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#98A2B3] hover:text-white border border-[#21262d] rounded-lg hover:border-[#344054] transition-colors"
           >
             <RefreshCw size={12} /> Refresh
           </button>
@@ -840,9 +840,9 @@ export default function Goals() {
               </div>
               <ProgressBar current={g.current_value} target={g.target_value} />
               <div className="flex justify-between mt-1.5">
-                <span className="text-[10px] text-[#667085]">{formatMetric(g.current_value, g.metric_type)} / {formatMetric(g.target_value, g.metric_type)}</span>
+                <span className="text-[10px] text-[#98A2B3]">{formatMetric(g.current_value, g.metric_type)} / {formatMetric(g.target_value, g.metric_type)}</span>
                 {g.due_date && (
-                  <span className={`text-[10px] ${isOverdue(g.due_date) ? 'text-red-400' : isDueSoon(g.due_date) ? 'text-yellow-400' : 'text-[#667085]'}`}>
+                  <span className={`text-[10px] ${isOverdue(g.due_date) ? 'text-red-400' : isDueSoon(g.due_date) ? 'text-yellow-400' : 'text-[#98A2B3]'}`}>
                     {g.due_date}
                   </span>
                 )}
@@ -855,24 +855,24 @@ export default function Goals() {
       {/* Filters */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-[#667085]">Status:</span>
+          <span className="text-xs text-[#98A2B3]">Status:</span>
           {(['all', 'active', 'achieved', 'on-hold', 'cancelled'] as StatusFilter[]).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${statusFilter === s ? 'bg-[#00FFA7]/15 text-[#00FFA7] border border-[#00FFA7]/30' : 'text-[#667085] border border-[#21262d] hover:border-[#344054]'}`}
+              className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${statusFilter === s ? 'bg-[#00FFA7]/15 text-[#00FFA7] border border-[#00FFA7]/30' : 'text-[#98A2B3] border border-[#21262d] hover:border-[#344054]'}`}
             >
               {s}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-[#667085]">Due:</span>
+          <span className="text-xs text-[#98A2B3]">Due:</span>
           {(['all', 'overdue', 'this-week', 'this-month'] as DueFilter[]).map((d) => (
             <button
               key={d}
               onClick={() => setDueFilter(d)}
-              className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${dueFilter === d ? 'bg-[#00FFA7]/15 text-[#00FFA7] border border-[#00FFA7]/30' : 'text-[#667085] border border-[#21262d] hover:border-[#344054]'}`}
+              className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${dueFilter === d ? 'bg-[#00FFA7]/15 text-[#00FFA7] border border-[#00FFA7]/30' : 'text-[#98A2B3] border border-[#21262d] hover:border-[#344054]'}`}
             >
               {d}
             </button>
@@ -884,7 +884,7 @@ export default function Goals() {
       {filteredMissions.length === 0 ? (
         <div className="text-center py-16 px-4">
           <p className="text-sm text-[#e6edf3] mb-2">Nenhuma Mission criada ainda.</p>
-          <p className="text-xs text-[#667085] max-w-md mx-auto mb-4">
+          <p className="text-xs text-[#98A2B3] max-w-md mx-auto mb-4">
             Missions são os objetivos de topo da sua organização. Projects e Goals descendem delas.
           </p>
           <button
@@ -905,20 +905,20 @@ export default function Goals() {
                   <div>
                     <span className="text-[9px] tracking-widest uppercase text-[#00FFA7]/70 font-semibold">Missão</span>
                     <h2 className="text-white font-bold text-base leading-tight">{mission.title}</h2>
-                    {mission.description && <p className="text-xs text-[#667085] mt-0.5">{mission.description}</p>}
+                    {mission.description && <p className="text-xs text-[#98A2B3] mt-0.5">{mission.description}</p>}
                   </div>
                 </div>
                 <div className="text-right shrink-0">
                   {mission.target_value && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#667085]">{mission.current_value} / {mission.target_value}</span>
+                      <span className="text-xs text-[#98A2B3]">{mission.current_value} / {mission.target_value}</span>
                       <div className="w-32">
                         <ProgressBar current={mission.current_value} target={mission.target_value} />
                       </div>
                     </div>
                   )}
                   {mission.due_date && (
-                    <div className="text-xs text-[#667085] mt-1">Due {mission.due_date}</div>
+                    <div className="text-xs text-[#98A2B3] mt-1">Due {mission.due_date}</div>
                   )}
                 </div>
               </div>
@@ -926,7 +926,7 @@ export default function Goals() {
 
             {/* Projects */}
             {(mission.projects || []).length === 0 ? (
-              <p className="text-xs text-[#667085] px-2">No projects in this mission.</p>
+              <p className="text-xs text-[#98A2B3] px-2">No projects in this mission.</p>
             ) : (
               (mission.projects || []).map((project) => (
                 <div id={`project-${project.id}`} key={project.id}>
@@ -942,7 +942,7 @@ export default function Goals() {
             )}
             <button
               onClick={() => setCreateProjectForMission(mission.id)}
-              className="flex items-center gap-1 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors mt-1 px-2"
+              className="flex items-center gap-1 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors mt-1 px-2"
             >
               <Plus size={12} /> {t('goals.newProject')}
             </button>

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Settings as SettingsIcon, Save } from 'lucide-react'
 import { api } from '../lib/api'
+import PageTabBar from '../components/PageTabBar'
 import UsersPage from './Users'
 import RolesPage from './Roles'
 import AuditPage from './Audit'
@@ -10,7 +11,7 @@ import DocsPage from './Docs'
 
 // ── Input / label class strings (same as Providers.tsx) ────────────────────
 const inp = 'w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20'
-const lbl = 'block text-[11px] font-semibold text-[#5a6b7f] mb-1.5 tracking-[0.08em] uppercase'
+const lbl = 'block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase'
 
 // ── Toast notification ──────────────────────────────────────────────────────
 type ToastType = 'success' | 'error' | 'info'
@@ -41,7 +42,7 @@ function ToastStack({ toasts }: { toasts: Toast[] }) {
               ? 'bg-[#0b1018] border-[#00FFA7]/30 text-[#00FFA7]'
               : t.type === 'error'
               ? 'bg-[#0b1018] border-red-500/30 text-red-400'
-              : 'bg-[#0b1018] border-[#21262d] text-[#667085]'
+              : 'bg-[#0b1018] border-[#21262d] text-[#98A2B3]'
           }`}
         >
           <span>{t.message}</span>
@@ -279,26 +280,12 @@ export default function Settings() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">{t('settings.title')}</h1>
-          <p className="text-[#5a6b7f] text-sm mt-0.5">{t('settings.headerSubtitle')}</p>
+          <p className="text-[#98A2B3] text-sm mt-0.5">{t('settings.headerSubtitle')}</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-7 border-b border-[#21262d]">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
-              activeTab === tab.key
-                ? 'text-[#00FFA7] border-[#00FFA7]'
-                : 'text-[#667085] border-transparent hover:text-[#e6edf3] hover:border-[#21262d]'
-            }`}
-          >
-            {t(tab.labelKey)}
-          </button>
-        ))}
-      </div>
+      <PageTabBar<TabKey> ariaLabel={t('settings.title')} extraClass="mb-7" active={activeTab} onSelect={setActiveTab} tabs={TABS.map((x) => ({ key: x.key, label: t(x.labelKey) }))} />
 
       {/* Tab content */}
       {activeTab === 'workspace' && <WorkspaceTab showToast={showToast} />}

@@ -38,12 +38,12 @@ export default function Intelligence() {
       <h1 className="text-xl font-semibold text-white mb-1">
         Integrações
       </h1>
-      <p className="text-sm text-[#667085] mb-6">
+      <p className="text-sm text-[#98A2B3] mb-6">
         Tudo que dá cérebro à operação — provedores, conhecimento, memória e integrações.
       </p>
 
       <section className="mb-8">
-        <h2 className="text-xs uppercase tracking-wider text-[#667085] font-semibold mb-3">
+        <h2 className="text-xs uppercase tracking-wider text-[#98A2B3] font-semibold mb-3">
           Cérebro & memória
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -61,7 +61,7 @@ export default function Intelligence() {
       </section>
 
       <section>
-        <h2 className="text-xs uppercase tracking-wider text-[#667085] font-semibold mb-3">
+        <h2 className="text-xs uppercase tracking-wider text-[#98A2B3] font-semibold mb-3">
           Catálogo (disponível para todos os agentes)
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

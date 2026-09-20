@@ -125,7 +125,7 @@ export default function ConnectionDetail() {
 
   if (!conn) {
     return (
-      <div className="text-center py-12 text-[#667085] text-sm">
+      <div className="text-center py-12 text-[#98A2B3] text-sm">
         {error || 'Connection not found.'}
       </div>
     )
@@ -136,7 +136,7 @@ export default function ConnectionDetail() {
     conn.status === 'error' ? XCircle : Wifi
   const statusColor = conn.status === 'ready' ? 'text-[#00FFA7]' :
     conn.status === 'needs_migration' ? 'text-yellow-400' :
-    conn.status === 'error' ? 'text-red-400' : 'text-[#667085]'
+    conn.status === 'error' ? 'text-red-400' : 'text-[#98A2B3]'
 
   return (
     <div className="space-y-6">
@@ -144,7 +144,7 @@ export default function ConnectionDetail() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/knowledge')}
-          className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
         >
           <ArrowLeft size={16} />
         </button>
@@ -153,7 +153,7 @@ export default function ConnectionDetail() {
             <h2 className="text-lg font-semibold text-[#F9FAFB]">{conn.name}</h2>
             <StatusIcon size={14} className={statusColor} />
           </div>
-          <p className="text-xs text-[#667085]">/{conn.slug}</p>
+          <p className="text-xs text-[#98A2B3]">/{conn.slug}</p>
         </div>
         {canManage && (
           <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ export default function ConnectionDetail() {
           { label: 'Created', value: new Date(conn.created_at).toLocaleString() },
         ].map(({ label, value }) => (
           <div key={label} className="bg-[#182230] border border-[#344054] rounded-xl p-4">
-            <p className="text-xs text-[#667085] mb-1">{label}</p>
+            <p className="text-xs text-[#98A2B3] mb-1">{label}</p>
             <p className="text-sm text-[#D0D5DD] font-medium truncate">{value}</p>
           </div>
         ))}
@@ -217,7 +217,7 @@ export default function ConnectionDetail() {
 
       {conn.last_error && (
         <div className="bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
-          <p className="text-xs text-[#667085] mb-1">Last Error</p>
+          <p className="text-xs text-[#98A2B3] mb-1">Last Error</p>
           <p className="text-sm text-red-400 font-mono">{conn.last_error}</p>
         </div>
       )}
@@ -232,10 +232,10 @@ export default function ConnectionDetail() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-[#D0D5DD]">{ev.event_type}</span>
-                    <span className="text-[10px] text-[#667085]">{new Date(ev.created_at).toLocaleString()}</span>
+                    <span className="text-[10px] text-[#98A2B3]">{new Date(ev.created_at).toLocaleString()}</span>
                   </div>
                   {ev.details && Object.keys(ev.details).length > 0 && (
-                    <p className="text-xs text-[#667085] mt-0.5 font-mono truncate">
+                    <p className="text-xs text-[#98A2B3] mt-0.5 font-mono truncate">
                       {JSON.stringify(ev.details).slice(0, 120)}
                     </p>
                   )}
@@ -250,7 +250,7 @@ export default function ConnectionDetail() {
       {canManage && (
         <div className="border border-red-500/20 rounded-xl p-4">
           <h3 className="text-sm font-semibold text-red-400 mb-2">{t('knowledge.dangerZone')}</h3>
-          <p className="text-xs text-[#667085] mb-4">
+          <p className="text-xs text-[#98A2B3] mb-4">
             Deleting this connection removes it from EvoNexus only.{' '}
             <strong className="text-[#D0D5DD]">Data on your Postgres remains untouched.</strong>
           </p>

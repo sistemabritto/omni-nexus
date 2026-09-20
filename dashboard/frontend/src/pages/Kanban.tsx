@@ -44,7 +44,7 @@ const STATUSES: Array<{ id: TicketStatus; label: string; icon: React.ReactNode; 
   { id: 'blocked', label: 'Blocked', icon: <AlertTriangle size={13} />, tone: 'text-red-400 border-red-500/25 bg-red-500/10' },
   { id: 'review', label: 'Review', icon: <Eye size={13} />, tone: 'text-purple-400 border-purple-500/25 bg-purple-500/10' },
   { id: 'resolved', label: 'Resolved', icon: <CheckCircle size={13} />, tone: 'text-gray-300 border-gray-500/25 bg-gray-500/10' },
-  { id: 'closed', label: 'Closed', icon: <XCircle size={13} />, tone: 'text-[#667085] border-[#344054] bg-[#21262d]' },
+  { id: 'closed', label: 'Closed', icon: <XCircle size={13} />, tone: 'text-[#98A2B3] border-[#344054] bg-[#21262d]' },
 ]
 
 const PRIORITY_ICON: Record<TicketPriority, React.ReactNode> = {
@@ -58,7 +58,7 @@ const PRIORITY_TONE: Record<TicketPriority, string> = {
   urgent: 'text-red-400 border-red-500/25 bg-red-500/10',
   high: 'text-orange-400 border-orange-500/25 bg-orange-500/10',
   medium: 'text-yellow-400 border-yellow-500/25 bg-yellow-500/10',
-  low: 'text-[#667085] border-[#344054] bg-[#21262d]',
+  low: 'text-[#98A2B3] border-[#344054] bg-[#21262d]',
 }
 
 const PRIORITY_RAIL: Record<TicketPriority, string> = {
@@ -144,7 +144,7 @@ export default function Kanban() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#e6edf3]">Kanban</h1>
-            <p className="text-sm text-[#667085]">{tickets.length} tickets ativos por status operacional</p>
+            <p className="text-sm text-[#98A2B3]">{tickets.length} tickets ativos por status operacional</p>
           </div>
         </div>
 
@@ -152,7 +152,7 @@ export default function Kanban() {
             de largura útil e rolava de lado antes mesmo do board. */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px] sm:flex-none">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -162,7 +162,7 @@ export default function Kanban() {
           </div>
           <button
             onClick={fetchTickets}
-            className="flex items-center gap-2 px-3 py-2 text-xs border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 rounded-lg transition-colors"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             Atualizar
@@ -207,7 +207,7 @@ export default function Kanban() {
                   {column.icon}
                   {column.label}
                 </span>
-                <span className="text-xs text-[#667085]">{items.length}</span>
+                <span className="text-xs text-[#98A2B3]">{items.length}</span>
               </header>
 
               {/* Com o board quebrando em duas linhas, uma coluna com 40 tickets
@@ -216,9 +216,9 @@ export default function Kanban() {
                   impede que ela sequestre a rolagem da página ao chegar no fim. */}
               <div className="flex-1 p-2 space-y-2 sm:max-h-[calc(100vh-16rem)] sm:overflow-y-auto overscroll-contain">
                 {loading ? (
-                  <div className="text-xs text-[#667085] px-2 py-6 text-center">Carregando...</div>
+                  <div className="text-xs text-[#98A2B3] px-2 py-6 text-center">Carregando...</div>
                 ) : items.length === 0 ? (
-                  <div className="text-xs text-[#667085] px-2 py-6 text-center border border-dashed border-[#21262d] rounded-lg">
+                  <div className="text-xs text-[#98A2B3] px-2 py-6 text-center border border-dashed border-[#21262d] rounded-lg">
                     Vazio
                   </div>
                 ) : (
@@ -240,7 +240,7 @@ export default function Kanban() {
                           {ticket.is_thread ? (
                             ticket.assignee_agent ? <AgentIcon agent={ticket.assignee_agent} size={18} /> : <Ticket size={14} className="text-[#00FFA7] mt-0.5" />
                           ) : (
-                            <Ticket size={14} className="text-[#667085] mt-0.5" />
+                            <Ticket size={14} className="text-[#98A2B3] mt-0.5" />
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start gap-1.5">
@@ -261,11 +261,11 @@ export default function Kanban() {
                           {PRIORITY_ICON[ticket.priority]}
                           {ticket.priority}
                         </span>
-                        <span className="font-ticket-mono text-[10px] text-[#667085]">{formatAge(ticket.updated_at)}</span>
+                        <span className="font-ticket-mono text-[10px] text-[#98A2B3]">{formatAge(ticket.updated_at)}</span>
                       </div>
 
                       <div className="mt-2.5 pt-2.5 border-t border-[#21262d]/60 flex items-center justify-between gap-2 min-w-0">
-                        <span className="font-ticket-mono text-[10px] text-[#667085] truncate min-w-0">
+                        <span className="font-ticket-mono text-[10px] text-[#98A2B3] truncate min-w-0">
                           {ticket.assignee_agent ? `@${ticket.assignee_agent}` : 'sem agente'}
                         </span>
                         {/* min-w-0 é o que permite encolher: o tamanho mínimo
@@ -293,7 +293,7 @@ export default function Kanban() {
       </div>
 
       {tickets.length === 0 && !loading && (
-        <div className="mt-2 flex items-center justify-center gap-3 text-xs text-[#667085]">
+        <div className="mt-2 flex items-center justify-center gap-3 text-xs text-[#98A2B3]">
           Nenhum ticket ativo ainda.
           <button
             onClick={() => setShowCreateModal(true)}

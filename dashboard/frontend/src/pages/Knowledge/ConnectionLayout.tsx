@@ -35,7 +35,7 @@ function ConnectionLayoutInner() {
   // page refresh that lands directly on /knowledge/connections/:id.
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-[#667085] text-sm">
+      <div className="flex items-center justify-center py-16 text-[#98A2B3] text-sm">
         Loading connection…
       </div>
     )
@@ -45,7 +45,7 @@ function ConnectionLayoutInner() {
     return (
       <div className="text-center py-16">
         <p className="text-[#D0D5DD] font-medium mb-2">Connection not found</p>
-        <p className="text-[#667085] text-sm mb-4">
+        <p className="text-[#98A2B3] text-sm mb-4">
           The connection you&apos;re trying to open doesn&apos;t exist or was deleted.
         </p>
         <button
@@ -71,7 +71,7 @@ function ConnectionLayoutInner() {
       <div className="mb-6">
         <Link
           to="/knowledge"
-          className="inline-flex items-center gap-1.5 text-xs text-[#667085] hover:text-[#D0D5DD] mb-3 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#D0D5DD] mb-3 transition-colors"
         >
           <ArrowLeft size={14} />
           All connections
@@ -82,7 +82,7 @@ function ConnectionLayoutInner() {
           <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-semibold ${statusColor}`}>
             {connection.status}
           </span>
-          <span className="text-xs text-[#667085] font-mono">
+          <span className="text-xs text-[#98A2B3] font-mono">
             {connection.host}:{connection.port ?? 5432} / {connection.database_name}
           </span>
         </div>
@@ -99,7 +99,7 @@ function ConnectionLayoutInner() {
               `px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                 isActive
                   ? 'text-[#00FFA7] border-[#00FFA7]'
-                  : 'text-[#667085] border-transparent hover:text-[#D0D5DD]'
+                  : 'text-[#98A2B3] border-transparent hover:text-[#D0D5DD]'
               }`
             }
           >
@@ -118,7 +118,7 @@ export default function ConnectionLayout() {
   const { hasPermission } = useAuth()
   if (!hasPermission('knowledge', 'view')) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#667085] text-sm">
+      <div className="flex items-center justify-center h-64 text-[#98A2B3] text-sm">
         You don&apos;t have permission to view Knowledge.
       </div>
     )

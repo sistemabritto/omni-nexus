@@ -47,7 +47,7 @@ const SOURCE_COLORS: Record<string, string> = {
   linear: 'bg-[#5e6ad2]/10 text-[#5e6ad2] border-[#5e6ad2]/20',
   telegram: 'bg-[#229ed9]/10 text-[#229ed9] border-[#229ed9]/20',
   discord: 'bg-[#5865f2]/10 text-[#5865f2] border-[#5865f2]/20',
-  custom: 'bg-[#667085]/10 text-[#667085] border-[#667085]/20',
+  custom: 'bg-[#667085]/10 text-[#98A2B3] border-[#667085]/20',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -255,7 +255,7 @@ export default function Triggers() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#e6edf3]">Triggers</h1>
-            <p className="text-[#667085] mt-0.5 text-sm">Reactive event triggers — webhook & event-based</p>
+            <p className="text-[#98A2B3] mt-0.5 text-sm">Reactive event triggers — webhook & event-based</p>
           </div>
         </div>
         {hasPermission('triggers', 'execute') && (
@@ -275,14 +275,14 @@ export default function Triggers() {
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               filter === f.value
                 ? 'bg-[#00FFA7]/10 border-[#00FFA7]/20 text-[#00FFA7]'
-                : 'bg-[#161b22] border-[#21262d] text-[#667085] hover:text-[#D0D5DD] hover:border-[#344054]'
+                : 'bg-[#161b22] border-[#21262d] text-[#98A2B3] hover:text-[#D0D5DD] hover:border-[#344054]'
             }`}
           >
             {f.label}
           </button>
         ))}
-        <span className="text-[11px] text-[#667085] ml-2">{triggers.length} triggers</span>
-        <button onClick={fetchTriggers} className="ml-auto p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3] transition-colors" title="Refresh">
+        <span className="text-[11px] text-[#98A2B3] ml-2">{triggers.length} triggers</span>
+        <button onClick={fetchTriggers} className="ml-auto p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Refresh">
           <RefreshCw size={14} />
         </button>
       </div>
@@ -290,13 +290,13 @@ export default function Triggers() {
       {/* Table */}
       {triggers.length === 0 ? (
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-12 text-center">
-          <p className="text-[#667085] text-sm">No triggers yet. Create one to get started.</p>
+          <p className="text-[#98A2B3] text-sm">No triggers yet. Create one to get started.</p>
         </div>
       ) : (
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#667085] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
                 <th className="text-left p-4 font-medium">Name</th>
                 <th className="text-left p-4 font-medium">Type</th>
                 <th className="text-left p-4 font-medium">Source</th>
@@ -312,7 +312,7 @@ export default function Triggers() {
                 <tr key={t.id} className="border-t border-[#21262d]/50 hover:bg-white/[0.02]">
                   <td className="p-4">
                     <div className="text-[#e6edf3] font-medium">{t.name}</div>
-                    <div className="text-[#667085] text-xs mt-0.5">
+                    <div className="text-[#98A2B3] text-xs mt-0.5">
                       {Object.entries(t.event_filter).map(([k, v]) => `${k}:${v}`).join(', ') || 'no filter'}
                     </div>
                   </td>
@@ -329,11 +329,11 @@ export default function Triggers() {
                     </span>
                   </td>
                   <td className="p-4 hidden xl:table-cell">
-                    <span className="text-[#667085] text-xs">{t.action_type}:</span>{' '}
+                    <span className="text-[#98A2B3] text-xs">{t.action_type}:</span>{' '}
                     <span className="text-[#e6edf3] text-xs">{t.action_payload.length > 40 ? t.action_payload.slice(0, 40) + '...' : t.action_payload}</span>
                   </td>
                   <td className="p-4 hidden lg:table-cell">
-                    <span className="text-[#667085] text-xs">{t.agent ? `@${t.agent.replace('-assistant', '').replace('-financeiro', '').replace('-community', '').replace('-strategy', '').replace('-social-media', '').replace('-comercial', '').replace('-courses', '').replace('-personal', '')}` : '--'}</span>
+                    <span className="text-[#98A2B3] text-xs">{t.agent ? `@${t.agent.replace('-assistant', '').replace('-financeiro', '').replace('-community', '').replace('-strategy', '').replace('-social-media', '').replace('-comercial', '').replace('-courses', '').replace('-personal', '')}` : '--'}</span>
                   </td>
                   <td className="p-4 text-center">
                     <button onClick={() => handleToggle(t)} title={t.enabled ? 'Disable' : 'Enable'}
@@ -344,7 +344,7 @@ export default function Triggers() {
                   </td>
                   <td className="p-4 text-center">
                     <button onClick={() => openExecutions(t.id, t.name)}
-                      className="text-[#667085] hover:text-[#e6edf3] text-xs transition-colors"
+                      className="text-[#98A2B3] hover:text-[#e6edf3] text-xs transition-colors"
                     >
                       {t.execution_count}
                     </button>
@@ -353,28 +353,28 @@ export default function Triggers() {
                     <div className="flex items-center gap-1 justify-end">
                       {t.type === 'webhook' && (
                         <button onClick={() => copyWebhookUrl(t)}
-                          className={`p-1.5 rounded-lg transition-colors ${copied === t.id ? 'text-[#00FFA7]' : 'hover:bg-white/5 text-[#667085] hover:text-[#e6edf3]'}`}
+                          className={`p-1.5 rounded-lg transition-colors ${copied === t.id ? 'text-[#00FFA7]' : 'hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]'}`}
                           title="Copy webhook URL"
                         >
                           <Copy size={14} />
                         </button>
                       )}
                       {hasPermission('triggers', 'execute') && (
-                        <button onClick={() => handleTest(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3] transition-colors" title="Test">
+                        <button onClick={() => handleTest(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Test">
                           <Play size={14} />
                         </button>
                       )}
                       {hasPermission('triggers', 'execute') && (
-                        <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3] transition-colors" title="Edit">
+                        <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Edit">
                           <Pencil size={14} />
                         </button>
                       )}
                       {hasPermission('triggers', 'manage') && (
                         <>
-                          <button onClick={() => handleRegenerateSecret(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-yellow-400 transition-colors" title="Regenerate Secret">
+                          <button onClick={() => handleRegenerateSecret(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-yellow-400 transition-colors" title="Regenerate Secret">
                             <KeyRound size={14} />
                           </button>
-                          <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#667085] hover:text-red-400 transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Delete">
                             <Trash2 size={14} />
                           </button>
                         </>
@@ -394,19 +394,19 @@ export default function Triggers() {
           <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
               <h2 className="text-lg font-semibold text-[#e6edf3]">{editingId ? 'Edit Trigger' : 'New Trigger'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3]"><X size={18} /></button>
+              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]"><X size={18} /></button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1.5">Name *</label>
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Name *</label>
                 <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Deploy Notification"
                   className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#667085] mb-1.5">Type *</label>
+                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Type *</label>
                   <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
                     className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
                     <option value="webhook">Webhook</option>
@@ -414,7 +414,7 @@ export default function Triggers() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#667085] mb-1.5">Source *</label>
+                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Source *</label>
                   <select value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}
                     className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
                     {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -423,7 +423,7 @@ export default function Triggers() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1.5">Event Filter (JSON)</label>
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Event Filter (JSON)</label>
                 <textarea value={form.event_filter} onChange={e => setForm({ ...form, event_filter: e.target.value })}
                   placeholder='{"event": "push", "branch": "main"}' rows={3}
                   className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none resize-none font-mono" />
@@ -431,14 +431,14 @@ export default function Triggers() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#667085] mb-1.5">Action Type *</label>
+                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Action Type *</label>
                   <select value={form.action_type} onChange={e => setForm({ ...form, action_type: e.target.value })}
                     className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
                     {ACTION_TYPES.map(at => <option key={at} value={at}>{at}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#667085] mb-1.5">Agent</label>
+                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Agent</label>
                   <select value={form.agent} onChange={e => setForm({ ...form, agent: e.target.value })}
                     className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
                     <option value="">None</option>
@@ -448,7 +448,7 @@ export default function Triggers() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#667085] mb-1.5">Action Payload *</label>
+                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Action Payload *</label>
                 <textarea value={form.action_payload} onChange={e => setForm({ ...form, action_payload: e.target.value })}
                   placeholder="discord-send-message Deploy detectado na main" rows={2}
                   className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none resize-none" />
@@ -457,13 +457,13 @@ export default function Triggers() {
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={form.enabled} onChange={e => setForm({ ...form, enabled: e.target.checked })}
                   className="rounded border-[#21262d] bg-[#0d1117] text-[#00FFA7] focus:ring-[#00FFA7]/50" />
-                <label className="text-xs text-[#667085]">Enabled</label>
+                <label className="text-xs text-[#98A2B3]">Enabled</label>
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#21262d]">
               <button onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg border border-[#21262d] text-[#667085] hover:text-[#e6edf3] hover:border-[#344054] transition-colors text-sm">
+                className="px-4 py-2 rounded-lg border border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-colors text-sm">
                 Cancel
               </button>
               <button onClick={handleSave} disabled={saving || !form.name || !form.action_payload}
@@ -481,17 +481,17 @@ export default function Triggers() {
           <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
               <h2 className="text-lg font-semibold text-[#e6edf3]">Executions — {execModal.name}</h2>
-              <button onClick={() => setExecModal(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3]"><X size={18} /></button>
+              <button onClick={() => setExecModal(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]"><X size={18} /></button>
             </div>
             <div className="overflow-y-auto flex-1">
               {execLoading ? (
-                <div className="p-6 text-center text-[#667085] text-sm">Loading...</div>
+                <div className="p-6 text-center text-[#98A2B3] text-sm">Loading...</div>
               ) : executions.length === 0 ? (
-                <div className="p-6 text-center text-[#667085] text-sm">No executions yet</div>
+                <div className="p-6 text-center text-[#98A2B3] text-sm">No executions yet</div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-[#667085] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+                    <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
                       <th className="text-left p-3 font-medium">Status</th>
                       <th className="text-left p-3 font-medium">Event</th>
                       <th className="text-left p-3 font-medium">Duration</th>
@@ -506,14 +506,14 @@ export default function Triggers() {
                             {ex.status}
                           </span>
                         </td>
-                        <td className="p-3 text-[#667085] text-xs max-w-[200px] truncate">
+                        <td className="p-3 text-[#98A2B3] text-xs max-w-[200px] truncate">
                           {(ex.event_data as Record<string, unknown>)?._test ? 'test' : (String((ex.event_data as Record<string, unknown>)?.event_type || '--'))}
                           {ex.error && <span className="text-red-400 ml-2" title={ex.error}>error</span>}
                         </td>
-                        <td className="p-3 text-[#667085] text-xs">
+                        <td className="p-3 text-[#98A2B3] text-xs">
                           {ex.duration_seconds != null ? `${ex.duration_seconds.toFixed(1)}s` : '--'}
                         </td>
-                        <td className="p-3 text-[#667085] text-xs">
+                        <td className="p-3 text-[#98A2B3] text-xs">
                           {ex.started_at ? relativeTime(ex.started_at) : '--'}
                         </td>
                       </tr>
@@ -532,16 +532,16 @@ export default function Triggers() {
           <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
               <h2 className="text-lg font-semibold text-[#e6edf3]">New Secret Generated</h2>
-              <button onClick={() => setNewSecret(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3]"><X size={18} /></button>
+              <button onClick={() => setNewSecret(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]"><X size={18} /></button>
             </div>
             <div className="p-6">
-              <p className="text-[#667085] text-xs mb-3">Copy this secret now — it won't be shown again.</p>
+              <p className="text-[#98A2B3] text-xs mb-3">Copy this secret now — it won't be shown again.</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-xs text-[#e6edf3] font-mono break-all">
                   {newSecret.secret}
                 </code>
                 <button onClick={() => { navigator.clipboard.writeText(newSecret.secret); }}
-                  className="p-2 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#00FFA7] transition-colors" title="Copy">
+                  className="p-2 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#00FFA7] transition-colors" title="Copy">
                   <Copy size={16} />
                 </button>
               </div>

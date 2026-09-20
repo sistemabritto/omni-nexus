@@ -140,7 +140,7 @@ export default function Systems() {
               </span>
             )}
           </div>
-          <a href={viewApp.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors">
+          <a href={viewApp.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors">
             Open in new tab <ExternalLink size={12} />
           </a>
         </div>
@@ -156,12 +156,12 @@ export default function Systems() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#e6edf3]">{t('systems.title')}</h1>
-          <p className="text-[#667085] mt-1">Registered applications and services</p>
+          <p className="text-[#98A2B3] mt-1">Registered applications and services</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setLoading(true); fetchApps() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
           >
             <RefreshCw size={16} /> Refresh
           </button>
@@ -181,9 +181,9 @@ export default function Systems() {
       ) : apps.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-[#161b22] border border-[#21262d] flex items-center justify-center mx-auto mb-4">
-            <Monitor size={28} className="text-[#667085]" />
+            <Monitor size={28} className="text-[#98A2B3]" />
           </div>
-          <p className="text-[#667085] mb-4">No systems registered yet.</p>
+          <p className="text-[#98A2B3] mb-4">No systems registered yet.</p>
           <button onClick={openCreate} className="text-[#00FFA7] text-sm hover:underline">
             Add your first system
           </button>
@@ -211,7 +211,7 @@ export default function Systems() {
                           {tc.label}
                         </span>
                       </div>
-                      <p className="text-sm text-[#667085] mt-0.5">{app.description}</p>
+                      <p className="text-sm text-[#98A2B3] mt-0.5">{app.description}</p>
                     </div>
                   </div>
 
@@ -262,17 +262,17 @@ export default function Systems() {
                     )}
 
                     {/* Edit / Delete */}
-                    <button onClick={() => openEdit(app)} className="p-1.5 rounded-lg text-[#667085] hover:text-[#e6edf3] hover:bg-white/5 transition-colors" title="Edit">
+                    <button onClick={() => openEdit(app)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-white/5 transition-colors" title="Edit">
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => handleDelete(app)} className="p-1.5 rounded-lg text-[#667085] hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
+                    <button onClick={() => handleDelete(app)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
                       <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
 
                 {/* Details */}
-                <div className="mt-4 pt-3 border-t border-[#21262d]/60 flex items-center gap-4 text-xs text-[#667085]">
+                <div className="mt-4 pt-3 border-t border-[#21262d]/60 flex items-center gap-4 text-xs text-[#98A2B3]">
                   {app.container && (
                     <span>Container: <code className="text-[#e6edf3] bg-black/30 px-1.5 py-0.5 rounded font-mono">{app.container}</code></span>
                   )}
@@ -292,7 +292,7 @@ export default function Systems() {
           <div className="bg-[#161b22] rounded-2xl border border-[#21262d] p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-[#e6edf3]">{editingId ? 'Edit System' : 'Add System'}</h2>
-              <button onClick={() => setModalOpen(false)} className="text-[#667085] hover:text-[#e6edf3] transition-colors"><X size={18} /></button>
+              <button onClick={() => setModalOpen(false)} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors"><X size={18} /></button>
             </div>
 
             {error && (
@@ -353,7 +353,7 @@ export default function Systems() {
 
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-[#667085] text-sm hover:text-[#e6edf3] hover:bg-white/5 transition-colors">
+                className="px-4 py-2 rounded-lg text-[#98A2B3] text-sm hover:text-[#e6edf3] hover:bg-white/5 transition-colors">
                 Cancel
               </button>
               <button onClick={handleSubmit} disabled={submitting}

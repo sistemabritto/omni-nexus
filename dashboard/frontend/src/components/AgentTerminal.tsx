@@ -522,7 +522,7 @@ export default function AgentTerminal({ agent, sessionId: externalSessionId, wor
           @{agent}
         </code>
         <span className="text-[#21262d]">·</span>
-        <span className="text-[10px] uppercase tracking-[0.12em] text-[#667085]">
+        <span className="text-[10px] uppercase tracking-[0.12em] text-[#98A2B3]">
           {statusLabel}
         </span>
         {errorMsg && (

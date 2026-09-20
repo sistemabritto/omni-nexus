@@ -220,10 +220,10 @@ export default function IntegrationDrawer({
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-[#667085] uppercase tracking-wider">
+                    <span className="text-xs text-[#98A2B3] uppercase tracking-wider">
                       {integration.type}
                     </span>
-                    <span className="text-xs text-[#667085]">
+                    <span className="text-xs text-[#98A2B3]">
                       {isConnected ? '· Conectado' : '· Não configurado'}
                     </span>
                   </div>
@@ -234,7 +234,7 @@ export default function IntegrationDrawer({
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar"
-                className="p-1.5 rounded-lg text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
+                className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
               >
                 <X size={18} />
               </button>
@@ -243,13 +243,13 @@ export default function IntegrationDrawer({
             {/* Body */}
             <div className="flex-1 overflow-y-auto px-5 py-5">
               {meta?.description && (
-                <p className="text-sm text-[#667085] mb-5">{meta.description}</p>
+                <p className="text-sm text-[#98A2B3] mb-5">{meta.description}</p>
               )}
 
               {meta?.oauthFlow ? (
                 /* OAuth integration */
                 <div className="rounded-xl border border-[#21262d] bg-[#161b22] p-5 text-center">
-                  <p className="text-sm text-[#667085] mb-1">
+                  <p className="text-sm text-[#98A2B3] mb-1">
                     Esta integração usa autenticação OAuth.
                   </p>
                   <p className="text-xs text-[#3F3F46] mb-5">
@@ -278,7 +278,7 @@ export default function IntegrationDrawer({
                   />
                 ))
               ) : (
-                <p className="text-sm text-[#667085]">
+                <p className="text-sm text-[#98A2B3]">
                   Nenhuma configuração disponível para esta integração.
                 </p>
               )}
@@ -288,7 +288,7 @@ export default function IntegrationDrawer({
                   href={meta.docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors mt-2"
+                  className="inline-flex items-center gap-1 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors mt-2"
                 >
                   <ExternalLink size={12} />
                   Documentação
@@ -319,7 +319,7 @@ export default function IntegrationDrawer({
                     type="button"
                     onClick={handleTest}
                     disabled={testState.status === 'loading' || !isConnected}
-                    className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-[#21262d] text-[#667085] hover:text-[#e6edf3] hover:border-[#344054] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {testState.status === 'loading' ? (
                       <Loader2 size={14} className="animate-spin" />

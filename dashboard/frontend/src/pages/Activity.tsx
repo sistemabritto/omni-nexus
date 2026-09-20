@@ -147,7 +147,7 @@ function RowIcon({ type }: { type: ItemType }) {
   )
   return (
     <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#21262d] border border-[#21262d] shrink-0">
-      <Clock size={16} className="text-[#667085]" />
+      <Clock size={16} className="text-[#98A2B3]" />
     </div>
   )
 }
@@ -231,7 +231,7 @@ function ActivityDrawer({ item, onClose }: DrawerProps) {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#667085] hover:text-[#e6edf3] hover:bg-white/5 transition-colors shrink-0"
+            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-white/5 transition-colors shrink-0"
             aria-label="Close"
           >
             <X size={16} />
@@ -249,7 +249,7 @@ function ActivityDrawer({ item, onClose }: DrawerProps) {
               { label: 'Triggered by', value: item.triggered_by ?? 'schedule' },
             ].map(({ label, value }) => (
               <div key={label} className="bg-[#161b22] border border-[#21262d] rounded-xl p-3">
-                <p className="text-[10px] uppercase tracking-wider text-[#667085] mb-1">{label}</p>
+                <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-1">{label}</p>
                 <p className="text-sm text-[#e6edf3] font-medium">{value}</p>
               </div>
             ))}
@@ -258,19 +258,19 @@ function ActivityDrawer({ item, onClose }: DrawerProps) {
           {/* Cost section — heartbeats only */}
           {item.type === 'heartbeat' && (hasCost || tokensTotal > 0) && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-[#667085] mb-2">Cost</p>
+              <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-2">Cost</p>
               <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-3 flex items-center gap-6">
                 <div>
-                  <p className="text-[10px] text-[#667085] mb-0.5">Tokens in</p>
+                  <p className="text-[10px] text-[#98A2B3] mb-0.5">Tokens in</p>
                   <p className="text-sm text-[#e6edf3] font-mono">{(item.tokens_in ?? 0).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-[#667085] mb-0.5">Tokens out</p>
+                  <p className="text-[10px] text-[#98A2B3] mb-0.5">Tokens out</p>
                   <p className="text-sm text-[#e6edf3] font-mono">{(item.tokens_out ?? 0).toLocaleString()}</p>
                 </div>
                 {hasCost && (
                   <div>
-                    <p className="text-[10px] text-[#667085] mb-0.5">Cost</p>
+                    <p className="text-[10px] text-[#98A2B3] mb-0.5">Cost</p>
                     <p className="text-sm text-[#00FFA7] font-mono">${item.cost_usd!.toFixed(4)}</p>
                   </div>
                 )}
@@ -280,7 +280,7 @@ function ActivityDrawer({ item, onClose }: DrawerProps) {
 
           {/* Output / log */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-[#667085] mb-2">Output</p>
+            <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-2">Output</p>
             <pre className="bg-[#0a0e14] border border-[#21262d] rounded-xl p-3 text-xs text-[#8b949e] font-mono overflow-auto max-h-64 whitespace-pre-wrap break-words">
               {logContent}
             </pre>
@@ -302,7 +302,7 @@ function ActivityDrawer({ item, onClose }: DrawerProps) {
           <Link
             to={dedicatedHref}
             onClick={onClose}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#161b22] border border-[#21262d] text-sm text-[#667085] hover:text-[#e6edf3] hover:border-[#00FFA7]/30 transition-all"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#161b22] border border-[#21262d] text-sm text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#00FFA7]/30 transition-all"
           >
             <ExternalLink size={14} />
             Open in dedicated page
@@ -542,7 +542,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
               <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">
                 {t('nav.activity')}
               </h1>
-              <p className="text-[#667085] text-sm mt-1">
+              <p className="text-[#98A2B3] text-sm mt-1">
                 Execution log across routines, heartbeats and triggers
               </p>
             </>
@@ -563,7 +563,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
                     className={`flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full border transition-all ${
                       active
                         ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/30'
-                        : 'bg-transparent text-[#667085] border-[#344054] hover:border-[#667085] hover:text-[#D0D5DD]'
+                        : 'bg-transparent text-[#98A2B3] border-[#344054] hover:border-[#667085] hover:text-[#D0D5DD]'
                     }`}
                   >
                     {type === 'routines' && <Clock size={12} />}
@@ -599,7 +599,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
                   className={`text-[12px] px-3 py-1.5 transition-colors ${
                     period === p.key
                       ? 'bg-[#00FFA7]/10 text-[#00FFA7]'
-                      : 'text-[#667085] hover:text-[#D0D5DD]'
+                      : 'text-[#98A2B3] hover:text-[#D0D5DD]'
                   }`}
                 >
                   {p.label}
@@ -622,7 +622,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
               className={`ml-auto text-[12px] px-3 py-1.5 rounded-lg border transition-all ${
                 paused
                   ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  : 'bg-transparent text-[#667085] border-[#344054] hover:text-[#D0D5DD]'
+                  : 'bg-transparent text-[#98A2B3] border-[#344054] hover:text-[#D0D5DD]'
               }`}
             >
               {paused ? 'Paused' : 'Auto-refresh on'}
@@ -641,7 +641,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
               <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[#21262d] border border-[#344054] mb-4">
                 <Activity size={24} className="text-[#3F3F46]" />
               </div>
-              <p className="text-[#667085] text-sm">No activity in this period.</p>
+              <p className="text-[#98A2B3] text-sm">No activity in this period.</p>
               <p className="text-[#3F3F46] text-xs mt-1">Try expanding the range.</p>
             </div>
           ) : (
@@ -664,14 +664,14 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <TypeBadge type={item.type} />
-                        <span className="text-[#667085] text-[11px]">·</span>
-                        <span className="text-[#667085] text-[11px]">
+                        <span className="text-[#98A2B3] text-[11px]">·</span>
+                        <span className="text-[#98A2B3] text-[11px]">
                           {formatDuration(item.duration_ms, item.duration_seconds)}
                         </span>
                         {item.triggered_by && (
                           <>
-                            <span className="text-[#667085] text-[11px]">·</span>
-                            <span className="text-[#667085] text-[11px]">{item.triggered_by}</span>
+                            <span className="text-[#98A2B3] text-[11px]">·</span>
+                            <span className="text-[#98A2B3] text-[11px]">{item.triggered_by}</span>
                           </>
                         )}
                       </div>
@@ -680,7 +680,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
                     <div className="flex items-center gap-3 shrink-0">
                       <StatusPill status={item.status} />
                       <div className="text-right hidden sm:block">
-                        <p className="text-[#667085] text-[11px]">{relativeTime(item.started_at)}</p>
+                        <p className="text-[#98A2B3] text-[11px]">{relativeTime(item.started_at)}</p>
                         <p className="text-[#3F3F46] text-[10px]">{formatTime(item.started_at)}</p>
                       </div>
                       <ChevronRight size={14} className="text-[#3F3F46]" />
@@ -693,7 +693,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
                 <div className="px-4 py-3 border-t border-[#21262d]/60">
                   <button
                     onClick={() => setPage((p) => p + 1)}
-                    className="text-[12px] text-[#667085] hover:text-[#00FFA7] transition-colors"
+                    className="text-[12px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
                   >
                     Load more ({filtered.length - paginated.length} remaining)
                   </button>
@@ -705,7 +705,7 @@ export default function ActivityPage({ embedded = false }: { embedded?: boolean 
 
         {/* Summary line */}
         {!loading && filtered.length > 0 && (
-          <p className="text-[#667085] text-xs mt-3 px-1">
+          <p className="text-[#98A2B3] text-xs mt-3 px-1">
             {filtered.length} execution{filtered.length !== 1 ? 's' : ''} · refreshes every 30s
             {paused ? ' (paused)' : ''}
           </p>

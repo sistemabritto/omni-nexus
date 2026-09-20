@@ -197,7 +197,7 @@ export default function Scheduler() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#e6edf3]">{t('scheduler.title')}</h1>
-            <p className="text-[#667085] mt-0.5 text-sm">Background services and scheduled routines</p>
+            <p className="text-[#98A2B3] mt-0.5 text-sm">Background services and scheduled routines</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function Scheduler() {
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
               restarting
                 ? 'border-[#F59E0B]/30 bg-[#F59E0B]/10 text-[#F59E0B]'
-                : 'border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#F59E0B] hover:border-[#F59E0B]/30'
+                : 'border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#F59E0B] hover:border-[#F59E0B]/30'
             }`}
           >
             <RotateCcw size={16} className={restarting ? 'animate-spin' : ''} />
@@ -215,7 +215,7 @@ export default function Scheduler() {
           </button>
           <button
             onClick={() => { setLoading(true); fetchData() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
           >
             <RefreshCw size={16} /> Refresh
           </button>
@@ -250,14 +250,14 @@ export default function Scheduler() {
                       {svc.running ? 'Running' : 'Stopped'}
                     </span>
                   </div>
-                  <p className="text-xs text-[#667085] mb-4">{svc.description}</p>
+                  <p className="text-xs text-[#98A2B3] mb-4">{svc.description}</p>
                   <div className="flex items-center justify-between gap-2">
                     <code className="text-[11px] text-[#e6edf3] bg-[#0d1117] border border-[#21262d] px-2 py-1 rounded font-mono truncate">{svc.command}</code>
                     <div className="flex items-center gap-2 shrink-0">
                       {svc.running && svc.id !== 'dashboard' && (
                         <button
                           onClick={() => openTerminal(svc.id)}
-                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
                         >
                           <Terminal size={12} /> Logs
                         </button>
@@ -300,19 +300,19 @@ export default function Scheduler() {
                 <span className="text-sm font-medium text-[#e6edf3]">
                   {services.find(s => s.id === terminalService)?.name || terminalService} — Logs
                 </span>
-                {terminalLoading && <RefreshCw size={12} className="text-[#667085] animate-spin" />}
+                {terminalLoading && <RefreshCw size={12} className="text-[#98A2B3] animate-spin" />}
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => fetchLogs(terminalService)}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-[#e6edf3] transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
                   title="Refresh"
                 >
                   <RefreshCw size={14} />
                 </button>
                 <button
                   onClick={closeTerminal}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#667085] hover:text-red-400 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-red-400 transition-colors"
                   title="Close"
                 >
                   <X size={14} />
@@ -331,10 +331,10 @@ export default function Scheduler() {
                   </div>
                 ))
               ) : (
-                <div className="text-[#667085] italic">No output yet. Waiting for logs...</div>
+                <div className="text-[#98A2B3] italic">No output yet. Waiting for logs...</div>
               )}
             </div>
-            <div className="px-4 py-2 bg-black/20 border-t border-[#21262d] text-[10px] text-[#667085]">
+            <div className="px-4 py-2 bg-black/20 border-t border-[#21262d] text-[10px] text-[#98A2B3]">
               Auto-refresh every 3s — Showing last 100 lines
             </div>
           </div>
@@ -355,7 +355,7 @@ export default function Scheduler() {
             <p className="text-sm font-medium text-[#e6edf3]">
               {tasks.length} rotinas agendadas
             </p>
-            <p className="text-xs text-[#667085]">
+            <p className="text-xs text-[#98A2B3]">
               {tasks.filter(t => t.engine === 'modelo').length} chamam modelo
               {' · '}
               {tasks.filter(t => t.engine === 'python').length} são Python puro
@@ -364,7 +364,7 @@ export default function Scheduler() {
         </div>
         <a
           href="/routines"
-          className="text-xs px-3 py-2 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors whitespace-nowrap"
+          className="text-xs px-3 py-2 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors whitespace-nowrap"
         >
           Ver rotinas
         </a>

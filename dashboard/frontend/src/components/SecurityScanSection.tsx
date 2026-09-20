@@ -85,7 +85,7 @@ function severityColor(sev: string): string {
     case 'HIGH':     return 'text-orange-400'
     case 'MEDIUM':   return 'text-yellow-400'
     case 'LOW':      return 'text-blue-400'
-    default:         return 'text-[#667085]'
+    default:         return 'text-[#98A2B3]'
   }
 }
 
@@ -204,12 +204,12 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
         <Shield size={14} className="text-[#00FFA7] shrink-0" />
         <span className="text-xs font-semibold text-[#D0D5DD]">Security Scan</span>
         {result?.cache_hit && (
-          <span className="ml-auto text-[10px] text-[#667085] bg-white/5 rounded px-1.5 py-0.5">
+          <span className="ml-auto text-[10px] text-[#98A2B3] bg-white/5 rounded px-1.5 py-0.5">
             cached
           </span>
         )}
         {result && (
-          <span className="text-[10px] text-[#667085] ml-auto">
+          <span className="text-[10px] text-[#98A2B3] ml-auto">
             {result.scan_duration_ms}ms · {result.scanners_used.join('+')}
           </span>
         )}
@@ -218,7 +218,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
       <div className="px-4 py-3 space-y-3">
         {/* Scanning spinner */}
         {scanning && (
-          <div className="flex items-center gap-2 text-xs text-[#667085]">
+          <div className="flex items-center gap-2 text-xs text-[#98A2B3]">
             <Loader2 size={13} className="animate-spin shrink-0" />
             <span>Scanning for security issues…</span>
           </div>
@@ -244,19 +244,19 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                 {verdictLabel(result.verdict)}
               </span>
               {result.findings.length > 0 && (
-                <span className="text-[10px] text-[#667085]">
+                <span className="text-[10px] text-[#98A2B3]">
                   {result.findings.length}{result.findings_truncated ? '+' : ''} finding
                   {result.findings.length !== 1 ? 's' : ''}
                 </span>
               )}
               {result.verdict === 'APPROVE' && result.findings.length === 0 && (
-                <span className="text-[10px] text-[#667085]">No issues found</span>
+                <span className="text-[10px] text-[#98A2B3]">No issues found</span>
               )}
             </div>
 
             {/* LLM reasoning (if any) */}
             {result.llm_used && result.llm_reasoning && (
-              <p className="text-[10px] text-[#667085] italic leading-relaxed">
+              <p className="text-[10px] text-[#98A2B3] italic leading-relaxed">
                 {result.llm_reasoning}
               </p>
             )}
@@ -266,7 +266,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
               <div className="border border-[#21262d] rounded-lg overflow-hidden">
                 <button
                   onClick={() => setFindingsOpen((o) => !o)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-medium text-[#667085] hover:text-[#D0D5DD] hover:bg-white/3 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-medium text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/3 transition-colors"
                 >
                   <span>Findings</span>
                   {findingsOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
@@ -279,23 +279,23 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                           <span className={`text-[10px] font-semibold uppercase ${severityColor(f.severity)}`}>
                             {f.severity}
                           </span>
-                          <span className="text-[10px] text-[#667085] font-mono">{f.category}</span>
+                          <span className="text-[10px] text-[#98A2B3] font-mono">{f.category}</span>
                         </div>
                         <p className="text-xs text-[#D0D5DD] leading-relaxed">{f.description}</p>
                         {f.file && (
-                          <p className="text-[10px] text-[#667085] font-mono truncate">
+                          <p className="text-[10px] text-[#98A2B3] font-mono truncate">
                             {f.file}{f.line > 0 ? `:${f.line}` : ''}
                           </p>
                         )}
                         {f.snippet && (
-                          <p className="text-[10px] text-[#667085] font-mono bg-black/20 rounded px-2 py-1 truncate">
+                          <p className="text-[10px] text-[#98A2B3] font-mono bg-black/20 rounded px-2 py-1 truncate">
                             {f.snippet}
                           </p>
                         )}
                       </div>
                     ))}
                     {result.findings_truncated && (
-                      <p className="px-3 py-2 text-[10px] text-[#667085] text-center">
+                      <p className="px-3 py-2 text-[10px] text-[#98A2B3] text-center">
                         More findings not shown. Review the full scan report.
                       </p>
                     )}
@@ -316,7 +316,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                   </button>
                 ) : (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-[#667085]">
+                    <label className="text-[10px] text-[#98A2B3]">
                       Override reason (min 20 chars, required)
                     </label>
                     <textarea
@@ -336,7 +336,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                       </button>
                       <button
                         onClick={() => { setShowOverrideInput(false); setOverrideReason('') }}
-                        className="px-3 py-1.5 text-xs text-[#667085] hover:text-[#D0D5DD] transition-colors"
+                        className="px-3 py-1.5 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
                       >
                         Cancel
                       </button>
@@ -372,7 +372,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                 </div>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] text-[#667085]">
+                <span className="text-[10px] text-[#98A2B3]">
                   Skip scan — will be logged to audit
                 </span>
                 {skipScan && (

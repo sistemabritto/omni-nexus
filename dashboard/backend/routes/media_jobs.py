@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 from flask import Blueprint, jsonify, request, send_file
 from flask_login import current_user
 
-from models import db, MediaJob, has_permission, audit
+from models import db, GoalProject, MediaJob, has_permission, audit
 from media_state_machine import assert_transition, can_transition, InvalidTransition, allowed_targets
 from media_workspace import ensure_job_scaffold, new_job_id, media_workspace_root, PathSecurityError
 from postiz_client import PostizClient, PostizError, MEDIA_JOB_PLATFORMS, build_platform_settings
@@ -117,6 +117,9 @@ def list_media_jobs():
     project_id = request.args.get("project_id", type=int)
     if project_id:
         query = query.filter(MediaJob.project_id == project_id)
+    company_id = request.args.get("company_id", type=int)
+    if company_id:
+        query = query.filter(MediaJob.company_id == company_id)
     platform = request.args.get("platform")
     if platform:
         query = query.filter(MediaJob.platform == platform)
@@ -222,9 +225,11 @@ def create_media_job():
 
     job_id = new_job_id()
     now = _now()
+    _proj = GoalProject.query.get(data.get("project_id")) if data.get("project_id") else None
     job = MediaJob(
         id=job_id,
         project_id=data.get("project_id"),
+        company_id=data.get("company_id") or (_proj.company_id if _proj else None),
         campaign_id=data.get("campaign_id"),
         goal_id=data.get("goal_id"),
         task_id=data.get("task_id"),

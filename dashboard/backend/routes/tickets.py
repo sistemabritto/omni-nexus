@@ -24,7 +24,7 @@ SUMMARY_EVERY_N = 20
 MEMORY_WARN_BYTES = 64 * 1024   # 64 KB
 MEMORY_TRUNCATE_BYTES = 32 * 1024  # 32 KB per section
 from models import (
-    Heartbeat, Ticket, TicketActivity, TicketComment,
+    GoalProject, Heartbeat, Ticket, TicketActivity, TicketComment,
     PRIORITY_RANK, TICKET_PRIORITIES, TICKET_STATUSES,
     db, has_permission, audit,
 )
@@ -135,6 +135,7 @@ def list_tickets():
     priorities = request.args.getlist("priority")
     project_id = request.args.get("project_id", type=int)
     goal_id = request.args.get("goal_id", type=int)
+    company_id = request.args.get("company_id", type=int)
     source_plugin = request.args.get("source_plugin")
     q = request.args.get("q", "").strip()
     display_mode = request.args.get("display_mode", "all")  # threads | issues | all
@@ -153,6 +154,8 @@ def list_tickets():
         query = query.filter(Ticket.project_id == project_id)
     if goal_id is not None:
         query = query.filter(Ticket.goal_id == goal_id)
+    if company_id is not None:
+        query = query.filter(Ticket.company_id == company_id)
     if source_plugin is not None:
         query = query.filter(Ticket.source_plugin == source_plugin)
     if display_mode == "threads":
@@ -285,6 +288,7 @@ def create_ticket():
         description = f"{description}\n\n{note}" if description else note
 
     now = _now()
+    _proj = GoalProject.query.get(data.get("project_id")) if data.get("project_id") else None
     ticket = Ticket(
         id=str(uuid.uuid4()),
         title=title,
@@ -295,6 +299,7 @@ def create_ticket():
         assignee_agent=assignee_agent,
         project_id=data.get("project_id"),
         goal_id=data.get("goal_id"),
+        company_id=data.get("company_id") or (_proj.company_id if _proj else None),
         task_id=data.get("task_id"),
         created_by=current_user.username,
         source_agent=source_agent,
@@ -370,6 +375,9 @@ def update_ticket(ticket_id: str):
 
     if "project_id" in data:
         ticket.project_id = data["project_id"]
+        _p = GoalProject.query.get(ticket.project_id) if ticket.project_id else None
+        if _p is not None:
+            ticket.company_id = _p.company_id
 
     if "goal_id" in data:
         ticket.goal_id = data["goal_id"]

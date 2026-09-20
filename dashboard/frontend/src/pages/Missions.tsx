@@ -7,6 +7,7 @@ import {
   X, Ticket as TicketIcon, ArrowUp, Minus, ArrowDown,
 } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
+import { useCompanies } from '../context/CompanyContext'
 
 // ---- Types ----
 
@@ -66,14 +67,6 @@ interface GoalProject {
   created_at: string
   updated_at: string
   goals?: Goal[]
-}
-
-interface Company {
-  id: number
-  name: string
-  slug: string
-  domain: string | null
-  status: string
 }
 
 interface Mission {
@@ -686,14 +679,13 @@ type DueFilter = 'all' | 'overdue' | 'this-week' | 'this-month'
 
 export default function Missions() {
   const { t } = useTranslation()
+  const { activeCompanyId } = useCompanies()
   const [searchParams] = useSearchParams()
   const [missions, setMissions] = useState<Mission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [dueFilter, setDueFilter] = useState<DueFilter>('all')
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [companyFilter, setCompanyFilter] = useState<number | 'all'>('all')
   const [createGoalForProject, setCreateGoalForProject] = useState<number | null>(null)
   const [createTaskForGoal, setCreateTaskForGoal] = useState<number | null>(null)
   const [showCreateMission, setShowCreateMission] = useState(false)
@@ -724,12 +716,6 @@ export default function Missions() {
         }))
       )
       setMissions(enriched)
-      try {
-        const comps = await apiFetch('/api/companies')
-        setCompanies(Array.isArray(comps) ? comps : [])
-      } catch {
-        setCompanies([])
-      }
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -786,7 +772,7 @@ export default function Missions() {
     return {
       ...mission,
       projects: (mission.projects || [])
-        .filter((proj) => companyFilter === 'all' || proj.company_id === companyFilter)
+        .filter((proj) => activeCompanyId === null || proj.company_id === activeCompanyId)
         .map((proj) => ({
           ...proj,
           goals: (proj.goals || []).filter(filterGoal),
@@ -873,21 +859,6 @@ export default function Missions() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
-        {companies.length > 0 && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-[#98A2B3]">Empresa:</span>
-            <select
-              value={String(companyFilter)}
-              onChange={(e) => setCompanyFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="bg-[#161b22] border border-[#21262d] text-xs text-white px-2.5 py-1.5 rounded-lg focus:border-[#00FFA7]/40 outline-none max-w-[180px]"
-            >
-              <option value="all">Todas</option>
-              {companies.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-[#98A2B3]">Status:</span>
           {(['all', 'active', 'achieved', 'on-hold', 'cancelled'] as StatusFilter[]).map((s) => (

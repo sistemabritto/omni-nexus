@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
+import { useCompanies } from '../context/CompanyContext'
+import CompanyManagerModal from './CompanyManagerModal'
 import NotificationBell from './NotificationBell'
 import {
   LayoutDashboard, Bot, Clock,
@@ -104,6 +106,8 @@ const roleBadgeClass: Record<string, string> = {
 
 export default function Sidebar() {
   const { user, logout, hasPermission } = useAuth()
+  const { companies, activeCompanyId, activeCompany, setActiveCompanyId } = useCompanies()
+  const [manageCompany, setManageCompany] = useState<number | null>(null)
   const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null)
@@ -187,7 +191,11 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       <div className="px-5 py-6 flex items-center justify-between">
-        <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-8 w-auto" />
+        <img
+          src={activeCompany?.logo_url ?? '/EVO_NEXUS.webp'}
+          alt={activeCompany?.name ?? 'EvoNexus'}
+          className="h-8 w-auto"
+        />
         <div className="flex items-center gap-1">
           <NotificationBell />
           <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1 rounded hover:bg-white/10 text-[#98A2B3]">
@@ -195,6 +203,38 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
+
+      {companies.length > 0 && (
+        <div className="px-3 pb-2">
+          <div className="flex items-center gap-1">
+            <select
+              value={activeCompanyId ?? ''}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === '__manage__') {
+                  setManageCompany(activeCompanyId ?? companies[0]?.id ?? null)
+                } else {
+                  setActiveCompanyId(v === '' ? null : Number(v))
+                }
+              }}
+              title={t('companies.activeLabel')}
+              className="w-full bg-[#1D2939] border border-[#344054] rounded-lg px-2.5 py-1.5 text-xs text-[#D0D5DD] focus:outline-none focus:ring-1 focus:ring-[#00FFA7]/50"
+            >
+              <option value="">{t('companies.all')}</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+              <option value="__manage__">⚙ {t('companies.manage')}</option>
+            </select>
+          </div>
+          {manageCompany !== null && (
+            <CompanyManagerModal
+              company={companies.find((c) => c.id === manageCompany)!}
+              onClose={() => setManageCompany(null)}
+            />
+          )}
+        </div>
+      )}
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
         {navSections.map(renderSection)}

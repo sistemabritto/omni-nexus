@@ -662,6 +662,7 @@ class Company(db.Model):
     slug = db.Column(db.String(200), unique=True, nullable=False)
     domain = db.Column(db.String(300))
     status = db.Column(db.String(20), nullable=False, default="active")
+    logo_path = db.Column(db.String(500))
     created_at = db.Column(db.String(30), nullable=False)
     updated_at = db.Column(db.String(30), nullable=False)
 
@@ -675,6 +676,11 @@ class Company(db.Model):
             "slug": self.slug,
             "domain": self.domain,
             "status": self.status,
+            "logo_url": (
+                f"/api/workspace/download?path={self.logo_path}&inline=1"
+                if self.logo_path
+                else None
+            ),
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -884,6 +890,7 @@ class Ticket(db.Model):
     priority_rank = db.Column(db.Integer, nullable=False, default=2)  # derived
     project_id = db.Column(db.Integer, db.ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
     goal_id = db.Column(db.Integer, db.ForeignKey("goals.id", ondelete="SET NULL"), nullable=True)
+    company_id = db.Column(db.Integer, db.ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
     # Legacy FK to the goal_task this ticket used to mirror. goal_tasks is now
     # frozen (goal-ticket-unification): current_value is computed solely from
     # tickets.goal_id (see heartbeat_outcome._recompute_goal_from_tickets),
@@ -931,6 +938,7 @@ class Ticket(db.Model):
             "priority_rank": self.priority_rank,
             "project_id": self.project_id,
             "goal_id": self.goal_id,
+            "company_id": self.company_id,
             "task_id": self.task_id,
             "due_date": self.due_date,
             "requires_human_approval": self.requires_human_approval,
@@ -1055,6 +1063,7 @@ class MediaJob(db.Model):
 
     id = db.Column(db.String(36), primary_key=True)  # uuid4
     project_id = db.Column(db.Integer, db.ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    company_id = db.Column(db.Integer, db.ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
     campaign_id = db.Column(db.String(200), nullable=True)
     goal_id = db.Column(db.Integer, db.ForeignKey("goals.id", ondelete="SET NULL"), nullable=True)
     task_id = db.Column(db.Integer, db.ForeignKey("goal_tasks.id", ondelete="SET NULL"), nullable=True)
@@ -1121,6 +1130,7 @@ class MediaJob(db.Model):
         return {
             "id": self.id,
             "project_id": self.project_id,
+            "company_id": self.company_id,
             "campaign_id": self.campaign_id,
             "goal_id": self.goal_id,
             "task_id": self.task_id,

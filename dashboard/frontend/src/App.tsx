@@ -6,6 +6,7 @@ import { hydratePluginUiRegistry } from './lib/plugin-ui-registry'
 import { initEvoNexusSdk } from './lib/evonexus-sdk'
 import PluginPageHost from './pages/PluginPageHost'
 import { NotificationProvider } from './context/NotificationContext'
+import { CompanyProvider } from './context/CompanyContext'
 import Sidebar from './components/Sidebar'
 import { FullPageLoader, SectionBoundary, SectionLoader } from './components/PageStates'
 import { lazyDefault, lazyNamed } from './lib/lazyImport'
@@ -226,6 +227,7 @@ function AppContent() {
 
   return (
     <NotificationProvider>
+      <CompanyProvider>
       <div className="flex min-h-screen bg-[#0C111D]">
         <Sidebar />
 
@@ -324,6 +326,7 @@ function AppContent() {
           </DashboardRouteFrame>
         </main>
       </div>
+      </CompanyProvider>
     </NotificationProvider>
   )
 }

@@ -19,6 +19,7 @@ import {
 import { AgentIcon } from '../components/AgentIcon'
 import { useToast } from '../components/Toast'
 import { api } from '../lib/api'
+import { useCompanies } from '../context/CompanyContext'
 import CreateTicketModal, { type CreatedTicket } from '../components/CreateTicketModal'
 
 type TicketStatus = 'open' | 'in_progress' | 'blocked' | 'review' | 'resolved' | 'closed' | 'archived'
@@ -80,6 +81,7 @@ function formatAge(iso: string): string {
 export default function Kanban() {
   const navigate = useNavigate()
   const toast = useToast()
+  const { activeCompanyId } = useCompanies()
   const [searchParams] = useSearchParams()
   // Deep-link de busca (?q=): /approvals redireciona para cá com ?q=🔐
   // (W1 — aprovações viraram tickets). Seed da busca, não estado reativo.
@@ -98,6 +100,7 @@ export default function Kanban() {
       params.set('limit', '500')
       params.set('display_mode', 'all')
       if (query.trim()) params.set('q', query.trim())
+      if (activeCompanyId != null) params.set('company_id', String(activeCompanyId))
       const data = await api.get(`/tickets?${params.toString()}`)
       setTickets((data.tickets || []).filter((t: TicketItem) => t.status !== 'archived'))
     } catch (err: any) {
@@ -105,7 +108,7 @@ export default function Kanban() {
     } finally {
       setLoading(false)
     }
-  }, [query])
+  }, [query, activeCompanyId])
 
   useEffect(() => {
     fetchTickets()

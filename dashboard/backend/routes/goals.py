@@ -194,10 +194,51 @@ def patch_company(company_id: int):
     for field in ("cnpj", "name", "domain", "status"):
         if field in data:
             setattr(c, field, data[field])
+    if "logo_path" in data:  # null remove o logo
+        c.logo_path = data["logo_path"] or None
     c.updated_at = _now()
     db.session.commit()
     audit(current_user, "update", "goals", f"Updated company #{c.id}: {c.name}")
     return jsonify(c.to_dict())
+
+
+@bp.route("/api/companies/<int:company_id>/logo", methods=["POST", "DELETE"])
+def company_logo(company_id: int):
+    denied = _require("manage")
+    if denied:
+        return denied
+    c = Company.query.get_or_404(company_id)
+    if request.method == "DELETE":
+        if c.logo_path:
+            logo_file = WORKSPACE / c.logo_path
+            if logo_file.exists():
+                logo_file.unlink(missing_ok=True)
+        c.logo_path = None
+        c.updated_at = _now()
+        db.session.commit()
+        audit(current_user, "update", "goals", f"Removed logo for company #{c.id}")
+        return jsonify(c.to_dict())
+    f = request.files.get("file")
+    if not f or not f.filename:
+        return jsonify({"error": "file part is required"}), 400
+    ext = Path(f.filename).suffix.lower()
+    if ext not in (".png", ".webp", ".jpg", ".jpeg", ".svg"):
+        return jsonify({"error": "allowed types: png, webp, jpg, svg"}), 400
+    from werkzeug.utils import secure_filename
+    out_dir = WORKSPACE / "assets" / "company-logos"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{secure_filename(c.slug)}{ext}"
+    dest = out_dir / filename
+    f.save(str(dest))
+    if c.logo_path:
+        old = WORKSPACE / c.logo_path
+        if old.exists():
+            old.unlink(missing_ok=True)
+    c.logo_path = str(dest.relative_to(WORKSPACE))
+    c.updated_at = _now()
+    db.session.commit()
+    audit(current_user, "update", "goals", f"Uploaded logo for company #{c.id}: {filename}")
+    return jsonify(c.to_dict()), 201
 
 
 # --------------- Projects ---------------
@@ -318,10 +359,18 @@ def list_goals():
     status_filter = request.args.get("status")
     due_filter = request.args.get("due_date")
     parent_goal_id = request.args.get("parent_goal_id", type=int)
+    company_id = request.args.get("company_id", type=int)
 
     q = Goal.query
     if project_id:
         q = q.filter_by(project_id=project_id)
+    if company_id is not None:
+        # Goal não tem company_id próprio — chega via project (NOT NULL).
+        q = q.filter(
+            Goal.project_id.in_(
+                db.session.query(GoalProject.id).filter(GoalProject.company_id == company_id)
+            )
+        )
     if parent_goal_id:
         q = q.filter_by(parent_goal_id=parent_goal_id)
     if status_filter:

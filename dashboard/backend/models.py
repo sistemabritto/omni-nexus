@@ -894,6 +894,10 @@ class Ticket(db.Model):
     # App-level enum (no CHECK constraint): 'pending_human_approval' |
     # 'agent_blocked' | 'review_exhausted'. See .claude/rules/tickets.md.
     blocked_reason = db.Column(db.String(30), nullable=True)
+    # W1 (2026-09-20): vínculo direto com o gate de aprovação que bloqueia este
+    # ticket, quando o próprio ticket É a superfície do gate ("🔐" tickets).
+    # NULL para tickets normais; preenchido por approvals._sync_approval_ticket.
+    approval_id = db.Column(db.Integer, nullable=True)
     assignee_agent = db.Column(db.String(100), nullable=True)
     locked_at = db.Column(db.String(30), nullable=True)
     locked_by = db.Column(db.String(100), nullable=True)
@@ -931,6 +935,7 @@ class Ticket(db.Model):
             "due_date": self.due_date,
             "requires_human_approval": self.requires_human_approval,
             "blocked_reason": self.blocked_reason,
+            "approval_id": self.approval_id,
             "assignee_agent": self.assignee_agent,
             "locked_at": self.locked_at,
             "locked_by": self.locked_by,

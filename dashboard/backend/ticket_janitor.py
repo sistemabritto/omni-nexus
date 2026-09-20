@@ -153,12 +153,30 @@ def sweep_pending_approvals(app=None) -> int:
                             "t": now,
                         },
                     )
+                    # W1: solta o vínculo do gate antigo no ticket do conteúdo —
+                    # o próximo park (attempt+1) re-vincula com a nova aprovação.
+                    db.session.execute(
+                        db.text("UPDATE tickets SET approval_id=NULL WHERE id=:tid AND approval_id=:aid"),
+                        {"tid": row.ticket_id, "aid": row.id},
+                    )
                 elif row.gate_type == "decomposition" and row.goal_id:
                     db.session.execute(
                         db.text("UPDATE goals SET decomposition_state='rejected', updated_at=:t WHERE id=:id"),
                         {"t": now, "id": row.goal_id},
                     )
                 db.session.commit()
+                # W1: o espelho `🔐` no Kanban acompanha a expiração (senão o
+                # ticket ficava blocked para sempre com o gate já morto).
+                try:
+                    from routes.approvals import _expire_approval_ticket
+                    from routes._helpers import raw_conn as _raw
+                    _conn = _raw()
+                    try:
+                        _expire_approval_ticket(row.id, "Aprovação expirou (8h sem resposta) — gate encerrado sem decisão.", _conn)
+                    finally:
+                        _conn.close()
+                except Exception:  # noqa: BLE001 — mirror é best-effort
+                    pass
                 swept += 1
                 continue
 

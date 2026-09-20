@@ -38,6 +38,179 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
+_GATE_TICKET_TITLES: dict[str, str] = {
+    "publish": "🔐 Aprovar publicação",
+    "decomposition": "🔐 Aprovar decomposição",
+    "project_suggestion": "🔐 Aprovar projetos sugeridos",
+    "goal_suggestion": "🔐 Aprovar metas sugeridas",
+    "pauta_ciclo": "🔐 Aprovar ciclo de pautas",
+}
+
+
+def _sync_approval_ticket(approval_id: int, gate_type: str, title: str, body: str,
+                          row_ids: dict, agent: str | None, now: str, conn) -> None:
+    """W1 (2026-09-20): toda aprovação é gerenciável COMO ticket no Kanban.
+
+    Cria/alinha um ticket `🔐` (status `blocked`, `requires_human_approval=1`)
+    para cada gate vivo. A decisão (Telegram ou dashboard) resolve o gate E o
+    ticket via `_decide_approval_ticket` — nada duplica efeito de negócio: o
+    gate segue dono da publicação/decomposição, o ticket é só a superfície.
+
+    Regras:
+    - publish: o ticket do CONTEÚDO já existe e é o que fica blocked — ligamos
+      o vínculo `approval_id` nele em vez de criar um ticket fantasma;
+    - gates sem nenhum elo (pauta_ciclo) criam um ticket próprio;
+    - idempotente pelo `approval_id` guard (segunda chamada alinha, não duplica).
+    """
+    if not approval_id:
+        return
+    existing = conn.execute(
+        "SELECT id FROM tickets WHERE approval_id = ?", (approval_id,)
+    ).fetchone()
+    if existing:
+        return
+
+    base_title = (title or "").strip() or _GATE_TICKET_TITLES.get(gate_type, "🔐 Aprovação pendente")
+    desc_parts = [
+        f"Gate `{gate_type}` — aprovação #{approval_id}.",
+        "",
+        "Gerencie este gate respondendo aqui (Telegram: `/aprovar <id>` + aprovar/rejeitar/ajustar) "
+        "ou pelo card do Telegram. Decidido o gate, este ticket resolve sozinho.",
+    ]
+    ctx = row_ids.get("ctx_line") or ""
+    if ctx:
+        desc_parts.insert(2, ctx)
+    if (body or "").strip():
+        desc_parts += ["", (body or "").strip()[:1500]]
+
+    if gate_type == "publish" and row_ids.get("ticket_id"):
+        # O ticket do conteúdo JÁ é a superfície (fica blocked pelo park).
+        try:
+            conn.execute(
+                "UPDATE tickets SET approval_id = ? WHERE id = ? AND approval_id IS NULL",
+                (approval_id, row_ids["ticket_id"]),
+            )
+            conn.commit()
+        except Exception as exc:  # noqa: BLE001
+            conn.rollback()
+            logging.getLogger(__name__).warning("sync_approval_ticket(%s) link falhou: %s", approval_id, exc)
+        return
+
+    new_tid = str(uuid.uuid4())
+    try:
+        conn.execute(
+            """INSERT INTO tickets (id, title, description, status, priority, priority_rank,
+                                    project_id, goal_id, requires_human_approval, blocked_reason,
+                                    assignee_agent, created_by, source_agent, approval_id, created_at, updated_at)
+               VALUES (?, ?, ?, 'blocked', ?, ?, ?, ?, 1, 'pending_human_approval', ?, ?, 'system:approval', ?, ?, ?)""",
+            (
+                new_tid, base_title, "\n".join(desc_parts), "high", PRIORITY_RANK["high"],
+                row_ids.get("project_id"), row_ids.get("goal_id"),
+                agent, approval_id, now, now,
+            ),
+        )
+        conn.execute(
+            "INSERT INTO ticket_comments (id, ticket_id, author, body, mentions, created_at) "
+            "VALUES (?, ?, 'system:approval', ?, '[]', ?)",
+            (str(uuid.uuid4()), new_tid, f"Aprovação #{approval_id} ({gate_type}) aguardando decisão.", now),
+        )
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001 — race de criação ou coluna ausente; gate segue
+        conn.rollback()
+        logging.getLogger(__name__).warning("sync_approval_ticket(%s) insert falhou: %s", approval_id, exc)
+
+
+def _decide_approval_ticket(approval_id: int, final_status: str, message: str,
+                            conn, actor: str | None = None) -> None:
+    """Fecha o ticket de aprovação junto com o gate.
+
+    - publish: o ticket do conteúdo segue dono do ciclo (o branch publish já o
+      move para resolved/in_progress) — aqui só limpa `approval_id` e, se
+      `final_status` veio, aplica no próprio;
+    - demais gates: move o ticket `🔐` para `final_status` com comentário.
+    Best-effort: qualquer erro de log nunca derruba a decisão do gate.
+    """
+    try:
+        row = conn.execute(
+            "SELECT ticket_id FROM pending_approvals WHERE id = ?", (approval_id,)
+        ).fetchone()
+        if not row:
+            return
+        linked = conn.execute(
+            "SELECT id FROM tickets WHERE approval_id = ?", (approval_id,)
+        ).fetchall()
+        now = _now()
+        actor = actor or "system:approval"
+        for t in linked:
+            tid = t["id"] if hasattr(t, "keys") else t[0]
+            # publish: o ticket do conteúdo já foi movido pelo branch publish de
+            # _apply_decision — não duplicamos o move (estouraria resolved_at),
+            # só limpamos o vínculo. Demais gates: este helper move o `🔐`.
+            if row["ticket_id"] and tid == row["ticket_id"]:
+                conn.execute("UPDATE tickets SET approval_id = NULL WHERE id = ?", (tid,))
+            else:
+                prev = conn.execute("SELECT goal_id FROM tickets WHERE id = ?", (tid,)).fetchone()
+                from heartbeat_outcome import _recompute_goal_from_tickets
+                conn.execute(
+                    """UPDATE tickets SET status = ?, updated_at = ?, requires_human_approval = 0,
+                       blocked_reason = NULL, resolved_at = COALESCE(?, resolved_at) WHERE id = ?""",
+                    (final_status, now, now if final_status in ("resolved", "closed") else None, tid),
+                )
+                _recompute_goal_from_tickets((prev["goal_id"] if prev else None), conn)
+            conn.execute(
+                "UPDATE tickets SET approval_id = NULL WHERE id = ?", (tid,)
+            )
+            conn.execute(
+                "INSERT INTO ticket_comments (id, ticket_id, author, body, mentions, created_at) "
+                "VALUES (?, ?, ?, ?, '[]', ?)",
+                (str(uuid.uuid4()), tid, actor, message, now),
+            )
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001 — decisão do gate vale mais que o mirror
+        logging.getLogger(__name__).warning(
+            "_decide_approval_ticket %s (%s) falhou: %s", approval_id, final_status, exc
+        )
+
+
+def _reopen_approval_ticket(approval_id: int, message: str, conn) -> None:
+    """Devolve o ticket de aprovação ao estado pendente (pedido de ajuste/re-fabrica).
+
+    O gate continua a fonte de verdade do efeito de negócio; isto só espelha no
+    Kanban que o humano mandou refazer — o ticket sai de resolved/closed para
+    `in_progress` com a crítica embutida no comentário.
+    """
+    try:
+        linked = conn.execute(
+            "SELECT id, title FROM tickets WHERE approval_id = ? OR title LIKE ? ",
+            (approval_id, f"%aprovação #{approval_id}%"),
+        ).fetchall()
+        now = _now()
+        for t in linked:
+            tid = t["id"] if hasattr(t, "keys") else t[0]
+            conn.execute(
+                """UPDATE tickets SET status = 'in_progress', updated_at = ?,
+                   requires_human_approval = 0, blocked_reason = NULL WHERE id = ?""",
+                (now, tid),
+            )
+            conn.execute(
+                "INSERT INTO ticket_comments (id, ticket_id, author, body, mentions, created_at) "
+                "VALUES (?, ?, ?, ?, '[]', ?)",
+                (str(uuid.uuid4()), tid, "system:approval", message, now),
+            )
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001
+        logging.getLogger(__name__).warning("_reopen_approval_ticket %s falhou: %s", approval_id, exc)
+
+
+def _expire_approval_ticket(approval_id: int, message: str, conn) -> None:
+    """TTL sem resposta: o gate expira e o ticket acompanha para `closed`.
+
+    Chamado pelo janitor no auto-expire — sem isto o ticket `🔐` ficava
+    `blocked` para sempre mesmo com o gate já morto.
+    """
+    _decide_approval_ticket(approval_id, "closed", message, conn, actor="system:janitor")
+
+
 def _db_path() -> str:
     return str(WORKSPACE / "dashboard" / "data" / "evonexus.db")
 
@@ -196,6 +369,17 @@ def _pedir_ajuste(approval_id: int, feedback: str, decided_by: str,
             conn.close()
 
     refazendo = _agendar_refacao(row.ticket_id, outcome, feedback)
+    # W1: espelho no Kanban volta a pendente com a crítica — o humano vê no
+    # board que o agente refaz, não que o gate "morreu rejeitado".
+    try:
+        from routes._helpers import raw_conn as _raw
+        _conn = _raw()
+        try:
+            _reopen_approval_ticket(approval_id, f"Ajuste pedido por {decided_by}: {feedback[:400]}", _conn)
+        finally:
+            _conn.close()
+    except Exception as exc:  # noqa: BLE001
+        logging.getLogger(__name__).warning("reopen_approval_ticket(%s) falhou: %s", approval_id, exc)
     return jsonify({"status": "revision_requested", "id": approval_id,
                     "ticket_id": row.ticket_id, "feedback": feedback[:480],
                     "refazendo": refazendo}), 200
@@ -579,6 +763,28 @@ def _apply_decision(approval_id: int, decision: str, decided_by: str, reason: st
                 )
         # reject: o ciclo segue em `proposta`, editável na tela. Rejeitar aqui
         # não descarta pauta: quem descarta é `vencer`, pela data.
+
+    # W1: fechar o espelho no Kanban junto com o gate. Para `publish` o branch
+    # acima já moveu o ticket do conteúdo — o helper só limpa o vínculo
+    # `approval_id` e registra o comentário da decisão nos demais.
+    _final = "resolved" if new_status == "approved" else "closed"
+    if new_status == "approved":
+        _msg = f"Aprovação #{approval_id} aprovada por {decided_by}."
+        if reason:
+            _msg += f" Motivo: {reason}"
+    else:
+        _msg = f"Aprovação #{approval_id} rejeitada por {decided_by}."
+        if reason:
+            _msg += f" Motivo: {reason}"
+    try:
+        from routes._helpers import raw_conn as _raw
+        _conn = _raw()
+        try:
+            _decide_approval_ticket(approval_id, _final, _msg, _conn, actor=decided_by)
+        finally:
+            _conn.close()
+    except Exception as exc:  # noqa: BLE001
+        logging.getLogger(__name__).warning("decide_approval_ticket(%s) falhou: %s", approval_id, exc)
 
     return jsonify({"status": "ok", "approval_id": approval_id, "decision": new_status}), 200
 
@@ -1146,5 +1352,22 @@ def create_approval():
             {"m": message_id, "id": row.id},
         )
         db.session.commit()
+
+    # W1: espelhar no Kanban — o gate também é um ticket `🔐` gerenciável.
+    try:
+        from routes._helpers import raw_conn as _raw
+        _conn = _raw()
+        try:
+            _sync_approval_ticket(
+                row.id, gate_type, payload.get("title") or "", payload.get("body") or "",
+                {"ticket_id": ticket_id, "goal_id": goal_id, "mission_id": mission_id,
+                 "project_id": project_id,
+                 "ctx_line": body_parts[0] if body_parts and body_parts[0] else ""},
+                agent, now, _conn,
+            )
+        finally:
+            _conn.close()
+    except Exception as exc:  # noqa: BLE001 — gate é dono do efeito; ticket é mirror
+        logging.getLogger(__name__).warning("sync_approval_ticket(%s) falhou: %s", row.id, exc)
 
     return jsonify({"id": row.id, "idempotency_key": idempotency_key, "status": "pending"}), 201

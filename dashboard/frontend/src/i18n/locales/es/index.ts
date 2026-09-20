@@ -159,12 +159,16 @@ const translations = {
       groups: {
         cockpit: 'Cockpit',
         proyectos: 'Projects',
-        agentes: 'Agents',
-        inteligencia: 'Intelligence',
-        workspace: 'Workspace',
+        inteligencia: 'Inteligencia',
+        materiales: 'Materiales',
         configuraciones: 'Configuraciones',
       },
       intelligenceHub: 'Centro de Inteligencia',
+      materiales: {
+        tabs: {
+          arquivos: 'Archivos',
+        },
+      },
       overview: 'Resumen',
       agents: 'Agentes',
       skills: 'Habilidades',
@@ -195,7 +199,7 @@ const translations = {
       systems: 'Sistemas',
       templates: 'Plantillas',
       shareLinks: 'Enlaces compartidos',
-      workspace: 'Workspace',
+      workspace: 'Materiales',
       users: 'Usuarios',
       roles: 'Roles',
       settings: 'Ajustes',
@@ -260,6 +264,11 @@ const translations = {
       referenceEdit: 'Editar',
       referenceSave: 'Guardar',
       referenceCancel: 'Cancelar',
+    },
+    materiais: {
+      tabs: {
+        arquivos: 'Archivos',
+      },
     },
     overview: {
       title: 'Cockpit',

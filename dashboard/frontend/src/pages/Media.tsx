@@ -101,7 +101,7 @@ const emptyForm = {
   scheduled_at: '', timezone: 'America/Bahia', project_id: '',
 }
 
-export default function Media() {
+export default function Media({ embedded = false }: { embedded?: boolean }) {
   const [jobs, setJobs] = useState<MediaJob[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -198,17 +198,19 @@ export default function Media() {
   }
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-            <Video size={18} className="text-[#00FFA7]" />
+    <div className={embedded ? '' : 'p-6 max-w-[1400px] mx-auto'}>
+      <div className={`flex items-center justify-between ${embedded ? 'mb-4' : 'mb-6'}`}>
+        {!embedded && (
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15">
+              <Video size={18} className="text-[#00FFA7]" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-[#e6edf3]">Mídias</h1>
+              <p className="text-xs text-[#8b949e]">Produção de vídeo social — briefing → HyperFrames → validação → Postiz</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-[#e6edf3]">Mídias</h1>
-            <p className="text-xs text-[#8b949e]">Produção de vídeo social — briefing → HyperFrames → validação → Postiz</p>
-          </div>
-        </div>
+        )}
         <div className="flex items-center gap-2">
           <select
             value={statusFilter}

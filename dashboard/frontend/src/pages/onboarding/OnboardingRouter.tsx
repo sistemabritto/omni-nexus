@@ -104,7 +104,7 @@ export default function OnboardingRouter() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080c14] flex items-center justify-center">
-        <div className="text-[#5a6b7f] text-sm">{t('onboarding.loading')}</div>
+        <div className="text-[#98A2B3] text-sm">{t('onboarding.loading')}</div>
       </div>
     )
   }

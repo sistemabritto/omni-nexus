@@ -11,7 +11,7 @@ export default function MetricCard({ label, value, delta, deltaType = 'neutral' 
   const deltaColor = {
     up: 'text-[#00FFA7]',
     down: 'text-red-400',
-    neutral: 'text-[#667085]',
+    neutral: 'text-[#98A2B3]',
   }[deltaType]
 
   const DeltaIcon = {
@@ -22,7 +22,7 @@ export default function MetricCard({ label, value, delta, deltaType = 'neutral' 
 
   return (
     <div className="bg-[#182230] border border-[#344054] rounded-xl p-5 hover:border-[#00FFA7] transition-colors">
-      <p className="text-sm text-[#667085] mb-1">{label}</p>
+      <p className="text-sm text-[#98A2B3] mb-1">{label}</p>
       <p className="text-2xl font-bold text-[#F9FAFB]">{value}</p>
       {delta && (
         <div className={`flex items-center gap-1 mt-2 text-xs ${deltaColor}`}>

@@ -357,7 +357,7 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
       >
         {/* Lock overlay */}
         <div className="absolute top-2.5 right-2.5 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-[#0d1117] border border-[#21262d]">
-          <Lock size={12} className="text-[#667085]" />
+          <Lock size={12} className="text-[#98A2B3]" />
         </div>
 
         {/* Top row: avatar + status */}
@@ -381,15 +381,15 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
         </div>
 
         {/* Description */}
-        <p className="relative mb-3 text-[11px] leading-relaxed text-[#667085] line-clamp-2">
+        <p className="relative mb-3 text-[11px] leading-relaxed text-[#98A2B3] line-clamp-2">
           {agent.description || 'No description available.'}
         </p>
 
         {/* Bottom row */}
         <div className="relative flex items-center justify-between">
-          <span className="text-[10px] text-[#667085]">Sem acesso</span>
+          <span className="text-[10px] text-[#98A2B3]">Sem acesso</span>
           <div className="flex items-center gap-1 rounded-full bg-[#0d1117] px-2 py-0.5 border border-[#21262d]">
-            <Brain size={10} className="text-[#667085]" />
+            <Brain size={10} className="text-[#98A2B3]" />
             <span className="text-[10px] font-medium text-[#8b949e]">{agent.memory_count}</span>
           </div>
         </div>
@@ -473,7 +473,7 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
       </div>
 
       {/* Description */}
-      <p className="relative mb-3 text-[11px] leading-relaxed text-[#667085] line-clamp-2">
+      <p className="relative mb-3 text-[11px] leading-relaxed text-[#98A2B3] line-clamp-2">
         {agent.description || 'No description available.'}
       </p>
 
@@ -488,7 +488,7 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
         )}
 
         <div className="flex items-center gap-1 rounded-full bg-[#0d1117] px-2 py-0.5 border border-[#21262d]">
-          <Brain size={10} className="text-[#667085]" />
+          <Brain size={10} className="text-[#98A2B3]" />
           <span className="text-[10px] font-medium text-[#8b949e]">
             {agent.memory_count}
           </span>
@@ -532,7 +532,7 @@ function OracleHeroCard({ agent, isRunning }: { agent: Agent; isRunning: boolean
             <h2 className="text-[22px] font-bold text-[#F9FAFB] leading-tight mb-0.5">Oracle</h2>
             <p className="text-[12.5px] text-[#8b949e] leading-snug">Sem acesso</p>
           </div>
-          <Lock size={16} className="flex-shrink-0 text-[#667085]" />
+          <Lock size={16} className="flex-shrink-0 text-[#98A2B3]" />
         </div>
       </div>
     )
@@ -648,7 +648,7 @@ function SectionHeader({
         </span>
       </div>
       {description && (
-        <p className="hidden md:block text-[11px] text-[#667085]">{description}</p>
+        <p className="hidden md:block text-[11px] text-[#98A2B3]">{description}</p>
       )}
     </div>
   )
@@ -657,9 +657,9 @@ function SectionHeader({
 function SubSectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="mb-2 mt-4 flex items-center gap-2">
-      <h3 className="text-[11px] font-medium uppercase tracking-wider text-[#667085]">{label}</h3>
+      <h3 className="text-[11px] font-medium uppercase tracking-wider text-[#98A2B3]">{label}</h3>
       <span className="text-[11px] text-[#3F3F46]">·</span>
-      <span className="text-[11px] text-[#667085]">{count}</span>
+      <span className="text-[11px] text-[#98A2B3]">{count}</span>
     </div>
   )
 }
@@ -827,7 +827,7 @@ export default function Agents() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#e6edf3]">{t('agents.title')}</h1>
-        <p className="text-[#667085] mt-1">{t('agents.headerSubtitle')}</p>
+        <p className="text-[#98A2B3] mt-1">{t('agents.headerSubtitle')}</p>
 
         {/* Stats bar */}
         {!loading && agents.length > 0 && (
@@ -864,7 +864,7 @@ export default function Agents() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Brain size={14} className="text-[#667085]" />
+              <Brain size={14} className="text-[#98A2B3]" />
               <span className="text-[#8b949e]">
                 <span className="font-medium text-[#e6edf3]">{totalMemories}</span> total memories
               </span>
@@ -897,8 +897,8 @@ export default function Agents() {
       {!loading && recentNames.length > 0 && filter === 'all' && !query && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <History size={13} className="text-[#667085]" />
-            <h2 className="text-[11px] font-medium uppercase tracking-wider text-[#667085]">Recent</h2>
+            <History size={13} className="text-[#98A2B3]" />
+            <h2 className="text-[11px] font-medium uppercase tracking-wider text-[#98A2B3]">Recent</h2>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {recentNames
@@ -956,7 +956,7 @@ export default function Agents() {
                 >
                   <FIcon size={12} />
                   {f.label}
-                  <span className="rounded-full bg-[#0d1117] px-1.5 py-0.5 text-[10px] text-[#667085] border border-[#21262d]">
+                  <span className="rounded-full bg-[#0d1117] px-1.5 py-0.5 text-[10px] text-[#98A2B3] border border-[#21262d]">
                     {c}
                   </span>
                 </button>
@@ -967,14 +967,14 @@ export default function Agents() {
           <div className="relative sm:w-64">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]"
             />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search agents..."
-              className="w-full rounded-full border border-[#21262d] bg-[#161b22] py-1.5 pl-9 pr-3 text-[12px] text-[#e6edf3] placeholder:text-[#667085] focus:border-[#00FFA7]/40 focus:outline-none"
+              className="w-full rounded-full border border-[#21262d] bg-[#161b22] py-1.5 pl-9 pr-3 text-[12px] text-[#e6edf3] placeholder:text-[#98A2B3] focus:border-[#00FFA7]/40 focus:outline-none"
             />
           </div>
         </div>
@@ -991,14 +991,14 @@ export default function Agents() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
             <Bot size={32} className="text-[#3F3F46]" />
           </div>
-          <p className="text-[#667085] text-lg">No agents found</p>
+          <p className="text-[#98A2B3] text-lg">No agents found</p>
           <p className="text-[#3F3F46] text-sm mt-1">
             Add agent files to .claude/agents/ to get started
           </p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-[#667085] text-sm">No agents match your filters.</p>
+          <p className="text-[#98A2B3] text-sm">No agents match your filters.</p>
         </div>
       ) : (
         <div className="space-y-10">

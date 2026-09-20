@@ -65,7 +65,7 @@ function CapabilitySwitch({
     <div className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-[#21262d]/50 transition-colors">
       <div className="flex-1 min-w-0 mr-3">
         <p className="text-sm text-[#D0D5DD] truncate">{item.label}</p>
-        <p className="text-xs text-[#667085]">{item.type}</p>
+        <p className="text-xs text-[#98A2B3]">{item.type}</p>
       </div>
       <button
         onClick={() => onToggle(item.type, item.id, !item.enabled)}
@@ -73,7 +73,7 @@ function CapabilitySwitch({
         className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors border ${
           item.enabled
             ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/20 hover:bg-[#00FFA7]/20'
-            : 'bg-[#21262d] text-[#667085] border-[#344054] hover:text-[#D0D5DD]'
+            : 'bg-[#21262d] text-[#98A2B3] border-[#344054] hover:text-[#D0D5DD]'
         } disabled:opacity-50`}
         title={item.enabled ? 'Disable' : 'Enable'}
       >
@@ -107,7 +107,7 @@ function CapabilityGroup({
   if (items.length === 0) return null
   return (
     <div className="mt-3 first:mt-0">
-      <p className="text-xs text-[#667085] font-medium uppercase tracking-wide mb-1 px-1">{title}</p>
+      <p className="text-xs text-[#98A2B3] font-medium uppercase tracking-wide mb-1 px-1">{title}</p>
       <div className="space-y-0.5">
         {items.map((item) => (
           <CapabilitySwitch
@@ -272,7 +272,7 @@ export default function PluginDetail() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-red-400 mb-2">{error ?? 'Plugin not found'}</p>
-          <button onClick={() => navigate('/plugins')} className="text-sm text-[#667085] hover:text-[#D0D5DD]">
+          <button onClick={() => navigate('/plugins')} className="text-sm text-[#98A2B3] hover:text-[#D0D5DD]">
             {t('common.back')}
           </button>
         </div>
@@ -456,7 +456,7 @@ export default function PluginDetail() {
       {/* Back */}
       <button
         onClick={() => navigate('/plugins')}
-        className="flex items-center gap-1.5 text-sm text-[#667085] hover:text-[#D0D5DD] mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-[#98A2B3] hover:text-[#D0D5DD] mb-6 transition-colors"
       >
         <ArrowLeft size={14} />
         {t('plugins.title')}
@@ -479,7 +479,7 @@ export default function PluginDetail() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-[#e6edf3]">{plugin.name}</h1>
-            <p className="text-sm text-[#667085]">
+            <p className="text-sm text-[#98A2B3]">
               {plugin.slug} &middot; v{plugin.version}
             </p>
           </div>
@@ -491,7 +491,7 @@ export default function PluginDetail() {
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
               plugin.enabled === 1
                 ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/20 hover:bg-[#00FFA7]/20'
-                : 'bg-[#21262d] text-[#667085] border-[#344054] hover:text-[#D0D5DD]'
+                : 'bg-[#21262d] text-[#98A2B3] border-[#344054] hover:text-[#D0D5DD]'
             }`}
           >
             {plugin.enabled === 1 ? t('common.enabled') : t('common.disabled')}
@@ -559,7 +559,7 @@ export default function PluginDetail() {
             ].map(({ label, value }) =>
               value ? (
                 <div key={label}>
-                  <dt className="text-xs text-[#667085] mb-0.5">{label}</dt>
+                  <dt className="text-xs text-[#98A2B3] mb-0.5">{label}</dt>
                   <dd className="text-[#e6edf3]">{value}</dd>
                 </div>
               ) : null
@@ -567,13 +567,13 @@ export default function PluginDetail() {
           </dl>
           {typeof manifest['description'] === 'string' && manifest['description'] && (
             <div className="mt-4 pt-4 border-t border-[#21262d]">
-              <dt className="text-xs text-[#667085] mb-1">{t('common.description')}</dt>
+              <dt className="text-xs text-[#98A2B3] mb-1">{t('common.description')}</dt>
               <dd className="text-sm text-[#D0D5DD]">{manifest['description']}</dd>
             </div>
           )}
           {capabilities.length > 0 && (
             <div className="mt-4 pt-4 border-t border-[#21262d]">
-              <p className="text-xs text-[#667085] mb-2">{t('plugins.capabilities')}</p>
+              <p className="text-xs text-[#98A2B3] mb-2">{t('plugins.capabilities')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {capabilities.map((cap) => (
                   <span key={cap} className="text-xs bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 px-2 py-0.5 rounded-full">
@@ -592,7 +592,7 @@ export default function PluginDetail() {
               <Layers size={14} className="text-[#00FFA7]" />
               Capabilities
             </h2>
-            <p className="text-xs text-[#667085] mb-4">
+            <p className="text-xs text-[#98A2B3] mb-4">
               Toggle individual capabilities. Plugin-level on/off overrides all.
             </p>
             <CapabilityGroup title="Heartbeats" items={heartbeatItems} onToggle={handleCapabilityToggle} loadingId={capLoadingId} />
@@ -619,7 +619,7 @@ export default function PluginDetail() {
             <button
               onClick={checkHealth}
               disabled={healthLoading}
-              className="flex items-center gap-1.5 text-xs text-[#667085] hover:text-[#D0D5DD] transition-colors"
+              className="flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
             >
               {healthLoading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
               {t('common.refresh')}
@@ -638,7 +638,7 @@ export default function PluginDetail() {
                 </span>
               </div>
               {health.reason && (
-                <p className="text-xs text-[#667085]">{health.reason}</p>
+                <p className="text-xs text-[#98A2B3]">{health.reason}</p>
               )}
               {health.tampered_files && health.tampered_files.length > 0 && (
                 <div className="mt-2 bg-red-500/5 border border-red-500/20 rounded-lg p-3">
@@ -654,7 +654,7 @@ export default function PluginDetail() {
               )}
             </div>
           ) : (
-            <p className="text-sm text-[#667085]">{t('plugins.healthNotChecked')}</p>
+            <p className="text-sm text-[#98A2B3]">{t('plugins.healthNotChecked')}</p>
           )}
         </section>
 
@@ -665,7 +665,7 @@ export default function PluginDetail() {
             <div className="space-y-1.5">
               {audit.slice(0, 20).map((entry) => (
                 <div key={entry.id} className="flex items-center gap-3 text-xs py-1">
-                  <span className="text-[#667085] w-32 shrink-0">
+                  <span className="text-[#98A2B3] w-32 shrink-0">
                     {new Date(entry.created_at).toLocaleString()}
                   </span>
                   <span className={`font-medium ${entry.success ? 'text-[#00FFA7]' : 'text-red-400'}`}>

@@ -65,7 +65,7 @@ export default function StepBrainConnect({ onNext, onBack }: StepBrainConnectPro
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[11px] font-semibold text-[#5a6b7f] tracking-[0.08em] uppercase">
+                <label className="block text-[11px] font-semibold text-[#98A2B3] tracking-[0.08em] uppercase">
                   {t('onboarding.connect.pat')}
                 </label>
                 <a
@@ -91,7 +91,7 @@ export default function StepBrainConnect({ onNext, onBack }: StepBrainConnectPro
                 <button
                   type="button"
                   onClick={() => setShowToken(!showToken)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a6b7f] hover:text-[#e2e8f0] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#e2e8f0] transition-colors"
                 >
                   {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -99,7 +99,7 @@ export default function StepBrainConnect({ onNext, onBack }: StepBrainConnectPro
             </div>
 
             <div className="p-3 rounded-lg bg-[#0a1220] border border-[#1e2a3a]">
-              <p className="text-[11px] text-[#5a6b7f] leading-relaxed">
+              <p className="text-[11px] text-[#98A2B3] leading-relaxed">
                 {t('onboarding.connect.patHintPart1')}
                 <code className="text-[#00FFA7]/80 bg-[#0f1520] px-1 py-0.5 rounded text-[10px]">{t('onboarding.connect.patHintScope')}</code>
                 {t('onboarding.connect.patHintPart2')}
@@ -109,7 +109,7 @@ export default function StepBrainConnect({ onNext, onBack }: StepBrainConnectPro
             <div className="flex gap-3 pt-2">
               <button
                 onClick={onBack}
-                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#5a6b7f] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('onboarding.back')}
               </button>

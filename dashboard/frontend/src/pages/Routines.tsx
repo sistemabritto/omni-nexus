@@ -189,7 +189,7 @@ function Cartao({ label, valor, icone: Icone }: { label: string; valor: string |
         <Icone size={18} className="text-[#00FFA7]" />
       </div>
       <p className="text-2xl sm:text-3xl font-bold text-[#e6edf3] tracking-tight tabular-nums">{valor}</p>
-      <p className="text-sm text-[#667085] mt-1">{label}</p>
+      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
     </div>
   )
 }
@@ -287,20 +287,20 @@ export default function Routines() {
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('routines.title')}</h1>
-          <p className="text-[#667085] text-sm mt-1">
+          <p className="text-[#98A2B3] text-sm mt-1">
             O que roda sozinho, quando roda de novo e quanto custa
           </p>
         </div>
         <button
           onClick={carregar}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors text-sm"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors text-sm"
         >
           <RefreshCw size={15} className={carregando ? 'animate-spin' : ''} /> Atualizar
         </button>
       </div>
 
       {/* Legenda do motor — a distinção que a página existe para deixar clara */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 text-xs text-[#667085]">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 text-xs text-[#98A2B3]">
         <span className="flex items-center gap-1.5">
           <span aria-hidden>🐍</span> <strong className="text-[#60A5FA] font-medium">Python</strong>
           — determinística, não gasta token
@@ -326,7 +326,7 @@ export default function Routines() {
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
               filtro === chave
                 ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/25'
-                : 'bg-[#161b22] text-[#667085] border-[#21262d] hover:text-[#e6edf3]'
+                : 'bg-[#161b22] text-[#98A2B3] border-[#21262d] hover:text-[#e6edf3]'
             }`}
           >
             {rotulo}
@@ -336,7 +336,7 @@ export default function Routines() {
           </button>
         ))}
         {filtro === 'todas' && (
-          <span className="text-[11px] text-[#667085]">
+          <span className="text-[11px] text-[#98A2B3]">
             inclui histórico de rotinas que saíram do agendador
           </span>
         )}
@@ -348,7 +348,7 @@ export default function Routines() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FFA7] opacity-60" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FFA7]" />
           </span>
-          <span className="text-[#667085] truncate">
+          <span className="text-[#98A2B3] truncate">
             Próxima: <strong className="text-[#e6edf3] font-medium">{proxima.nome}</strong>
             {' '}{proximaEm(proxima.proxima)}
           </span>
@@ -364,7 +364,7 @@ export default function Routines() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
             <Clock size={32} className="text-[#3F3F46]" />
           </div>
-          <p className="text-[#667085]">Nenhuma rotina agendada</p>
+          <p className="text-[#98A2B3]">Nenhuma rotina agendada</p>
         </div>
       ) : (
         <>
@@ -378,7 +378,7 @@ export default function Routines() {
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[#e6edf3] font-medium text-sm leading-snug">{r.nome}</p>
-                    <p className="text-[11px] text-[#667085] font-mono truncate mt-0.5">
+                    <p className="text-[11px] text-[#98A2B3] font-mono truncate mt-0.5">
                       {r.script || '—'}
                     </p>
                   </div>
@@ -402,7 +402,7 @@ export default function Routines() {
                         style={{ width: `${r.sucessoPct}%`, backgroundColor: SAUDE[r.saude].cor }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#667085] tabular-nums">
+                    <div className="flex items-center justify-between text-[11px] text-[#98A2B3] tabular-nums">
                       <span>
                         <span style={{ color: SAUDE[r.saude].cor }}>{r.sucessoPct}%</span>
                         {' em '}{r.execucoes} execuções
@@ -417,7 +417,7 @@ export default function Routines() {
                 )}
 
                 <div className="flex items-center justify-between pt-2 border-t border-[#21262d]/60">
-                  <span className="text-[11px] text-[#667085]">
+                  <span className="text-[11px] text-[#98A2B3]">
                     {r.ultimaExecucao ? `última ${tempoRelativo(r.ultimaExecucao)}` : 'nunca rodou'}
                   </span>
                   <BotaoRodar r={r} />
@@ -436,7 +436,7 @@ export default function Routines() {
           <div className="hidden md:block bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
             <div className="grid grid-cols-[minmax(200px,2.4fr)_minmax(140px,1.4fr)_minmax(120px,1.1fr)_minmax(88px,0.8fr)_minmax(74px,0.7fr)_84px]
                             gap-x-3 px-4 py-3 bg-[#0d1117]/50 border-b border-[#21262d]
-                            text-[#667085] text-[11px] uppercase tracking-wider font-medium">
+                            text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
               <span>Rotina</span>
               <span>Agendamento</span>
               <span>Confiabilidade</span>
@@ -462,7 +462,7 @@ export default function Routines() {
                       </span>
                       <p className="text-[#e6edf3] font-medium text-[13px] truncate">{r.nome}</p>
                     </div>
-                    <p className="text-[11px] text-[#667085] font-mono truncate pl-6">
+                    <p className="text-[11px] text-[#98A2B3] font-mono truncate pl-6">
                       {r.script || '—'}
                     </p>
                   </div>
@@ -472,7 +472,7 @@ export default function Routines() {
                       {r.agendamento || <span className="text-[#3F3F46]">não agendada</span>}
                     </p>
                     {r.proxima && (
-                      <p className="text-[11px] text-[#667085] truncate">{proximaEm(r.proxima)}</p>
+                      <p className="text-[11px] text-[#98A2B3] truncate">{proximaEm(r.proxima)}</p>
                     )}
                   </div>
 
@@ -487,7 +487,7 @@ export default function Routines() {
                             style={{ width: `${r.sucessoPct}%`, backgroundColor: SAUDE[r.saude].cor }}
                           />
                         </div>
-                        <p className="text-[11px] text-[#667085] tabular-nums">
+                        <p className="text-[11px] text-[#98A2B3] tabular-nums">
                           <span style={{ color: SAUDE[r.saude].cor }}>{r.sucessoPct}%</span>
                           {' · '}{r.execucoes}x
                         </p>
@@ -506,7 +506,7 @@ export default function Routines() {
                         <p className="text-[#D0D5DD] tabular-nums text-[13px]">
                           {r.custoTotal.toFixed(2)}
                         </p>
-                        <p className="text-[11px] text-[#667085] tabular-nums">
+                        <p className="text-[11px] text-[#98A2B3] tabular-nums">
                           {porExecucao >= 0.01 ? `${porExecucao.toFixed(2)}/x` : '<0,01/x'}
                         </p>
                       </>
@@ -515,7 +515,7 @@ export default function Routines() {
                     )}
                   </div>
 
-                  <p className="text-right text-[#667085] text-[12px] truncate">
+                  <p className="text-right text-[#98A2B3] text-[12px] truncate">
                     {r.ultimaExecucao ? tempoRelativo(r.ultimaExecucao) : 'nunca'}
                   </p>
 

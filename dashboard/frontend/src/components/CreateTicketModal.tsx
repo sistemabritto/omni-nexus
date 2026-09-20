@@ -33,7 +33,7 @@ const PRIORITY_OPTIONS: Array<{ value: TicketPriority; label: string; icon: Reac
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-3.5">
-      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[#667085] mb-1.5">
+      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[#98A2B3] mb-1.5">
         {label}
       </label>
       {children}
@@ -129,7 +129,7 @@ export default function CreateTicketModal({ onClose, onCreated, defaultAssigneeA
               Novo ticket
             </h3>
           </div>
-          <button onClick={onClose} className="text-[#667085] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -203,7 +203,7 @@ export default function CreateTicketModal({ onClose, onCreated, defaultAssigneeA
           </Field>
 
           <div className="flex justify-end gap-2 mt-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-[#667085] hover:text-white transition-colors">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white transition-colors">
               Cancelar
             </button>
             <button

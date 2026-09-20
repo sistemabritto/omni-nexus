@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
 import {
   LayoutDashboard, Bot, Clock,
-  LogOut, Menu, X, BookOpen,
+  LogOut, Menu, X,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3, FolderKanban,
   Plug, FolderOpen, Settings,
@@ -33,34 +33,32 @@ interface NavItem {
   desktopOnly?: boolean
 }
 
-interface NavGroup {
-  key: string                // i18n key under nav.groups.*  (also used as storage key)
-  collapsible: boolean
-  headerless?: boolean       // true = sem cabeçalho de seção; itens ficam soltos
+// Seção fixa: título discreto (uppercase) SEM chevron e SEM colapso. O estado
+// de colapsar ficou só nos grupos de plugins injetados. Configurações não é
+// mais seção de menu — virou a engrenagem ao lado do nome do usuário no rodapé.
+interface NavSection {
+  key: string                // i18n key under nav.groups.*
+  title?: string             // undefined = links soltos sem título
   adminOnly?: boolean
   items: NavItem[]
 }
 
-const navGroups: NavGroup[] = [
-  // Só "Inteligência" mantém dropdown+cabeçalho (5 destinos diferentes).
-  // Todo o resto fica SOLTO: Cockpit/Materiais/Configurações são 1 página de
-  // abas cada (1 link); Projetos são 3 vistas do mesmo grafo (3 links soltos).
+const navSections: NavSection[] = [
   {
     key: 'cockpit',
-    collapsible: false,
-    headerless: true,
+    title: 'Cockpit',
     items: [
-      // Os 5 domínios viraram abas da única página /?tab=. 1 link solto no topo.
+      // Os 5 domínios viraram abas da única página /?tab=. 1 link.
       { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
     ],
   },
   {
     key: 'projetos',
-    collapsible: false,
-    headerless: true,
+    title: 'Projetos',
     items: [
       // Missões → Projetos → Metas → Tickets: 3 vistas do MESMO grafo em zooms
-      // diferentes, então ficam soltas sem dropdown.
+      // diferentes. A unificação em 1 árvore é o plano (revamp P2); por ora
+      // seguem como 3 links soltos.
       { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
       { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
       { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
@@ -68,37 +66,19 @@ const navGroups: NavGroup[] = [
   },
   {
     key: 'inteligencia',
-    collapsible: true,
+    title: 'Inteligência',
     items: [
-      // Tudo que dá cérebro à operação, num grupo só (agentes + o hub de
-      // integrações). O item "Integrações" aponta pro hub antigo /inteligencia,
-      // agora renomeado: reúne Provedores + Conhecimento (RAG) + Memória +
-      // MemPalace + Custos + Skills + MCP + Plugins + Integrações de API.
+      // Tudo que dá cérebro à operação: agentes + o que acorda cada um +
+      // materiais + o hub de integrações (o item "Integrações" aponta pro hub
+      // antigo /inteligencia, agora renomeado: Provedores + Conhecimento +
+      // Memória + MemPalace + Custos + Skills + MCP + Plugins + APIs).
+      // Materiais entrou aqui por decisão do dono (09/20/2026).
       { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
       { to: '/triggers', labelKey: 'triggers', icon: Webhook, resource: 'triggers' },
-      { to: '/inteligencia', labelKey: 'integrations', icon: Plug, resource: null },
-    ],
-  },
-  {
-    key: 'materiais',
-    collapsible: false,
-    headerless: true,
-    items: [
-      // Arquivos do negócio numa página só: árvore + mídias + shares + templates
-      // viraram abas em /workspace (?mat=). 1 link solto.
       { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
-    ],
-  },
-  {
-    key: 'configuracoes',
-    collapsible: false,
-    headerless: true,
-    items: [
-      // Backups/Docs/Usuários/Papéis/Auditoria são abas de /settings (?tab=).
-      // 1 link solto.
-      { to: '/settings', labelKey: 'settings', icon: Settings, resource: 'config' },
+      { to: '/inteligencia', labelKey: 'integrations', icon: Plug, resource: null },
     ],
   },
 ]
@@ -171,12 +151,12 @@ export default function Sidebar() {
       end={item.to === '/'}
       onClick={() => setMobileOpen(false)}
       className={({ isActive }) =>
-        `items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+        `items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
           item.desktopOnly ? 'hidden lg:flex' : 'flex'
         } ${
           isActive
             ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-l-2 border-[#00FFA7]'
-            : 'text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
+            : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
         }`
       }
     >
@@ -185,71 +165,23 @@ export default function Sidebar() {
     </NavLink>
   )
 
-  const renderGroup = (group: NavGroup) => {
-    // Filter items by permission
-    const visibleItems = group.items.filter(
+  const renderSection = (section: NavSection) => {
+    const visibleItems = section.items.filter(
       (item) => item.resource === null || hasPermission(item.resource, 'view')
     )
-
     if (visibleItems.length === 0) return null
 
-    // Admin group: only show if user has permission to view at least one admin item
-    if (group.adminOnly) {
-      const hasAnyAdmin = group.items.some((item) =>
-        item.resource && hasPermission(item.resource, 'view')
-      )
-      if (!hasAnyAdmin) return null
-    }
-
-    const isCollapsed = collapsed[group.key] ?? false
-
-    // Grupos "headerless": itens ficam SOLTOS (sem cabeçalho de seção nem
-    // chevron). É o caso de Cockpit/Materiais/Configurações (1 página de abas)
-    // e Projetos (3 vistas do mesmo grafo). Só grupos com cabeçalho usam o
-    // dropdown. O espaçamento superior separa visualmente dos links acima.
-    if (group.headerless) {
-      return (
-        <div key={group.key} className="mb-1">
-          <div className="flex flex-col gap-0.5 mt-2 first:mt-0">
-            {visibleItems.map(renderLink)}
-          </div>
-        </div>
-      )
-    }
-
     return (
-      <div key={group.key} className="mb-1">
-        {group.collapsible ? (
-          <button
-            onClick={() => toggleGroup(group.key)}
-            className="w-full flex items-center justify-between px-3 py-1.5 mt-2 group cursor-pointer"
-          >
-            <span className="text-[10px] uppercase tracking-wider text-[#667085] font-semibold select-none">
-              {t(`nav.groups.${group.key}`)}
-            </span>
-            <ChevronDown
-              size={12}
-              className={`text-[#667085] transition-transform duration-200 group-hover:text-[#D0D5DD] ${
-                isCollapsed ? '-rotate-90' : ''
-              }`}
-            />
-          </button>
-        ) : (
-          <div className="px-3 py-1.5">
-            <span className="text-[10px] uppercase tracking-wider text-[#667085] font-semibold">
-              {t(`nav.groups.${group.key}`)}
+      <div key={section.key} className="mb-1">
+        {section.title && (
+          <div className="px-3 pt-3 pb-1 first:pt-0">
+            <span className="text-[10px] uppercase tracking-wider text-[#475467] font-semibold">
+              {t(`nav.groups.${section.key}`)}
             </span>
           </div>
         )}
-
-        <div
-          className={`overflow-hidden transition-all duration-200 ease-in-out ${
-            group.collapsible && isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[720px] opacity-100'
-          }`}
-        >
-          <div className="flex flex-col gap-0.5">
-            {visibleItems.map(renderLink)}
-          </div>
+        <div className="flex flex-col gap-0.5 mt-2 first:mt-0">
+          {visibleItems.map(renderLink)}
         </div>
       </div>
     )
@@ -261,14 +193,14 @@ export default function Sidebar() {
         <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-8 w-auto" />
         <div className="flex items-center gap-1">
           <NotificationBell />
-          <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1 rounded hover:bg-white/10 text-[#667085]">
+          <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1 rounded hover:bg-white/10 text-[#98A2B3]">
             <X size={20} />
           </button>
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
-        {navGroups.map(renderGroup)}
+        {navSections.map(renderSection)}
 
         {/* Wave 2.1: Plugin sidebar groups injected after native groups */}
         {pluginGroups.map((group) => {
@@ -285,19 +217,19 @@ export default function Sidebar() {
                   onClick={() => toggleGroup(storageKey)}
                   className="w-full flex items-center justify-between px-3 py-1.5 mt-2 group cursor-pointer"
                 >
-                  <span className="text-[10px] uppercase tracking-wider text-[#667085] font-semibold select-none">
+                  <span className="text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold select-none">
                     {group.label}
                   </span>
                   <ChevronDown
                     size={12}
-                    className={`text-[#667085] transition-transform duration-200 group-hover:text-[#D0D5DD] ${
+                    className={`text-[#98A2B3] transition-transform duration-200 group-hover:text-[#D0D5DD] ${
                       isCollapsed ? '-rotate-90' : ''
                     }`}
                   />
                 </button>
               ) : (
                 <div className="px-3 py-1.5">
-                  <span className="text-[10px] uppercase tracking-wider text-[#667085] font-semibold">
+                  <span className="text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">
                     {group.label}
                   </span>
                 </div>
@@ -316,10 +248,10 @@ export default function Sidebar() {
                         to={`/plugins-ui/${page.slug}/${page.path}`}
                         onClick={() => setMobileOpen(false)}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border-l-2 ${
+                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border-l-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
                             isActive
                               ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-[#00FFA7]'
-                              : 'text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 border-transparent'
+                              : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 border-transparent'
                           }`
                         }
                       >
@@ -332,24 +264,6 @@ export default function Sidebar() {
             </div>
           )
         })}
-
-        {/* Docs link — standalone at the bottom of nav */}
-        <div className="mt-2">
-          <NavLink
-            to="/docs"
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-l-2 border-[#00FFA7]'
-                  : 'text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
-              }`
-            }
-          >
-            <BookOpen size={16} />
-            {t('nav.docs')}
-          </NavLink>
-        </div>
       </nav>
 
       {user && (
@@ -364,9 +278,23 @@ export default function Sidebar() {
                 {user.role}
               </span>
             </div>
+            <NavLink
+              to="/settings"
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) =>
+                `p-2 rounded-xl transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
+                  isActive
+                    ? 'bg-[#00FFA7]/15 text-[#00FFA7]'
+                    : 'bg-white/5 text-[#98A2B3] hover:bg-white/10 hover:text-[#D0D5DD]'
+                }`
+              }
+              title={t('nav.settings')}
+            >
+              <Settings size={20} />
+            </NavLink>
             <button
               onClick={logout}
-              className="p-1.5 rounded-lg text-[#667085] hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60"
               title={t('nav.logout')}
             >
               <LogOut size={16} />
@@ -379,7 +307,7 @@ export default function Sidebar() {
       {versionInfo && (
         <div className="px-4 py-2 border-t border-[#344054]/50">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="text-[#667085]">v{versionInfo.current}</span>
+            <span className="text-[#98A2B3]">v{versionInfo.current}</span>
             {versionInfo.update_available && versionInfo.release_url && (
               <a
                 href={versionInfo.release_url}
@@ -402,7 +330,7 @@ export default function Sidebar() {
           href="https://evolutionfoundation.com.br"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 text-[10px] text-[#667085] hover:text-[#00FFA7] transition-colors"
+          className="flex items-center justify-center gap-1.5 text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
         >
           by <span className="font-semibold text-[#00FFA7]/60">Evolution Foundation</span>
         </a>

@@ -125,7 +125,7 @@ export default function KnowledgeApiKeys() {
   }
 
   if (!activeConnectionId) {
-    return <div className="text-center py-12 text-[#667085] text-sm">Select a connection using the switcher above.</div>
+    return <div className="text-center py-12 text-[#98A2B3] text-sm">Select a connection using the switcher above.</div>
   }
 
   if (loading) {
@@ -166,7 +166,7 @@ export default function KnowledgeApiKeys() {
                 </button>
               </div>
             </div>
-            <button onClick={() => setCreatedToken(null)} className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 shrink-0"><X size={14} /></button>
+            <button onClick={() => setCreatedToken(null)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 shrink-0"><X size={14} /></button>
           </div>
         </div>
       )}
@@ -183,7 +183,7 @@ export default function KnowledgeApiKeys() {
       )}
 
       {keys.length === 0 ? (
-        <div className="text-center py-12 bg-[#182230] border border-[#344054] rounded-xl text-[#667085] text-sm">
+        <div className="text-center py-12 bg-[#182230] border border-[#344054] rounded-xl text-[#98A2B3] text-sm">
           No API keys yet. Create one to access knowledge from external apps or skills.
         </div>
       ) : (
@@ -192,7 +192,7 @@ export default function KnowledgeApiKeys() {
             <thead>
               <tr className="border-b border-[#344054]">
                 {['Name', 'Prefix', 'Scopes', 'Rate Limit', 'Expires', 'Last Used', ''].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs text-[#667085] font-medium">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs text-[#98A2B3] font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -201,7 +201,7 @@ export default function KnowledgeApiKeys() {
                 <tr key={k.id} className={`border-b border-[#344054]/50 last:border-0 hover:bg-white/2 transition-colors ${k.revoked ? 'opacity-50' : ''}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Key size={12} className="text-[#667085]" />
+                      <Key size={12} className="text-[#98A2B3]" />
                       <p className="text-[#D0D5DD] font-medium">{k.name}</p>
                     </div>
                     {k.revoked && <span className="text-[10px] text-red-400 ml-4">revoked</span>}
@@ -212,25 +212,25 @@ export default function KnowledgeApiKeys() {
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {k.scopes.map((s) => (
-                        <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[#667085]">{s}</span>
+                        <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[#98A2B3]">{s}</span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs text-[#667085]">
+                  <td className="px-4 py-3 text-xs text-[#98A2B3]">
                     {k.rate_limit_per_minute && `${k.rate_limit_per_minute}/min`}
                     {k.rate_limit_per_day && ` · ${k.rate_limit_per_day}/day`}
                   </td>
-                  <td className="px-4 py-3 text-xs text-[#667085]">
+                  <td className="px-4 py-3 text-xs text-[#98A2B3]">
                     {k.expires_at ? new Date(k.expires_at).toLocaleDateString() : 'Never'}
                   </td>
-                  <td className="px-4 py-3 text-xs text-[#667085]">
+                  <td className="px-4 py-3 text-xs text-[#98A2B3]">
                     {k.last_used_at ? new Date(k.last_used_at).toLocaleString() : '—'}
                   </td>
                   <td className="px-4 py-3">
                     {canManage && !k.revoked && (
                       <button
                         onClick={() => setConfirmRevokeId(k.id)}
-                        className="p-1.5 rounded-lg text-[#667085] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         title="Revoke key"
                       >
                         <Trash2 size={12} />
@@ -253,11 +253,11 @@ export default function KnowledgeApiKeys() {
                 <Key size={14} className="text-[#00FFA7]" />
                 <h3 className="text-sm font-semibold text-[#F9FAFB]">{t('knowledge.newApiKey')}</h3>
               </div>
-              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5"><X size={14} /></button>
+              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5"><X size={14} /></button>
             </div>
             <div className="px-5 py-4 space-y-4">
               <div>
-                <label className="block text-xs text-[#667085] mb-1">Name *</label>
+                <label className="block text-xs text-[#98A2B3] mb-1">Name *</label>
                 <input
                   type="text"
                   placeholder="My app integration"
@@ -268,7 +268,7 @@ export default function KnowledgeApiKeys() {
               </div>
 
               <div>
-                <label className="block text-xs text-[#667085] mb-2">Scopes</label>
+                <label className="block text-xs text-[#98A2B3] mb-2">Scopes</label>
                 <div className="flex flex-wrap gap-2">
                   {ALL_SCOPES.map((s) => (
                     <button
@@ -277,7 +277,7 @@ export default function KnowledgeApiKeys() {
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                         form.scopes.includes(s)
                           ? 'bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/30'
-                          : 'bg-white/5 text-[#667085] border border-[#344054] hover:border-[#667085]'
+                          : 'bg-white/5 text-[#98A2B3] border border-[#344054] hover:border-[#667085]'
                       }`}
                     >
                       {s}
@@ -288,7 +288,7 @@ export default function KnowledgeApiKeys() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-[#667085] mb-1">Rate limit / min</label>
+                  <label className="block text-xs text-[#98A2B3] mb-1">Rate limit / min</label>
                   <input
                     type="number"
                     value={form.rate_limit_per_minute}
@@ -297,7 +297,7 @@ export default function KnowledgeApiKeys() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-[#667085] mb-1">Rate limit / day</label>
+                  <label className="block text-xs text-[#98A2B3] mb-1">Rate limit / day</label>
                   <input
                     type="number"
                     value={form.rate_limit_per_day}
@@ -306,7 +306,7 @@ export default function KnowledgeApiKeys() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs text-[#667085] mb-1">Expiration date (optional)</label>
+                  <label className="block text-xs text-[#98A2B3] mb-1">Expiration date (optional)</label>
                   <input
                     type="date"
                     value={form.expires_at}
@@ -333,7 +333,7 @@ export default function KnowledgeApiKeys() {
           <div className="bg-[#0C111D] border border-[#344054] rounded-xl w-full max-w-sm shadow-2xl p-6 text-center">
             <Trash2 size={28} className="text-red-400 mx-auto mb-3" />
             <p className="text-sm font-semibold text-[#F9FAFB] mb-1">Revoke API Key?</p>
-            <p className="text-xs text-[#667085] mb-6">Any application using this key will immediately lose access. This cannot be undone.</p>
+            <p className="text-xs text-[#98A2B3] mb-6">Any application using this key will immediately lose access. This cannot be undone.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmRevokeId(null)} className="flex-1 px-4 py-2 bg-white/5 text-[#D0D5DD] rounded-lg text-sm hover:bg-white/10 transition-colors">Cancel</button>
               <button onClick={() => handleRevoke(confirmRevokeId)} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors">Revoke</button>

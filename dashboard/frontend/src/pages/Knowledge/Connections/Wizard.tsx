@@ -174,7 +174,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
             <Database size={16} className="text-[#00FFA7]" />
             <h2 className="text-sm font-semibold text-[#F9FAFB]">{t('knowledge.newConnection')}</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -186,12 +186,12 @@ export default function Wizard({ onClose, onCreated }: Props) {
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
                 step === s ? 'bg-[#00FFA7] text-[#0C111D]' :
                 step > s ? 'bg-[#00FFA7]/20 text-[#00FFA7]' :
-                'bg-white/5 text-[#667085]'
+                'bg-white/5 text-[#98A2B3]'
               }`}>{s}</div>
               {s < 3 && <div className={`h-px w-8 ${step > s ? 'bg-[#00FFA7]/40' : 'bg-[#344054]'}`} />}
             </div>
           ))}
-          <span className="text-xs text-[#667085] ml-2">
+          <span className="text-xs text-[#98A2B3] ml-2">
             {step === 1 ? 'Credentials' : step === 2 ? 'Configuring...' : 'Done'}
           </span>
         </div>
@@ -202,7 +202,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs text-[#667085] mb-1">Connection Name *</label>
+                  <label className="block text-xs text-[#98A2B3] mb-1">Connection Name *</label>
                   <input
                     type="text"
                     placeholder="e.g. Academy - Supabase"
@@ -212,7 +212,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-[#667085] mb-1">Slug *</label>
+                  <label className="block text-xs text-[#98A2B3] mb-1">Slug *</label>
                   <input
                     type="text"
                     placeholder="academy-supabase"
@@ -222,7 +222,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-[#667085] mb-1">SSL Mode</label>
+                  <label className="block text-xs text-[#98A2B3] mb-1">SSL Mode</label>
                   <select
                     value={form.ssl_mode}
                     onChange={(e) => set('ssl_mode', e.target.value)}
@@ -239,7 +239,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => set('useConnectionString', !form.useConnectionString)}
-                  className="flex items-center gap-2 text-xs text-[#667085] hover:text-[#D0D5DD] transition-colors"
+                  className="flex items-center gap-2 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
                 >
                   <div className={`w-8 h-4 rounded-full transition-colors relative ${form.useConnectionString ? 'bg-[#00FFA7]' : 'bg-[#344054]'}`}>
                     <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${form.useConnectionString ? 'translate-x-4' : 'translate-x-0.5'}`} />
@@ -250,7 +250,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
 
               {form.useConnectionString ? (
                 <div>
-                  <label className="block text-xs text-[#667085] mb-1">Connection String *</label>
+                  <label className="block text-xs text-[#98A2B3] mb-1">Connection String *</label>
                   <input
                     type="password"
                     placeholder="postgresql://user:password@host:5432/database"
@@ -258,7 +258,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                     onChange={(e) => set('connection_string', e.target.value)}
                     className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none font-mono"
                   />
-                  <p className="mt-2 text-[11px] text-[#667085] leading-relaxed">
+                  <p className="mt-2 text-[11px] text-[#98A2B3] leading-relaxed">
                     Using <strong>Supabase / Neon / Railway</strong>? Use the <em>direct</em>{' '}
                     connection string on port <code className="text-[#D0D5DD]">5432</code>, not the
                     transaction pooler on <code className="text-[#D0D5DD]">6543</code>. Transaction
@@ -270,7 +270,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-[#667085] mb-1">Host *</label>
+                    <label className="block text-xs text-[#98A2B3] mb-1">Host *</label>
                     <input
                       type="text"
                       placeholder="db.example.com"
@@ -280,7 +280,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#667085] mb-1">Port</label>
+                    <label className="block text-xs text-[#98A2B3] mb-1">Port</label>
                     <input
                       type="number"
                       placeholder="5432"
@@ -290,7 +290,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#667085] mb-1">Username *</label>
+                    <label className="block text-xs text-[#98A2B3] mb-1">Username *</label>
                     <input
                       type="text"
                       placeholder="postgres"
@@ -300,7 +300,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#667085] mb-1">Password</label>
+                    <label className="block text-xs text-[#98A2B3] mb-1">Password</label>
                     <input
                       type="password"
                       placeholder="••••••••"
@@ -310,7 +310,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs text-[#667085] mb-1">Database Name</label>
+                    <label className="block text-xs text-[#98A2B3] mb-1">Database Name</label>
                     <input
                       type="text"
                       placeholder="mydb"
@@ -322,7 +322,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                 </div>
               )}
 
-              <div className="bg-[#182230] border border-[#344054] rounded-lg px-4 py-3 text-xs text-[#667085]">
+              <div className="bg-[#182230] border border-[#344054] rounded-lg px-4 py-3 text-xs text-[#98A2B3]">
                 <strong className="text-[#D0D5DD]">Prerequisites:</strong> Postgres ≥ 14 with pgvector ≥ 0.5 installed.
                 EvoNexus does not provision Postgres — bring your own.
               </div>
@@ -351,7 +351,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
           {/* Step 2: Configuring */}
           {step === 2 && (
             <div className="space-y-4">
-              <p className="text-sm text-[#667085]">Setting up your connection...</p>
+              <p className="text-sm text-[#98A2B3]">Setting up your connection...</p>
               <div className="space-y-3">
                 {phases.map((phase, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -362,7 +362,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                       {phase.status === 'error' && <XCircle size={16} className="text-red-400" />}
                     </div>
                     <div className="flex-1">
-                      <p className={`text-sm ${phase.status === 'error' ? 'text-red-400' : phase.status === 'done' ? 'text-[#D0D5DD]' : 'text-[#667085]'}`}>
+                      <p className={`text-sm ${phase.status === 'error' ? 'text-red-400' : phase.status === 'done' ? 'text-[#D0D5DD]' : 'text-[#98A2B3]'}`}>
                         {phase.label}
                       </p>
                       {phase.error && (
@@ -396,7 +396,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                   <CheckCircle size={28} className="text-[#00FFA7]" />
                 </div>
                 <p className="text-[#F9FAFB] font-semibold mb-1">Connection ready!</p>
-                <p className="text-[#667085] text-sm">
+                <p className="text-[#98A2B3] text-sm">
                   Schema migrated. You can now create spaces and upload documents.
                 </p>
               </div>
@@ -409,7 +409,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                 </button>
               </div>
               {createdId && (
-                <p className="text-center text-xs text-[#667085]">
+                <p className="text-center text-xs text-[#98A2B3]">
                   Connection ID: <span className="font-mono">{createdId}</span>
                 </p>
               )}

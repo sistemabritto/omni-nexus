@@ -160,11 +160,11 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
           <div>
             <h2 className="text-base font-semibold text-[#e6edf3]">{t('plugins.installPlugin')}</h2>
-            <p className="text-xs text-[#667085] mt-0.5">{t('plugins.stepOf', { current: step, total: 3 })}</p>
+            <p className="text-xs text-[#98A2B3] mt-0.5">{t('plugins.stepOf', { current: step, total: 3 })}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
           >
             <X size={16} />
           </button>
@@ -177,7 +177,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                 s < step ? 'bg-[#00FFA7] text-black' :
                 s === step ? 'bg-[#00FFA7]/20 text-[#00FFA7] border border-[#00FFA7]/40' :
-                'bg-[#21262d] text-[#667085]'
+                'bg-[#21262d] text-[#98A2B3]'
               }`}>
                 {s < step ? <CheckCircle size={12} /> : s}
               </div>
@@ -204,14 +204,14 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
                   className="w-full bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-2.5 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
                   onKeyDown={(e) => { if (e.key === 'Enter') handlePreview() }}
                 />
-                <p className="mt-2 text-xs text-[#667085]">Formatos: github:owner/repo[@ref] · https://…/arquivo.tar.gz</p>
+                <p className="mt-2 text-xs text-[#98A2B3]">Formatos: github:owner/repo[@ref] · https://…/arquivo.tar.gz</p>
               </div>
 
               {/* Upload alternative */}
               <div className="relative">
                 <div className="flex items-center gap-3 my-1">
                   <div className="flex-1 h-px bg-[#21262d]" />
-                  <span className="text-[10px] text-[#667085] uppercase tracking-wider">ou</span>
+                  <span className="text-[10px] text-[#98A2B3] uppercase tracking-wider">ou</span>
                   <div className="flex-1 h-px bg-[#21262d]" />
                 </div>
                 <input
@@ -243,7 +243,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
               <div>
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-1.5 text-xs text-[#667085] hover:text-[#D0D5DD] transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
                 >
                   {showAdvanced ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                   Opções avançadas
@@ -262,7 +262,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
                       className="w-full bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-2 text-xs text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
                       autoComplete="off"
                     />
-                    <p className="mt-1 text-[10px] text-[#667085]">Usado apenas para baixar o arquivo; não é armazenado.</p>
+                    <p className="mt-1 text-[10px] text-[#98A2B3]">Usado apenas para baixar o arquivo; não é armazenado.</p>
                   </div>
                 )}
               </div>
@@ -311,14 +311,14 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
                   {['name', 'version', 'author', 'license', 'description'].map((k) =>
                     manifest[k] ? (
                       <div key={k} className="flex gap-2">
-                        <dt className="text-[#667085] capitalize w-20 shrink-0">{k}</dt>
+                        <dt className="text-[#98A2B3] capitalize w-20 shrink-0">{k}</dt>
                         <dd className="text-[#e6edf3] break-all">{String(manifest[k])}</dd>
                       </div>
                     ) : null
                   )}
                   {Array.isArray(manifest['capabilities']) && (manifest['capabilities'] as string[]).length > 0 && (
                     <div className="flex gap-2">
-                      <dt className="text-[#667085] capitalize w-20 shrink-0">capabilities</dt>
+                      <dt className="text-[#98A2B3] capitalize w-20 shrink-0">capabilities</dt>
                       <dd className="text-[#e6edf3]">{(manifest['capabilities'] as string[]).join(', ')}</dd>
                     </div>
                   )}
@@ -367,7 +367,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
                   <CheckCircle size={28} className="text-[#00FFA7]" />
                 </div>
                 <h3 className="text-base font-semibold text-[#e6edf3] mb-1">{t('plugins.installedSuccessTitle')}</h3>
-                <p className="text-sm text-[#667085]">
+                <p className="text-sm text-[#98A2B3]">
                   {installedSlug && <code className="text-[#00FFA7]">{installedSlug}</code>} {t('plugins.installedDesc')}
                 </p>
               </div>
@@ -400,7 +400,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
           {step < 3 && (
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-[#667085] hover:text-[#D0D5DD] transition-colors"
+              className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
             >
               {t('common.cancel')}
             </button>
@@ -421,7 +421,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
             <>
               <button
                 onClick={() => setStep(1)}
-                className="px-4 py-2 text-sm text-[#667085] hover:text-[#D0D5DD] transition-colors"
+                className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
               >
                 {t('common.back')}
               </button>

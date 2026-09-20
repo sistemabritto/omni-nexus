@@ -24,6 +24,7 @@ import {
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import HealthBadge from '../components/HealthBadge'
+import PageTabBar from '../components/PageTabBar'
 import PluginWidgetsGrid from '../components/PluginWidgetsGrid'
 import CockpitReference from '../components/CockpitReference'
 
@@ -185,35 +186,9 @@ function CockpitTabSkeleton() {
   )
 }
 
-// Abas do cockpit: os 5 domínios numa página só. O botão ativo usa o mesmo
-// idioma visual das outras tabs (border-b-2 verde) e ?tab= no URL dá deep-link
-// para compartilhar a aba aberta.
-function CockpitTabBar({ active, onSelect, t, tabs }: {
-  active: CockpitTab
-  onSelect: (tab: CockpitTab) => void
-  t: (key: string) => string
-  tabs: { key: CockpitTab; labelKey: string }[]
-}) {
-  return (
-    <div role="tablist" aria-label="Cockpit" className="flex gap-1 mb-6 border-b border-[#21262d] overflow-x-auto">
-      {tabs.map((tab) => (
-        <button
-          key={tab.key}
-          role="tab"
-          aria-selected={active === tab.key}
-          onClick={() => onSelect(tab.key)}
-          className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px cursor-pointer ${
-            active === tab.key
-              ? 'text-[#00FFA7] border-[#00FFA7]'
-              : 'text-[#667085] border-transparent hover:text-[#e6edf3] hover:border-[#21262d]'
-          }`}
-        >
-          {t(tab.labelKey)}
-        </button>
-      ))}
-    </div>
-  )
-}
+// Abas do cockpit: os 5 domínios numa página só, na barra padrão PageTabBar
+// (mesmo idioma de Materiais/Configurações). ?tab= no URL dá deep-link para
+// compartilhar a aba aberta.
 
 // --- Stat Card ---
 function StatCard({
@@ -232,7 +207,7 @@ function StatCard({
   const deltaColor = {
     up: 'text-[#00FFA7]',
     down: 'text-red-400',
-    neutral: 'text-[#667085]',
+    neutral: 'text-[#98A2B3]',
   }[deltaType]
 
   const deltaBg = {
@@ -265,7 +240,7 @@ function StatCard({
       </div>
 
       <p className="text-3xl font-bold text-[#e6edf3] tracking-tight">{value}</p>
-      <p className="text-sm text-[#667085] mt-1">{label}</p>
+      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
     </div>
   )
 }
@@ -284,9 +259,9 @@ function ActiveAgentsBar({ agents, loading }: { agents: ActiveAgent[]; loading: 
 
   return (
     <div className="flex items-center gap-3 mb-8 flex-wrap">
-      <span className="text-xs font-medium text-[#667085] uppercase tracking-wider mr-1">Active Agents</span>
+      <span className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mr-1">Active Agents</span>
       {agents.length === 0 ? (
-        <span className="text-xs text-[#667085]/60 italic">No agents running</span>
+        <span className="text-xs text-[#98A2B3]/60 italic">No agents running</span>
       ) : (
         agents.map((agent, i) => (
           <span
@@ -376,9 +351,9 @@ export default function Overview() {
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('overview.title')}</h1>
-          <p className="text-[#667085] text-sm mt-1">{t('overview.subtitle')}</p>
+          <p className="text-[#98A2B3] text-sm mt-1">{t('overview.subtitle')}</p>
         </div>
-        <CockpitTabBar active={activeTab} onSelect={setTab} t={t} tabs={visibleTabs} />
+        <PageTabBar ariaLabel={t('overview.title')} active={activeTab} onSelect={setTab} extraClass="mb-6" tabs={visibleTabs.map((x) => ({ key: x.key, label: t(x.labelKey) }))} />
         <Suspense fallback={<CockpitTabSkeleton />}>
           {activeTab === 'orquestracao' && <OrchestrationPage embedded />}
           {activeTab === 'aprovacoes' && <ApprovalsPage embedded />}
@@ -394,7 +369,7 @@ export default function Overview() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-red-400 text-lg mb-2">Failed to load overview</p>
-          <p className="text-[#667085] text-sm">{error}</p>
+          <p className="text-[#98A2B3] text-sm">{error}</p>
         </div>
       </div>
     )
@@ -408,11 +383,11 @@ export default function Overview() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('overview.title')}</h1>
-        <p className="text-[#667085] text-sm mt-1">{t('overview.subtitle')}</p>
+        <p className="text-[#98A2B3] text-sm mt-1">{t('overview.subtitle')}</p>
       </div>
 
       {/* Os 5 domínios do cockpit numa página só — deep-link por ?tab= */}
-      <CockpitTabBar active="visao" onSelect={setTab} t={t} tabs={visibleTabs} />
+      <PageTabBar ariaLabel={t('overview.title')} active="visao" onSelect={setTab} extraClass="mb-6" tabs={visibleTabs.map((x) => ({ key: x.key, label: t(x.labelKey) }))} />
 
       {/* Reference — a antiga aba Settings → Reference, condensada e editável
           direto no cockpit. Recolhida por padrão: é contexto, não ação. */}
@@ -635,7 +610,7 @@ export default function Overview() {
                 <HeartCrack size={13} /> Heartbeats com falha ({data.needs_attention.heartbeat_failures.length})
               </div>
               {data.needs_attention.heartbeat_failures.length === 0 ? (
-                <div className="text-[#667085] text-xs">Nenhum</div>
+                <div className="text-[#98A2B3] text-xs">Nenhum</div>
               ) : (
                 data.needs_attention.heartbeat_failures.slice(0, 4).map((h) => (
                   <Link key={h.heartbeat_id} to="/heartbeats" className="block text-xs text-[#e6edf3] hover:text-red-300 truncate mb-1">
@@ -649,7 +624,7 @@ export default function Overview() {
                 <Lock size={13} /> Tickets travados ({data.needs_attention.stale_locked_tickets.length})
               </div>
               {data.needs_attention.stale_locked_tickets.length === 0 ? (
-                <div className="text-[#667085] text-xs">Nenhum</div>
+                <div className="text-[#98A2B3] text-xs">Nenhum</div>
               ) : (
                 data.needs_attention.stale_locked_tickets.slice(0, 4).map((t) => (
                   <Link key={t.id} to={`/tickets/${t.id}`} className="block text-xs text-[#e6edf3] hover:text-red-300 truncate mb-1">
@@ -663,7 +638,7 @@ export default function Overview() {
                 <CheckCircle2 size={13} /> Aprovações pendentes há +24h ({data.needs_attention.aged_approvals.length})
               </div>
               {data.needs_attention.aged_approvals.length === 0 ? (
-                <div className="text-[#667085] text-xs">Nenhuma</div>
+                <div className="text-[#98A2B3] text-xs">Nenhuma</div>
               ) : (
                 data.needs_attention.aged_approvals.slice(0, 4).map((a) => (
                   <Link key={a.id} to="/approvals" className="block text-xs text-[#e6edf3] hover:text-red-300 truncate mb-1">
@@ -690,7 +665,7 @@ export default function Overview() {
               </div>
               Recent Reports
             </h2>
-            <Link to="/workspace" className="text-xs font-medium text-[#667085] hover:text-[#00FFA7] transition-colors flex items-center gap-1">
+            <Link to="/workspace" className="text-xs font-medium text-[#98A2B3] hover:text-[#00FFA7] transition-colors flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
@@ -711,11 +686,11 @@ export default function Overview() {
                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-all group"
                   >
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] shrink-0">
-                      <FileText size={14} className="text-[#667085] group-hover:text-[#e6edf3] transition-colors" />
+                      <FileText size={14} className="text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-[#e6edf3] group-hover:text-white transition-colors truncate">{r.title}</p>
-                      <p className="text-xs text-[#667085] mt-0.5">{relativeTime(r.date)}</p>
+                      <p className="text-xs text-[#98A2B3] mt-0.5">{relativeTime(r.date)}</p>
                     </div>
                     <span
                       className="text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0"
@@ -733,7 +708,7 @@ export default function Overview() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-32">
-              <p className="text-[#667085] text-sm">No recent reports</p>
+              <p className="text-[#98A2B3] text-sm">No recent reports</p>
             </div>
           )}
         </div>
@@ -747,7 +722,7 @@ export default function Overview() {
               </div>
               Routines
             </h2>
-            <Link to="/activity" className="text-xs font-medium text-[#667085] hover:text-[#00FFA7] transition-colors flex items-center gap-1">
+            <Link to="/activity" className="text-xs font-medium text-[#98A2B3] hover:text-[#00FFA7] transition-colors flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
@@ -762,7 +737,7 @@ export default function Overview() {
             <div className="overflow-x-auto -mx-6 px-6">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-[#667085] text-[11px] uppercase tracking-wider font-medium">
+                  <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
                     <th className="text-left pb-3 pr-4">Routine</th>
                     <th className="text-left pb-3 pr-4">Status</th>
                     <th className="text-right pb-3 pr-4">Runs</th>
@@ -780,7 +755,7 @@ export default function Overview() {
                         <HealthBadge status={r.status} label={r.status} />
                       </td>
                       <td className="py-2.5 pr-4 text-right text-[#D0D5DD] tabular-nums text-[13px]">{r.runs}</td>
-                      <td className="py-2.5 text-right text-[#667085] text-[13px]">{relativeTime(r.last_run)}</td>
+                      <td className="py-2.5 text-right text-[#98A2B3] text-[13px]">{relativeTime(r.last_run)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -788,7 +763,7 @@ export default function Overview() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-32">
-              <p className="text-[#667085] text-sm">No routines data</p>
+              <p className="text-[#98A2B3] text-sm">No routines data</p>
             </div>
           )}
         </div>
@@ -799,7 +774,7 @@ export default function Overview() {
 
       {/* Quick Actions */}
       <div className="mb-4">
-        <h3 className="text-xs font-medium text-[#667085] uppercase tracking-wider mb-3">Quick Actions</h3>
+        <h3 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-3">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon
@@ -810,11 +785,11 @@ export default function Overview() {
                 className="group flex items-center gap-3 bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-3 transition-all duration-200 hover:border-[#00FFA7]/30 hover:bg-[#00FFA7]/[0.03]"
               >
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-[#00FFA7]/10 transition-colors">
-                  <Icon size={15} className="text-[#667085] group-hover:text-[#00FFA7] transition-colors" />
+                  <Icon size={15} className="text-[#98A2B3] group-hover:text-[#00FFA7] transition-colors" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-medium text-[#e6edf3] group-hover:text-white truncate">{action.label}</p>
-                  <p className="text-[11px] text-[#667085] truncate">{action.hint}</p>
+                  <p className="text-[11px] text-[#98A2B3] truncate">{action.hint}</p>
                 </div>
               </Link>
             )

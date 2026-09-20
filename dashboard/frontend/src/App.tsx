@@ -209,7 +209,7 @@ function AppContent() {
   // Allow direct access to /onboarding regardless
   if (isOnboarding) {
     return (
-      <Suspense fallback={<div className="min-h-screen bg-[#080c14] flex items-center justify-center"><div className="text-[#5a6b7f] text-sm">Loading...</div></div>}>
+      <Suspense fallback={<div className="min-h-screen bg-[#080c14] flex items-center justify-center"><div className="text-[#98A2B3] text-sm">Loading...</div></div>}>
         <Routes>
           <Route path="/onboarding/*" element={<OnboardingRouter />} />
         </Routes>
@@ -235,12 +235,12 @@ function AppContent() {
               {/* Onboarding & Settings routes (lazy — keep their own suspense so they
                   can render even before Sidebar-scoped permissions load) */}
               <Route path="/onboarding/*" element={
-                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[#5a6b7f] text-sm">Loading...</div></div>}>
+                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[#98A2B3] text-sm">Loading...</div></div>}>
                   <OnboardingRouter />
                 </Suspense>
               } />
               <Route path="/settings/brain-repo" element={
-                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[#5a6b7f] text-sm">Loading...</div></div>}>
+                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[#98A2B3] text-sm">Loading...</div></div>}>
                   <BrainRepo />
                 </Suspense>
               } />

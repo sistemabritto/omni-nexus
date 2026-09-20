@@ -128,7 +128,7 @@ export default function BrainRepo() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 size={24} className="text-[#5a6b7f] animate-spin" />
+        <Loader2 size={24} className="text-[#98A2B3] animate-spin" />
       </div>
     )
   }
@@ -140,7 +140,7 @@ export default function BrainRepo() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#e6edf3]">{t('brainRepoSettings.title')}</h1>
-        <p className="text-[#667085] mt-1">{t('brainRepoSettings.subtitle')}</p>
+        <p className="text-[#98A2B3] mt-1">{t('brainRepoSettings.subtitle')}</p>
       </div>
 
       {/* Crypto-broken banner — master key missing or cryptography module
@@ -163,9 +163,9 @@ export default function BrainRepo() {
             <div className={`flex items-center justify-center w-9 h-9 rounded-xl border ${
               status?.connected
                 ? 'bg-[#00FFA7]/10 border-[#00FFA7]/20'
-                : 'bg-[#5a6b7f]/10 border-[#5a6b7f]/20'
+                : 'bg-[#98A2B3]/10 border-[#98A2B3]/20'
             }`}>
-              <GitBranch size={16} className={status?.connected ? 'text-[#00FFA7]' : 'text-[#5a6b7f]'} />
+              <GitBranch size={16} className={status?.connected ? 'text-[#00FFA7]' : 'text-[#98A2B3]'} />
             </div>
             <div>
               <p className="text-[14px] font-semibold text-[#e2e8f0]">
@@ -194,21 +194,21 @@ export default function BrainRepo() {
         {status?.connected && (
           <div className="px-6 py-4 grid grid-cols-3 gap-4">
             <div>
-              <p className="text-[10px] font-semibold text-[#5a6b7f] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.lastSync')}</p>
+              <p className="text-[10px] font-semibold text-[#98A2B3] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.lastSync')}</p>
               <div className="flex items-center gap-1.5 mt-1">
-                <Clock size={12} className="text-[#5a6b7f]" />
+                <Clock size={12} className="text-[#98A2B3]" />
                 <p className="text-[13px] text-[#e2e8f0]">{formatDate(status.last_sync)}</p>
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#5a6b7f] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.pending')}</p>
+              <p className="text-[10px] font-semibold text-[#98A2B3] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.pending')}</p>
               <p className={`text-[13px] mt-1 font-medium ${status.pending_count > 0 ? 'text-[#F59E0B]' : 'text-[#e2e8f0]'}`}>
                 {t('brainRepoSettings.status.pendingCount', { count: status.pending_count })}
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#5a6b7f] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.autoSync')}</p>
-              <p className={`text-[13px] mt-1 ${status.sync_enabled ? 'text-[#00FFA7]' : 'text-[#5a6b7f]'}`}>
+              <p className="text-[10px] font-semibold text-[#98A2B3] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.autoSync')}</p>
+              <p className={`text-[13px] mt-1 ${status.sync_enabled ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`}>
                 {status.sync_enabled ? t('brainRepoSettings.status.enabled') : t('brainRepoSettings.status.disabled')}
               </p>
             </div>
@@ -223,7 +223,7 @@ export default function BrainRepo() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[14px] font-semibold text-[#e2e8f0]">{t('brainRepoSettings.sync.title')}</p>
-                <p className="text-[11px] text-[#5a6b7f] mt-0.5">{t('brainRepoSettings.sync.desc')}</p>
+                <p className="text-[11px] text-[#98A2B3] mt-0.5">{t('brainRepoSettings.sync.desc')}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -263,7 +263,7 @@ export default function BrainRepo() {
           {/* Create milestone */}
           <div className="rounded-xl border border-[#152030] bg-[#0b1018] px-6 py-5 mb-4">
             <p className="text-[14px] font-semibold text-[#e2e8f0] mb-1">{t('brainRepoSettings.milestone.title')}</p>
-            <p className="text-[11px] text-[#5a6b7f] mb-3">{t('brainRepoSettings.milestone.desc')}</p>
+            <p className="text-[11px] text-[#98A2B3] mb-3">{t('brainRepoSettings.milestone.desc')}</p>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -276,7 +276,7 @@ export default function BrainRepo() {
               <button
                 onClick={handleMilestone}
                 disabled={busy || !milestoneInput.trim()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#152030] text-[#5a6b7f] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors disabled:opacity-40 flex-shrink-0"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors disabled:opacity-40 flex-shrink-0"
                 title={busy ? t('brainRepoSettings.sync.running') : undefined}
               >
                 {busy ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}
@@ -304,7 +304,7 @@ export default function BrainRepo() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[14px] font-semibold text-[#e2e8f0]">{t('brainRepoSettings.disconnect.title')}</p>
-                <p className="text-[11px] text-[#5a6b7f] mt-0.5">{t('brainRepoSettings.disconnect.desc')}</p>
+                <p className="text-[11px] text-[#98A2B3] mt-0.5">{t('brainRepoSettings.disconnect.desc')}</p>
               </div>
               <button
                 onClick={() => setConfirmDisconnect(true)}
@@ -323,7 +323,7 @@ export default function BrainRepo() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setConfirmDisconnect(false)}
-                    className="flex-1 py-2 rounded-lg border border-[#152030] text-[#5a6b7f] text-sm font-medium transition-colors hover:text-[#e2e8f0]"
+                    className="flex-1 py-2 rounded-lg border border-[#152030] text-[#98A2B3] text-sm font-medium transition-colors hover:text-[#e2e8f0]"
                   >
                     {t('brainRepoSettings.disconnect.cancel')}
                   </button>
@@ -344,7 +344,7 @@ export default function BrainRepo() {
       {!status?.connected && (
         <div className="rounded-xl border border-[#152030] bg-[#0b1018] px-6 py-8 text-center">
           <GitBranch size={32} className="text-[#2d3d4f] mx-auto mb-3" />
-          <p className="text-[14px] text-[#5a6b7f]">{t('brainRepoSettings.empty.title')}</p>
+          <p className="text-[14px] text-[#98A2B3]">{t('brainRepoSettings.empty.title')}</p>
           <p className="text-[11px] text-[#2d3d4f] mt-1">
             {t('brainRepoSettings.empty.desc')}
           </p>

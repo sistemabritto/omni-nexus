@@ -106,7 +106,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function StageBadge({ stage }: { stage: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#667085] bg-white/5">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#98A2B3] bg-white/5">
       {STAGE_LABELS[stage] || stage}
     </span>
   )
@@ -124,11 +124,11 @@ function AgentBadge({ agent }: { agent: string }) {
 }
 
 function RelativeTime({ dateStr }: { dateStr: string | null }) {
-  if (!dateStr) return <span className="text-[#667085] text-xs">—</span>
+  if (!dateStr) return <span className="text-[#98A2B3] text-xs">—</span>
   try {
-    return <span className="text-[#667085] text-xs" title={dateStr}>{tempoRelativo(dateStr)}</span>
+    return <span className="text-[#98A2B3] text-xs" title={dateStr}>{tempoRelativo(dateStr)}</span>
   } catch {
-    return <span className="text-[#667085] text-xs">{dateStr}</span>
+    return <span className="text-[#98A2B3] text-xs">{dateStr}</span>
   }
 }
 
@@ -243,7 +243,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Orquestração</h1>
-            <p className="text-[#667085] mt-1">Acompanhe jobs multi-agente disparados via Telegram/Chat</p>
+            <p className="text-[#98A2B3] mt-1">Acompanhe jobs multi-agente disparados via Telegram/Chat</p>
           </div>
           <button onClick={fetchJobs} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-[#D0D5DD] border border-[#344054]">
             <RefreshCw className="h-4 w-4" />
@@ -255,7 +255,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
       {/* Filters */}
       <div className="flex flex-wrap gap-3 bg-[#131a2a] border border-[#344054] rounded-lg p-4">
         <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#667085]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#98A2B3]" />
           <input
             type="text"
             placeholder="Buscar por ID ou prompt..."
@@ -292,20 +292,20 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#344054] bg-[#0C111D]/50">
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#667085] font-semibold">ID</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#667085] font-semibold">Agente</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#667085] font-semibold">Prompt</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#667085] font-semibold">Etapa</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#667085] font-semibold">Status</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#667085] font-semibold">Iniciado</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#667085] font-semibold">Concluído</th>
-                <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-[#667085] font-semibold pr-4">Ações</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">ID</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Agente</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Prompt</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Etapa</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Status</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Iniciado</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Concluído</th>
+                <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold pr-4">Ações</th>
               </tr>
             </thead>
             <tbody>
               {filteredJobs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-[#667085]">
+                  <td colSpan={8} className="px-4 py-12 text-center text-[#98A2B3]">
                     {jobs.length === 0 ? 'Nenhum job ainda. Use /ops no Telegram para criar um.' : 'Nenhum job corresponde aos filtros.'}
                   </td>
                 </tr>
@@ -332,7 +332,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
                           </button>
                         )}
                         {(job.status === 'success' || job.status === 'failed') && (
-                          <button onClick={e => { e.stopPropagation(); handleToggleExpand(job.id) }} className="p-1.5 text-[#667085] hover:text-[#D0D5DD] hover:bg-white/10 rounded" title={expandedJob === job.id ? 'Recolher' : 'Expandir'}>
+                          <button onClick={e => { e.stopPropagation(); handleToggleExpand(job.id) }} className="p-1.5 text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/10 rounded" title={expandedJob === job.id ? 'Recolher' : 'Expandir'}>
                             {expandedJob === job.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </button>
                         )}
@@ -350,7 +350,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
           <div className="border-t border-[#344054] bg-[#0C111D]/50 p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-[#D0D5DD] font-mono">Logs — {expandedJob.slice(0, 12)}…</span>
-              <button onClick={() => setExpandedJob(null)} className="p-1 text-[#667085] hover:text-[#D0D5DD]">
+              <button onClick={() => setExpandedJob(null)} className="p-1 text-[#98A2B3] hover:text-[#D0D5DD]">
                 <XCircle className="h-4 w-4" />
               </button>
             </div>
@@ -363,7 +363,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatCard label="Total" value={jobs.length} icon={FileText} color="text-[#667085]" />
+        <StatCard label="Total" value={jobs.length} icon={FileText} color="text-[#98A2B3]" />
         <StatCard label="Executando" value={jobs.filter(j => j.status === 'running').length} icon={Play} color="text-blue-400" />
         <StatCard label="Sucesso" value={jobs.filter(j => j.status === 'success').length} icon={CheckCircle2} color="text-green-400" />
         <StatCard label="Falha" value={jobs.filter(j => j.status === 'failed').length} icon={AlertTriangle} color="text-red-400" />
@@ -378,7 +378,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: n
     <div className="bg-[#131a2a] border border-[#344054] rounded-lg p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-[#667085]">{label}</p>
+          <p className="text-[10px] uppercase tracking-wider text-[#98A2B3]">{label}</p>
           <p className="text-2xl font-bold text-white mt-1">{value}</p>
         </div>
         <div className={`${color} bg-current/10 p-3 rounded-lg`}>

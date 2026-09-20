@@ -62,7 +62,7 @@ function CollapsibleSection({
         <div className="px-4 pb-3 pt-1 space-y-2">
           {items.map(([capType, ids]) => (
             <div key={capType}>
-              <p className="text-[10px] text-[#667085] uppercase tracking-wider mb-1">{capType}</p>
+              <p className="text-[10px] text-[#98A2B3] uppercase tracking-wider mb-1">{capType}</p>
               <ul className="space-y-0.5">
                 {ids.map((id) => (
                   <li key={id} className="text-xs text-[#D0D5DD] font-mono truncate">{id}</li>
@@ -224,7 +224,7 @@ export default function UpdatePreviewModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
           >
             <X size={16} />
           </button>
@@ -234,7 +234,7 @@ export default function UpdatePreviewModal({
         <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Loading */}
           {loading && (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-[#667085]">
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-[#98A2B3]">
               <Loader2 size={16} className="animate-spin" />
               {t('plugins.updatePreviewLoading')}
             </div>
@@ -258,7 +258,7 @@ export default function UpdatePreviewModal({
                 onClick={() => setSourceOverrideOpen((o) => !o)}
                 className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-[#D0D5DD] hover:bg-white/5 transition-colors"
               >
-                <span>📦 Source <span className="text-[#667085] font-mono">{effectiveSource}</span></span>
+                <span>📦 Source <span className="text-[#98A2B3] font-mono">{effectiveSource}</span></span>
                 {sourceOverrideOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
               </button>
               {sourceOverrideOpen && (
@@ -270,10 +270,10 @@ export default function UpdatePreviewModal({
                     placeholder={sourceUrl || 'github:owner/repo@main'}
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full bg-[#0d1117] border border-[#344054] rounded-lg px-3 py-2 text-xs font-mono text-[#e6edf3] placeholder:text-[#667085] focus:outline-none focus:border-[#00FFA7]"
+                    className="w-full bg-[#0d1117] border border-[#344054] rounded-lg px-3 py-2 text-xs font-mono text-[#e6edf3] placeholder:text-[#98A2B3] focus:outline-none focus:border-[#00FFA7]"
                   />
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] text-[#667085]">
+                    <p className="text-[10px] text-[#98A2B3]">
                       Override the pinned source (e.g. <code className="text-[#D0D5DD]">@main</code> or a newer tag) to discover updates beyond the installed version.
                     </p>
                     <button
@@ -313,10 +313,10 @@ export default function UpdatePreviewModal({
                     placeholder="ghp_... or gho_..."
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full bg-[#0d1117] border border-[#344054] rounded-lg px-3 py-2 text-xs font-mono text-[#e6edf3] placeholder:text-[#667085] focus:outline-none focus:border-[#00FFA7]"
+                    className="w-full bg-[#0d1117] border border-[#344054] rounded-lg px-3 py-2 text-xs font-mono text-[#e6edf3] placeholder:text-[#98A2B3] focus:outline-none focus:border-[#00FFA7]"
                   />
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] text-[#667085]">
+                    <p className="text-[10px] text-[#98A2B3]">
                       Required for private repos. Scope: <code className="text-[#D0D5DD]">repo</code>. Never logged.
                     </p>
                     <button
@@ -370,7 +370,7 @@ export default function UpdatePreviewModal({
           {!loading && !previewError && preview && !preview.up_to_date && (
             <>
               {/* Version line */}
-              <p className="text-xs text-[#667085]">
+              <p className="text-xs text-[#98A2B3]">
                 {t('plugins.updatePreviewVersionLine', {
                   from: preview.from_version,
                   to: preview.to_version,
@@ -477,7 +477,7 @@ export default function UpdatePreviewModal({
               {totalCount(preview.added) === 0 &&
                 totalCount(preview.removed) === 0 &&
                 totalCount(preview.modified) === 0 && (
-                  <p className="text-xs text-[#667085] text-center py-2">
+                  <p className="text-xs text-[#98A2B3] text-center py-2">
                     No capability changes detected.
                   </p>
                 )}
@@ -497,7 +497,7 @@ export default function UpdatePreviewModal({
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#21262d]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#667085] hover:text-[#D0D5DD] transition-colors"
+            className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
           >
             {t('common.cancel')}
           </button>

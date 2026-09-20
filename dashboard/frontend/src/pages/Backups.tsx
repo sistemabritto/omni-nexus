@@ -147,14 +147,14 @@ function S3ConfigPanel({ config, onSaved }: { config: BackupConfig; onSaved: () 
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#0f1520]/40 transition-colors"
       >
         <div className="flex items-center gap-3 text-sm">
-          <Cloud size={16} className={config.s3_configured ? 'text-blue-400' : 'text-[#5a6b7f]'} />
+          <Cloud size={16} className={config.s3_configured ? 'text-blue-400' : 'text-[#98A2B3]'} />
           <span className="text-[#e2e8f0] font-medium">{t('backups.s3Config.title')}</span>
           {config.s3_configured ? (
             <span className="text-xs px-2 py-0.5 rounded-full bg-[#00FFA7]/10 text-[#00FFA7]">
               S3: {config.s3_bucket}
             </span>
           ) : (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#21262d] text-[#667085]">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[#21262d] text-[#98A2B3]">
               Local only
             </span>
           )}
@@ -163,21 +163,21 @@ function S3ConfigPanel({ config, onSaved }: { config: BackupConfig; onSaved: () 
               boto3 not installed
             </span>
           )}
-          <span className="flex items-center gap-1 text-xs text-[#667085]">
+          <span className="flex items-center gap-1 text-xs text-[#98A2B3]">
             <HardDrive size={12} />
             {config.backups_dir}
           </span>
         </div>
         <ChevronDown
           size={16}
-          className={`text-[#667085] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          className={`text-[#98A2B3] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
         />
       </button>
 
       {/* Expandable form */}
       {expanded && (
         <div className="px-5 pb-5 border-t border-[#152030]">
-          <p className="text-xs text-[#5a6b7f] mt-4 mb-4 leading-relaxed">
+          <p className="text-xs text-[#98A2B3] mt-4 mb-4 leading-relaxed">
             {t('backups.s3Config.endpointHint')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -205,7 +205,7 @@ function S3ConfigPanel({ config, onSaved }: { config: BackupConfig; onSaved: () 
                           isRevealed ? n.delete(field.envKey) : n.add(field.envKey)
                           return n
                         })}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#667085] hover:text-[#D0D5DD] transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
                       >
                         {isRevealed ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
@@ -309,7 +309,7 @@ function DestinationsPanel({
   const cardOff = "border-[#152030] hover:border-[#1e2a3a]"
 
   const badgeOk = "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 uppercase tracking-wider"
-  const badgeOff = "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#152030] text-[#5a6b7f] border border-[#1e2a3a] uppercase tracking-wider"
+  const badgeOff = "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#152030] text-[#98A2B3] border border-[#1e2a3a] uppercase tracking-wider"
   const pillBtn = "text-[11px] font-medium px-3 py-1.5 rounded-md transition-colors inline-flex items-center gap-1.5"
 
   return (
@@ -323,7 +323,7 @@ function DestinationsPanel({
             </div>
             <div>
               <div className="text-[14px] font-semibold text-[#e2e8f0]">{t('backups.destinations.local')}</div>
-              <div className="text-[10px] text-[#5a6b7f] mt-0.5">{t('backups.destinations.localDesc')}</div>
+              <div className="text-[10px] text-[#98A2B3] mt-0.5">{t('backups.destinations.localDesc')}</div>
             </div>
           </div>
           <span className={badgeOk}>
@@ -331,7 +331,7 @@ function DestinationsPanel({
             {t('backups.destinations.available')}
           </span>
         </div>
-        <div className="text-[11px] text-[#5a6b7f] font-mono mt-3 px-2 py-1.5 rounded bg-[#0f1520] border border-[#152030]">
+        <div className="text-[11px] text-[#98A2B3] font-mono mt-3 px-2 py-1.5 rounded bg-[#0f1520] border border-[#152030]">
           ./{config.backups_dir}/
         </div>
       </div>
@@ -343,11 +343,11 @@ function DestinationsPanel({
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
               s3Connected ? 'bg-blue-500/10 border-blue-500/20' : 'bg-[#152030] border-[#1e2a3a]'
             }`}>
-              <Cloud size={16} className={s3Connected ? 'text-blue-400' : 'text-[#5a6b7f]'} />
+              <Cloud size={16} className={s3Connected ? 'text-blue-400' : 'text-[#98A2B3]'} />
             </div>
             <div>
               <div className="text-[14px] font-semibold text-[#e2e8f0]">{t('backups.destinations.s3')}</div>
-              <div className="text-[10px] text-[#5a6b7f] mt-0.5">{t('backups.destinations.s3Desc')}</div>
+              <div className="text-[10px] text-[#98A2B3] mt-0.5">{t('backups.destinations.s3Desc')}</div>
             </div>
           </div>
           {s3Connected ? (
@@ -360,11 +360,11 @@ function DestinationsPanel({
           )}
         </div>
         {s3Connected ? (
-          <div className="text-[11px] text-[#5a6b7f] font-mono px-2 py-1.5 rounded bg-[#0f1520] border border-[#152030] truncate">
+          <div className="text-[11px] text-[#98A2B3] font-mono px-2 py-1.5 rounded bg-[#0f1520] border border-[#152030] truncate">
             {config.s3_bucket}
           </div>
         ) : (
-          <div className="text-[11px] text-[#5a6b7f] mt-1">
+          <div className="text-[11px] text-[#98A2B3] mt-1">
             {t('backups.destinations.s3ConfigureHint')}
           </div>
         )}
@@ -373,7 +373,7 @@ function DestinationsPanel({
             onClick={onOpenS3Config}
             className={`${pillBtn} ${
               s3Connected
-                ? 'border border-[#152030] text-[#5a6b7f] hover:text-[#e2e8f0] hover:border-[#1e2a3a]'
+                ? 'border border-[#152030] text-[#98A2B3] hover:text-[#e2e8f0] hover:border-[#1e2a3a]'
                 : 'bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 hover:bg-[#00FFA7]/20'
             }`}
           >
@@ -402,12 +402,12 @@ function DestinationsPanel({
               <GitBranch size={16} className={
                 cryptoBroken || (brainConfigured && brain?.last_error) ? 'text-[#f87171]'
                 : brainConfigured ? 'text-[#00FFA7]'
-                : 'text-[#5a6b7f]'
+                : 'text-[#98A2B3]'
               } />
             </div>
             <div>
               <div className="text-[14px] font-semibold text-[#e2e8f0]">{t('backups.destinations.brainRepo')}</div>
-              <div className="text-[10px] text-[#5a6b7f] mt-0.5">{t('backups.destinations.brainRepoDesc')}</div>
+              <div className="text-[10px] text-[#98A2B3] mt-0.5">{t('backups.destinations.brainRepoDesc')}</div>
             </div>
           </div>
           {cryptoBroken ? (
@@ -440,7 +440,7 @@ function DestinationsPanel({
               {brain!.repo_owner}/{brain!.repo_name}
               <ExternalLink size={10} />
             </a>
-            <div className="text-[11px] text-[#5a6b7f] mt-1.5">
+            <div className="text-[11px] text-[#98A2B3] mt-1.5">
               {t('backups.destinations.lastSync')}: {formatLastSync(brain!.last_sync)}
               {(brain!.pending_count ?? 0) > 0 && (
                 <span className="ml-2 text-[#F59E0B]">• {brain!.pending_count} {t('backups.destinations.pending')}</span>
@@ -486,7 +486,7 @@ function DestinationsPanel({
               )}
               <Link
                 to="/settings/brain-repo"
-                className={`${pillBtn} border border-[#152030] text-[#5a6b7f] hover:text-[#e2e8f0] hover:border-[#1e2a3a]`}
+                className={`${pillBtn} border border-[#152030] text-[#98A2B3] hover:text-[#e2e8f0] hover:border-[#1e2a3a]`}
               >
                 {t('backups.destinations.manage')}
               </Link>
@@ -559,7 +559,7 @@ function ImportMenu({
             <FileArchive size={14} className="text-[#00FFA7] flex-shrink-0 mt-0.5" />
             <div>
               <div className="text-[12px] text-[#e2e8f0] font-medium">{t('backups.importMenu.zipTitle')}</div>
-              <div className="text-[10px] text-[#5a6b7f]">{t('backups.importMenu.zipDesc')}</div>
+              <div className="text-[10px] text-[#98A2B3]">{t('backups.importMenu.zipDesc')}</div>
             </div>
           </button>
           <button
@@ -567,10 +567,10 @@ function ImportMenu({
             disabled={!brainConfigured}
             className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-[#0f1520] transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-t border-[#152030]"
           >
-            <GitBranch size={14} className={`flex-shrink-0 mt-0.5 ${brainConfigured ? 'text-[#00FFA7]' : 'text-[#5a6b7f]'}`} />
+            <GitBranch size={14} className={`flex-shrink-0 mt-0.5 ${brainConfigured ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`} />
             <div>
               <div className="text-[12px] text-[#e2e8f0] font-medium">{t('backups.importMenu.brainTitle')}</div>
-              <div className="text-[10px] text-[#5a6b7f]">
+              <div className="text-[10px] text-[#98A2B3]">
                 {brainConfigured ? t('backups.importMenu.brainDesc') : t('backups.importMenu.brainDisabled')}
               </div>
             </div>
@@ -593,7 +593,7 @@ function TabButton({
         active
           ? 'text-[#00FFA7] border-[#00FFA7]'
           : dimmed
-            ? 'text-[#3d4f65] border-transparent hover:text-[#667085]'
+            ? 'text-[#3d4f65] border-transparent hover:text-[#98A2B3]'
             : 'text-[#8a9aae] border-transparent hover:text-[#e2e8f0]'
       }`}
     >
@@ -601,7 +601,7 @@ function TabButton({
       <span>{label}</span>
       {typeof count === 'number' && (
         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-          active ? 'bg-[#00FFA7]/15 text-[#00FFA7]' : 'bg-[#152030] text-[#5a6b7f]'
+          active ? 'bg-[#00FFA7]/15 text-[#00FFA7]' : 'bg-[#152030] text-[#98A2B3]'
         }`}>{count}</span>
       )}
     </button>
@@ -649,19 +649,19 @@ function BrainRepoSnapshots({
           </span>
         </div>
       </td>
-      <td className="px-4 py-3 text-[#667085] text-xs font-mono">{s.sha ? s.sha.slice(0, 8) : '-'}</td>
-      <td className="px-4 py-3 text-[#667085] text-xs">{s.date || '-'}</td>
+      <td className="px-4 py-3 text-[#98A2B3] text-xs font-mono">{s.sha ? s.sha.slice(0, 8) : '-'}</td>
+      <td className="px-4 py-3 text-[#98A2B3] text-xs">{s.date || '-'}</td>
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
           <button
             onClick={() => onRestore(s)}
-            className="p-1.5 rounded-lg text-[#667085] hover:text-blue-400 hover:bg-blue-400/10 transition-colors"
+            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-blue-400 hover:bg-blue-400/10 transition-colors"
             title={t('backups.action.restoreBtn')}
           ><RotateCcw size={14} /></button>
           {repoUrl && (
             <button
               onClick={() => viewOnGitHub(s)}
-              className="p-1.5 rounded-lg text-[#667085] hover:text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors"
+              className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors"
               title={t('backups.action.viewOnGithub')}
             ><ExternalLink size={14} /></button>
           )}
@@ -673,7 +673,7 @@ function BrainRepoSnapshots({
   const total = brainCount(data)
   if (total === 0) {
     return (
-      <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#667085]">
+      <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#98A2B3]">
         <GitBranch size={48} className="mb-4 opacity-40" />
         <p className="text-sm text-[#8a9aae]">{t('backups.brainTab.noSnapshotsTitle')}</p>
         <p className="text-xs mt-1">{t('backups.brainTab.noSnapshotsHint')}</p>
@@ -698,10 +698,10 @@ function BrainRepoSnapshots({
         >
           <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-wider text-[#8a9aae] font-semibold">{title}</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#152030] text-[#5a6b7f]">{items.length}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#152030] text-[#98A2B3]">{items.length}</span>
           </div>
           {collapsible && (
-            <ChevronDown size={14} className={`text-[#5a6b7f] transition-transform ${collapsible.open ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className={`text-[#98A2B3] transition-transform ${collapsible.open ? 'rotate-180' : ''}`} />
           )}
         </button>
         {(!collapsible || collapsible.open) && (
@@ -1053,13 +1053,13 @@ export default function Backups() {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-[#e6edf3]">{t('backups.title')}</h1>
-            <p className="text-sm text-[#667085]">{t('backups.subtitle')}</p>
+            <p className="text-sm text-[#98A2B3]">{t('backups.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => fetchData()}
-            className="p-2 rounded-lg border border-[#21262d] text-[#667085] hover:text-[#e6edf3] hover:border-[#344054] transition-colors"
+            className="p-2 rounded-lg border border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-colors"
           >
             <RefreshCw size={16} />
           </button>
@@ -1174,7 +1174,7 @@ export default function Backups() {
             <button
               onClick={fetchS3}
               disabled={s3Loading}
-              className="ml-auto mb-2 p-1.5 rounded-lg border border-[#152030] text-[#667085] hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors disabled:opacity-50"
+              className="ml-auto mb-2 p-1.5 rounded-lg border border-[#152030] text-[#98A2B3] hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors disabled:opacity-50"
               title="Refresh"
             >
               <RefreshCw size={13} className={s3Loading ? 'animate-spin' : ''} />
@@ -1184,7 +1184,7 @@ export default function Backups() {
             <button
               onClick={fetchBrainSnapshots}
               disabled={brainLoading}
-              className="ml-auto mb-2 p-1.5 rounded-lg border border-[#152030] text-[#667085] hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors disabled:opacity-50"
+              className="ml-auto mb-2 p-1.5 rounded-lg border border-[#152030] text-[#98A2B3] hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors disabled:opacity-50"
               title="Refresh"
             >
               <RefreshCw size={13} className={brainLoading ? 'animate-spin' : ''} />
@@ -1206,7 +1206,7 @@ export default function Backups() {
       {!loading && activeTab === 'local' && (
         <>
           {backups.length === 0 ? (
-            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#667085]">
+            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#98A2B3]">
               <FileArchive size={48} className="mb-4 opacity-40" />
               <p className="text-sm text-[#8a9aae]">{t('backups.empty.title')}</p>
               <p className="text-xs mt-1">{t('backups.empty.hint')}</p>
@@ -1215,7 +1215,7 @@ export default function Backups() {
             <div className="bg-[#0b1018] border border-[#152030] rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#152030] text-[#5a6b7f] text-[11px] uppercase tracking-wider">
+                  <tr className="border-b border-[#152030] text-[#98A2B3] text-[11px] uppercase tracking-wider">
                     <th className="text-left px-4 py-3 font-medium">{t('backups.table.backup')}</th>
                     <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">{t('backups.table.version')}</th>
                     <th className="text-right px-4 py-3 font-medium hidden sm:table-cell">{t('backups.table.files')}</th>
@@ -1238,22 +1238,22 @@ export default function Backups() {
                       <td className="px-4 py-3 text-[#D0D5DD] hidden sm:table-cell">{b.manifest?.version || '-'}</td>
                       <td className="px-4 py-3 text-right text-[#D0D5DD] hidden sm:table-cell">{b.manifest?.file_count?.toLocaleString() || '-'}</td>
                       <td className="px-4 py-3 text-right text-[#D0D5DD]">{formatSize(b.size)}</td>
-                      <td className="px-4 py-3 text-[#667085]">{formatDate(b.modified)}</td>
+                      <td className="px-4 py-3 text-[#98A2B3]">{formatDate(b.modified)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => handleDownload(b.filename)}
-                            className="p-1.5 rounded-lg text-[#667085] hover:text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors"
+                            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors"
                             title={t('backups.action.download')}
                           ><Download size={14} /></button>
                           <button
                             onClick={() => { setShowRestoreModal(b.filename); setRestoreMode('merge') }}
-                            className="p-1.5 rounded-lg text-[#667085] hover:text-blue-400 hover:bg-blue-400/10 transition-colors"
+                            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-blue-400 hover:bg-blue-400/10 transition-colors"
                             title={t('backups.action.restoreBtn')}
                           ><RotateCcw size={14} /></button>
                           <button
                             onClick={() => handleDelete(b.filename)}
-                            className="p-1.5 rounded-lg text-[#667085] hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-400/10 transition-colors"
                             title={t('backups.action.delete')}
                           ><Trash2 size={14} /></button>
                         </div>
@@ -1271,7 +1271,7 @@ export default function Backups() {
       {!loading && activeTab === 's3' && (
         <>
           {!config?.s3_configured ? (
-            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#667085]">
+            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#98A2B3]">
               <Cloud size={48} className="mb-4 opacity-40" />
               <p className="text-sm text-[#8a9aae]">{t('backups.s3Tab.notConfiguredTitle')}</p>
               <p className="text-xs mt-1">{t('backups.s3Tab.notConfiguredHint')}</p>
@@ -1285,7 +1285,7 @@ export default function Backups() {
               <AlertCircle size={14} />{s3Error}
             </div>
           ) : !s3Loading && s3Backups.length === 0 ? (
-            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#667085]">
+            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#98A2B3]">
               <Cloud size={48} className="mb-4 opacity-40" />
               <p className="text-sm text-[#8a9aae]">{t('backups.s3List.empty')}</p>
             </div>
@@ -1293,7 +1293,7 @@ export default function Backups() {
             <div className="bg-[#0b1018] border border-[#152030] rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#152030] text-[#5a6b7f] text-[11px] uppercase tracking-wider">
+                  <tr className="border-b border-[#152030] text-[#98A2B3] text-[11px] uppercase tracking-wider">
                     <th className="text-left px-4 py-3 font-medium">{t('backups.table.backup')}</th>
                     <th className="text-right px-4 py-3 font-medium">{t('backups.table.size')}</th>
                     <th className="text-left px-4 py-3 font-medium">{t('backups.table.date')}</th>
@@ -1310,7 +1310,7 @@ export default function Backups() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right text-[#D0D5DD]">{formatSize(b.size)}</td>
-                      <td className="px-4 py-3 text-[#667085]">{formatDate(b.modified)}</td>
+                      <td className="px-4 py-3 text-[#98A2B3]">{formatDate(b.modified)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
@@ -1318,7 +1318,7 @@ export default function Backups() {
                               const base = import.meta.env.DEV ? 'http://localhost:8080' : ''
                               window.open(`${base}/api/backups/s3/${encodeURIComponent(b.key)}/download`, '_blank')
                             }}
-                            className="p-1.5 rounded-lg text-[#667085] hover:text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors"
+                            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors"
                             title={t('backups.action.downloadFromS3')}
                           ><Download size={14} /></button>
                         </div>
@@ -1336,7 +1336,7 @@ export default function Backups() {
       {!loading && activeTab === 'brain' && (
         <>
           {!config?.brain_repo_configured ? (
-            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#667085]">
+            <div className="rounded-xl border border-[#152030] bg-[#0b1018] flex flex-col items-center justify-center py-16 text-[#98A2B3]">
               <GitBranch size={48} className="mb-4 opacity-40" />
               <p className="text-sm text-[#8a9aae]">{t('backups.brainTab.notConnectedTitle')}</p>
               <p className="text-xs mt-1">{t('backups.brainTab.notConnectedHint')}</p>
@@ -1347,7 +1347,7 @@ export default function Backups() {
             </div>
           ) : brainLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 size={24} className="animate-spin text-[#5a6b7f]" />
+              <Loader2 size={24} className="animate-spin text-[#98A2B3]" />
             </div>
           ) : brainError ? (
             <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
@@ -1380,7 +1380,7 @@ export default function Backups() {
               </div>
               <div>
                 <h2 className="text-[16px] font-semibold text-[#e2e8f0]">{t('backups.brainRestore.title')}</h2>
-                <p className="text-[11px] text-[#5a6b7f] mt-0.5 font-mono truncate">
+                <p className="text-[11px] text-[#98A2B3] mt-0.5 font-mono truncate">
                   {brainRestoreModal.label || (brainRestoreModal.ref ?? '').replace(/^refs\/tags\//, '') || '(unnamed)'}
                 </p>
               </div>
@@ -1404,7 +1404,7 @@ export default function Backups() {
                   />
                   <div>
                     <div className="text-[12px] text-[#e2e8f0] font-medium">{t('backups.brainRestore.includeKb')}</div>
-                    <div className="text-[10px] text-[#5a6b7f] mt-0.5">{t('backups.brainRestore.includeKbDesc')}</div>
+                    <div className="text-[10px] text-[#98A2B3] mt-0.5">{t('backups.brainRestore.includeKbDesc')}</div>
                   </div>
                 </label>
 
@@ -1418,7 +1418,7 @@ export default function Backups() {
                     />
                     <div>
                       <div className="text-[12px] text-[#e2e8f0] font-medium">{t('backups.brainRestore.keyMatches')}</div>
-                      <div className="text-[10px] text-[#5a6b7f] mt-0.5">{t('backups.brainRestore.keyMatchesDesc')}</div>
+                      <div className="text-[10px] text-[#98A2B3] mt-0.5">{t('backups.brainRestore.keyMatchesDesc')}</div>
                     </div>
                   </label>
                 )}
@@ -1426,7 +1426,7 @@ export default function Backups() {
                 <div className="flex justify-end gap-2 mt-2">
                   <button
                     onClick={() => setBrainRestoreModal(null)}
-                    className="px-4 py-2 rounded-lg border border-[#152030] text-[#5a6b7f] text-sm hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors"
+                    className="px-4 py-2 rounded-lg border border-[#152030] text-[#98A2B3] text-sm hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors"
                   >{t('backups.modal.cancel')}</button>
                   <button
                     onClick={() => runBrainRestore(brainRestoreModal)}
@@ -1443,8 +1443,8 @@ export default function Backups() {
               <div className="space-y-3 mt-2">
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] text-[#5a6b7f]">{brainRestoreProgress.message}</span>
-                    <span className="text-[11px] text-[#5a6b7f]">{brainRestoreProgress.progress}%</span>
+                    <span className="text-[11px] text-[#98A2B3]">{brainRestoreProgress.message}</span>
+                    <span className="text-[11px] text-[#98A2B3]">{brainRestoreProgress.progress}%</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-[#152030] overflow-hidden">
                     <div
@@ -1462,7 +1462,7 @@ export default function Backups() {
                       setBrainRestoreModal(null)
                       setBrainRestoreProgress({ running: false, progress: 0, message: '', error: false })
                     }}
-                    className="w-full py-2 rounded-lg border border-[#152030] text-[#5a6b7f] text-sm hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors"
+                    className="w-full py-2 rounded-lg border border-[#152030] text-[#98A2B3] text-sm hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors"
                   >{t('common.close')}</button>
                 )}
               </div>
@@ -1476,7 +1476,7 @@ export default function Backups() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowRestoreModal(null)}>
           <div className="bg-[#0b1018] border border-[#152030] rounded-xl w-full max-w-md p-6 shadow-[0_4px_40px_rgba(0,0,0,0.4)]" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-semibold text-[#e2e8f0] mb-1">{t('backups.modal.title')}</h2>
-            <p className="text-xs text-[#5a6b7f] mb-5 font-mono truncate">{showRestoreModal}</p>
+            <p className="text-xs text-[#98A2B3] mb-5 font-mono truncate">{showRestoreModal}</p>
 
             <div className="space-y-2 mb-6">
               <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -1493,7 +1493,7 @@ export default function Backups() {
                 />
                 <div>
                   <div className="text-sm font-medium text-[#e2e8f0]">{t('backups.modal.merge')}</div>
-                  <div className="text-[11px] text-[#5a6b7f] mt-0.5">{t('backups.modal.mergeDesc')}</div>
+                  <div className="text-[11px] text-[#98A2B3] mt-0.5">{t('backups.modal.mergeDesc')}</div>
                 </div>
               </label>
               <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -1510,7 +1510,7 @@ export default function Backups() {
                 />
                 <div>
                   <div className="text-sm font-medium text-[#e2e8f0]">{t('backups.modal.replace')}</div>
-                  <div className="text-[11px] text-[#5a6b7f] mt-0.5">{t('backups.modal.replaceDesc')}</div>
+                  <div className="text-[11px] text-[#98A2B3] mt-0.5">{t('backups.modal.replaceDesc')}</div>
                 </div>
               </label>
             </div>
@@ -1518,7 +1518,7 @@ export default function Backups() {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowRestoreModal(null)}
-                className="px-4 py-2 rounded-lg border border-[#152030] text-[#5a6b7f] text-sm hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors"
+                className="px-4 py-2 rounded-lg border border-[#152030] text-[#98A2B3] text-sm hover:text-[#e2e8f0] hover:border-[#1e2a3a] transition-colors"
               >
                 {t('backups.modal.cancel')}
               </button>

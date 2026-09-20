@@ -27,7 +27,7 @@ interface SearchResponse {
 const SCORE_COLOR = (score: number) =>
   score > 0.8 ? 'bg-[#00FFA7]/10 text-[#00FFA7]' :
   score > 0.6 ? 'bg-yellow-500/10 text-yellow-400' :
-  'bg-white/5 text-[#667085]'
+  'bg-white/5 text-[#98A2B3]'
 
 export default function KnowledgeSearch() {
   const { activeConnectionId } = useKnowledge()
@@ -61,7 +61,7 @@ export default function KnowledgeSearch() {
   }, [query, activeConnectionId, spaceId, contentType, topK])
 
   if (!activeConnectionId) {
-    return <div className="text-center py-12 text-[#667085] text-sm">Select a connection using the switcher above.</div>
+    return <div className="text-center py-12 text-[#98A2B3] text-sm">Select a connection using the switcher above.</div>
   }
 
   return (
@@ -70,7 +70,7 @@ export default function KnowledgeSearch() {
       <div className="bg-[#182230] border border-[#344054] rounded-xl p-5">
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
+            <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
             <input
               type="text"
               placeholder="Search your knowledge base..."
@@ -92,7 +92,7 @@ export default function KnowledgeSearch() {
         {/* Filters toggle */}
         <button
           onClick={() => setShowFilters((v) => !v)}
-          className="flex items-center gap-1 mt-3 text-xs text-[#667085] hover:text-[#D0D5DD] transition-colors"
+          className="flex items-center gap-1 mt-3 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
         >
           {showFilters ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           Advanced filters
@@ -123,7 +123,7 @@ export default function KnowledgeSearch() {
       {/* Results */}
       {results && (
         <div>
-          <div className="flex items-center gap-3 mb-3 text-xs text-[#667085]">
+          <div className="flex items-center gap-3 mb-3 text-xs text-[#98A2B3]">
             <span>{results.total ?? results.results.length} result(s) for &quot;{results.query}&quot;</span>
             {results.query_time_ms != null && (
               <span>{results.query_time_ms.toFixed(0)} ms</span>
@@ -131,7 +131,7 @@ export default function KnowledgeSearch() {
           </div>
 
           {results.results.length === 0 ? (
-            <div className="text-center py-12 text-[#667085] text-sm">No results found. Try different terms or filters.</div>
+            <div className="text-center py-12 text-[#98A2B3] text-sm">No results found. Try different terms or filters.</div>
           ) : (
             <div className="space-y-3">
               {results.results.map((r, i) => {
@@ -144,10 +144,10 @@ export default function KnowledgeSearch() {
                           <p className="text-sm font-medium text-[#D0D5DD] truncate">{r.document_title}</p>
                         )}
                         {r.source_uri && (
-                          <p className="text-xs text-[#667085] truncate">{r.source_uri}</p>
+                          <p className="text-xs text-[#98A2B3] truncate">{r.source_uri}</p>
                         )}
                         {r.section && (
-                          <p className="text-xs text-[#667085] truncate">§ {r.section}</p>
+                          <p className="text-xs text-[#98A2B3] truncate">§ {r.section}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -165,7 +165,7 @@ export default function KnowledgeSearch() {
                     {(r.topics?.length ?? 0) > 0 && (
                       <div className="flex gap-1.5 mt-2 flex-wrap">
                         {r.topics!.slice(0, 4).map((t) => (
-                          <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[#667085]">{t}</span>
+                          <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[#98A2B3]">{t}</span>
                         ))}
                       </div>
                     )}
@@ -178,7 +178,7 @@ export default function KnowledgeSearch() {
       )}
 
       {!results && !error && (
-        <div className="text-center py-12 text-[#667085] text-sm">
+        <div className="text-center py-12 text-[#98A2B3] text-sm">
           Enter a query to search. Hybrid search combines vector similarity + BM25 keyword matching.
         </div>
       )}

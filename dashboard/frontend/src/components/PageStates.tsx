@@ -69,7 +69,7 @@ export class SectionBoundary extends Component<SectionBoundaryProps, SectionBoun
             </div>
 
             <div className="mt-4 rounded-2xl border border-[#21262d] bg-[#0C111D] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#667085]">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#98A2B3]">
                 Error details
               </p>
               <p className="mt-2 text-sm text-[#FCA5A5] break-words">

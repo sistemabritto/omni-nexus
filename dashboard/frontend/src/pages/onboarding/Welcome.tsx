@@ -103,7 +103,7 @@ export default function Welcome({ onFirstTime, onRestore }: WelcomeProps) {
 
           {/* Content */}
           <div className="px-7 py-6 space-y-3">
-            <p className="text-[12px] text-[#5a6b7f] text-center mb-5">
+            <p className="text-[12px] text-[#98A2B3] text-center mb-5">
               {t('onboarding.welcome.chooseHowToStart')}
             </p>
 
@@ -116,7 +116,7 @@ export default function Welcome({ onFirstTime, onRestore }: WelcomeProps) {
 
             <button
               onClick={onRestore}
-              className="w-full py-3 px-4 rounded-lg border border-[#152030] text-[#5a6b7f] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+              className="w-full py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
             >
               {t('onboarding.welcome.restoreBrainRepo')}
             </button>

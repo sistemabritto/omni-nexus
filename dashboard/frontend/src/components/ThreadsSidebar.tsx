@@ -260,7 +260,7 @@ export default function ThreadsSidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="p-1.5 text-[#667085] hover:text-[#e6edf3] transition-colors"
+            className="p-1.5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
             aria-label="Expand sidebar"
           >
             <PanelLeftOpen size={14} />
@@ -293,7 +293,7 @@ export default function ThreadsSidebar({
             type="button"
             disabled
             aria-label="New thread"
-            className="p-1 text-[#667085] opacity-40 cursor-not-allowed"
+            className="p-1 text-[#98A2B3] opacity-40 cursor-not-allowed"
             title="Nova thread (em breve)"
           >
             <Plus size={13} />
@@ -301,7 +301,7 @@ export default function ThreadsSidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="p-1 text-[#667085] hover:text-[#e6edf3] transition-colors"
+            className="p-1 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
             aria-label="Collapse sidebar"
           >
             <PanelLeftClose size={13} />

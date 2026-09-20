@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
+import PageTabBar from '../components/PageTabBar'
 
 // "Materiais" — arquivos do negócio numa página só (revamp 20/09): abas
 // Arquivos (árvore + editor) · Mídias (produção de vídeo) · Shares (links
@@ -52,25 +53,9 @@ export default function Materiais() {
   // column com flex-shrink-0 não quebra o layout.
   return (
     <div className="flex flex-col h-full min-h-0" style={{ background: 'var(--bg-primary)' }}>
-      <div role="tablist" aria-label="Materiais" className="flex gap-1 border-b border-[#21262d] flex-shrink-0">
-        {visibleTabs.map((tab) => (
-          <button
-            key={tab.key}
-            role="tab"
-            aria-selected={activeTab === tab.key}
-            onClick={() => selectTab(tab.key)}
-            className={`px-4 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px cursor-pointer ${
-              activeTab === tab.key
-                ? 'text-[#00FFA7] border-[#00FFA7]'
-                : 'text-[#667085] border-transparent hover:text-[#e6edf3] hover:border-[#21262d]'
-            }`}
-          >
-            {t(tab.labelKey)}
-          </button>
-        ))}
-      </div>
+      <PageTabBar ariaLabel="Materiais" slim extraClass="flex-shrink-0" active={activeTab} onSelect={selectTab} tabs={visibleTabs.map((x) => ({ key: x.key, label: t(x.labelKey) }))} />
       <div className="flex-1 min-h-0 overflow-hidden">
-        <Suspense fallback={<div className="p-8 text-sm text-[#5a6b7f]">Carregando…</div>}>
+        <Suspense fallback={<div className="p-8 text-sm text-[#98A2B3]">Carregando…</div>}>
           {/* O Workspace fica montado (oculto nas outras abas) para não perder
               os tabs abertos/editor no estado ao alternar. */}
           <div className="h-full" style={{ display: activeTab === 'arquivos' ? 'block' : 'none' }}>

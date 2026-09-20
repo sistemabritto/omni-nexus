@@ -58,7 +58,7 @@ function timeAgo(dateStr: string | null): string {
   return new Date(dateStr).toLocaleDateString()
 }
 
-export default function UsersPage() {
+export default function UsersPage({ embedded = false }: { embedded?: boolean }) {
   const confirm = useConfirm()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -154,16 +154,18 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-            <UsersIcon size={20} className="text-[#00FFA7]" />
+      <div className={`flex items-center justify-between ${embedded ? 'mb-4' : 'mb-6'}`}>
+        {!embedded && (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
+              <UsersIcon size={20} className="text-[#00FFA7]" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-[#e6edf3]">User Management</h1>
+              <p className="text-sm text-[#98A2B3]">{users.length} user{users.length !== 1 ? 's' : ''}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-[#e6edf3]">User Management</h1>
-            <p className="text-sm text-[#667085]">{users.length} user{users.length !== 1 ? 's' : ''}</p>
-          </div>
-        </div>
+        )}
         <button
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0d1117] font-semibold text-sm hover:bg-[#00FFA7]/90 transition-colors"
@@ -180,7 +182,7 @@ export default function UsersPage() {
         <div className="bg-[#161b22] rounded-xl border border-[#21262d] overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#21262d] text-[#667085]">
+              <tr className="border-b border-[#21262d] text-[#98A2B3]">
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">User</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Email</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Role</th>
@@ -204,11 +206,11 @@ export default function UsersPage() {
                         </div>
                         <div>
                           <div className="text-[#e6edf3] font-medium">{u.display_name || u.username}</div>
-                          <div className="text-[#667085] text-xs">@{u.username}</div>
+                          <div className="text-[#98A2B3] text-xs">@{u.username}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#667085]">{u.email || '--'}</td>
+                    <td className="px-4 py-3 text-[#98A2B3]">{u.email || '--'}</td>
                     <td className="px-4 py-3">
                       <span
                         className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium border"
@@ -223,12 +225,12 @@ export default function UsersPage() {
                         {u.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#667085] text-xs">{timeAgo(u.last_login)}</td>
+                    <td className="px-4 py-3 text-[#98A2B3] text-xs">{timeAgo(u.last_login)}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(u)}
-                          className="p-1.5 rounded-lg text-[#667085] hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
+                          className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
                           title="Edit"
                         >
                           <Pencil size={14} />
@@ -236,7 +238,7 @@ export default function UsersPage() {
                         {u.is_active && (
                           <button
                             onClick={() => handleDeactivate(u)}
-                            className="p-1.5 rounded-lg text-[#667085] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             title="Deactivate"
                           >
                             <Trash2 size={14} />
@@ -249,7 +251,7 @@ export default function UsersPage() {
               })}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-[#667085]">No users found</td>
+                  <td colSpan={6} className="px-4 py-12 text-center text-[#98A2B3]">No users found</td>
                 </tr>
               )}
             </tbody>
@@ -263,7 +265,7 @@ export default function UsersPage() {
           <div className="bg-[#161b22] rounded-2xl border border-[#21262d] p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-[#e6edf3]">{editingId ? 'Edit User' : 'Create User'}</h2>
-              <button onClick={() => setModalOpen(false)} className="text-[#667085] hover:text-[#e6edf3] transition-colors"><X size={18} /></button>
+              <button onClick={() => setModalOpen(false)} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors"><X size={18} /></button>
             </div>
 
             {error && (
@@ -302,7 +304,7 @@ export default function UsersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#e6edf3] mb-1">
-                  Password {editingId && <span className="text-[#667085]">(leave blank to keep current)</span>}
+                  Password {editingId && <span className="text-[#98A2B3]">(leave blank to keep current)</span>}
                 </label>
                 <input
                   type="password"
@@ -328,7 +330,7 @@ export default function UsersPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-[#667085] text-sm hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
+                className="px-4 py-2 rounded-lg text-[#98A2B3] text-sm hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
               >
                 Cancel
               </button>

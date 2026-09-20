@@ -72,7 +72,7 @@ function formatCost(usd: number | null): string {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cls = STATUS_COLORS[status] || 'bg-[#21262d] text-[#667085] border-[#21262d]'
+  const cls = STATUS_COLORS[status] || 'bg-[#21262d] text-[#98A2B3] border-[#21262d]'
   return (
     <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${cls}`}>
       {status === 'running' && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />}
@@ -183,13 +183,13 @@ export function HeartbeatsList() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#e6edf3]">{t('heartbeats.title')}</h1>
-            <p className="text-[#667085] mt-0.5 text-sm">Proactive agents — wake on trigger, decide, act or sleep</p>
+            <p className="text-[#98A2B3] mt-0.5 text-sm">Proactive agents — wake on trigger, decide, act or sleep</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setLoading(true); load() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
           >
             <RefreshCw size={16} />
           </button>
@@ -205,9 +205,9 @@ export function HeartbeatsList() {
       {/* Table */}
       {heartbeats.length === 0 ? (
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-12 text-center">
-          <Heart size={32} className="text-[#667085] mx-auto mb-3" />
+          <Heart size={32} className="text-[#98A2B3] mx-auto mb-3" />
           <p className="text-[#e6edf3] font-medium mb-1">No heartbeats configured</p>
-          <p className="text-[#667085] text-sm mb-4">Create one or run <code className="font-mono">make heartbeat-lint</code> to sync from YAML</p>
+          <p className="text-[#98A2B3] text-sm mb-4">Create one or run <code className="font-mono">make heartbeat-lint</code> to sync from YAML</p>
           <button
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium"
@@ -219,7 +219,7 @@ export function HeartbeatsList() {
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#667085] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
                 <th className="text-left p-4 font-medium">Heartbeat</th>
                 <th className="text-left p-4 font-medium">Agent</th>
                 <th className="text-left p-4 font-medium">Interval</th>
@@ -239,9 +239,9 @@ export function HeartbeatsList() {
                       className="flex items-center gap-1.5 text-[#e6edf3] font-medium hover:text-[#00FFA7] transition-colors"
                     >
                       {hb.id}
-                      <ChevronRight size={14} className="text-[#667085]" />
+                      <ChevronRight size={14} className="text-[#98A2B3]" />
                     </button>
-                    <p className="text-[10px] text-[#667085] mt-0.5">{hb.run_count} runs total</p>
+                    <p className="text-[10px] text-[#98A2B3] mt-0.5">{hb.run_count} runs total</p>
                   </td>
                   <td className="p-4">
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#00FFA7]/8 border border-[#00FFA7]/20 text-[#00FFA7]">
@@ -253,7 +253,7 @@ export function HeartbeatsList() {
                       {formatInterval(hb.interval_seconds)}
                     </code>
                   </td>
-                  <td className="p-4 text-[#667085] text-xs">
+                  <td className="p-4 text-[#98A2B3] text-xs">
                     {hb.last_run ? (
                       <div>
                         <div>{new Date(hb.last_run.started_at).toLocaleDateString()}</div>
@@ -262,15 +262,15 @@ export function HeartbeatsList() {
                     ) : '--'}
                   </td>
                   <td className="p-4">
-                    {hb.last_run ? <StatusBadge status={hb.last_run.status} /> : <span className="text-[#667085] text-xs">never</span>}
+                    {hb.last_run ? <StatusBadge status={hb.last_run.status} /> : <span className="text-[#98A2B3] text-xs">never</span>}
                   </td>
-                  <td className="p-4 text-[#667085] text-xs font-mono">
+                  <td className="p-4 text-[#98A2B3] text-xs font-mono">
                     {formatCost(hb.cost_7d)}
                   </td>
                   <td className="p-4">
                     <button
                       onClick={() => handleToggle(hb)}
-                      className={`transition-colors ${hb.enabled ? 'text-[#00FFA7] hover:text-[#00FFA7]/70' : 'text-[#667085] hover:text-[#e6edf3]'}`}
+                      className={`transition-colors ${hb.enabled ? 'text-[#00FFA7] hover:text-[#00FFA7]/70' : 'text-[#98A2B3] hover:text-[#e6edf3]'}`}
                       title={hb.enabled ? 'Disable' : 'Enable'}
                     >
                       {hb.enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
@@ -281,7 +281,7 @@ export function HeartbeatsList() {
                       <button
                         onClick={() => handleRunNow(hb)}
                         disabled={running === hb.id}
-                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors disabled:opacity-50"
                         title="Run Now"
                       >
                         {running === hb.id ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
@@ -289,14 +289,14 @@ export function HeartbeatsList() {
                       </button>
                       <button
                         onClick={() => navigate(`/heartbeats/${hb.id}`)}
-                        className="p-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#667085] hover:text-[#e6edf3] hover:border-[#21262d] transition-colors"
+                        className="p-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#21262d] transition-colors"
                         title="View details"
                       >
                         <Info size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(hb)}
-                        className="p-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#667085] hover:text-red-400 hover:border-red-500/20 transition-colors"
+                        className="p-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-red-400 hover:border-red-500/20 transition-colors"
                         title="Delete"
                       >
                         <Trash2 size={14} />
@@ -401,13 +401,13 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
       <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-[#e6edf3]">{t('heartbeats.createHeartbeat')}</h2>
-          <button onClick={onClose} className="text-[#667085] hover:text-[#e6edf3] transition-colors">✕</button>
+          <button onClick={onClose} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors">✕</button>
         </div>
 
         <div className="space-y-4">
           {/* ID */}
           <div>
-            <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">ID (slug)</label>
+            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">ID (slug)</label>
             <input
               type="text"
               value={form.id}
@@ -420,7 +420,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Agent */}
           <div>
-            <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">Agent</label>
+            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Agent</label>
             <input
               type="text"
               value={form.agent}
@@ -437,7 +437,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Interval */}
           <div>
-            <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">Interval (seconds)</label>
+            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Interval (seconds)</label>
             <input
               type="number"
               min={60}
@@ -445,14 +445,14 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
               onChange={e => setForm(f => ({ ...f, interval_seconds: parseInt(e.target.value) || 60 }))}
               className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50"
             />
-            <p className="text-[10px] text-[#667085] mt-1">= {formatInterval(form.interval_seconds)} — minimum 60s</p>
+            <p className="text-[10px] text-[#98A2B3] mt-1">= {formatInterval(form.interval_seconds)} — minimum 60s</p>
             {errors.interval_seconds && <p className="text-red-400 text-xs mt-1">{errors.interval_seconds}</p>}
           </div>
 
           {/* Max turns + Timeout */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">Max turns</label>
+              <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Max turns</label>
               <input
                 type="number"
                 min={1}
@@ -463,7 +463,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">Timeout (s)</label>
+              <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Timeout (s)</label>
               <input
                 type="number"
                 min={30}
@@ -477,7 +477,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Wake triggers */}
           <div>
-            <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">Wake triggers</label>
+            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Wake triggers</label>
             <div className="flex flex-wrap gap-2">
               {WAKE_TRIGGER_OPTIONS.map(t => (
                 <button
@@ -487,7 +487,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
                   className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                     form.wake_triggers.includes(t)
                       ? 'border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7]'
-                      : 'border-[#21262d] bg-[#0d1117] text-[#667085] hover:text-[#e6edf3]'
+                      : 'border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#e6edf3]'
                   }`}
                 >
                   {t}
@@ -499,7 +499,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Required secrets */}
           <div>
-            <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">Required secrets (comma-separated, optional)</label>
+            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Required secrets (comma-separated, optional)</label>
             <input
               type="text"
               value={form.required_secrets}
@@ -511,7 +511,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Decision prompt */}
           <div>
-            <label className="block text-xs font-medium text-[#667085] uppercase tracking-wider mb-1.5">Decision prompt</label>
+            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Decision prompt</label>
             <textarea
               value={form.decision_prompt}
               onChange={e => setForm(f => ({ ...f, decision_prompt: e.target.value }))}
@@ -527,11 +527,11 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
             <button
               type="button"
               onClick={() => setForm(f => ({ ...f, enabled: !f.enabled }))}
-              className={`transition-colors ${form.enabled ? 'text-[#00FFA7]' : 'text-[#667085]'}`}
+              className={`transition-colors ${form.enabled ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`}
             >
               {form.enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
             </button>
-            <span className="text-sm text-[#667085]">
+            <span className="text-sm text-[#98A2B3]">
               {form.enabled ? 'Enabled (will run on schedule)' : 'Disabled (safe — enable via toggle when ready)'}
             </span>
           </div>
@@ -540,7 +540,7 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#21262d]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#667085] hover:text-[#e6edf3] transition-colors"
+            className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
           >
             Cancel
           </button>
@@ -619,7 +619,7 @@ export function HeartbeatDetail() {
   if (!hb) {
     return (
       <div className="text-center py-20">
-        <p className="text-[#667085]">Heartbeat not found</p>
+        <p className="text-[#98A2B3]">Heartbeat not found</p>
         <button onClick={() => navigate('/heartbeats')} className="mt-4 text-[#00FFA7] hover:underline text-sm">
           Back to list
         </button>
@@ -632,17 +632,17 @@ export function HeartbeatDetail() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/heartbeats')} className="text-[#667085] hover:text-[#e6edf3] transition-colors text-sm">
+          <button onClick={() => navigate('/heartbeats')} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors text-sm">
             Heartbeats
           </button>
-          <ChevronRight size={14} className="text-[#667085]" />
+          <ChevronRight size={14} className="text-[#98A2B3]" />
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
               <Heart size={20} className="text-[#00FFA7]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#e6edf3]">{hb.id}</h1>
-              <p className="text-[#667085] mt-0.5 text-sm">@{hb.agent} · every {formatInterval(hb.interval_seconds)}</p>
+              <p className="text-[#98A2B3] mt-0.5 text-sm">@{hb.agent} · every {formatInterval(hb.interval_seconds)}</p>
             </div>
           </div>
         </div>
@@ -652,7 +652,7 @@ export function HeartbeatDetail() {
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm font-medium ${
               hb.enabled
                 ? 'border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20'
-                : 'border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#e6edf3]'
+                : 'border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#e6edf3]'
             }`}
           >
             {hb.enabled ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
@@ -661,14 +661,14 @@ export function HeartbeatDetail() {
           <button
             onClick={handleRunNow}
             disabled={running}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors text-sm disabled:opacity-50"
           >
             {running ? <RefreshCw size={16} className="animate-spin" /> : <Play size={16} />}
             Run Now
           </button>
           <button
             onClick={() => { setLoading(true); load() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#667085] hover:text-[#e6edf3] transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
           >
             <RefreshCw size={16} />
           </button>
@@ -678,7 +678,7 @@ export function HeartbeatDetail() {
       {/* Config */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-5">
-          <h3 className="text-xs font-medium text-[#667085] uppercase tracking-wider mb-4">Configuration</h3>
+          <h3 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-4">Configuration</h3>
           <dl className="space-y-2">
             {[
               ['Agent', `@${hb.agent}`],
@@ -691,14 +691,14 @@ export function HeartbeatDetail() {
               ['Total runs', String(hb.run_count)],
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between text-sm">
-                <dt className="text-[#667085]">{label}</dt>
+                <dt className="text-[#98A2B3]">{label}</dt>
                 <dd className="text-[#e6edf3] font-mono text-xs">{value}</dd>
               </div>
             ))}
           </dl>
         </div>
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-5">
-          <h3 className="text-xs font-medium text-[#667085] uppercase tracking-wider mb-4">Decision Prompt</h3>
+          <h3 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-4">Decision Prompt</h3>
           <pre className="text-xs text-[#e6edf3] whitespace-pre-wrap font-mono leading-5 max-h-48 overflow-y-auto">
             {hb.decision_prompt}
           </pre>
@@ -708,18 +708,18 @@ export function HeartbeatDetail() {
       {/* Runs */}
       <div className="flex items-center gap-3 mb-4">
         <h2 className="text-base font-semibold text-[#e6edf3]">Run History</h2>
-        <span className="text-[11px] font-medium text-[#667085] bg-[#21262d] px-2 py-0.5 rounded-full">{runs.length}</span>
+        <span className="text-[11px] font-medium text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full">{runs.length}</span>
       </div>
       {runs.length === 0 ? (
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-8 text-center">
-          <Clock size={24} className="text-[#667085] mx-auto mb-3" />
-          <p className="text-[#667085] text-sm">No runs yet</p>
+          <Clock size={24} className="text-[#98A2B3] mx-auto mb-3" />
+          <p className="text-[#98A2B3] text-sm">No runs yet</p>
         </div>
       ) : (
         <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#667085] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
                 <th className="text-left p-4 font-medium">Started</th>
                 <th className="text-left p-4 font-medium">Status</th>
                 <th className="text-left p-4 font-medium">Duration</th>
@@ -732,20 +732,20 @@ export function HeartbeatDetail() {
               {runs.map((run) => (
                 <Fragment key={run.run_id}>
                   <tr className="border-t border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
-                    <td className="p-4 text-[#667085] text-xs">
+                    <td className="p-4 text-[#98A2B3] text-xs">
                       {new Date(run.started_at).toLocaleString()}
                     </td>
                     <td className="p-4"><StatusBadge status={run.status} /></td>
-                    <td className="p-4 text-[#667085] text-xs font-mono">{formatDuration(run.duration_ms)}</td>
+                    <td className="p-4 text-[#98A2B3] text-xs font-mono">{formatDuration(run.duration_ms)}</td>
                     <td className="p-4">
-                      <span className="text-[11px] text-[#667085]">{run.triggered_by || '--'}</span>
+                      <span className="text-[11px] text-[#98A2B3]">{run.triggered_by || '--'}</span>
                     </td>
-                    <td className="p-4 text-[#667085] text-xs font-mono">{formatCost(run.cost_usd)}</td>
+                    <td className="p-4 text-[#98A2B3] text-xs font-mono">{formatCost(run.cost_usd)}</td>
                     <td className="p-4">
                       {(run.prompt_preview || run.error) && (
                         <button
                           onClick={() => setExpandedRun(expandedRun === run.run_id ? null : run.run_id)}
-                          className="text-xs text-[#667085] hover:text-[#e6edf3] transition-colors"
+                          className="text-xs text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
                         >
                           {expandedRun === run.run_id ? 'hide' : 'expand'}
                         </button>
@@ -765,7 +765,7 @@ export function HeartbeatDetail() {
                         )}
                         {run.prompt_preview && (
                           <div>
-                            <p className="text-xs font-medium text-[#667085] mb-1">Prompt preview</p>
+                            <p className="text-xs font-medium text-[#98A2B3] mb-1">Prompt preview</p>
                             <pre className="text-xs text-[#e6edf3] whitespace-pre-wrap bg-[#0d1117] border border-[#21262d] rounded-lg p-3 font-mono leading-5 max-h-40 overflow-y-auto">
                               {run.prompt_preview}
                             </pre>

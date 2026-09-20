@@ -197,7 +197,7 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: string |
         </div>
       </div>
       <p className="text-3xl font-bold text-[#e6edf3] tracking-tight">{value}</p>
-      <p className="text-sm text-[#667085] mt-1">{label}</p>
+      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
     </div>
   )
 }
@@ -411,7 +411,7 @@ function CustomModal({ open, initial, isEdit, onClose, onSaved }: CustomModalPro
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
+            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
           >
             <X size={16} />
           </button>
@@ -509,7 +509,7 @@ function CustomModal({ open, initial, isEdit, onClose, onSaved }: CustomModalPro
                       <button
                         type="button"
                         onClick={() => toggleRowVisibility(idx)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#667085] hover:text-[#e6edf3] transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
                         tabIndex={-1}
                       >
                         {visibleRows.has(idx) ? <EyeOff size={12} /> : <Eye size={12} />}
@@ -520,7 +520,7 @@ function CustomModal({ open, initial, isEdit, onClose, onSaved }: CustomModalPro
                   <button
                     type="button"
                     onClick={() => removeEnvRow(idx)}
-                    className="p-1 rounded text-[#667085] hover:text-red-400 transition-colors shrink-0"
+                    className="p-1 rounded text-[#98A2B3] hover:text-red-400 transition-colors shrink-0"
                   >
                     <X size={12} />
                   </button>
@@ -530,7 +530,7 @@ function CustomModal({ open, initial, isEdit, onClose, onSaved }: CustomModalPro
             <button
               type="button"
               onClick={addEnvRow}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[#21262d] text-xs text-[#667085] hover:text-[#e6edf3] hover:border-[#344054] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[#21262d] text-xs text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-colors"
             >
               <Plus size={12} />
               Add env key
@@ -543,7 +543,7 @@ function CustomModal({ open, initial, isEdit, onClose, onSaved }: CustomModalPro
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-sm text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
+            className="px-4 py-2 rounded-lg text-sm text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
           >
             Cancel
           </button>
@@ -583,10 +583,10 @@ function PluginEnvField({
       <label className="flex items-center gap-1 text-xs font-medium text-[#e6edf3] mb-1">
         {spec.name}
         {spec.required && <span className="text-red-400">*</span>}
-        {spec.secret && <Lock size={10} className="text-[#667085]" />}
+        {spec.secret && <Lock size={10} className="text-[#98A2B3]" />}
       </label>
       {spec.description && (
-        <p className="text-[10px] text-[#667085] mb-1">{spec.description}</p>
+        <p className="text-[10px] text-[#98A2B3] mb-1">{spec.description}</p>
       )}
       <div className="relative">
         <input
@@ -601,7 +601,7 @@ function PluginEnvField({
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#667085] hover:text-[#e6edf3] transition-colors"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
             tabIndex={-1}
           >
             {show ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -700,7 +700,7 @@ function IntegrationCard({ int, onSelect, onEdit, onDelete }: IntegrationCardPro
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onEdit?.(int) }}
-                className="p-1 rounded text-[#667085] hover:text-[#00FFA7] transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1 rounded text-[#98A2B3] hover:text-[#00FFA7] transition-colors opacity-0 group-hover:opacity-100"
                 title="Edit"
               >
                 <Pencil size={13} />
@@ -708,7 +708,7 @@ function IntegrationCard({ int, onSelect, onEdit, onDelete }: IntegrationCardPro
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onDelete?.(int) }}
-                className="p-1 rounded text-[#667085] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1 rounded text-[#98A2B3] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                 title="Delete"
               >
                 <Trash2 size={13} />
@@ -739,7 +739,7 @@ function IntegrationCard({ int, onSelect, onEdit, onDelete }: IntegrationCardPro
 
       {/* Description for custom integrations */}
       {isCustom && int.description && (
-        <p className="relative text-xs text-[#667085] mb-2 line-clamp-2">{int.description}</p>
+        <p className="relative text-xs text-[#98A2B3] mb-2 line-clamp-2">{int.description}</p>
       )}
 
       {/* Bottom badges + configure affordance */}
@@ -766,11 +766,11 @@ function IntegrationCard({ int, onSelect, onEdit, onDelete }: IntegrationCardPro
 
         {/* Hover affordance */}
         {isOAuth ? (
-          <span className="flex items-center gap-1 text-[11px] text-[#667085] group-hover:text-[#00FFA7] opacity-0 group-hover:opacity-100 transition-all duration-200">
+          <span className="flex items-center gap-1 text-[11px] text-[#98A2B3] group-hover:text-[#00FFA7] opacity-0 group-hover:opacity-100 transition-all duration-200">
             Conectar
           </span>
         ) : isConfigurable ? (
-          <span className="flex items-center gap-1 text-[11px] text-[#667085] group-hover:text-[#00FFA7] opacity-0 group-hover:opacity-100 transition-all duration-200">
+          <span className="flex items-center gap-1 text-[11px] text-[#98A2B3] group-hover:text-[#00FFA7] opacity-0 group-hover:opacity-100 transition-all duration-200">
             <Settings size={11} />
             Configurar
           </span>
@@ -1000,7 +1000,7 @@ export default function Integrations() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-[#161b22] border border-[#00FFA7]/30 shadow-2xl text-sm text-[#e6edf3]">
           <CheckCircle2 size={16} className="text-[#00FFA7] shrink-0" />
           <span>Saved — env values written to <code className="text-[#00FFA7] font-mono text-xs">.env</code>. Restart services to pick up the new values.</span>
-          <button type="button" onClick={() => setEnvToast(false)} className="ml-2 text-[#667085] hover:text-[#e6edf3]">
+          <button type="button" onClick={() => setEnvToast(false)} className="ml-2 text-[#98A2B3] hover:text-[#e6edf3]">
             <X size={14} />
           </button>
         </div>
@@ -1013,14 +1013,14 @@ export default function Integrations() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setDeleteTarget(null)} />
           <div className="relative w-full max-w-sm bg-[#0C111D] border border-[#21262d] rounded-2xl shadow-2xl p-6">
             <h3 className="text-base font-semibold text-[#e6edf3] mb-2">Delete Custom Integration</h3>
-            <p className="text-sm text-[#667085] mb-5">
+            <p className="text-sm text-[#98A2B3] mb-5">
               Delete <span className="text-[#e6edf3] font-medium">{deleteTarget.name}</span>? This removes the SKILL.md file permanently.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 rounded-lg text-sm text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
+                className="px-4 py-2 rounded-lg text-sm text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
               >
                 Cancel
               </button>
@@ -1049,12 +1049,12 @@ export default function Integrations() {
               </div>
               <div>
                 <h3 className="text-base font-semibold text-[#e6edf3]">Configure {pluginIntegTarget.name}</h3>
-                <p className="text-[11px] text-[#667085]">via plugin: {pluginIntegTarget.source_plugin}</p>
+                <p className="text-[11px] text-[#98A2B3]">via plugin: {pluginIntegTarget.source_plugin}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setPluginIntegModalOpen(false)}
-                className="ml-auto text-[#667085] hover:text-[#e6edf3] transition-colors"
+                className="ml-auto text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
               >
                 <X size={16} />
               </button>
@@ -1090,7 +1090,7 @@ export default function Integrations() {
                   type="button"
                   onClick={handlePluginIntegTest}
                   disabled={pluginTesting}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors disabled:opacity-60"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors disabled:opacity-60"
                 >
                   {pluginTesting ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
                   Test
@@ -1100,7 +1100,7 @@ export default function Integrations() {
                 <button
                   type="button"
                   onClick={() => setPluginIntegModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
+                  className="px-4 py-2 rounded-lg text-sm text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
                 >
                   Cancel
                 </button>
@@ -1122,7 +1122,7 @@ export default function Integrations() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('integrations.title')}</h1>
-        <p className="text-[#667085] text-sm mt-1">Connected services, APIs, social accounts & databases</p>
+        <p className="text-[#98A2B3] text-sm mt-1">Connected services, APIs, social accounts & databases</p>
       </div>
 
       {/* Tab bar */}
@@ -1141,7 +1141,7 @@ export default function Integrations() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 active
                   ? 'bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/25 shadow-[0_0_12px_rgba(0,255,167,0.08)]'
-                  : 'text-[#667085] hover:text-[#e6edf3] border border-transparent'
+                  : 'text-[#98A2B3] hover:text-[#e6edf3] border border-transparent'
               }`}
             >
               <TabIcon size={14} />
@@ -1222,7 +1222,7 @@ export default function Integrations() {
                         {brainRepoStatus.repo_url}
                       </a>
                     ) : (
-                      <p className="text-[11px] text-[#667085]">Version control for workspace configuration</p>
+                      <p className="text-[11px] text-[#98A2B3]">Version control for workspace configuration</p>
                     )}
                   </div>
                 </div>
@@ -1235,7 +1235,7 @@ export default function Integrations() {
                         </span>
                       )}
                       {brainRepoStatus.last_sync && (
-                        <span className="text-[10px] text-[#667085]">
+                        <span className="text-[10px] text-[#98A2B3]">
                           Synced {new Date(brainRepoStatus.last_sync).toLocaleDateString()}
                         </span>
                       )}
@@ -1334,7 +1334,7 @@ export default function Integrations() {
                         via plugin
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#667085] mb-3">
+                    <p className="text-[11px] text-[#98A2B3] mb-3">
                       {int.source_plugin}
                     </p>
 
@@ -1369,7 +1369,7 @@ export default function Integrations() {
                         <Settings size={11} /> Configure
                       </button>
                       {hasHealthCheck && (
-                        <span className="text-[10px] text-[#667085] italic">health check available</span>
+                        <span className="text-[10px] text-[#98A2B3] italic">health check available</span>
                       )}
                     </div>
                   </div>
@@ -1413,7 +1413,7 @@ export default function Integrations() {
                 <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15 group-hover:bg-[#00FFA7]/15 transition-colors">
                   <Plus size={20} className="text-[#00FFA7]" />
                 </div>
-                <p className="text-sm font-medium text-[#667085] group-hover:text-[#e6edf3] transition-colors">Add custom integration</p>
+                <p className="text-sm font-medium text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors">Add custom integration</p>
                 <p className="text-xs text-[#3F3F46]">Creates a SKILL.md template in .claude/skills/</p>
               </div>
             ) : (
@@ -1436,7 +1436,7 @@ export default function Integrations() {
                   className="cursor-pointer rounded-xl border border-dashed border-[#21262d] hover:border-[#00FFA7]/30 bg-[#161b22]/50 p-5 flex flex-col items-center justify-center gap-2 transition-colors group min-h-[120px]"
                 >
                   <Plus size={18} className="text-[#3F3F46] group-hover:text-[#00FFA7] transition-colors" />
-                  <p className="text-xs text-[#3F3F46] group-hover:text-[#667085] transition-colors">Add custom integration</p>
+                  <p className="text-xs text-[#3F3F46] group-hover:text-[#98A2B3] transition-colors">Add custom integration</p>
                 </div>
               </div>
             )}
@@ -1471,7 +1471,7 @@ export default function Integrations() {
                           <PlatIcon size={16} style={{ color: platMeta.color }} />
                         </div>
                         <span className="font-semibold text-[#e6edf3] text-sm">{platform.name}</span>
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/[0.04] text-[#667085] border border-[#21262d]">
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/[0.04] text-[#98A2B3] border border-[#21262d]">
                           {platform.accounts.length} account{platform.accounts.length !== 1 ? 's' : ''}
                         </span>
                       </div>
@@ -1516,7 +1516,7 @@ export default function Integrations() {
                                 />
                                 <div>
                                   <p className="text-sm font-medium text-[#e6edf3]">{acc.label}</p>
-                                  <p className="text-xs text-[#667085] mt-0.5">{acc.detail}</p>
+                                  <p className="text-xs text-[#98A2B3] mt-0.5">{acc.detail}</p>
                                 </div>
                               </div>
 
@@ -1525,7 +1525,7 @@ export default function Integrations() {
                                   isOk ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/25' :
                                   isExpiring ? 'bg-[#FBBF24]/10 text-[#FBBF24] border-[#FBBF24]/25' :
                                   isExpired ? 'bg-red-500/10 text-red-400 border-red-500/25' :
-                                  'bg-white/[0.04] text-[#667085] border-[#21262d]'
+                                  'bg-white/[0.04] text-[#98A2B3] border-[#21262d]'
                                 }`}>
                                   {isOk && <CheckCircle2 size={10} />}
                                   {(isExpiring || isExpired) && <AlertCircle size={10} />}
@@ -1535,7 +1535,7 @@ export default function Integrations() {
                                 </span>
                                 <button
                                   onClick={() => handleDisconnect(platform.id, acc.index)}
-                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#667085] hover:text-red-400 transition-colors"
+                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors"
                                   title="Remove"
                                 >
                                   <Trash2 size={14} />
@@ -1547,7 +1547,7 @@ export default function Integrations() {
                       </div>
                     ) : (
                       <div className="rounded-xl border border-dashed border-[#21262d] bg-[#161b22]/50 p-6 text-center">
-                        <p className="text-sm text-[#667085]">No accounts connected</p>
+                        <p className="text-sm text-[#98A2B3]">No accounts connected</p>
                         <p className="text-xs text-[#3F3F46] mt-1">Click "Add account" to get started</p>
                       </div>
                     )}
@@ -1695,12 +1695,12 @@ function DatabasesTab({ flavors, onReload }: DatabasesTabProps) {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setDeleteTarget(null)} />
           <div className="relative w-full max-w-sm bg-[#0C111D] border border-[#21262d] rounded-2xl shadow-2xl p-6">
             <h3 className="text-base font-semibold text-[#e6edf3] mb-2">Remove database connection</h3>
-            <p className="text-sm text-[#667085] mb-5">
+            <p className="text-sm text-[#98A2B3] mb-5">
               Remove <span className="text-[#e6edf3] font-medium">{deleteTarget.label}</span>? The env variables will be deleted from{' '}
               <code className="text-[#00FFA7] font-mono text-xs">.env</code>.
             </p>
             <div className="flex items-center justify-end gap-3">
-              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 rounded-lg text-sm text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors">Cancel</button>
+              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 rounded-lg text-sm text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors">Cancel</button>
               <button onClick={handleDelete} disabled={deleting} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-500/80 text-white text-sm font-semibold hover:bg-red-500 transition-colors disabled:opacity-60">
                 {deleting && <Loader2 size={14} className="animate-spin" />} Remove
               </button>
@@ -1768,7 +1768,7 @@ function FlavorSection({ flavor, onAdd, onEdit, onDelete }: {
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15 group-hover:bg-[#00FFA7]/15 transition-colors">
             <Plus size={20} className="text-[#00FFA7]" />
           </div>
-          <p className="text-sm font-medium text-[#667085] group-hover:text-[#e6edf3] transition-colors">Add {meta.label} connection</p>
+          <p className="text-sm font-medium text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors">Add {meta.label} connection</p>
           <p className="text-xs text-[#3F3F46]">Host, port, user, password — stored in .env automatically</p>
         </div>
       ) : (
@@ -1813,9 +1813,9 @@ function ConnectionCard({ conn, flavor, meta, onEdit, onDelete }: {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-sm font-semibold text-[#e6edf3] truncate">{conn.label}</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono text-[#667085] bg-white/[0.04] border border-[#21262d] shrink-0">#{conn.index}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono text-[#98A2B3] bg-white/[0.04] border border-[#21262d] shrink-0">#{conn.index}</span>
           </div>
-          <p className="text-[11px] text-[#667085] font-mono truncate">{envPrefix}_*</p>
+          <p className="text-[11px] text-[#98A2B3] font-mono truncate">{envPrefix}_*</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {conn.allow_write ? (
@@ -1838,15 +1838,15 @@ function ConnectionCard({ conn, flavor, meta, onEdit, onDelete }: {
       </div>
 
       <div className="relative flex items-center justify-between gap-2 pt-3 border-t border-[#21262d]">
-        <div className="flex items-center gap-3 text-[10px] text-[#667085]">
+        <div className="flex items-center gap-3 text-[10px] text-[#98A2B3]">
           <span>timeout <span className="text-[#e6edf3] font-mono">{conn.query_timeout}s</span></span>
           <span>max rows <span className="text-[#e6edf3] font-mono">{conn.max_rows}</span></span>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={onEdit} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors" title="Edit">
+          <button onClick={onEdit} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors" title="Edit">
             <Pencil size={11} /> Edit
           </button>
-          <button onClick={onDelete} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#667085] hover:text-red-400 transition-colors" title="Remove">
+          <button onClick={onDelete} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Remove">
             <Trash2 size={12} />
           </button>
         </div>
@@ -1967,10 +1967,10 @@ function DatabaseFormModal({ flavor, editingIndex, initial, onClose, onSaved }: 
               </div>
               <div>
                 <h3 className="text-base font-semibold text-[#e6edf3]">{isEdit ? 'Edit' : 'Add'} {meta.label} connection</h3>
-                <p className="text-xs text-[#667085] mt-0.5">Saved to <code className="text-[#00FFA7] font-mono">.env</code> as <code className="text-[#00FFA7] font-mono">DB_{flavor.toUpperCase()}_N_*</code></p>
+                <p className="text-xs text-[#98A2B3] mt-0.5">Saved to <code className="text-[#00FFA7] font-mono">.env</code> as <code className="text-[#00FFA7] font-mono">DB_{flavor.toUpperCase()}_N_*</code></p>
               </div>
             </div>
-            <button type="button" onClick={onClose} className="p-1.5 rounded-lg text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d]"><X size={16} /></button>
+            <button type="button" onClick={onClose} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d]"><X size={16} /></button>
           </div>
 
           {/* Fields */}
@@ -2019,7 +2019,7 @@ function DatabaseFormModal({ flavor, editingIndex, initial, onClose, onSaved }: 
               <Field label="Password" hint={isEdit ? 'Leave blank to keep current' : undefined}>
                 <div className="relative">
                   <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={e => update('password', e.target.value)} placeholder={isEdit ? '••••••• (unchanged)' : 'password'} className={inputClass + ' pr-9'} autoComplete="new-password" />
-                  <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#667085] hover:text-[#e6edf3]">
+                  <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#98A2B3] hover:text-[#e6edf3]">
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
@@ -2063,14 +2063,14 @@ function DatabaseFormModal({ flavor, editingIndex, initial, onClose, onSaved }: 
                 </span>
                 <div>
                   <span className="text-xs text-[#e6edf3] font-medium">TLS (rediss://)</span>
-                  <p className="text-[10px] text-[#667085] mt-0.5">Enable for managed Redis (Upstash, AWS, etc).</p>
+                  <p className="text-[10px] text-[#98A2B3] mt-0.5">Enable for managed Redis (Upstash, AWS, etc).</p>
                 </div>
               </label>
             )}
 
             {/* Advanced */}
             <details className="group rounded-lg border border-[#21262d] bg-[#161b22]/50">
-              <summary className="cursor-pointer px-3 py-2 text-xs text-[#667085] hover:text-[#e6edf3] flex items-center gap-1.5 select-none">
+              <summary className="cursor-pointer px-3 py-2 text-xs text-[#98A2B3] hover:text-[#e6edf3] flex items-center gap-1.5 select-none">
                 <span className="group-open:rotate-90 transition-transform">▸</span> Advanced
               </summary>
               <div className="px-3 pb-3 pt-1 space-y-3">
@@ -2106,7 +2106,7 @@ function DatabaseFormModal({ flavor, editingIndex, initial, onClose, onSaved }: 
                   </span>
                   <div>
                     <span className="text-xs text-[#e6edf3] font-medium">Allow write queries</span>
-                    <p className="text-[10px] text-[#667085] mt-0.5">Default off. When on, DELETE/UPDATE/INSERT are permitted on this DB.</p>
+                    <p className="text-[10px] text-[#98A2B3] mt-0.5">Default off. When on, DELETE/UPDATE/INSERT are permitted on this DB.</p>
                   </div>
                 </label>
               </div>
@@ -2115,7 +2115,7 @@ function DatabaseFormModal({ flavor, editingIndex, initial, onClose, onSaved }: 
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#21262d] bg-[#0a0f18]">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-[#667085] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0C111D] text-sm font-semibold hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-60">
               {saving && <Loader2 size={14} className="animate-spin" />} {isEdit ? 'Save changes' : 'Add connection'}
             </button>
@@ -2137,7 +2137,7 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
         {label}{required && <span className="text-[#00FFA7]">*</span>}
       </label>
       {children}
-      {hint && <p className="text-[10px] text-[#667085] mt-1">{hint}</p>}
+      {hint && <p className="text-[10px] text-[#98A2B3] mt-1">{hint}</p>}
     </div>
   )
 }

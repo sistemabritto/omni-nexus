@@ -9,7 +9,7 @@ function StatusIcon({ status }: { status: KnowledgeConnection['status'] }) {
     return <AlertTriangle size={10} className="text-yellow-400" />
   if (status === 'error')
     return <XCircle size={10} className="text-red-400" />
-  return <Wifi size={10} className="text-[#667085]" />
+  return <Wifi size={10} className="text-[#98A2B3]" />
 }
 
 export default function ConnectionSwitcher() {
@@ -33,7 +33,7 @@ export default function ConnectionSwitcher() {
 
   if (connections.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-[#182230] border border-[#344054] rounded-lg text-xs text-[#667085]">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-[#182230] border border-[#344054] rounded-lg text-xs text-[#98A2B3]">
         <Wifi size={12} />
         No connections — add one below
       </div>
@@ -52,7 +52,7 @@ export default function ConnectionSwitcher() {
             <span className="flex-1 text-left truncate">{active.name}</span>
           </>
         ) : (
-          <span className="flex-1 text-left text-[#667085]">Select connection</span>
+          <span className="flex-1 text-left text-[#98A2B3]">Select connection</span>
         )}
         <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>

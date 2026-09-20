@@ -88,7 +88,7 @@ export default function RestoreSelectRepo({ onNext, onBack }: RestoreSelectRepoP
             {!tokenConnected && (
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-[11px] font-semibold text-[#5a6b7f] tracking-[0.08em] uppercase">
+                  <label className="block text-[11px] font-semibold text-[#98A2B3] tracking-[0.08em] uppercase">
                     {t('restore.selectRepo.pat')}
                   </label>
                   <a
@@ -114,7 +114,7 @@ export default function RestoreSelectRepo({ onNext, onBack }: RestoreSelectRepoP
                     <button
                       type="button"
                       onClick={() => setShowToken(!showToken)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a6b7f] hover:text-[#e2e8f0] transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#e2e8f0] transition-colors"
                     >
                       {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -133,16 +133,16 @@ export default function RestoreSelectRepo({ onNext, onBack }: RestoreSelectRepoP
             {/* Repo list */}
             {tokenConnected && (
               <div>
-                <label className="block text-[11px] font-semibold text-[#5a6b7f] mb-1.5 tracking-[0.08em] uppercase">
+                <label className="block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase">
                   {t('restore.selectRepo.detectedRepos')}
                 </label>
                 {loadingRepos ? (
                   <div className="flex items-center justify-center py-6">
-                    <Loader2 size={18} className="text-[#5a6b7f] animate-spin" />
+                    <Loader2 size={18} className="text-[#98A2B3] animate-spin" />
                   </div>
                 ) : repos.length === 0 ? (
                   <div className="py-4 text-center">
-                    <p className="text-[12px] text-[#5a6b7f]">{t('restore.selectRepo.noReposFound')}</p>
+                    <p className="text-[12px] text-[#98A2B3]">{t('restore.selectRepo.noReposFound')}</p>
                     <p className="text-[11px] text-[#2d3d4f] mt-1">{t('restore.selectRepo.noReposHint')}</p>
                   </div>
                 ) : (
@@ -157,10 +157,10 @@ export default function RestoreSelectRepo({ onNext, onBack }: RestoreSelectRepoP
                             : 'border-[#1e2a3a] bg-[#0f1520] hover:border-[#2a3a4a]'
                         }`}
                       >
-                        <GitBranch size={13} className="text-[#5a6b7f] flex-shrink-0" />
+                        <GitBranch size={13} className="text-[#98A2B3] flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-[12px] font-medium text-[#e2e8f0] truncate">{repo.name}</p>
-                          <p className="text-[10px] text-[#5a6b7f] truncate">{repo.full_name}</p>
+                          <p className="text-[10px] text-[#98A2B3] truncate">{repo.full_name}</p>
                         </div>
                       </button>
                     ))}
@@ -172,7 +172,7 @@ export default function RestoreSelectRepo({ onNext, onBack }: RestoreSelectRepoP
             <div className="flex gap-3 pt-2">
               <button
                 onClick={onBack}
-                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#5a6b7f] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('restore.back')}
               </button>

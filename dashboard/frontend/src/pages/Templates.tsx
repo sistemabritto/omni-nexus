@@ -67,7 +67,7 @@ export default function Templates({ embedded = false }: { embedded?: boolean }) 
       {!embedded && (
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-[#e6edf3]">{t('templates.title')}</h1>
-          <p className="text-[#667085] mt-1">Reusable templates</p>
+          <p className="text-[#98A2B3] mt-1">Reusable templates</p>
         </div>
       )}
 
@@ -78,9 +78,9 @@ export default function Templates({ embedded = false }: { embedded?: boolean }) 
       ) : templates.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-[#161b22] border border-[#21262d] flex items-center justify-center mx-auto mb-4">
-            <Layout size={28} className="text-[#667085]" />
+            <Layout size={28} className="text-[#98A2B3]" />
           </div>
-          <p className="text-[#667085]">No templates found</p>
+          <p className="text-[#98A2B3]">No templates found</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -104,7 +104,7 @@ export default function Templates({ embedded = false }: { embedded?: boolean }) 
                     )}
                   </div>
                   {t.custom ? (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#21262d]/60 border-[#21262d] text-[#667085]">custom</span>
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#21262d]/60 border-[#21262d] text-[#98A2B3]">custom</span>
                   ) : (
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#00FFA7]/8 border-[#00FFA7]/20 text-[#00FFA7]">core</span>
                   )}
@@ -112,7 +112,7 @@ export default function Templates({ embedded = false }: { embedded?: boolean }) 
                 <h3 className="text-sm font-medium text-[#e6edf3] group-hover:text-[#00FFA7] transition-colors truncate">
                   {t.name}
                 </h3>
-                <p className="text-xs text-[#667085] mt-1">{isHtml ? 'HTML Template' : 'Markdown'}</p>
+                <p className="text-xs text-[#98A2B3] mt-1">{isHtml ? 'HTML Template' : 'Markdown'}</p>
               </button>
             )
           })}

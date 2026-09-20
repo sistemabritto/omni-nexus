@@ -184,11 +184,11 @@ export default function KnowledgeUpload() {
   }
 
   if (!canManage) {
-    return <div className="text-center py-12 text-[#667085] text-sm">You don&apos;t have permission to upload documents.</div>
+    return <div className="text-center py-12 text-[#98A2B3] text-sm">You don&apos;t have permission to upload documents.</div>
   }
 
   if (!activeConnectionId) {
-    return <div className="text-center py-12 text-[#667085] text-sm">Select a connection using the switcher above.</div>
+    return <div className="text-center py-12 text-[#98A2B3] text-sm">Select a connection using the switcher above.</div>
   }
 
   const hasPending = files.some((f) => f.phase === 'queued')
@@ -198,7 +198,7 @@ export default function KnowledgeUpload() {
       {/* Space + Unit selectors */}
       <div className="flex items-center gap-3 flex-wrap">
         <div>
-          <label className="block text-xs text-[#667085] mb-1">Space *</label>
+          <label className="block text-xs text-[#98A2B3] mb-1">Space *</label>
           <select
             value={selectedSpaceId}
             onChange={(e) => setSelectedSpaceId(e.target.value)}
@@ -209,7 +209,7 @@ export default function KnowledgeUpload() {
         </div>
         {units.length > 0 && (
           <div>
-            <label className="block text-xs text-[#667085] mb-1">Unit (optional)</label>
+            <label className="block text-xs text-[#98A2B3] mb-1">Unit (optional)</label>
             <select
               value={selectedUnitId}
               onChange={(e) => setSelectedUnitId(e.target.value)}
@@ -232,9 +232,9 @@ export default function KnowledgeUpload() {
           dragging ? 'border-[#00FFA7] bg-[#00FFA7]/5' : 'border-[#344054] hover:border-[#00FFA7]/40 hover:bg-white/2'
         }`}
       >
-        <UploadIcon size={28} className={`mx-auto mb-3 ${dragging ? 'text-[#00FFA7]' : 'text-[#667085]'}`} />
+        <UploadIcon size={28} className={`mx-auto mb-3 ${dragging ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`} />
         <p className="text-sm font-medium text-[#D0D5DD]">Drag files here or click to browse</p>
-        <p className="text-xs text-[#667085] mt-1">PDF, DOCX, PPTX, XLSX, HTML, EPUB, TXT, MD, CSV, JSON, images · Max 100 MB per file</p>
+        <p className="text-xs text-[#98A2B3] mt-1">PDF, DOCX, PPTX, XLSX, HTML, EPUB, TXT, MD, CSV, JSON, images · Max 100 MB per file</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -258,7 +258,7 @@ export default function KnowledgeUpload() {
               <div className="flex items-center gap-3 mb-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[#D0D5DD] truncate">{item.file.name}</p>
-                  <p className="text-xs text-[#667085]">
+                  <p className="text-xs text-[#98A2B3]">
                     {(item.file.size / 1024 / 1024).toFixed(1)} MB
                     {' · '}
                     {item.phase === 'done' ? (
@@ -278,7 +278,7 @@ export default function KnowledgeUpload() {
                   {(item.phase !== 'scanning' && item.phase !== 'parsing' && item.phase !== 'chunking' && item.phase !== 'embedding' && item.phase !== 'storing' && item.phase !== 'classifying') && (
                     <button
                       onClick={() => removeFile(item.id)}
-                      className="p-1 rounded text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+                      className="p-1 rounded text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
                     >
                       <X size={12} />
                     </button>

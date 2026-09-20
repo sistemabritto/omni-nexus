@@ -80,7 +80,7 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: string |
         </div>
       </div>
       <p className="text-3xl font-bold text-[#e6edf3] tracking-tight">{value}</p>
-      <p className="text-sm text-[#667085] mt-1">{label}</p>
+      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
     </div>
   )
 }
@@ -128,13 +128,13 @@ function SkillCard({ skill }: { skill: Skill }) {
         <h3 className="text-[15px] font-semibold text-[#e6edf3] transition-colors duration-200 group-hover:text-white">
           {skill.name}
         </h3>
-        <code className="mt-1 inline-block text-[11px] font-mono text-[#667085]">
+        <code className="mt-1 inline-block text-[11px] font-mono text-[#98A2B3]">
           {skill.prefix}-*
         </code>
       </div>
 
       {/* Description */}
-      <p className="relative text-[13px] leading-relaxed text-[#667085] line-clamp-2">
+      <p className="relative text-[13px] leading-relaxed text-[#98A2B3] line-clamp-2">
         {skill.description || 'No description available.'}
       </p>
     </Link>
@@ -171,7 +171,7 @@ export default function Skills() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('skills.title')}</h1>
-        <p className="text-[#667085] text-sm mt-1">Specialized capabilities and domain knowledge</p>
+        <p className="text-[#98A2B3] text-sm mt-1">Specialized capabilities and domain knowledge</p>
       </div>
 
       {/* Stats Bar */}
@@ -192,7 +192,7 @@ export default function Skills() {
       {/* Search + Filter Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
           <input
             type="text"
             placeholder="Search skills..."
@@ -207,7 +207,7 @@ export default function Skills() {
             className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 ${
               !selectedCategory
                 ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/30'
-                : 'bg-transparent text-[#667085] border-[#21262d] hover:border-[#667085]/50'
+                : 'bg-transparent text-[#98A2B3] border-[#21262d] hover:border-[#667085]/50'
             }`}
           >
             All
@@ -245,7 +245,7 @@ export default function Skills() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
             <Zap size={32} className="text-[#3F3F46]" />
           </div>
-          <p className="text-[#667085] text-lg">No skills found</p>
+          <p className="text-[#98A2B3] text-lg">No skills found</p>
           <p className="text-[#3F3F46] text-sm mt-1">Try adjusting your search or filter</p>
         </div>
       ) : (

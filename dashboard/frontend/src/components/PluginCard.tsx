@@ -30,7 +30,7 @@ function StatusIcon({ status }: { status: Plugin['status'] }) {
   if (status === 'active') return <CheckCircle size={14} className="text-[#00FFA7]" />
   if (status === 'broken') return <XCircle size={14} className="text-red-400" />
   if (status === 'installing' || status === 'uninstalling') return <Loader2 size={14} className="text-yellow-400 animate-spin" />
-  return <AlertTriangle size={14} className="text-[#667085]" />
+  return <AlertTriangle size={14} className="text-[#98A2B3]" />
 }
 
 function statusLabel(status: Plugin['status']): string {
@@ -83,7 +83,7 @@ export default function PluginCard({ plugin, onClick, onToggle }: Props) {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-[#e6edf3] truncate">{plugin.name}</p>
-            <p className="text-xs text-[#667085]">v{plugin.version}</p>
+            <p className="text-xs text-[#98A2B3]">v{plugin.version}</p>
           </div>
         </div>
 
@@ -108,7 +108,7 @@ export default function PluginCard({ plugin, onClick, onToggle }: Props) {
       </div>
 
       {manifest.description && (
-        <p className="text-xs text-[#667085] mb-3 line-clamp-2">{manifest.description}</p>
+        <p className="text-xs text-[#98A2B3] mb-3 line-clamp-2">{manifest.description}</p>
       )}
 
       <div className="flex items-center justify-between">
@@ -117,13 +117,13 @@ export default function PluginCard({ plugin, onClick, onToggle }: Props) {
           <span className={`text-xs font-medium ${
             plugin.status === 'active' ? 'text-[#00FFA7]' :
             plugin.status === 'broken' ? 'text-red-400' :
-            'text-[#667085]'
+            'text-[#98A2B3]'
           }`}>
             {statusLabel(plugin.status)}
           </span>
         </div>
         {manifest.capabilities && manifest.capabilities.length > 0 && (
-          <span className="text-[10px] text-[#667085] bg-[#21262d] px-2 py-0.5 rounded-full">
+          <span className="text-[10px] text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full">
             {manifest.capabilities.length} cap{manifest.capabilities.length !== 1 ? 's' : ''}
           </span>
         )}

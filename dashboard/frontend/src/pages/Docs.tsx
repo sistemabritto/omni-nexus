@@ -130,12 +130,12 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
             <span className="text-lg font-bold">
               <span className="text-[#00FFA7]">Evo</span>
               <span className="text-white">Nexus</span>
-              <span className="text-[#667085] ml-1.5 text-sm font-normal">Docs</span>
+              <span className="text-[#98A2B3] ml-1.5 text-sm font-normal">Docs</span>
             </span>
           </div>
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-1 rounded hover:bg-white/10 text-[#667085]"
+            className="lg:hidden p-1 rounded hover:bg-white/10 text-[#98A2B3]"
           >
             <X size={20} />
           </button>
@@ -145,7 +145,7 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
       {/* Search */}
       <div className="px-3 py-3">
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-2.5 text-[#667085]" />
+          <Search size={14} className="absolute left-2.5 top-2.5 text-[#98A2B3]" />
           <input
             type="text"
             placeholder="Search docs..."
@@ -175,7 +175,7 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
           <div key={sec.slug} className="mb-2">
             <button
               onClick={() => toggleSection(sec.slug)}
-              className="w-full flex items-center gap-2 px-2 py-1.5 text-[11px] uppercase tracking-widest text-[#667085] font-semibold hover:text-[#D0D5DD] transition-colors"
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-[11px] uppercase tracking-widest text-[#98A2B3] font-semibold hover:text-[#D0D5DD] transition-colors"
             >
               {collapsed[sec.slug] ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
               <Icon size={13} className="text-[#00FFA7]/60" />
@@ -201,7 +201,7 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-0.5 block ${
                         activeSlug === child.slug
                           ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-l-2 border-[#00FFA7]'
-                          : 'text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
+                          : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
                       }`}
                     >
                       {child.title}
@@ -225,7 +225,7 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
         <div className="px-4 py-3 border-t border-[#344054]/50">
           <a
             href="/"
-            className="flex items-center justify-center gap-1.5 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors"
+            className="flex items-center justify-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
           >
             Back to Dashboard
           </a>
@@ -272,7 +272,7 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
       <main className={`flex-1 p-4 lg:p-12 pt-16 lg:pt-12 overflow-auto ${embedded ? '' : 'ml-0 lg:ml-64'}`}>
         <div className="max-w-4xl mx-auto">
           {loading && sections.length > 0 ? (
-            <div className="text-[#667085] text-sm">Loading...</div>
+            <div className="text-[#98A2B3] text-sm">Loading...</div>
           ) : (
             <article className="docs-content">
               <ReactMarkdown

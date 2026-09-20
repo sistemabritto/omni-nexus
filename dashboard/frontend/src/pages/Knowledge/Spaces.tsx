@@ -36,7 +36,7 @@ const defaultForm: SpaceForm = {
 function VisibilityIcon({ v }: { v: Space['visibility'] }) {
   if (v === 'public') return <Globe size={12} className="text-[#00FFA7]" />
   if (v === 'shared') return <Users size={12} className="text-blue-400" />
-  return <Lock size={12} className="text-[#667085]" />
+  return <Lock size={12} className="text-[#98A2B3]" />
 }
 
 export default function KnowledgeSpaces() {
@@ -154,7 +154,7 @@ export default function KnowledgeSpaces() {
 
   if (!activeConnectionId) {
     return (
-      <div className="text-center py-12 text-[#667085] text-sm">
+      <div className="text-center py-12 text-[#98A2B3] text-sm">
         Select a connection using the switcher above.
       </div>
     )
@@ -190,7 +190,7 @@ export default function KnowledgeSpaces() {
       )}
 
       {spaces.length === 0 ? (
-        <div className="text-center py-12 bg-[#182230] border border-[#344054] rounded-xl text-[#667085] text-sm">
+        <div className="text-center py-12 bg-[#182230] border border-[#344054] rounded-xl text-[#98A2B3] text-sm">
           No spaces yet. Create one to organize your documents.
         </div>
       ) : (
@@ -199,7 +199,7 @@ export default function KnowledgeSpaces() {
             <thead>
               <tr className="border-b border-[#344054]">
                 {['Name', 'Visibility', 'Docs', 'Chunks', 'Created', ''].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs text-[#667085] font-medium">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs text-[#98A2B3] font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -208,24 +208,24 @@ export default function KnowledgeSpaces() {
                 <tr key={s.id} className="border-b border-[#344054]/50 last:border-0 hover:bg-white/2 transition-colors">
                   <td className="px-4 py-3">
                     <p className="font-medium text-[#D0D5DD]">{s.name}</p>
-                    <p className="text-xs text-[#667085] font-mono">{s.slug}</p>
+                    <p className="text-xs text-[#98A2B3] font-mono">{s.slug}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="flex items-center gap-1 text-xs text-[#667085]">
+                    <span className="flex items-center gap-1 text-xs text-[#98A2B3]">
                       <VisibilityIcon v={s.visibility} />
                       {s.visibility}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-[#667085]">{s.documents_count ?? '—'}</td>
-                  <td className="px-4 py-3 text-xs text-[#667085]">{s.chunks_count?.toLocaleString() ?? '—'}</td>
-                  <td className="px-4 py-3 text-xs text-[#667085]">{new Date(s.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-xs text-[#98A2B3]">{s.documents_count ?? '—'}</td>
+                  <td className="px-4 py-3 text-xs text-[#98A2B3]">{s.chunks_count?.toLocaleString() ?? '—'}</td>
+                  <td className="px-4 py-3 text-xs text-[#98A2B3]">{new Date(s.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
                     {canManage && (
                       <div className="flex items-center gap-1">
-                        <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors">
+                        <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors">
                           <Pencil size={12} />
                         </button>
-                        <button onClick={() => setConfirmDeleteId(s.id)} className="p-1.5 rounded-lg text-[#667085] hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                        <button onClick={() => setConfirmDeleteId(s.id)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors">
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -244,23 +244,23 @@ export default function KnowledgeSpaces() {
           <div className="bg-[#0C111D] border border-[#344054] rounded-xl w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#344054]">
               <h3 className="text-sm font-semibold text-[#F9FAFB]">{editingSpace ? 'Edit Space' : 'New Space'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"><X size={14} /></button>
+              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"><X size={14} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
-                <label className="block text-xs text-[#667085] mb-1">Name *</label>
+                <label className="block text-xs text-[#98A2B3] mb-1">Name *</label>
                 <input type="text" value={form.name} onChange={(e) => setField('name', e.target.value)} className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] focus:border-[#00FFA7] focus:outline-none" placeholder="Academy 2026" />
               </div>
               <div>
-                <label className="block text-xs text-[#667085] mb-1">Slug *</label>
+                <label className="block text-xs text-[#98A2B3] mb-1">Slug *</label>
                 <input type="text" value={form.slug} onChange={(e) => setField('slug', e.target.value)} className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] font-mono focus:border-[#00FFA7] focus:outline-none" placeholder="academy-2026" />
               </div>
               <div>
-                <label className="block text-xs text-[#667085] mb-1">Description</label>
+                <label className="block text-xs text-[#98A2B3] mb-1">Description</label>
                 <textarea value={form.description} onChange={(e) => setField('description', e.target.value)} rows={2} className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] focus:border-[#00FFA7] focus:outline-none resize-none" />
               </div>
               <div>
-                <label className="block text-xs text-[#667085] mb-1">Visibility</label>
+                <label className="block text-xs text-[#98A2B3] mb-1">Visibility</label>
                 <select value={form.visibility} onChange={(e) => setField('visibility', e.target.value)} className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#D0D5DD] focus:border-[#00FFA7] focus:outline-none">
                   <option value="private">private</option>
                   <option value="shared">shared</option>
@@ -268,7 +268,7 @@ export default function KnowledgeSpaces() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#667085] mb-1">Content Type Boosts (JSON)</label>
+                <label className="block text-xs text-[#98A2B3] mb-1">Content Type Boosts (JSON)</label>
                 <textarea
                   value={form.content_type_boosts_raw}
                   onChange={(e) => setField('content_type_boosts_raw', e.target.value)}
@@ -294,7 +294,7 @@ export default function KnowledgeSpaces() {
           <div className="bg-[#0C111D] border border-[#344054] rounded-xl w-full max-w-sm shadow-2xl p-6 text-center">
             <Trash2 size={28} className="text-red-400 mx-auto mb-3" />
             <p className="text-sm font-semibold text-[#F9FAFB] mb-1">Delete Space?</p>
-            <p className="text-xs text-[#667085] mb-6">All documents and chunks in this space will be permanently deleted from Postgres.</p>
+            <p className="text-xs text-[#98A2B3] mb-6">All documents and chunks in this space will be permanently deleted from Postgres.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDeleteId(null)} className="flex-1 px-4 py-2 bg-white/5 text-[#D0D5DD] rounded-lg text-sm hover:bg-white/10 transition-colors">Cancel</button>
               <button onClick={() => handleDelete(confirmDeleteId)} disabled={deleting} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50">

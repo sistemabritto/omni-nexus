@@ -232,7 +232,7 @@ export default function KnowledgeSettings() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-sm font-semibold text-[#F9FAFB]">{t('knowledge.settingsPage.embedderProvider')}</h3>
-            <p className="text-xs text-[#667085] mt-0.5">Global for all connections. Cannot change after first connection is added.</p>
+            <p className="text-xs text-[#98A2B3] mt-0.5">Global for all connections. Cannot change after first connection is added.</p>
           </div>
           {providerLocked && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-yellow-500/10 rounded-lg">
@@ -270,7 +270,7 @@ export default function KnowledgeSettings() {
               />
               <div className="flex-1">
                 <p className="text-sm font-medium text-[#D0D5DD]">{opt.label}</p>
-                <p className="text-xs text-[#667085]">{opt.desc}</p>
+                <p className="text-xs text-[#98A2B3]">{opt.desc}</p>
               </div>
             </label>
           ))}
@@ -303,12 +303,12 @@ export default function KnowledgeSettings() {
               return (
                 <div className="mt-1.5 space-y-0.5">
                   {embedder === 'openai' && (
-                    <p className="text-xs text-[#667085]">
+                    <p className="text-xs text-[#98A2B3]">
                       Vector dimensions: <code className="text-[#98A2B3] bg-[#0C111D] px-1 py-0.5 rounded">{current.dim}</code>
                     </p>
                   )}
                   {current.note && (
-                    <p className="text-xs text-[#667085]">{current.note}</p>
+                    <p className="text-xs text-[#98A2B3]">{current.note}</p>
                   )}
                 </div>
               )
@@ -340,7 +340,7 @@ export default function KnowledgeSettings() {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-[#667085] mt-1.5">
+            <p className="text-xs text-[#98A2B3] mt-1.5">
               Matryoshka Representation Learning — same model, selectable output size.
               768 aligns storage cost with the local provider. 3072 maximizes quality.
             </p>
@@ -377,7 +377,7 @@ export default function KnowledgeSettings() {
             {openaiKeyInvalid && (
               <p className="text-xs text-red-400 mt-1.5">Key must start with <code>sk-</code>.</p>
             )}
-            <p className="text-xs text-[#667085] mt-1.5">
+            <p className="text-xs text-[#98A2B3] mt-1.5">
               Stored in <code className="text-[#98A2B3] bg-[#0C111D] px-1 py-0.5 rounded">.env</code> as <code className="text-[#98A2B3] bg-[#0C111D] px-1 py-0.5 rounded">OPENAI_API_KEY</code>. Only used by the Knowledge embedder.
             </p>
           </div>
@@ -415,7 +415,7 @@ export default function KnowledgeSettings() {
                 Key must match the Google AI Studio pattern <code>AIzaSy...</code> (39 chars total).
               </p>
             )}
-            <p className="text-xs text-[#667085] mt-1.5">
+            <p className="text-xs text-[#98A2B3] mt-1.5">
               Get one at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-[#00FFA7]/80 hover:text-[#00FFA7] underline">aistudio.google.com/apikey</a>.
               Stored in <code className="text-[#98A2B3] bg-[#0C111D] px-1 py-0.5 rounded">.env</code> as <code className="text-[#98A2B3] bg-[#0C111D] px-1 py-0.5 rounded">GEMINI_API_KEY</code>. Only used by the Knowledge embedder.
             </p>
@@ -423,7 +423,7 @@ export default function KnowledgeSettings() {
         )}
 
         {providerLocked && (
-          <p className="text-xs text-[#667085] mt-3">
+          <p className="text-xs text-[#98A2B3] mt-3">
             Embedder provider is locked because connections exist. To change the provider, remove all connections and recreate them (reindex feature planned for v0.25.1).
           </p>
         )}
@@ -432,7 +432,7 @@ export default function KnowledgeSettings() {
       {/* Parser */}
       <div className="bg-[#182230] border border-[#344054] rounded-xl p-5">
         <h3 className="text-sm font-semibold text-[#F9FAFB] mb-1">{t('knowledge.settingsPage.defaultParser')}</h3>
-        <p className="text-xs text-[#667085] mb-4">Used when uploading documents without explicit parser selection.</p>
+        <p className="text-xs text-[#98A2B3] mb-4">Used when uploading documents without explicit parser selection.</p>
 
         <div className="space-y-2">
           {PARSER_OPTIONS.map((opt) => (
@@ -455,7 +455,7 @@ export default function KnowledgeSettings() {
               />
               <div>
                 <p className="text-sm font-medium text-[#D0D5DD]">{opt.label}</p>
-                <p className="text-xs text-[#667085]">{opt.desc}</p>
+                <p className="text-xs text-[#98A2B3]">{opt.desc}</p>
               </div>
             </label>
           ))}
@@ -466,7 +466,7 @@ export default function KnowledgeSettings() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <p className="text-xs font-medium text-[#D0D5DD]">Marker Models</p>
-              <p className="text-xs text-[#667085]">
+              <p className="text-xs text-[#98A2B3]">
                 {parserStatus?.marker_installed
                   ? `Installed${parserStatus.marker_version ? ` · v${parserStatus.marker_version}` : ''}`
                   : 'Not installed — ~500 MB download required'}
@@ -496,7 +496,7 @@ export default function KnowledgeSettings() {
               <div className="h-1.5 bg-[#0C111D] rounded-full overflow-hidden">
                 <div className="h-full bg-[#00FFA7] animate-pulse w-2/3" />
               </div>
-              <p className="text-xs text-[#667085] mt-1">Downloading Surya models (~500 MB)...</p>
+              <p className="text-xs text-[#98A2B3] mt-1">Downloading Surya models (~500 MB)...</p>
             </div>
           )}
         </div>
@@ -515,7 +515,7 @@ export default function KnowledgeSettings() {
           </button>
           {saved && <CheckCircle size={14} className="text-[#00FFA7]" />}
           {dirty && !saving && !saved && (
-            <span className="text-xs text-[#667085]">Unsaved changes</span>
+            <span className="text-xs text-[#98A2B3]">Unsaved changes</span>
           )}
         </div>
       )}

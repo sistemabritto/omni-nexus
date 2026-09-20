@@ -74,7 +74,7 @@ function MarketplaceTab() {
     <div>
       {/* Search */}
       <div className="relative mb-6">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
         <input
           type="text"
           value={search}
@@ -87,7 +87,7 @@ function MarketplaceTab() {
       {filtered.length === 0 ? (
         <div className="text-center py-12">
           <Package size={32} className="text-[#344054] mx-auto mb-3" />
-          <p className="text-[#667085] text-sm">{t('plugins.noMarketplaceResults')}</p>
+          <p className="text-[#98A2B3] text-sm">{t('plugins.noMarketplaceResults')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -105,7 +105,7 @@ function MarketplaceTab() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[#e6edf3] truncate">{item.name}</p>
-                    <p className="text-xs text-[#667085]">v{item.version}</p>
+                    <p className="text-xs text-[#98A2B3]">v{item.version}</p>
                   </div>
                 </div>
                 {item.verified ? (
@@ -114,18 +114,18 @@ function MarketplaceTab() {
                     {t('plugins.verified')}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-medium text-[#667085] bg-[#21262d] px-2 py-0.5 rounded-full border border-[#344054] shrink-0">
+                  <span className="text-[10px] font-medium text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full border border-[#344054] shrink-0">
                     {t('plugins.community')}
                   </span>
                 )}
               </div>
 
-              <p className="text-xs text-[#667085] mb-3 line-clamp-2">{item.description}</p>
+              <p className="text-xs text-[#98A2B3] mb-3 line-clamp-2">{item.description}</p>
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap gap-1">
                   {item.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="text-[10px] text-[#667085] bg-[#0C111D] px-1.5 py-0.5 rounded">
+                    <span key={tag} className="text-[10px] text-[#98A2B3] bg-[#0C111D] px-1.5 py-0.5 rounded">
                       {tag}
                     </span>
                   ))}
@@ -136,7 +136,7 @@ function MarketplaceTab() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-[10px] text-[#667085] hover:text-[#00FFA7] transition-colors flex items-center gap-1"
+                    className="text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors flex items-center gap-1"
                   >
                     <Star size={10} />
                     {t('plugins.viewRepo')}
@@ -205,13 +205,13 @@ export default function Plugins() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('plugins.title')}</h1>
-          <p className="text-[#667085] text-sm mt-1">{t('plugins.subtitle')}</p>
+          <p className="text-[#98A2B3] text-sm mt-1">{t('plugins.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={fetchPlugins}
             disabled={loading}
-            className="p-2 rounded-lg text-[#667085] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+            className="p-2 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
             title={t('common.refresh')}
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -235,12 +235,12 @@ export default function Plugins() {
             className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
               tab === key
                 ? 'bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20'
-                : 'text-[#667085] hover:text-[#D0D5DD]'
+                : 'text-[#98A2B3] hover:text-[#D0D5DD]'
             }`}
           >
             {label}
             {key === 'installed' && plugins.length > 0 && (
-              <span className="ml-1.5 text-[10px] bg-[#21262d] text-[#667085] px-1.5 py-0.5 rounded-full">
+              <span className="ml-1.5 text-[10px] bg-[#21262d] text-[#98A2B3] px-1.5 py-0.5 rounded-full">
                 {plugins.length}
               </span>
             )}
@@ -253,7 +253,7 @@ export default function Plugins() {
         <div>
           {/* Search */}
           <div className="relative mb-6">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
             <input
               type="text"
               value={search}
@@ -279,7 +279,7 @@ export default function Plugins() {
               <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#161b22] border border-[#21262d] mx-auto mb-4">
                 <Package size={28} className="text-[#344054]" />
               </div>
-              <p className="text-[#667085] text-sm mb-4">
+              <p className="text-[#98A2B3] text-sm mb-4">
                 {plugins.length === 0 ? t('plugins.noPlugins') : t('common.noResults')}
               </p>
               {plugins.length === 0 && (

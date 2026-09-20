@@ -24,6 +24,7 @@ import {
 import { api } from '../lib/api'
 import HealthBadge from '../components/HealthBadge'
 import PluginWidgetsGrid from '../components/PluginWidgetsGrid'
+import CockpitReference from '../components/CockpitReference'
 
 interface OverviewData {
   metrics: {
@@ -316,6 +317,10 @@ export default function Overview() {
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('overview.title')}</h1>
         <p className="text-[#667085] text-sm mt-1">{t('overview.subtitle')}</p>
       </div>
+
+      {/* Reference — a antiga aba Settings → Reference, condensada e editável
+          direto no cockpit. Recolhida por padrão: é contexto, não ação. */}
+      <CockpitReference />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

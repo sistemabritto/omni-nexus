@@ -198,9 +198,19 @@ scripts/ghost_integration_test.py
 # Local Portainer import with Postiz secrets
 /postiz-vps.env
 
-# Estado local do OpenCode (node_modules, goal-state) — não vai pro repositório
-.opencode/
+# Estado local do OpenCode — ignora todo, mas mantém o registro do plugin graphify
+.opencode/*
+!.opencode/plugins/
+!.opencode/opencode.json
 
 # Locais: débito técnico em edição + stack OpenSEO com segredos em texto puro
 TECH_DEBT.md
 openseo-vps.stack.yml
+
+# Graphify: commite o grafo consultável (equipe parte com o mapa), mas ignora
+# cache de AST e backups rotativos (que somam dezenas de MB e mudam sempre).
+graphify-out/cache/
+graphify-out/*.json.bak
+graphify-out/2026-*
+graphify-out/cost.json
+graphify-out/.graphify_python

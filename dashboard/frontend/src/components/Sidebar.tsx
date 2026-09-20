@@ -48,31 +48,21 @@ const navSections: NavSection[] = [
     key: 'cockpit',
     title: 'Cockpit',
     items: [
-      // Os 5 domínios viraram abas da única página /?tab=. 1 link.
+      // Os 5 domínios viraram abas da única página /?tab=. 1 link no topo.
       { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
-    ],
-  },
-  {
-    key: 'projetos',
-    title: 'Projetos',
-    items: [
-      // Missões → Projetos → Metas → Tickets: 3 vistas do MESMO grafo em zooms
-      // diferentes. A unificação em 1 árvore é o plano (revamp P2); por ora
-      // seguem como 3 links soltos.
-      { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
-      { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
-      { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
     ],
   },
   {
     key: 'inteligencia',
     title: 'Inteligência',
     items: [
-      // Tudo que dá cérebro à operação: agentes + o que acorda cada um +
-      // materiais + o hub de integrações (o item "Integrações" aponta pro hub
-      // antigo /inteligencia, agora renomeado: Provedores + Conhecimento +
-      // Memória + MemPalace + Custos + Skills + MCP + Plugins + APIs).
-      // Materiais entrou aqui por decisão do dono (09/20/2026).
+      // Tudo que dá cérebro à operação: o grafo Missões→Projetos→Metas→Tickets
+      // (3 vistas em zooms diferentes — a unificação em 1 árvore é o plano
+      // revamp P2; por ora seguem como 3 links sem título de seção) + agentes
+      // + o que acorda cada um + materiais + o hub de integrações.
+      { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
+      { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
+      { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
       { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },

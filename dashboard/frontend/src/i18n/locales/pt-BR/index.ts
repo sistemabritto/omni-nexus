@@ -756,6 +756,7 @@ const translations = {
       tabs: {
         workspace: 'Workspace',
         backups: 'Backups',
+        docs: 'Docs',
         trust: 'Confiança',
         users: 'Usuários',
         roles: 'Papéis',

@@ -6,6 +6,7 @@ import UsersPage from './Users'
 import RolesPage from './Roles'
 import AuditPage from './Audit'
 import BackupsPage from './Backups'
+import DocsPage from './Docs'
 
 // ── Input / label class strings (same as Providers.tsx) ────────────────────
 const inp = 'w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20'
@@ -242,17 +243,27 @@ function BackupsTab() { return <BackupsPage /> }
 function UsersTab() { return <UsersPage /> }
 function RolesTab() { return <RolesPage /> }
 function AuditTab() { return <AuditPage /> }
+// Docs embutido: layout interno próprio (sidebar de nav + artigo), precisa de
+// altura definida pra funcionar no lugar do scroll da página.
+function DocsTab() {
+  return (
+    <div className="h-[calc(100vh-260px)] min-h-[420px] -mx-2">
+      <DocsPage embedded />
+    </div>
+  )
+}
 
 // ── Main Settings page ──────────────────────────────────────────────────────
 const TABS = [
   { key: 'workspace', labelKey: 'settings.tabs.workspace' },
   { key: 'backups', labelKey: 'settings.tabs.backups' },
+  { key: 'docs', labelKey: 'settings.tabs.docs' },
   { key: 'users', labelKey: 'settings.tabs.users' },
   { key: 'roles', labelKey: 'settings.tabs.roles' },
   { key: 'audit', labelKey: 'settings.tabs.audit' },
 ] as const
 
-type TabKey = 'workspace' | 'backups' | 'users' | 'roles' | 'audit'
+type TabKey = 'workspace' | 'backups' | 'docs' | 'users' | 'roles' | 'audit'
 
 export default function Settings() {
   const { t } = useTranslation()
@@ -260,7 +271,7 @@ export default function Settings() {
   const { toasts, show: showToast } = useToast()
 
   return (
-    <div className="max-w-[1200px] mx-auto font-[Inter,-apple-system,sans-serif]">
+    <div className={`${activeTab === 'docs' ? '' : 'max-w-[1200px] mx-auto'} font-[Inter,-apple-system,sans-serif] ${activeTab === 'docs' ? 'h-full min-h-0' : ''}`}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d]">
@@ -292,6 +303,7 @@ export default function Settings() {
       {/* Tab content */}
       {activeTab === 'workspace' && <WorkspaceTab showToast={showToast} />}
       {activeTab === 'backups' && <BackupsTab />}
+      {activeTab === 'docs' && <DocsTab />}
       {activeTab === 'users' && <UsersTab />}
       {activeTab === 'roles' && <RolesTab />}
       {activeTab === 'audit' && <AuditTab />}

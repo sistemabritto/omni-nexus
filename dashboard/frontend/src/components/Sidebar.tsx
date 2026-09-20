@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
 import {
-  LayoutDashboard, Bot, Clock, Layout,
+  LayoutDashboard, Bot, Clock,
   LogOut, Menu, X, BookOpen,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3, FolderKanban,
@@ -36,28 +36,31 @@ interface NavItem {
 interface NavGroup {
   key: string                // i18n key under nav.groups.*  (also used as storage key)
   collapsible: boolean
+  headerless?: boolean       // true = sem cabeçalho de seção; itens ficam soltos
   adminOnly?: boolean
   items: NavItem[]
 }
 
 const navGroups: NavGroup[] = [
+  // Só "Inteligência" mantém dropdown+cabeçalho (5 destinos diferentes).
+  // Todo o resto fica SOLTO: Cockpit/Materiais/Configurações são 1 página de
+  // abas cada (1 link); Projetos são 3 vistas do mesmo grafo (3 links soltos).
   {
     key: 'cockpit',
     collapsible: false,
+    headerless: true,
     items: [
-      // Os 5 domínios (Visão · Orquestração · Aprovações · Pautas · Atividade)
-      // viraram abas desta única página — deep-link por /?tab=. Colocar cada
-      // um como link do menu era 5 entradas apontando para a mesma tela.
+      // Os 5 domínios viraram abas da única página /?tab=. 1 link solto no topo.
       { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
     ],
   },
   {
     key: 'projetos',
-    collapsible: true,
+    collapsible: false,
+    headerless: true,
     items: [
-      // Hierarquia de trabalho: Missões → Projetos → Metas → Tickets (kanban).
-      // As três vistas são o MESMO grafo em granularidades diferentes
-      // (goal-ticket-unification); o menu só separa por zoom.
+      // Missões → Projetos → Metas → Tickets: 3 vistas do MESMO grafo em zooms
+      // diferentes, então ficam soltas sem dropdown.
       { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
       { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
       { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
@@ -69,9 +72,8 @@ const navGroups: NavGroup[] = [
     items: [
       // Tudo que dá cérebro à operação, num grupo só (agentes + o hub de
       // integrações). O item "Integrações" aponta pro hub antigo /inteligencia,
-      // agora renomeado: reúne Provedores (harness→provider→modelo) +
-      // Conhecimento (RAG) + Memória + MemPalace + Custos + Skills + MCP +
-      // Plugins + Integrações de API. /providers sai do menu — já vive dentro.
+      // agora renomeado: reúne Provedores + Conhecimento (RAG) + Memória +
+      // MemPalace + Custos + Skills + MCP + Plugins + Integrações de API.
       { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
@@ -81,23 +83,22 @@ const navGroups: NavGroup[] = [
   },
   {
     key: 'materiais',
-    collapsible: true,
+    collapsible: false,
+    headerless: true,
     items: [
-      // Arquivos do negócio numa página só: árvore de arquivos + mídias +
-      // shares viraram abas em /workspace (?mat=). 3 links do menu apontando
-      // pra 1 tela era ruído.
+      // Arquivos do negócio numa página só: árvore + mídias + shares + templates
+      // viraram abas em /workspace (?mat=). 1 link solto.
       { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
     ],
   },
   {
     key: 'configuracoes',
-    collapsible: true,
+    collapsible: false,
+    headerless: true,
     items: [
-      // Backups/Usuários/Papéis/Auditoria não aparecem no menu: são abas de
-      // /settings (?tab=backups|users|roles|audit). Menú com 5 links p/ a
-      // mesma página é ruído, não navegação.
+      // Backups/Docs/Usuários/Papéis/Auditoria são abas de /settings (?tab=).
+      // 1 link solto.
       { to: '/settings', labelKey: 'settings', icon: Settings, resource: 'config' },
-      { to: '/templates', labelKey: 'templates', icon: Layout, resource: 'templates' },
     ],
   },
 ]
@@ -201,6 +202,20 @@ export default function Sidebar() {
     }
 
     const isCollapsed = collapsed[group.key] ?? false
+
+    // Grupos "headerless": itens ficam SOLTOS (sem cabeçalho de seção nem
+    // chevron). É o caso de Cockpit/Materiais/Configurações (1 página de abas)
+    // e Projetos (3 vistas do mesmo grafo). Só grupos com cabeçalho usam o
+    // dropdown. O espaçamento superior separa visualmente dos links acima.
+    if (group.headerless) {
+      return (
+        <div key={group.key} className="mb-1">
+          <div className="flex flex-col gap-0.5 mt-2 first:mt-0">
+            {visibleItems.map(renderLink)}
+          </div>
+        </div>
+      )
+    }
 
     return (
       <div key={group.key} className="mb-1">

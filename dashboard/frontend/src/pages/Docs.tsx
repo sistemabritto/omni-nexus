@@ -19,7 +19,7 @@ interface DocSection {
   children: DocEntry[]
 }
 
-export default function Docs() {
+export default function Docs({ embedded = false }: { embedded?: boolean }) {
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -29,15 +29,18 @@ export default function Docs() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [search, setSearch] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [activeSlug, setActiveSlug] = useState('')
+  // Nav interno (estado) quando embutido — em /docs a URL segue mandando; na
+  // aba de Configurações o slug fica no state (a URL é da página pai).
+  const [embeddedSlug, setEmbeddedSlug] = useState('')
 
-  // Derive the current doc slug from the URL
+  // Derive the current doc slug from the URL (only on the standalone route)
   const getSlugFromPath = useCallback(() => {
+    if (embedded) return embeddedSlug
     const prefix = '/docs'
     const path = location.pathname
     if (path === prefix || path === prefix + '/') return ''
     return path.slice(prefix.length + 1)
-  }, [location.pathname])
+  }, [embedded, embeddedSlug, location.pathname])
 
   // Load the doc tree
   useEffect(() => {
@@ -50,7 +53,6 @@ export default function Docs() {
   // Load content when slug changes
   useEffect(() => {
     const slug = getSlugFromPath()
-    setActiveSlug(slug)
 
     // Find the matching doc entry
     let docPath = ''
@@ -59,7 +61,7 @@ export default function Docs() {
       const first = sections[0]?.children?.[0]
       if (first) {
         docPath = first.path
-        setActiveSlug(first.slug)
+        if (embedded) setEmbeddedSlug(first.slug)
       }
     } else {
       for (const sec of sections) {
@@ -93,7 +95,11 @@ export default function Docs() {
   }, [getSlugFromPath, sections])
 
   const handleNav = (slug: string) => {
-    navigate(`/docs/${slug}`)
+    if (embedded) {
+      setEmbeddedSlug(slug)
+    } else {
+      navigate(`/docs/${slug}`)
+    }
     setMobileOpen(false)
   }
 
@@ -102,6 +108,7 @@ export default function Docs() {
   }
 
   // Filter sections by search (matches title and content_preview)
+  const activeSlug = getSlugFromPath()
   const searchLower = search.toLowerCase()
   const filtered = sections
     .map((sec) => ({
@@ -116,22 +123,24 @@ export default function Docs() {
   const sidebar = (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-5 flex items-center justify-between border-b border-[#344054]">
-        <div className="flex items-center gap-2">
-          <BookOpen size={20} className="text-[#00FFA7]" />
-          <span className="text-lg font-bold">
-            <span className="text-[#00FFA7]">Evo</span>
-            <span className="text-white">Nexus</span>
-            <span className="text-[#667085] ml-1.5 text-sm font-normal">Docs</span>
-          </span>
+      {!embedded && (
+        <div className="px-4 py-5 flex items-center justify-between border-b border-[#344054]">
+          <div className="flex items-center gap-2">
+            <BookOpen size={20} className="text-[#00FFA7]" />
+            <span className="text-lg font-bold">
+              <span className="text-[#00FFA7]">Evo</span>
+              <span className="text-white">Nexus</span>
+              <span className="text-[#667085] ml-1.5 text-sm font-normal">Docs</span>
+            </span>
+          </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden p-1 rounded hover:bg-white/10 text-[#667085]"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="lg:hidden p-1 rounded hover:bg-white/10 text-[#667085]"
-        >
-          <X size={20} />
-        </button>
-      </div>
+      )}
 
       {/* Search */}
       <div className="px-3 py-3">
@@ -212,26 +221,30 @@ export default function Docs() {
       </nav>
 
       {/* Back to dashboard */}
-      <div className="px-4 py-3 border-t border-[#344054]/50">
-        <a
-          href="/"
-          className="flex items-center justify-center gap-1.5 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors"
-        >
-          Back to Dashboard
-        </a>
-      </div>
+      {!embedded && (
+        <div className="px-4 py-3 border-t border-[#344054]/50">
+          <a
+            href="/"
+            className="flex items-center justify-center gap-1.5 text-xs text-[#667085] hover:text-[#00FFA7] transition-colors"
+          >
+            Back to Dashboard
+          </a>
+        </div>
+      )}
     </div>
   )
 
   return (
-    <div className="flex min-h-screen bg-[#0C111D]">
-      {/* Mobile hamburger */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[#182230] border border-[#344054] text-[#D0D5DD] hover:text-[#00FFA7] transition-colors"
-      >
-        <Menu size={20} />
-      </button>
+    <div className={`flex ${embedded ? 'h-full' : 'min-h-screen'} bg-[#0C111D]`}>
+      {/* Mobile hamburger — só na rota standalone (a página pai já tem o dela) */}
+      {!embedded && (
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[#182230] border border-[#344054] text-[#D0D5DD] hover:text-[#00FFA7] transition-colors"
+        >
+          <Menu size={20} />
+        </button>
+      )}
 
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -243,18 +256,20 @@ export default function Docs() {
 
       {/* Sidebar */}
       <aside
-        className={`
-          fixed left-0 top-0 bottom-0 w-64 bg-[#0a0f1a] border-r border-[#344054] flex flex-col z-50
-          transition-transform duration-200 ease-in-out
-          lg:translate-x-0
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
+        className={embedded
+          // Embutido: coluna estática em fluxo, largura fixa menor, sem offset
+          // de viewport (a sidebar do dashboard continua à esquerda).
+          ? 'w-60 lg:w-64 flex-shrink-0 bg-[#0a0f1a] border-r border-[#344054] flex flex-col overflow-y-auto'
+          : `fixed left-0 top-0 bottom-0 w-64 bg-[#0a0f1a] border-r border-[#344054] flex flex-col z-50
+             transition-transform duration-200 ease-in-out
+             lg:translate-x-0
+              ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {sidebar}
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-12 pt-16 lg:pt-12 overflow-auto">
+      <main className={`flex-1 p-4 lg:p-12 pt-16 lg:pt-12 overflow-auto ${embedded ? '' : 'ml-0 lg:ml-64'}`}>
         <div className="max-w-4xl mx-auto">
           {loading && sections.length > 0 ? (
             <div className="text-[#667085] text-sm">Loading...</div>

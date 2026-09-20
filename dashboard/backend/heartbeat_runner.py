@@ -1103,6 +1103,35 @@ Ao final, responda APENAS o JSON do outcome (uma linha):
                 )
                 invoke_result["agent"] = hb["agent"]
                 invoke_result["started_at"] = started_at
+
+                # Retry once for non-fatal failure: a transient provider hiccup
+                # or hard timeout shouldn't kill the run when the chain itself
+                # says the model is available. Fatal errors (auth/quota) and
+                # exhausted fallback chains are NOT retried — same input will
+                # just produce the same error.
+                if invoke_result.get("status") not in ("success",):
+                    _category = _classify_failure(invoke_result)
+                    if _category not in ("auth", "provider_exhausted"):
+                        print(f"[heartbeat_runner] step7 attempt 1 {invoke_result['status']} ({_category}); retrying in 30s", flush=True)
+                        time.sleep(30)
+                        retry_result = step7_invoke_claude(
+                            agent=hb["agent"],
+                            prompt=full_prompt,
+                            max_turns=hb["max_turns"],
+                            timeout_seconds=hb["timeout_seconds"],
+                        )
+                        if retry_result.get("status") == "success":
+                            print(f"[heartbeat_runner] step7 retry succeeded after {_category} failure", flush=True)
+                            retry_result["attempt_number"] = 2
+                            invoke_result = retry_result
+                        else:
+                            retry_result["attempt_number"] = 2
+                            _first_err = invoke_result.get("error") or ""
+                            retry_result["error"] = f"attempt1({invoke_result['status']}): {_first_err[:500]} || attempt2({retry_result['status']}): {(retry_result.get('error') or '')[:500]}"
+                            invoke_result = retry_result
+                    else:
+                        print(f"[heartbeat_runner] step7 {invoke_result['status']} ({_category}); no retry (fatal)", flush=True)
+
                 result = invoke_result
                 print(f"[heartbeat_runner] step7 done status={result['status']} duration_ms={result.get('duration_ms')}", flush=True)
 

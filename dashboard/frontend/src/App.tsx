@@ -41,10 +41,9 @@ const ShareLinks = lazyDefault(() => import('./pages/ShareLinks'))
 const HeartbeatsList = lazyDefault(() => import('./pages/Heartbeats'))
 const HeartbeatDetail = lazyNamed(() => import('./pages/Heartbeats'), 'HeartbeatDetail')
 const Activity = lazyDefault(() => import('./pages/Activity'))
-const Goals = lazyDefault(() => import('./pages/Goals'))
+const Missions = lazyDefault(() => import('./pages/Missions'))
 const Media = lazyDefault(() => import('./pages/Media'))
 const Orchestration = lazyDefault(() => import('./pages/Orchestration'))
-const ProjectsOverview = lazyDefault(() => import('./pages/ProjectsOverview'))
 const Kanban = lazyDefault(() => import('./pages/Kanban'))
 const Plugins = lazyDefault(() => import('./pages/Plugins'))
 const PluginDetail = lazyDefault(() => import('./pages/PluginDetail'))
@@ -107,6 +106,16 @@ const BrainRepo = lazy(() => import('./pages/settings/BrainRepo'))
 interface OnboardingUser {
   onboarding_state?: string | null
   onboarding_completed_agents_visit?: boolean
+}
+
+function RedirectPreserveQuery({ from, to }: { from: string; to: string }) {
+  const location = useLocation()
+  return (
+    <Route
+      path={from.slice(1)}
+      element={<Navigate to={{ pathname: to, search: location.search }} replace />}
+    />
+  )
 }
 
 function AppContent() {
@@ -271,13 +280,17 @@ function AppContent() {
               {hasPermission('audit', 'view') && <Route path="/audit" element={<Audit />} />}
               {hasPermission('users', 'manage') && <Route path="/roles" element={<Roles />} />}
               {hasPermission('workspace', 'manage') && <Route path="/shares" element={<ShareLinks />} />}
-              <Route path="/goals" element={<Goals />} />
+              <Route path="/missions" element={<Missions />} />
               {/* W1 (2026-09-20): pautas e aprovações viraram tickets do Kanban —
                   as rotas antigas redirecionam em vez de manter páginas paralelas. */}
               <Route path="/pautas" element={<Navigate to="/kanban" replace />} />
               <Route path="/orquestracao" element={<Orchestration />} />
               {hasPermission('media_jobs', 'view') && <Route path="/media" element={<Media />} />}
-              <Route path="/projects" element={<ProjectsOverview />} />
+              {/* W2 (2026-09-20): Missões une os zôms de /projects e /goals numa
+                  árvore única — as rotas antigas redirecionam preservando a query
+                  (o deep-link ?project=<id> segue funcionando). */}
+              <RedirectPreserveQuery from="/projects" to="/missions" />
+              <RedirectPreserveQuery from="/goals" to="/missions" />
               <Route path="/plugins" element={<Plugins />} />
               <Route path="/plugins/:slug" element={<PluginDetail />} />
               <Route path="/mcp-servers" element={<McpServers />} />

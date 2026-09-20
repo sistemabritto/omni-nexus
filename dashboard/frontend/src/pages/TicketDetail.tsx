@@ -691,7 +691,7 @@ export default function TicketDetail() {
             <div className="col-span-2 sm:col-span-4">
               <p className="text-[#98A2B3] mb-1.5">Goal chain</p>
               <button
-                onClick={() => navigate(`/goals?project=${parentChain.project?.id ?? ''}`)}
+                onClick={() => navigate(`/missions?project=${parentChain.project?.id ?? ''}`)}
                 className="text-[#e6edf3] hover:text-[#00FFA7] transition-colors text-xs text-left"
               >
                 {parentChain.mission ? `${parentChain.mission.title} › ` : ''}

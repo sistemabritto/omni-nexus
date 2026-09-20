@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Bot, Clock,
   LogOut, Menu, X,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
-  Puzzle, Columns3, FolderKanban,
+  Puzzle, Columns3,
   Plug, FolderOpen, Settings,
 } from 'lucide-react'
 import {
@@ -52,16 +52,15 @@ const navSections: NavSection[] = [
       { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
     ],
   },
-  {
-    // Missões → Projetos → Metas → Tickets: 3 vistas do MESMO grafo em zooms
-    // diferentes (unificação em 1 árvore é o plano revamp P2). Ficam sem
-    // título, entre Cockpit e a seção Inteligência. Materiais vai no fim do
-    // bloco — abaixo do Kanban, logo acima do título Inteligência (decisão
-    // do dono, 20/09): é material de trabalho, não "cérebro".
+   {
+    // Missões → Projetos → Metas → Tickets numa única árvore (W2, 2026-09-20 —
+    // a unificação dos zôms /projects e /goals). Ficam sem título, entre
+    // Cockpit e a seção Inteligência. Materiais vai no fim do bloco — abaixo do
+    // Kanban, logo acima do título Inteligência (decisão do dono, 20/09): é
+    // material de trabalho, não "cérebro".
     key: 'projetos',
     items: [
-      { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
-      { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
+      { to: '/missions', labelKey: 'missions', icon: Target, resource: 'goals' },
       { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
       { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
     ],

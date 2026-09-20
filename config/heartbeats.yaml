@@ -2,8 +2,8 @@ heartbeats:
 - id: atlas-4h
   agent: atlas-project
   interval_seconds: 14400
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -29,8 +29,8 @@ heartbeats:
 - id: autopilot-bolt-executor
   agent: bolt-executor
   interval_seconds: 900
-  max_turns: 8
-  timeout_seconds: 480
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -71,8 +71,8 @@ heartbeats:
 - id: autopilot-clawdia-assistant
   agent: clawdia-assistant
   interval_seconds: 1800
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -113,8 +113,8 @@ heartbeats:
 - id: autopilot-compass-planner
   agent: compass-planner
   interval_seconds: 1800
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -155,8 +155,8 @@ heartbeats:
 - id: autopilot-dex-data
   agent: dex-data
   interval_seconds: 1800
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -197,8 +197,8 @@ heartbeats:
 - id: autopilot-grid-tester
   agent: grid-tester
   interval_seconds: 1800
-  max_turns: 8
-  timeout_seconds: 480
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -239,8 +239,8 @@ heartbeats:
 - id: autopilot-hawk-debugger
   agent: hawk-debugger
   interval_seconds: 1800
-  max_turns: 8
-  timeout_seconds: 480
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -281,8 +281,8 @@ heartbeats:
 - id: autopilot-helm-conductor
   agent: helm-conductor
   interval_seconds: 900
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -323,8 +323,8 @@ heartbeats:
 - id: autopilot-mako-marketing
   agent: mako-marketing
   interval_seconds: 3600
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -365,8 +365,8 @@ heartbeats:
 - id: autopilot-oath-verifier
   agent: oath-verifier
   interval_seconds: 1200
-  max_turns: 4
-  timeout_seconds: 300
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -407,8 +407,8 @@ heartbeats:
 - id: autopilot-oracle
   agent: oracle
   interval_seconds: 900
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -449,8 +449,8 @@ heartbeats:
 - id: autopilot-pixel-social-media
   agent: pixel-social-media
   interval_seconds: 3600
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -491,8 +491,8 @@ heartbeats:
 - id: autopilot-quill-writer
   agent: quill-writer
   interval_seconds: 3600
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -533,8 +533,8 @@ heartbeats:
 - id: autopilot-raven-critic
   agent: raven-critic
   interval_seconds: 1800
-  max_turns: 4
-  timeout_seconds: 300
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -575,8 +575,8 @@ heartbeats:
 - id: autopilot-sage-strategy
   agent: sage-strategy
   interval_seconds: 1500
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -617,8 +617,8 @@ heartbeats:
 - id: autopilot-scout-explorer
   agent: scout-explorer
   interval_seconds: 900
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -659,8 +659,8 @@ heartbeats:
 - id: autopilot-scroll-docs
   agent: scroll-docs
   interval_seconds: 1800
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -701,8 +701,8 @@ heartbeats:
 - id: autopilot-vault-security
   agent: vault-security
   interval_seconds: 1800
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -743,8 +743,8 @@ heartbeats:
 - id: autopilot-zara-cs
   agent: zara-cs
   interval_seconds: 1800
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -799,8 +799,8 @@ heartbeats:
 - id: flux-6h
   agent: flux-finance
   interval_seconds: 21600
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -822,8 +822,8 @@ heartbeats:
 - id: goal-planner
   agent: goal-planner
   interval_seconds: 86400
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - goal_created
@@ -841,8 +841,8 @@ heartbeats:
 - id: goal-suggester
   agent: goal-suggester
   interval_seconds: 3600
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - project_created
@@ -871,8 +871,8 @@ heartbeats:
 - id: mirror-retro-strategy
   agent: mirror-retro
   interval_seconds: 21600
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -910,8 +910,8 @@ heartbeats:
 - id: pixel-growth-6h
   agent: pixel-social-media
   interval_seconds: 21600
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -942,8 +942,8 @@ heartbeats:
 - id: project-planner
   agent: project-planner
   interval_seconds: 3600
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - mission_created
@@ -971,8 +971,8 @@ heartbeats:
 - id: sage-offer-watch
   agent: sage-strategy
   interval_seconds: 86400
-  max_turns: 8
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval
@@ -1034,8 +1034,8 @@ heartbeats:
 - id: zara-2h
   agent: zara-cs
   interval_seconds: 7200
-  max_turns: 6
-  timeout_seconds: 420
+  max_turns: 16
+  timeout_seconds: 600
   lock_timeout_seconds: 1800
   wake_triggers:
   - interval

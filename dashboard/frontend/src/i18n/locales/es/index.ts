@@ -177,6 +177,7 @@ const translations = {
       heartbeats: 'Heartbeats',
       projects: 'Proyectos',
       goals: 'Metas',
+      missions: 'Misiones',
       kanban: 'Kanban',
       media: 'Medios',
       pautas: 'Cola de Contenido',

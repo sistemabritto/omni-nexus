@@ -41,7 +41,7 @@ interface CreateProjectModalProps {
   onClose: () => void
   onCreated: (project: CreatedProject) => void
   // Pre-select and lock a mission — used when opened from inside a specific
-  // Mission's card in Goals.tsx. Left undefined when opened from a
+  // Mission's card in Missions.tsx. Left undefined when opened from a
   // mission-agnostic entry point (e.g. the Projects overview page).
   defaultMissionId?: number
 }

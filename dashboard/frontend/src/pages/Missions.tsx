@@ -684,7 +684,7 @@ type DueFilter = 'all' | 'overdue' | 'this-week' | 'this-month'
 
 // ---- Main component ----
 
-export default function Goals() {
+export default function Missions() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const [missions, setMissions] = useState<Mission[]>([])

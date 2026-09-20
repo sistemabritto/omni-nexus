@@ -2,14 +2,15 @@
 
 Agents are the core of EvoNexus. Each agent is a specialized AI persona with its own domain, system prompt, skills, and persistent memory.
 
-EvoNexus organizes agents in **two ortogonal layers**:
+EvoNexus organizes agents in **two orthogonal layers**:
 
 - **Business Layer (17 agents)** — operations, finance, community, marketing, HR, legal, product, data, sales, learning retention. Built and maintained by EvoNexus.
 - **Engineering Layer (21 agents)** — software development, code review, testing, debugging, security, design, cycle orchestration, retrospective. 19 derived from [oh-my-claudecode](https://github.com/yeachan-heo/oh-my-claudecode) (MIT, by Yeachan Heo) + 2 native (Helm, Mirror). Follows a canonical 6-phase workflow. See [Engineering Layer](engineering-layer.md) for details.
+- **Support (4 agents)** — cross-cutting specialists used by both layers: goal-planner, goal-suggester, project-planner, reels-copilot.
 
 The two layers are independent — business tasks route to business agents, engineering tasks to engineering agents — but cross-layer handoffs are common (e.g., `@nova` writes a PRD → `@apex-architect` does the architecture review → `@bolt-executor` implements → `@mirror-retro` captures lessons).
 
-**Total: 38 agents** + custom agents you create.
+**Total: 42 agents** + custom agents you create.
 
 ## What Is an Agent?
 

@@ -147,5 +147,5 @@ No. `.env` is. The page is a read-only convenience view — it lists what's pars
 
 - [`db-postgres` SKILL.md](../../.claude/skills/db-postgres/SKILL.md) — full command reference + deep-dive references
 - [`db-mysql` SKILL.md](../../.claude/skills/db-mysql/SKILL.md) — full command reference + deep-dive references
-- [`data-write-query`](../skills/data-write-query.md) — SQL authoring skill (can compose with `db-*` via `--connection <label>` flag — coming in PR 2)
+- [`data-write-query`](../skills/overview.md) — SQL authoring skill (can compose with `db-*` via `--connection <label>` flag — coming in PR 2)
 - Upstream reference content: [planetscale/database-skills](https://github.com/planetscale/database-skills) (MIT)

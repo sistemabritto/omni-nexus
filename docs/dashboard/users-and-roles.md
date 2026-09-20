@@ -22,7 +22,7 @@ Built-in roles cannot be deleted, but you can create custom roles with any permi
 | services | view, execute, manage | view, execute | view |
 | systems | view, execute, manage | view, execute | view |
 | integrations | view, execute, manage | view, execute | view |
-| reports | view, manage | view | view |
+| workspace | view, manage | view | view |
 | agents | view, manage | view | view |
 | memory | view, manage | view | view |
 | skills | view, manage | view | view |
@@ -30,22 +30,29 @@ Built-in roles cannot be deleted, but you can create custom roles with any permi
 | config | view, manage | view | view |
 | users | view, manage | -- | -- |
 | audit | view | -- | -- |
-| files | view, manage | view | view |
 | templates | view | view | view |
 | routines | view, execute | view, execute | view |
 | scheduler | view, execute | view, execute | view |
+| tasks | view, execute, manage | view, execute | view |
+| triggers | view, execute, manage | view, execute | view |
+| mempalace | view, manage | view | view |
+| knowledge | view, manage | view, manage | view |
+| heartbeats | view, execute, manage | view, execute | view |
+| goals | view, execute, manage | -- | -- |
+| tickets | view, execute, manage | view, execute | view |
+| media_jobs | view, execute, manage | view, execute | view |
 
 ## Creating Users
 
 ### Via the Dashboard
 
-1. Navigate to **Users** in the sidebar (requires `users:manage` permission)
+1. Open **Settings → Users** (gear icon in the sidebar footer; requires `users:manage` permission)
 2. Click **Add User**
 3. Fill in:
    - **Username** (unique, used for login)
    - **Email** (optional)
    - **Display name** (shown in the UI)
-   - **Password** (minimum 8 characters, hashed with bcrypt)
+   - **Password** (minimum 6 characters, hashed with bcrypt)
    - **Role** (select from available roles)
 4. Click **Create**
 
@@ -61,7 +68,7 @@ The very first user is created during the setup wizard when the dashboard starts
 
 ### Creating a Custom Role
 
-1. Go to **Roles** in the sidebar
+1. Open **Settings → Roles** (gear icon in the sidebar footer)
 2. Click **Create Role**
 3. Enter a **name** and **description**
 4. Use the permission matrix to toggle actions per resource
@@ -73,36 +80,36 @@ The very first user is created during the setup wizard when the dashboard starts
 
 Each cell in the matrix is a resource + action combination:
 
-**Resources** (16 total):
-`chat`, `services`, `systems`, `integrations`, `reports`, `agents`, `memory`, `skills`, `costs`, `config`, `users`, `audit`, `files`, `templates`, `routines`, `scheduler`
+**Resources** (23 total):
+`chat`, `services`, `systems`, `integrations`, `workspace`, `agents`, `memory`, `skills`, `costs`, `config`, `users`, `audit`, `templates`, `routines`, `scheduler`, `tasks`, `triggers`, `mempalace`, `knowledge`, `heartbeats`, `goals`, `tickets`, `media_jobs`
 
 **Actions** (3 types):
 - **view** -- read data, see pages
 - **execute** -- run routines, use chat, start/stop services
 - **manage** -- create, update, delete (users, config, memory files)
 
-Not all resources support all actions. For example, `audit` only supports `view`, and `templates` only supports `view`.
+Not all resources support all actions. For example, `audit` and `templates` only support `view`. Note that `operator` has **no** `goals` permissions by default, and `viewer` has no `chat` or `goals` access.
 
 ### Example: "Finance Viewer" Role
 
-A role that can only see financial reports and costs:
+A role that can only see costs and workspace materials:
 
 ```json
 {
-  "reports": ["view"],
   "costs": ["view"],
+  "workspace": ["view"],
   "integrations": ["view"]
 }
 ```
 
 ### Example: "Community Manager" Role
 
-A role that can run community routines and view reports:
+A role that can run community routines and see open tickets:
 
 ```json
 {
-  "reports": ["view"],
   "routines": ["view", "execute"],
+  "tickets": ["view", "execute"],
   "services": ["view"],
   "integrations": ["view"],
   "memory": ["view"]
@@ -123,4 +130,4 @@ All user-related actions are logged to the audit trail:
 - Login attempts (successful and failed)
 - Config changes (including `.env` edits)
 
-View the full audit log at **Audit Log** in the sidebar (requires `audit:view`).
+View the full audit log at **Settings → Audit** (requires `audit:view`).

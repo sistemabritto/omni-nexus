@@ -10,7 +10,7 @@ Most "AI assistants" are chatbots. You ask a question, you get an answer, and th
 
 ## What EvoNexus Is
 
-EvoNexus is a multi-agent workspace compatible with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and other LLM tooling. It turns a single Claude Code installation into a team of **38 specialized agents** organized in two ortogonal layers — one for business operations, one for software engineering.
+EvoNexus is a multi-agent workspace compatible with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and other LLM tooling. It turns a single Claude Code installation into a team of **40+ specialized agents** organized in two orthogonal layers — one for business operations, one for software engineering.
 
 The **Business Layer** has 17 agents that own distinct domains (finance, projects, community, social media, strategy, sales, courses, learning retention, personal wellness, marketing, HR, customer success, legal, product, data, knowledge) and produce real operational outputs: HTML reports, triaged inboxes, synced meeting notes, financial snapshots, community health checks.
 
@@ -33,9 +33,9 @@ A scheduler runs routines on a daily, weekly, and monthly cadence. Cross-layer h
 |---------|------------|
 | You ask, it answers | Agents run routines on schedule |
 | Forgets between sessions | Persistent memory across sessions |
-| One conversation thread | 38 agents with isolated domains (17 business + 21 engineering) |
+| One conversation thread | 42 agents with isolated domains (17 business + 21 engineering + 4 support) |
 | Generic helper | Specialized roles per layer: ops, finance, code review, security audit, debugging |
-| No integrations | 18+ integrations (Google, GitHub, Stripe, Discord, etc.) |
+| No integrations | 20 integrations (Google, GitHub, Stripe, Discord, Omie, Asaas, etc.) |
 | Text output | HTML reports, dashboards, structured artifacts |
 | Manual every time | Automated daily/weekly/monthly workflows + on-demand pipelines (`dev-autopilot`, `dev-ralplan`) |
 | Single LLM persona | Multi-perspective consensus (Planner + Architect + Critic) for high-stakes decisions |
@@ -68,7 +68,7 @@ A scheduler runs routines on a daily, weekly, and monthly cadence. Cross-layer h
 
 ### Skills
 
-175+ reusable capabilities organized by prefix (`fin-`, `social-`, `int-`, `prod-`, `hr-`, `legal-`, `ops-`, `cs-`, `data-`, `pm-`, `mkt-`, etc.). Skills are markdown files that teach agents how to perform specific tasks — no plugins, no code.
+200+ reusable capabilities organized by prefix (`fin-`, `social-`, `int-`, `prod-`, `hr-`, `legal-`, `ops-`, `cs-`, `data-`, `pm-`, `mkt-`, etc.). Skills are markdown files that teach agents how to perform specific tasks — no plugins, no code.
 
 ### Routines
 

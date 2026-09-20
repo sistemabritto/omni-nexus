@@ -1,6 +1,6 @@
 # Brain Repo — GitHub Backup
 
-The **Brain Repo** backs up the knowledge layers of the workspace (`memory/`, `workspace/`, `customizations/`, `config-safe/`) to a private GitHub repository — with secrets scanning before every push. It lives in the dashboard sidebar and gives you versioned, off-machine snapshots of everything the agents have learned.
+The **Brain Repo** backs up the knowledge layers of the workspace (`memory/`, `workspace/`, `customizations/`, `config-safe/`) to a private GitHub repository — with secrets scanning before every push. It is reached from **Settings → Backups** and gives you versioned, off-machine snapshots of everything the agents have learned.
 
 ## What Gets Synced
 
@@ -12,7 +12,7 @@ On every sync the pipeline runs: **mirror → secrets scan → commit → (tag) 
 
 ## Connecting
 
-1. Open **Brain Repo** in the dashboard sidebar
+1. Open **Settings → Backups** in the dashboard and expand the Brain Repo section
 2. Provide a GitHub token (encrypted at rest with `BRAIN_REPO_MASTER_KEY`)
 3. Create a new repo or connect an existing one — the local working clone lives under `dashboard/data/brain-repos/<repo-name>`
 

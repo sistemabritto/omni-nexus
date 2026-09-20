@@ -1,0 +1,24 @@
+# Janelas de indisponibilidade por provider (cota esgotada).
+#
+# O provider FallbackEngine lê este arquivo a cada tentativa: qualquer provider
+# com `until` no futuro é PULADO direto e o combo gira pro que tem (Drael/omnirouter,
+# NVIDIA, OpenRouter free). Quando `until` passa, o motor volta a tentar sozinho —
+# não precisa mexer nada aqui depois.
+#
+# As datas são em BRT (America/Sao_Paulo, UTC-3). Formato: YYYY-MM-DD ou YYYY-MM-DD HH:MM.
+#
+# Fonte dupla: (a) este arquivo (declarado — você ou o ops_watchdog escreve);
+# (b) auto-detectada na resposta do próprio provider ("resets on 22 September"),
+# persistida em config/availability.auto.json. Vence a janela mais longa.
+
+enabled: true
+
+providers:
+  # Codex (OAuth) — sem quota até dia 22 (volta "com tudo").
+  codex_auth:
+    until: "2026-09-22 00:00"
+    note: "codex sem quota ate dia 22"
+  # Claude Code Pro — sem quota até amanhã 22h.
+  anthropic:
+    until: "2026-09-20 22:00"
+    note: "claude sem quota ate amanha 22h (19->20/09 BRT)"

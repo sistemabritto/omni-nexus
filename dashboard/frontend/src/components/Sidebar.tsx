@@ -53,16 +53,22 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    key: 'inteligencia',
-    title: 'Inteligência',
+    // Missões → Projetos → Metas → Tickets: 3 vistas do MESMO grafo em zooms
+    // diferentes (unificação em 1 árvore é o plano revamp P2). Ficam sem
+    // título, entre Cockpit e a seção Inteligência.
+    key: 'projetos',
     items: [
-      // Tudo que dá cérebro à operação: o grafo Missões→Projetos→Metas→Tickets
-      // (3 vistas em zooms diferentes — a unificação em 1 árvore é o plano
-      // revamp P2; por ora seguem como 3 links sem título de seção) + agentes
-      // + o que acorda cada um + materiais + o hub de integrações.
       { to: '/projects', labelKey: 'projects', icon: FolderKanban, resource: 'goals' },
       { to: '/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
       { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
+    ],
+  },
+  {
+    key: 'inteligencia',
+    title: 'Inteligência',
+    items: [
+      // Tudo que dá cérebro à operação: agentes + o que acorda cada um +
+      // materiais + o hub de integrações (APIs).
       { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
@@ -164,13 +170,13 @@ export default function Sidebar() {
     return (
       <div key={section.key} className="mb-1">
         {section.title && (
-          <div className="px-3 pt-3 pb-1 first:pt-0">
+          <div className="px-3 pt-3 pb-1">
             <span className="text-[10px] uppercase tracking-wider text-[#475467] font-semibold">
               {t(`nav.groups.${section.key}`)}
             </span>
           </div>
         )}
-        <div className="flex flex-col gap-0.5 mt-2 first:mt-0">
+        <div className={`flex flex-col gap-0.5 ${section.title ? 'mt-0' : 'mt-2 first:mt-0'}`}>
           {visibleItems.map(renderLink)}
         </div>
       </div>

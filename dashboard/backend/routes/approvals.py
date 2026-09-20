@@ -101,8 +101,9 @@ def _sync_approval_ticket(approval_id: int, gate_type: str, title: str, body: st
         conn.execute(
             """INSERT INTO tickets (id, title, description, status, priority, priority_rank,
                                     project_id, goal_id, requires_human_approval, blocked_reason,
-                                    assignee_agent, created_by, source_agent, approval_id, created_at, updated_at)
-               VALUES (?, ?, ?, 'blocked', ?, ?, ?, ?, 1, 'pending_human_approval', ?, ?, 'system:approval', ?, ?, ?)""",
+                                    assignee_agent, created_by, source_agent, approval_id,
+                                    message_count, last_summary_at_message, created_at, updated_at)
+               VALUES (?, ?, ?, 'blocked', ?, ?, ?, ?, 1, 'pending_human_approval', ?, ?, 'system:approval', ?, 0, 0, ?, ?)""",
             (
                 new_tid, base_title, "\n".join(desc_parts), "high", PRIORITY_RANK["high"],
                 row_ids.get("project_id"), row_ids.get("goal_id"),

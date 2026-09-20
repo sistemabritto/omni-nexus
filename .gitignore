@@ -214,3 +214,9 @@ graphify-out/*.json.bak
 graphify-out/2026-*
 graphify-out/cost.json
 graphify-out/.graphify_python
+
+# tooling junk (2026-09-20)
+.claude/skills/*/venv/
+*.graphify-bak
+config/.bootstrap.lock
+graphify-out/.rebuild.lock

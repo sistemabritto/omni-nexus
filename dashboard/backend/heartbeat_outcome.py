@@ -104,6 +104,15 @@ def _unwrap_provider_output(text: str) -> str:
             return None
         if "action" in obj:
             return json.dumps(obj)  # already the outcome itself
+        # opencode ndjson: the assistant text is nested at part.text on a
+        # {"type":"text"} event (provider_fallback uses output_mode
+        # "opencode-ndjson" and stores the raw stream as `output`). Without
+        # this, an opencode run that emits the outcome JSON inside its final
+        # text event falls through to `return text` and the raw-scanner below
+        # never reaches the {\"action\":…} (it's inside a JSON string field).
+        part = obj.get("part")
+        if isinstance(part, dict) and isinstance(part.get("text"), str) and part["text"].strip():
+            return part["text"]
         for key in ("result", "content", "text", "message", "response", "output"):
             v = obj.get(key)
             if isinstance(v, str) and v.strip():
@@ -117,7 +126,8 @@ def _unwrap_provider_output(text: str) -> str:
             return got
     except json.JSONDecodeError:
         pass
-    # stream-json: scan lines bottom-up for the last decodable envelope with content
+    # stream-json / opencode-ndjson: scan lines bottom-up for the LAST decodable
+    # event carrying assistant text (the final message holds the outcome JSON).
     for line in reversed(s.splitlines()):
         line = line.strip()
         if not line.startswith("{"):

@@ -719,6 +719,26 @@ with app.app_context():
     _root_id = _root[0]
     _cur.execute("UPDATE projects SET company_id=? WHERE company_id IS NULL", (_root_id,))
     _conn.commit()
+    # --- W3 (2026-09-20): empresas têm logo; tickets/media_jobs partitionam por
+    # empresa (project_id é nullable nas duas — sem coluna própria o vínculo se
+    # perde quando o projeto é apagado). Backfill via project → senão raiz. ---
+    _comp_cols = {row[1] for row in _cur.execute("PRAGMA table_info(companies)").fetchall()}
+    if "logo_path" not in _comp_cols:
+        _cur.execute("ALTER TABLE companies ADD COLUMN logo_path TEXT")
+        _conn.commit()
+    for _t in ("tickets", "media_jobs"):
+        _cols = {row[1] for row in _cur.execute(f"PRAGMA table_info({_t})").fetchall()}
+        if "company_id" not in _cols:
+            _cur.execute(f"ALTER TABLE {_t} ADD COLUMN company_id INTEGER REFERENCES companies(id) ON DELETE SET NULL")
+            _conn.commit()
+        _cur.execute(f"CREATE INDEX IF NOT EXISTS idx_{_t}_company ON {_t}(company_id)")
+    for _t in ("tickets", "media_jobs"):
+        _cur.execute(
+            f"UPDATE {_t} SET company_id=(SELECT projects.company_id FROM projects WHERE projects.id={_t}.project_id) "
+            f"WHERE project_id IS NOT NULL AND company_id IS NULL"
+        )
+        _cur.execute(f"UPDATE {_t} SET company_id=? WHERE company_id IS NULL", (_root_id,))
+    _conn.commit()
     # --- End multitenant P4 ---
 
     # --- goal-ticket-unification: drop legacy goal_tasks-driven rollup trigger ---

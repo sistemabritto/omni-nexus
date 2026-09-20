@@ -32,6 +32,7 @@ import subprocess
 import threading
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterator
 
@@ -244,6 +245,288 @@ def _embed_agent_for_openclaude(prompt: str, agent: str | None) -> str:
         f"Never break character. Follow ALL instructions above.\n\n"
         f"---\n\nTask:\n{prompt}"
     )
+
+
+# ── Provider availability windows (quota-exhaustion self-rescue) ───────────────
+# Quando um provider fica SEM COTA, a mensagem de erro devolve a data/hora exata
+# da reset ("resets on 22 September 2026", "your quota resets in 2 days", um ISO).
+# Antes disso o motor só sabia de 429 → cooldown de 60s → e seguia martelando o
+# MESMO provider (troca de modelo, não de provider) até estourar o budget inteiro,
+# sem nunca girar para o que tava livre. Confirmado ao vivo 2026-09-20:
+# codex_auth:codexplan travava ~200s devolvendo "reset on <date>" e o engine só
+# via "Killed after 59s timeout" (a mensagem morria antes do communicate() por
+# conta do cap por tentativa). Com isso:
+#   1. a resposta é lida MESMO quando o processo estoura o cap (streaming +
+#      grace), então a data/hora do reset chega;
+#   2. a data vira uma JANELA de indisponibilidade (dias/horas, não 60s);
+#   3. provider dentro da janela é PULADO direto e o combo gira pro que tem
+#      (Drael/NVIDIA/OpenRouter free);
+#   4. quando a janela expira, o motor volta a tentar o provider sozinho.
+# Fonte dupla: (a) auto — detectada na resposta do próprio provider e persistida
+# em AVAILABILITY_AUTO; (b) declarada — config/availability.yaml (você ou o
+# ops_watchdog escrevem, ex.: "codex_auth até dia 22"). Ambas se somam: vence a
+# janela mais longa.
+
+AVAILABILITY_DECL = WORKSPACE / "config" / "availability.yaml"
+AVAILABILITY_AUTO = WORKSPACE / "config" / "availability.auto.json"
+AVAILABILITY_TTL_SECONDS = 3 * 24 * 3600  # guarda auto fora daqui não passa de 3 dias
+BRT = timezone(timedelta(hours=-3))
+
+# Mensagens de cota com data/hora de reset — varre as formas que os CLIs
+# devolvem (Codex/OAuth, Claude Code, OpenAI, genérico). A data pode vir em
+# inglês (dia do mês), relativo ("in 2 days"), ISO-8601 ou epoch.
+_RESET_HINT = re.compile(
+    r"(?P<lead>(?:resets?|reset|becomes?\s+available|available\s+again|"
+    r"quota\s+resets?|limit\s+resets?|unlocks?|clears?|refills?)\s+"
+    r"(?:on|at|in|by)?\s*)"
+    r"(?P<body>[A-Za-z0-9:/ \-T]+)",
+    re.IGNORECASE,
+)
+_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8,
+    "sep": 9, "sept": 9, "oct": 10, "nov": 11, "dec": 12,
+}
+
+# Gatilho do auto-detect: só tenta extrair data quando a resposta fala em
+# reset/cota/limite — evita false positive de datas avulsas no output.
+_RE_RESET_LEAD = re.compile(
+    r"resets?\b|reset\s+(on|at|in|by)\b|becomes?\s+available|available\s+again|"
+    r"(quota|limit|rate)\s+resets?|unlocks?\b|clears?\b|refills?\b|"
+    r"(monthly|weekly|daily)\s+(limit|quota)|spend\s+limit|usage\s+limit|"
+    r"out\s+of\s+credit|insufficient.?credits?",
+    re.IGNORECASE,
+)
+
+
+def _parse_reset_date(text: str):
+    """Extrai um timestamp UTC de uma mensagem de quota. None se não achar data."""
+    if not text:
+        return None
+    body = None
+    m = _RESET_HINT.search(text)
+    if m:
+        body = m.group("body")
+    else:
+        # Sem verbo de reset — tenta mesmo assim pegar uma data nua.
+        return _parse_date_token(text)
+    if not body:
+        return None
+
+    now = datetime.now(timezone.utc)
+    today = now.date()
+
+    # "in N day(s)/hour(s)/minute(s)" (o "in" às vezes já foi consumido pelo lead)
+    rel = re.search(r"\b(\d+)\s*(weeks?|days?|hours?|minutes?|mins?|months?)\b", body, re.IGNORECASE)
+    if rel:
+        n = int(rel.group(1))
+        unit = rel.group(2).lower().rstrip("s")
+        secs = {"minute": 60, "hour": 3600, "day": 86400, "week": 604800}.get(unit)
+        if secs is None and unit.startswith("month"):
+            secs = 30 * 86400
+        if secs:
+            return now + timedelta(seconds=n * secs)
+
+    # ISO-8601: 2026-09-22T00:00:00Z / 2026-09-22 14:30 / 2026-09-22
+    iso = re.search(r"\b(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?(?::(\d{2}))?\s*(Z|[+-]\d{2}:?\d{2})?", body)
+    if iso:
+        y, mo, d = (int(x) for x in iso.group(1).split("-"))
+        hh = 0; mm = 0
+        if iso.group(2):
+            hh, mm = (int(x) for x in iso.group(2).split(":"))
+        try:
+            dt = datetime(y, mo, d, hh, mm, tzinfo=timezone.utc)
+            # ISO sem ano futuro e sem hora explícita → assume meio-dia UTC daquele dia
+            if dt < now - timedelta(hours=1):
+                dt += timedelta(days=365)
+            return dt
+        except ValueError:
+            pass
+
+    # "22 September 2026" / "Sept 22, 2026" / "22/09/2026"
+    dm = re.search(r"\b(\d{1,2})\s+([A-Za-z]+)\.?,?\s+(\d{4})\b", body)
+    md = re.search(r"\b([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})\b", body)
+    br = re.search(r"\b(\d{1,2})/(\d{1,2})/(\d{4})\b", body)
+    try:
+        if dm:
+            day, mon_name, year = int(dm.group(1)), dm.group(2).lower(), int(dm.group(3))
+            mon = _MONTHS.get(mon_name[:5] if len(mon_name) > 3 else mon_name, 0) or \
+                  _MONTHS.get(mon_name, 0)
+            if mon:
+                dt = datetime(year, mon, day, tzinfo=timezone.utc)
+                if dt < now - timedelta(days=1):
+                    dt += timedelta(days=365)
+                return dt
+        elif md:
+            mon = _MONTHS.get(md.group(1)[:5].lower() if len(md.group(1)) > 3 else md.group(1).lower(), 0)
+            if mon:
+                dt = datetime(int(md.group(3)), mon, int(md.group(2)), tzinfo=timezone.utc)
+                if dt < now - timedelta(days=1):
+                    dt += timedelta(days=365)
+                return dt
+        elif br:
+            d1, d2, year = int(br.group(1)), int(br.group(2)), int(br.group(3))
+            day, mon = (d1, d2) if d1 <= 31 and d2 <= 12 else (d2, d1)
+            dt = datetime(year, mon, day, tzinfo=timezone.utc)
+            if dt < now - timedelta(days=1):
+                dt += timedelta(days=365)
+            return dt
+    except ValueError:
+        return None
+
+    # "September 22" sem ano → ano corrente
+    mon_day = re.search(r"\b([A-Za-z]+)\s+(\d{1,2})\b", body)
+    if mon_day:
+        mon = _MONTHS.get(mon_day.group(1).lower(), 0)
+        if mon:
+            dt = datetime(today.year, mon, int(mon_day.group(2)), 12, 0, tzinfo=timezone.utc)
+            if dt < now:
+                dt = dt.replace(year=today.year + 1)
+            return dt
+    return None
+
+
+def _parse_date_token(text: str):
+    """Data 'nua' sem verbo de reset (fallback)."""
+    iso = re.search(r"\b(\d{4})-(\d{2})-(\d{2})\b", text or "")
+    if iso:
+        try:
+            return datetime(int(iso.group(1)), int(iso.group(2)), int(iso.group(3)), 12, 0, tzinfo=timezone.utc)
+        except ValueError:
+            return None
+    return None
+
+
+def _load_declared_availability() -> dict:
+    """config/availability.yaml -> {provider_id: iso_utc_expires}. Não falha."""
+    out = {}
+    try:
+        import yaml  # lazy
+        if not AVAILABILITY_DECL.is_file():
+            return out
+        data = yaml.safe_load(AVAILABILITY_DECL.read_text(encoding="utf-8")) or {}
+        providers = data.get("providers") or {}
+        for pid, spec in providers.items():
+            until = (spec or {}).get("until") if isinstance(spec, dict) else spec
+            if not until:
+                continue
+            iso = str(until).strip()
+            m = re.match(r"^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?", iso)
+            if not m:
+                continue
+            year, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            hh = int(m.group(4) or 0); mm = int(m.group(5) or 0)
+            dt = datetime(year, mo, d, hh, mm, tzinfo=BRT)  # declarado em BRT
+            out[str(pid)] = dt.astimezone(timezone.utc).isoformat()
+    except Exception:  # noqa: BLE001 — arquivo ausente/corrompido não derruba o fallback
+        return {}
+    return out
+
+
+def _load_auto_availability() -> dict:
+    """config/availability.auto.json escrito pelo próprio motor (auto-detect)."""
+    out = {}
+    try:
+        if AVAILABILITY_AUTO.is_file():
+            raw = json.loads(AVAILABILITY_AUTO.read_text(encoding="utf-8")) or {}
+            cutoff = time.time() - AVAILABILITY_TTL_SECONDS
+            for pid, spec in (raw.get("windows") or {}).items():
+                expires = spec.get("expires_at") if isinstance(spec, dict) else spec
+                ts = _iso_to_ts(expires)
+                if ts and ts > time.time():
+                    out[str(pid)] = expires
+                elif isinstance(spec, dict) and ts and ts > cutoff:
+                    out[str(pid)] = expires  # recém-expirado: mantém p/ auditoria
+    except Exception:  # noqa: BLE001
+        return {}
+    return out
+
+
+def _iso_to_ts(iso: str) -> float | None:
+    try:
+        from datetime import datetime as _dt
+        return _dt.fromisoformat(str(iso).replace("Z", "+00:00")).timestamp()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _write_auto_availability() -> None:
+    """Consolida auto + declarada e persiste o estado (para ops_watchdog ler)."""
+    state = {"updated_at": datetime.now(timezone.utc).isoformat(), "windows": {}}
+    try:
+        declared = _load_declared_availability()
+        auto = _load_auto_availability()
+        merged = {}
+        for pid, exp in declared.items():
+            note = {"expires_at": exp, "source": "declared"}
+            merged[pid] = note
+        for pid, exp in auto.items():
+            cur = merged.get(pid)
+            if cur is None:
+                merged[pid] = {"expires_at": exp, "source": "auto"}
+            else:
+                # vence a mais longa
+                if (_iso_to_ts(exp) or 0) > (_iso_to_ts(cur["expires_at"]) or 0):
+                    merged[pid] = {"expires_at": exp, "source": "auto"}
+        state["windows"] = merged
+        AVAILABILITY_AUTO.parent.mkdir(parents=True, exist_ok=True)
+        AVAILABILITY_AUTO.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _availability_windows() -> dict:
+    """provider_id -> datetime(utc) de fim de indisponibilidade (agora +)."""
+    now = datetime.now(timezone.utc)
+    wins = {}
+    for pid, iso in _load_declared_availability().items():
+        ts = _iso_to_ts(iso)
+        if ts and ts > now.timestamp():
+            wins[pid] = ts
+    for pid, iso in _load_auto_availability().items():
+        ts = _iso_to_ts(iso)
+        if ts and ts > now.timestamp() and ts > wins.get(pid, 0):
+            wins[pid] = ts
+    return wins
+
+
+def _record_provider_unavailable(provider_id: str, error_text: str) -> None:
+    """Lê a data/hora da resposta e grava uma janela de indisponibilidade auto."""
+    dt = _parse_reset_date(error_text or "")
+    if not dt:
+        return
+    # Sanidade: reset plausível (agora até ~14 dias à frente). Fora disso ignora.
+    now = datetime.now(timezone.utc)
+    if dt <= now or dt > now + timedelta(days=14):
+        return
+    expires = dt.isoformat()
+    auto = {}
+    try:
+        if AVAILABILITY_AUTO.is_file():
+            auto = (json.loads(AVAILABILITY_AUTO.read_text(encoding="utf-8")) or {}).get("windows", {}) or {}
+    except Exception:  # noqa: BLE001
+        auto = {}
+    prev = auto.get(provider_id) or {}
+    prev_ts = _iso_to_ts(prev.get("expires_at") if isinstance(prev, dict) else prev) or 0
+    if prev_ts > dt.timestamp():
+        return  # já tem uma janela mais longa
+    auto[provider_id] = {
+        "expires_at": expires,
+        "source": "auto",
+        "reason": (error_text or "").strip()[:200],
+        "recorded_at": now.isoformat(),
+    }
+    try:
+        AVAILABILITY_AUTO.parent.mkdir(parents=True, exist_ok=True)
+        AVAILABILITY_AUTO.write_text(
+            json.dumps({"updated_at": now.isoformat(), "windows": auto}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[availability] {provider_id} indisponível até {expires} "
+              f"(parseado da resposta)", flush=True)
+    except OSError as exc:
+        print(f"[availability] não gravou {provider_id}: {exc}", flush=True)
 
 
 # ── Config reading ─────────────────────────────────────────────────────────────
@@ -772,32 +1055,72 @@ def _invoke_cli_run(cmd: list, run_env: dict, timeout_seconds: int, workspace: P
     error = None
     status = "success"
 
+    def _drain(stream, sink):
+        try:
+            for line in iter(stream.readline, ""):
+                sink.append(line)
+        except (OSError, ValueError):
+            pass
+        finally:
+            try:
+                stream.close()
+            except OSError:
+                pass
+
     try:
         proc = _sp.Popen(
             cmd, stdout=_sp.PIPE, stderr=_sp.PIPE,
             stdin=_sp.PIPE if stdin_input is not None else None,
             text=True, cwd=str(workspace), start_new_session=True, env=run_env,
         )
+        out_buf: list[str] = []
+        err_buf: list[str] = []
+        out_thread = threading.Thread(target=_drain, args=(proc.stdout, out_buf), daemon=True)
+        err_thread = threading.Thread(target=_drain, args=(proc.stderr, err_buf), daemon=True)
+        out_thread.start()
+        err_thread.start()
         try:
             if stdin_input is not None:
-                stdout, stderr = proc.communicate(input=stdin_input, timeout=timeout_seconds)
-            else:
-                stdout, stderr = proc.communicate(timeout=timeout_seconds)
-            output = stdout or ""
+                proc.stdin.write(stdin_input)
+                proc.stdin.flush()
+                try:
+                    proc.stdin.close()
+                except OSError:
+                    pass
+            proc.wait(timeout=timeout_seconds)
+            out_thread.join(timeout=3)
+            err_thread.join(timeout=3)
+            output = "".join(out_buf)
+            stderr = "".join(err_buf)
             if proc.returncode != 0:
                 status = "fail"
-                error = stderr[:2000] if stderr else f"exit code {proc.returncode}"
+                error = (stderr or "").strip()[:2000] or f"exit code {proc.returncode}"
         except _sp.TimeoutExpired:
+            # Mata e dá um grace curto para os threads despejarem o que já veio.
+            # SEM o grace, o stdout é perdido e a mensagem de cota ("resets on …")
+            # nunca chega — o provider morre como timeout sem data de reset.
             try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             except (ProcessLookupError, OSError):
-                proc.kill()
+                proc.terminate()
             try:
-                proc.communicate(timeout=5)
+                proc.wait(timeout=4)
             except _sp.TimeoutExpired:
-                pass
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except (ProcessLookupError, OSError):
+                    proc.kill()
+                proc.wait(timeout=2)
+            out_thread.join(timeout=6)
+            err_thread.join(timeout=6)
+            output = "".join(out_buf)
+            stderr = "".join(err_buf)
+            already = (output or stderr).strip()
             status = "timeout"
-            error = f"Killed after {timeout_seconds}s timeout"
+            base = f"Killed after {timeout_seconds}s timeout"
+            # Se o CLI já tinha escrito o resultado (cota/401/auth), preserva a
+            # mensagem — é nela que mora a data/hora de reset para o auto-detect.
+            error = f"{base} | provider said: {already[-1500:]}" if already else base
     except Exception as exc:
         status = "fail"
         error = str(exc)
@@ -903,8 +1226,26 @@ class FallbackEngine:
             except Exception as _route_exc:  # noqa: BLE001 — rota não derruba a execução
                 print(f"[fallback] routing policy erro (ignorado): {_route_exc}", flush=True)
 
+        # Janela de indisponibilidade por cota: provider em janela (declara
+        # config/availability.yaml ou auto-detectada na resposta) é PULADO e o
+        # combo gira pro que tem. Guard: se TODOS os providers estivessem em
+        # janela, a cadeia não ficava vazia — nesse caso segue tentando o de
+        # janela mais curta (melhor chance de já ter resetado).
+        windows = _availability_windows() if AVAILABILITY_DECL.exists() or AVAILABILITY_AUTO.exists() else {}
+        if windows:
+            _windowed = {e["provider_id"] for e in chain} & set(windows)
+            if _windowed and _windowed >= {e["provider_id"] for e in chain}:
+                # todos indisponíveis → solta o mais próximo de liberar
+                _keep = min(windows, key=lambda p: windows[p])
+                windows = {k: v for k, v in windows.items() if k != _keep}
+
         for provider_entry in chain:
             provider_id = provider_entry["provider_id"]
+            if provider_id in windows:
+                ends = datetime.fromtimestamp(windows[provider_id], tz=timezone.utc)
+                print(f"[fallback] {provider_id} sem cota até {ends:%d/%m %H:%M} UTC "
+                      f"— pulando e girando pro próximo", flush=True)
+                continue
             cli_command = provider_entry["cli_command"]
             base_url = provider_entry.get("base_url")
             model_chain = provider_entry.get("model_chain", [None])
@@ -1147,6 +1488,16 @@ def _invoke_with_fallback_locked(
         last_result = result
         print(f"[fallback] attempt #{attempt.attempt_number} failed "
               f"({attempt.provider_id}:{attempt.model}) status={result['status']}", flush=True)
+
+        # Auto-rescue: se a resposta devolveu uma data/hora de reset de cota,
+        # grava janela de indisponibilidade — o próximo ciclo já pula este
+        # provider e gira direto pro que tem (Drael/NVIDIA/free).
+        _blob = f"{result.get('error') or ''} {result.get('output') or ''}"
+        if result["status"] in ("timeout", "fail") and _RE_RESET_LEAD.search(_blob):
+            try:
+                _record_provider_unavailable(attempt.provider_id, _blob)
+            except Exception as _av_exc:  # noqa: BLE001 — disponibilidade não derruba o loop
+                print(f"[availability] erro ao registrar {attempt.provider_id}: {_av_exc}", flush=True)
 
     if last_result:
         last_result["fallback_exhausted"] = True

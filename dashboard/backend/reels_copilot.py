@@ -40,7 +40,7 @@ ARTIFACTS_DIR = WORKSPACE / "workspace" / "social" / "reels"
 
 BRT = timezone(timedelta(hours=-3))
 
-OPENREPLY_VPS = os.environ.get("OPENREPLY_SSH_HOST", "evo-nexus-vps")
+OPENREPLY_VPS = os.environ.get("OPENREPLY_SSH_HOST", "")  # vazio = executa local (dashboard já roda na VPS)
 OPENREPLY_DB_CONTAINER = "postgres_postgres"
 OPENREPLY_WORKSPACE_ID = os.environ.get("OPENREPLY_WORKSPACE_ID", "cmtn8ppz700010jmsp15ul9s0")
 OPENREPLY_INSTRAM_ID = os.environ.get("OPENREPLY_INSTRAM_ID", "cmtn8t74m00040jmsxi8dbbzo")
@@ -117,14 +117,48 @@ _REEL_SCHEMA_HINT = (
 _REQUIRED = ("theme", "headline", "hook_spoken", "hook_visual", "script_md", "cta")
 
 
+def _extract_text(raw: str) -> str:
+    """Normaliza o output do LLM para texto.
+
+    O Drael/opencode emite NDJSON (um evento por linha: step_start, text, ...);
+    Claude/Codex devolvem um envelope único. Se o output tem múltiplas linhas que
+    parseiam como JSON de evento, extrai a resposta real dos eventos `text`.
+    """
+    from provider_fallback import _parse_opencode_ndjson
+
+    lines = [l for l in raw.splitlines() if l.strip()]
+    # NDJSON? duas+ linhas que são eventos de opencode/claude (têm "type")
+    events = 0
+    for l in lines[:20]:
+        try:
+            ev = json.loads(l)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(ev, dict) and "type" in ev:
+            events += 1
+    if events >= 2:
+        parsed = _parse_opencode_ndjson(raw)
+        if parsed.get("text"):
+            return parsed["text"]
+    return raw
+
+
 def _parse_llm_json(raw: str) -> dict:
-    text = raw.strip()
+    text = _extract_text(raw).strip()
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
-    start, end = text.find("{"), text.rfind("}")
-    if start < 0 or end <= start:
-        raise ValueError(f"sem JSON no output ({len(text)} chars)")
-    data = json.loads(text[start:end + 1])
+    start = text.find("{")
+    if start < 0:
+        raise ValueError(f"sem JSON no output ({len(text)} chars): {text[:120]!r}")
+    # raw_decode lê o PRIMEIRO objeto JSON completo a partir de { e ignora o
+    # resto (o LLM às vezes devolve "Aqui está o roteiro: {…} (pronto!)" ou um
+    # segundo objeto solto — json.loads no slice até o último } dava "Extra data").
+    try:
+        data, _end = json.JSONDecoder().raw_decode(text[start:])
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"JSON inválido no output: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError("JSON do roteiro não é um objeto")
     missing = [k for k in _REQUIRED if not str(data.get(k) or "").strip()]
     if missing:
         raise ValueError(f"campos faltando: {missing}")
@@ -261,13 +295,18 @@ def create_openreply_campaign(row: dict) -> dict:
       false, NULL, NULL, false, NULL, 0, true, NULL, ARRAY['{public_reply.replace(chr(39), chr(39)*2)}'],
       true, true, NULL, true, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'));"""
 
-    remote = (
+    psql_cmd = (
         f"docker exec $(docker ps -q -f name={OPENREPLY_DB_CONTAINER}) psql -U postgres "
         f"-d openreply -c \"SET search_path=public; {sql.replace(chr(10), ' ')}\""
     )
     try:
+        if OPENREPLY_VPS:
+            cmd = ["ssh", OPENREPLY_VPS, psql_cmd]
+        else:
+            # Dashboard já roda na própria VPS — executa o docker exec direto, sem SSH.
+            cmd = ["sh", "-c", psql_cmd]
         proc = subprocess.run(
-            ["ssh", OPENREPLY_VPS, remote], capture_output=True, text=True, timeout=60,
+            cmd, capture_output=True, text=True, timeout=60,
         )
         if proc.returncode == 0 and "INSERT" in proc.stdout:
             return {"ok": True, "status": "created", "automation_id": aid, "name": name, "keyword": keyword}

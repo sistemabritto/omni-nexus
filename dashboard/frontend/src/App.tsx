@@ -109,14 +109,9 @@ interface OnboardingUser {
   onboarding_completed_agents_visit?: boolean
 }
 
-function RedirectPreserveQuery({ from, to }: { from: string; to: string }) {
+function RedirectPreserveQuery({ to }: { to: string }) {
   const location = useLocation()
-  return (
-    <Route
-      path={from.slice(1)}
-      element={<Navigate to={{ pathname: to, search: location.search }} replace />}
-    />
-  )
+  return <Navigate to={{ pathname: to, search: location.search }} replace />
 }
 
 function AppContent() {
@@ -291,8 +286,8 @@ function AppContent() {
               {/* W2 (2026-09-20): Missões une os zôms de /projects e /goals numa
                   árvore única — as rotas antigas redirecionam preservando a query
                   (o deep-link ?project=<id> segue funcionando). */}
-              <RedirectPreserveQuery from="/projects" to="/missions" />
-              <RedirectPreserveQuery from="/goals" to="/missions" />
+              <Route path="/projects" element={<RedirectPreserveQuery to="/missions" />} />
+              <Route path="/goals" element={<RedirectPreserveQuery to="/missions" />} />
               <Route path="/plugins" element={<Plugins />} />
               <Route path="/plugins/:slug" element={<PluginDetail />} />
               <Route path="/mcp-servers" element={<McpServers />} />

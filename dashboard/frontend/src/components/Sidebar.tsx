@@ -10,7 +10,7 @@ import {
   LogOut, Menu, X,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
-  Plug, FolderOpen, Settings,
+  Plug, FolderOpen, Settings, Building2, Settings2,
 } from 'lucide-react'
 import {
   getAllPluginSidebarGroups,
@@ -204,38 +204,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {companies.length > 0 && (
-        <div className="px-3 pb-2">
-          <div className="flex items-center gap-1">
-            <select
-              value={activeCompanyId ?? ''}
-              onChange={(e) => {
-                const v = e.target.value
-                if (v === '__manage__') {
-                  setManageCompany(activeCompanyId ?? companies[0]?.id ?? null)
-                } else {
-                  setActiveCompanyId(v === '' ? null : Number(v))
-                }
-              }}
-              title={t('companies.activeLabel')}
-              className="w-full bg-[#1D2939] border border-[#344054] rounded-lg px-2.5 py-1.5 text-xs text-[#D0D5DD] focus:outline-none focus:ring-1 focus:ring-[#00FFA7]/50"
-            >
-              <option value="">{t('companies.all')}</option>
-              {companies.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-              <option value="__manage__">⚙ {t('companies.manage')}</option>
-            </select>
-          </div>
-          {manageCompany !== null && (
-            <CompanyManagerModal
-              company={companies.find((c) => c.id === manageCompany)!}
-              onClose={() => setManageCompany(null)}
-            />
-          )}
-        </div>
-      )}
-
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
         {navSections.map(renderSection)}
 
@@ -304,7 +272,37 @@ export default function Sidebar() {
       </nav>
 
       {user && (
-        <div className="px-4 py-4 border-t border-[#344054]">
+        <div className="px-3 py-3 border-t border-[#344054] space-y-2">
+          {/* W3 (2026-09-20): empresa ativa ao lado da conta — mesma linha visual
+              do perfil, não compete com o logo do topo. */}
+          {companies.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <span
+                title={t('nav.companies.activeLabel')}
+                className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/5 text-[#98A2B3] shrink-0"
+              >
+                <Building2 size={13} />
+              </span>
+              <select
+                value={activeCompanyId ?? ''}
+                onChange={(e) => setActiveCompanyId(e.target.value === '' ? null : Number(e.target.value))}
+                aria-label={t('nav.companies.activeLabel')}
+                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#D0D5DD] focus:outline-none focus:ring-1 focus:ring-[#00FFA7]/50 cursor-pointer"
+              >
+                <option value="">{t('nav.companies.all')}</option>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => setManageCompany(activeCompanyId ?? companies[0]?.id ?? null)}
+                title={t('nav.companies.manage')}
+                className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/10 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60"
+              >
+                <Settings2 size={14} />
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[#00FFA7]/20 text-[#00FFA7] flex items-center justify-center text-sm font-bold shrink-0">
               {(user.display_name || user.username).charAt(0).toUpperCase()}
@@ -372,6 +370,13 @@ export default function Sidebar() {
           by <span className="font-semibold text-[#00FFA7]/60">Evolution Foundation</span>
         </a>
       </div>
+
+      {manageCompany !== null && companies.find((c) => c.id === manageCompany) && (
+        <CompanyManagerModal
+          company={companies.find((c) => c.id === manageCompany)!}
+          onClose={() => setManageCompany(null)}
+        />
+      )}
     </>
   )
 

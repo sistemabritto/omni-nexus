@@ -195,6 +195,27 @@ export default function Providers() {
   const [deviceCode, setDeviceCode] = useState<{ user_code: string; verification_url: string; interval: number; expires_in: number } | null>(null)
   const [devicePolling, setDevicePolling] = useState(false)
   const [toggling, setToggling] = useState<string | null>(null)
+  const [trustMode, setTrustMode] = useState<boolean | null>(null)
+  const [savingTrust, setSavingTrust] = useState(false)
+
+  useEffect(() => {
+    api.get('/settings/chat')
+      .then((d: { trustMode: boolean }) => setTrustMode(d.trustMode))
+      .catch(() => setTrustMode(false))
+  }, [])
+
+  const handleTrust = async (value: boolean) => {
+    setSavingTrust(true)
+    const prev = trustMode
+    setTrustMode(value)
+    try {
+      await api.patch('/settings/chat', { trustMode: value })
+    } catch {
+      setTrustMode(prev)
+    } finally {
+      setSavingTrust(false)
+    }
+  }
 
   // Dynamic model discovery — populated when Configure modal opens for
   // openai/codex_auth. Shape: { [providerId]: { loading, models[], error? } }
@@ -377,7 +398,14 @@ export default function Providers() {
               openclaude {openclaudeInstalled ? '' : '(missing)'}
             </span>
           </div>
+          {/* Confiança — antes morava em Configurações; agora fica junto do que
+              ela controla (os provedores/agentes). Discreta de propósito: é um
+              interruptor, não uma seção. */}
           <div className="ml-auto flex items-center gap-4 text-[11px] tracking-wide uppercase text-[#5a6b7f]">
+            <label className="flex items-center gap-2 cursor-pointer select-none" title="When on, agents run Write/Edit/Bash without asking for approval">
+              <span>{t('settings.tabs.trust')}</span>
+              <Toggle on={!!trustMode} onChange={handleTrust} disabled={savingTrust || trustMode === null} />
+            </label>
             <span>{providers.length} available</span>
             <span>{configuredCount} configured</span>
             <span className={hasActive ? 'text-[#00FFA7]' : 'text-[#ef4444]'}>

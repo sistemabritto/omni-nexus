@@ -267,6 +267,12 @@ const translations = {
       setupFailed: 'Setup failed',
     },
 
+    cockpit: {
+      referenceHint: 'workspace context — edit here',
+      referenceEdit: 'Edit',
+      referenceSave: 'Save',
+      referenceCancel: 'Cancel',
+    },
     overview: {
       title: 'Overview',
       subtitle: 'Workspace at a glance',
@@ -752,10 +758,11 @@ const translations = {
       headerSubtitle: 'Workspace, routines and reference',
       tabs: {
         workspace: 'Workspace',
-        routines: 'Routines',
-        notifications: 'Notifications',
+        backups: 'Backups',
         trust: 'Trust',
-        reference: 'Reference',
+        users: 'Users',
+        roles: 'Roles',
+        audit: 'Audit log',
       },
       workspace: 'Workspace',
       account: 'Account',

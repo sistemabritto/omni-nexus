@@ -12,7 +12,7 @@ interface Template {
   type?: string
 }
 
-export default function Templates() {
+export default function Templates({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,10 +64,12 @@ export default function Templates() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#e6edf3]">{t('templates.title')}</h1>
-        <p className="text-[#667085] mt-1">Reusable templates</p>
-      </div>
+      {!embedded && (
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-[#e6edf3]">{t('templates.title')}</h1>
+          <p className="text-[#667085] mt-1">Reusable templates</p>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

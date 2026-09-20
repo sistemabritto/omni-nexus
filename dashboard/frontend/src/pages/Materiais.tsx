@@ -9,17 +9,19 @@ import { useAuth } from '../context/AuthContext'
 // (sem ?mat=), que cai na aba Arquivos e mantém o comportamento antigo.
 // As rotas standalone /media e /shares seguem existindo p/ links diretos.
 
-type MateriaisTab = 'arquivos' | 'midias' | 'shares'
+type MateriaisTab = 'arquivos' | 'midias' | 'shares' | 'templates'
 
 const MATERIAIS_TABS: { key: MateriaisTab; labelKey: string; resource: string | null }[] = [
   { key: 'arquivos', labelKey: 'materiais.tabs.arquivos', resource: 'workspace' },
   { key: 'midias', labelKey: 'nav.media', resource: 'media_jobs' },
   { key: 'shares', labelKey: 'nav.shareLinks', resource: 'workspace' },
+  { key: 'templates', labelKey: 'nav.templates', resource: 'templates' },
 ]
 
 const WorkspacePage = lazy(() => import('./Workspace'))
 const MediaPage = lazy(() => import('./Media'))
 const ShareLinksPage = lazy(() => import('./ShareLinks'))
+const TemplatesPage = lazy(() => import('./Templates'))
 
 export default function Materiais() {
   const { t } = useTranslation()
@@ -75,13 +77,18 @@ export default function Materiais() {
             <WorkspacePage />
           </div>
           {activeTab === 'midias' && (
-            <div className="h-full overflow-auto">
+            <div className="h-full overflow-auto p-4 lg:p-6">
               <MediaPage embedded />
             </div>
           )}
           {activeTab === 'shares' && (
-            <div className="h-full overflow-auto">
+            <div className="h-full overflow-auto p-4 lg:p-6">
               <ShareLinksPage embedded />
+            </div>
+          )}
+          {activeTab === 'templates' && (
+            <div className="h-full overflow-auto p-4 lg:p-6">
+              <TemplatesPage embedded />
             </div>
           )}
         </Suspense>

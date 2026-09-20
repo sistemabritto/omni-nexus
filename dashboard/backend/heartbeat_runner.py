@@ -966,12 +966,26 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                 inbox = step3_query_inbox(hb["agent"], conn)
                 print(f"[heartbeat_runner] step3 inbox={len(inbox)}", flush=True)
 
+                # Load the wake payload EARLY (before the cost guard): a
+                # @mention wake carries {"ticket_id","comment_id","mentioner"}
+                # and the mentioned reviewer's OWN ticket inbox is typically
+                # empty — without seeing the payload here the cost guard below
+                # would skip the run before Claude ever learned it was poked.
+                trigger_payload = _load_trigger_payload(trigger_id, conn)
+                _is_mention_wake = bool(
+                    triggered_by == "mention"
+                    or (isinstance(trigger_payload, dict) and trigger_payload.get("ticket_id"))
+                )
+
                 # Cost guard: executor agents don't burn tokens "deciding to skip".
                 # If there's no assigned work and no pending approvals, skip the
                 # Claude invocation entirely (silent, ~zero cost). State-monitor
                 # agents (Linear/Stripe/etc.) opt out via STATE_MONITOR_AGENTS.
+                # A @mention is NEVER skipped: the whole point of mentioning an
+                # agent is that it reads the ticket and comments back.
                 if (not inbox and not approvals
-                        and hb["agent"] not in STATE_MONITOR_AGENTS):
+                        and hb["agent"] not in STATE_MONITOR_AGENTS
+                        and not _is_mention_wake):
                     print(f"[heartbeat_runner] cost-guard: empty inbox/approvals for {hb['agent']}, skipping without Claude", flush=True)
                     result = {"status": "success", "error": None, "agent": hb["agent"],
                               "duration_ms": 0, "output": '{"action":"skip","reason":"no assigned work"}'}
@@ -983,7 +997,7 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                 print(f"[heartbeat_runner] step4 decision context assembled", flush=True)
 
                 # Step 6
-                trigger_payload = _load_trigger_payload(trigger_id, conn)
+                # (trigger_payload was loaded above; reused here)
 
                 # goal-planner sweep (Python-side, see pick_orphan_goal_for_sweep
                 # docstring): an interval/manual wake carries no goal_id — a real
@@ -1000,6 +1014,34 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                     print(f"[heartbeat_runner] goal-planner sweep: picked orphaned goal #{swept_goal_id}", flush=True)
 
                 full_prompt = step6_assemble_context(identity, decision_ctx, hb.get("goal_id"), trigger_payload)
+
+                # @mention wake → you were poked on a SPECIFIC ticket to give
+                # feedback. Override the generic "work your inbox" framing: the
+                # review target is the mentioned ticket (not your inbox), and
+                # the deliverable is a comment posted back onto it. The reviewer
+                # must NOT take a checkout lock on someone else's ticket.
+                if _is_mention_wake and isinstance(trigger_payload, dict) and trigger_payload.get("ticket_id"):
+                    _mentioned_ticket = trigger_payload["ticket_id"]
+                    _mentioner = trigger_payload.get("mentioner", "alguém")
+                    full_prompt += f"""
+
+---
+## ⚠️ Você foi MENCIONADO no ticket {_mentioned_ticket}
+
+`{_mentioner}` te citou num comentário desse ticket pedindo tua leitura/feedback.
+Este é o objetivo desta execução — NÃO é "trabalhar sua inbox".
+
+Passos:
+1. LEIA o ticket completo (cabeçalho + descrição + TODOS os comentários):
+   `GET /api/tickets/{_mentioned_ticket}` (usa o Bearer token do ambiente).
+2. Faça sua análise no seu papel (crítica, verificação, QA, o que for seu domínio).
+3. Poste SEU feedback como NOVO comentário no MESMO ticket:
+   `POST /api/tickets/{_mentioned_ticket}/comments` com body em pt-BR, autor = teu slug.
+   Seja concreto e acionável — cite o que precisa mudar, por quê, e evidência.
+4. NÃO faça checkout deste ticket (ele é do responsável). Responde `ticket_id: null`.
+
+Responda `action:"work"` com `result:` = resumo curto em pt-BR do feedback que
+você postou (o que apontou / validou / bloqueou)."""
 
                 # Self-healing review loop (Step 6, ADR SPEC 2c): read
                 # active_provider PRE-run (not provider_id, which only

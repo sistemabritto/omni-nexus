@@ -358,8 +358,17 @@ def start_dispatcher_thread():
         except Exception as exc:  # noqa: BLE001 — reconcile no boot nunca derruba o dispatcher
             print(f"[dispatcher] hb_reconcile on boot failed (non-fatal): {exc}", flush=True)
         register_interval_jobs()
+        _last_drain = 0.0
+        _DRAIN_EVERY_SECONDS = 15
         while True:
             schedule.run_pending()
+            import time as _time
+            if _time.monotonic() - _last_drain >= _DRAIN_EVERY_SECONDS:
+                _last_drain = _time.monotonic()
+                try:
+                    drain_event_triggers()
+                except Exception as exc:
+                    print(f"[dispatcher] drain_event_triggers ERROR: {exc}", flush=True)
             time.sleep(5)
 
     t = threading.Thread(target=_loop, name="heartbeat-dispatcher", daemon=True)
@@ -408,3 +417,90 @@ def on_mention(heartbeat_id: str, mention_data: dict):
 def on_approval_decision(heartbeat_id: str, approval_id: str, decision: str):
     """Hook called on approval resolution. F1.2 will implement fully."""
     dispatch(heartbeat_id, "approval_decision", payload={"approval_id": approval_id, "decision": decision})
+
+
+# ── Event-trigger consumer (F1.3) ─────────────────────────────────────────────
+#
+# API handlers (e.g. _fire_mention_triggers on a ticket comment) INSERT a row
+# into heartbeat_triggers, but nothing ever WOKES the agent — that was the gap
+# ("mention morre na fila"). This poller claims each pending event trigger and
+# runs its heartbeat, passing the ORIGINAL trigger_id so the runner loads the
+# exact payload (ticket_id / comment_id / mentioner).
+
+_EVENT_TRIGGER_TYPES = ("mention", "new_task", "approval_decision")
+
+
+def _pending_event_triggers(limit: int = 20):
+    """Oldest-first pending event triggers not yet consumed or coalesced."""
+    conn = _get_db()
+    try:
+        placeholders = ",".join("?" for _ in _EVENT_TRIGGER_TYPES)
+        rows = conn.execute(
+            f"""SELECT id, heartbeat_id, trigger_type, payload, created_at
+                FROM heartbeat_triggers
+                WHERE consumed_at IS NULL AND coalesced_into IS NULL
+                  AND trigger_type IN ({placeholders})
+                ORDER BY created_at ASC
+                LIMIT ?""",
+            (*_EVENT_TRIGGER_TYPES, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def _claim_trigger(trigger_id: str) -> bool:
+    """Atomically claim a pending trigger (single writer wins). Crash-safe."""
+    conn = _get_db()
+    try:
+        cur = conn.execute(
+            "UPDATE heartbeat_triggers SET consumed_at = ? WHERE id = ? AND consumed_at IS NULL",
+            (_now_iso(), trigger_id),
+        )
+        conn.commit()
+        return cur.rowcount == 1
+    finally:
+        conn.close()
+
+
+def drain_event_triggers() -> int:
+    """One pass: claim pending event triggers and run their heartbeats.
+
+    Returns how many triggers were dispatched this pass. Idempotent & safe:
+    a row is claimed (consumed_at set) before its run is submitted, so a
+    restart never re-runs the same mention twice. Runs reuse the same worker
+    pool and per-heartbeat execution lock as interval dispatches, so two
+    events to one agent never overlap and a heartbeat already running skips
+    the row (it stays pending and is retried on the next pass).
+    """
+    dispatched = 0
+    for row in _pending_event_triggers():
+        hb_id = row["heartbeat_id"]
+        with _running_lock:
+            if hb_id in _running:
+                continue
+            _running.add(hb_id)
+        if not _claim_trigger(row["id"]):
+            with _running_lock:
+                _running.discard(hb_id)
+            continue
+
+        def _run(hb_id=hb_id, trigger_id=row["id"], ttype=row["trigger_type"]):
+            try:
+                from heartbeat_runner import run_heartbeat
+                run_heartbeat(
+                    heartbeat_id=hb_id,
+                    triggered_by=ttype,
+                    trigger_id=trigger_id,
+                    run_id=str(uuid.uuid4()),
+                )
+            except Exception as exc:
+                print(f"[dispatcher] event-trigger run ERROR hb={hb_id}: {exc}", flush=True)
+            finally:
+                with _running_lock:
+                    _running.discard(hb_id)
+
+        _executor.submit(_run)
+        print(f"[dispatcher] drained event trigger {row['trigger_type']} -> {hb_id} (trigger={row['id'][:8]})", flush=True)
+        dispatched += 1
+    return dispatched

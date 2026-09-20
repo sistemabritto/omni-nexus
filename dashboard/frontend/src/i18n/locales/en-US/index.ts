@@ -274,8 +274,11 @@ const translations = {
       referenceCancel: 'Cancel',
     },
     overview: {
-      title: 'Overview',
+      title: 'Cockpit',
       subtitle: 'Workspace at a glance',
+      tabs: {
+        visao: 'Overview',
+      },
       activeAgents: 'Active agents',
       pendingTasks: 'Pending tasks',
       totalMemories: 'Total memories',

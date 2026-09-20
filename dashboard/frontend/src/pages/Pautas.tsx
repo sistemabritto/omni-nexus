@@ -217,7 +217,7 @@ function AudioFeedback({ pauta, onSaved }: { pauta: Pauta; onSaved: (p: Pauta) =
   )
 }
 
-export default function Pautas() {
+export default function Pautas({ embedded = false }: { embedded?: boolean }) {
   const { hasPermission } = useAuth()
   const canManage = hasPermission('goals', 'manage')
 
@@ -276,12 +276,14 @@ export default function Pautas() {
   const ciclos = [...porCiclo.keys()].sort()
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className={embedded ? 'p-0' : 'p-6 max-w-6xl mx-auto'}>
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Newspaper className="text-[#00FFA7]" size={22} />
-          <h1 className="text-xl font-bold text-white">Fila de Pautas</h1>
-        </div>
+        {!embedded && (
+          <div className="flex items-center gap-2">
+            <Newspaper className="text-[#00FFA7]" size={22} />
+            <h1 className="text-xl font-bold text-white">Fila de Pautas</h1>
+          </div>
+        )}
         <button
           onClick={load}
           className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white border border-white/15 rounded-lg px-3 py-1.5"

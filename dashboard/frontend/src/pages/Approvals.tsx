@@ -210,7 +210,7 @@ function relatedLink(a: ApprovalItem): { to: string; label: string } | null {
   return null
 }
 
-export default function Approvals() {
+export default function Approvals({ embedded = false }: { embedded?: boolean }) {
   const toast = useToast()
   const confirm = useConfirm()
   const [approvals, setApprovals] = useState<ApprovalItem[]>([])
@@ -278,15 +278,17 @@ export default function Approvals() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+    <div className={embedded ? '' : 'p-4 sm:p-6 max-w-4xl mx-auto'}>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-white">Aprovações</h1>
-          <p className="text-sm text-white/50 mt-1">
-            Fallback do dashboard para as aprovações que normalmente chegam no Telegram —
-            decidir aqui exige sessão de admin logada, nunca token de API.
-          </p>
-        </div>
+        {!embedded && (
+          <div>
+            <h1 className="text-xl font-semibold text-white">Aprovações</h1>
+            <p className="text-sm text-white/50 mt-1">
+              Fallback do dashboard para as aprovações que normalmente chegam no Telegram —
+              decidir aqui exige sessão de admin logada, nunca token de API.
+            </p>
+          </div>
+        )}
         <button
           onClick={fetchApprovals}
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition"

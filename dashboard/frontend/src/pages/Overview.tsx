@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useState, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   FileText,
@@ -22,9 +22,19 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { api } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 import HealthBadge from '../components/HealthBadge'
 import PluginWidgetsGrid from '../components/PluginWidgetsGrid'
 import CockpitReference from '../components/CockpitReference'
+
+// Os outros 4 domínios do cockpit viram abas da MESMA página (deep-link por
+// ?tab=). Lazy-load: só quem abre a aba paga o bundle — o dashboard inicial
+// continua leve. As rotas standalone (/orquestracao etc.) seguem existindo p/
+// links diretos; aqui é o hub de uma página só.
+const OrchestrationPage = lazy(() => import('./Orchestration'))
+const ApprovalsPage = lazy(() => import('./Approvals'))
+const PautasPage = lazy(() => import('./Pautas'))
+const ActivityPage = lazy(() => import('./Activity'))
 
 interface OverviewData {
   metrics: {
@@ -165,6 +175,46 @@ function SkeletonPill() {
   return <div className="skeleton h-8 w-24 rounded-full" />
 }
 
+function CockpitTabSkeleton() {
+  return (
+    <div className="space-y-3 py-4">
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+    </div>
+  )
+}
+
+// Abas do cockpit: os 5 domínios numa página só. O botão ativo usa o mesmo
+// idioma visual das outras tabs (border-b-2 verde) e ?tab= no URL dá deep-link
+// para compartilhar a aba aberta.
+function CockpitTabBar({ active, onSelect, t, tabs }: {
+  active: CockpitTab
+  onSelect: (tab: CockpitTab) => void
+  t: (key: string) => string
+  tabs: { key: CockpitTab; labelKey: string }[]
+}) {
+  return (
+    <div role="tablist" aria-label="Cockpit" className="flex gap-1 mb-6 border-b border-[#21262d] overflow-x-auto">
+      {tabs.map((tab) => (
+        <button
+          key={tab.key}
+          role="tab"
+          aria-selected={active === tab.key}
+          onClick={() => onSelect(tab.key)}
+          className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px cursor-pointer ${
+            active === tab.key
+              ? 'text-[#00FFA7] border-[#00FFA7]'
+              : 'text-[#667085] border-transparent hover:text-[#e6edf3] hover:border-[#21262d]'
+          }`}
+        >
+          {t(tab.labelKey)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // --- Stat Card ---
 function StatCard({
   label,
@@ -263,9 +313,29 @@ const QUICK_ACTIONS = [
   { label: 'Check GitHub', icon: GitBranch, to: '/integrations', hint: 'Repo status' },
 ]
 
+// --- Cockpit tabs: um hub por domínio, na MESMA página (ui-ux-pro-max:
+//     nav-hierarchy + deep-linking). ?tab= faz o deep-link p/ a aba. ---
+type CockpitTab = 'visao' | 'orquestracao' | 'aprovacoes' | 'pautas' | 'atividade'
+
+// Mesmo mapeamento de permissão das rotas: quem não tem o recurso não vê a
+// aba (mesmo comportamento do sidebar antigo).
+const COCKPIT_TABS: { key: CockpitTab; labelKey: string; resource: string | null }[] = [
+  { key: 'visao', labelKey: 'overview.tabs.visao', resource: null },
+  { key: 'orquestracao', labelKey: 'nav.orchestration', resource: 'tickets' },
+  { key: 'aprovacoes', labelKey: 'nav.approvals', resource: 'goals' },
+  { key: 'pautas', labelKey: 'nav.pautas', resource: 'goals' },
+  { key: 'atividade', labelKey: 'nav.activity', resource: 'scheduler' },
+]
+
 // --- Main Component ---
 export default function Overview() {
   const { t } = useTranslation()
+  const { hasPermission } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const visibleTabs = COCKPIT_TABS.filter((x) => x.resource === null || hasPermission(x.resource, 'view'))
+  // Se o deep-link aponta para uma aba que o usuário não vê, cai na Visão.
+  const activeTab: CockpitTab = (visibleTabs.some((x) => x.key === tabParam) ? (tabParam as CockpitTab) : 'visao')
   const [data, setData] = useState<OverviewData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -296,6 +366,29 @@ export default function Overview() {
     return () => clearInterval(interval)
   }, [fetchActiveAgents])
 
+  const setTab = (tab: CockpitTab) => {
+    if (tab === 'visao') setSearchParams({}, { replace: false })
+    else setSearchParams({ tab }, { replace: false })
+  }
+
+  if (activeTab !== 'visao') {
+    return (
+      <div className="max-w-[1400px] mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('overview.title')}</h1>
+          <p className="text-[#667085] text-sm mt-1">{t('overview.subtitle')}</p>
+        </div>
+        <CockpitTabBar active={activeTab} onSelect={setTab} t={t} tabs={visibleTabs} />
+        <Suspense fallback={<CockpitTabSkeleton />}>
+          {activeTab === 'orquestracao' && <OrchestrationPage embedded />}
+          {activeTab === 'aprovacoes' && <ApprovalsPage embedded />}
+          {activeTab === 'pautas' && <PautasPage embedded />}
+          {activeTab === 'atividade' && <ActivityPage embedded />}
+        </Suspense>
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -313,10 +406,13 @@ export default function Overview() {
   return (
     <div className="max-w-[1400px] mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('overview.title')}</h1>
         <p className="text-[#667085] text-sm mt-1">{t('overview.subtitle')}</p>
       </div>
+
+      {/* Os 5 domínios do cockpit numa página só — deep-link por ?tab= */}
+      <CockpitTabBar active="visao" onSelect={setTab} t={t} tabs={visibleTabs} />
 
       {/* Reference — a antiga aba Settings → Reference, condensada e editável
           direto no cockpit. Recolhida por padrão: é contexto, não ação. */}

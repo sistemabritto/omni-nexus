@@ -5,10 +5,10 @@ import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
 import {
   LayoutDashboard, Bot, Clock, Layout,
-  Users, ScrollText, LogOut, Menu, X, Shield, BookOpen,
-  ArrowUpCircle, ChevronDown, Webhook, HardDriveDownload, Settings, Share2, Heart, Target, Activity,
-  Puzzle, Columns3, FolderKanban, CheckCircle2, Video, Newspaper,
-  Workflow, Sparkles, Cpu, FolderOpen,
+  LogOut, Menu, X, BookOpen,
+  ArrowUpCircle, ChevronDown, Webhook, Share2, Heart, Target,
+  Puzzle, Columns3, FolderKanban, Video,
+  Sparkles, Cpu, FolderOpen, Settings,
 } from 'lucide-react'
 import {
   getAllPluginSidebarGroups,
@@ -45,16 +45,10 @@ const navGroups: NavGroup[] = [
     key: 'cockpit',
     collapsible: false,
     items: [
+      // Os 5 domínios (Visão · Orquestração · Aprovações · Pautas · Atividade)
+      // viraram abas desta única página — deep-link por /?tab=. Colocar cada
+      // um como link do menu era 5 entradas apontando para a mesma tela.
       { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
-      // Fila de jobs de orquestração multi-agente disparados pelo chat/Telegram.
-      // Mesmo `resource` do Kanban: quem enxerga ticket enxerga o trabalho que
-      // a orquestração produz.
-      { to: '/orquestracao', labelKey: 'orchestration', icon: Workflow, resource: 'tickets' },
-      // Fallback de visibilidade/aprovação — antes só existia como mensagem
-      // no Telegram (panorama 2026-07-17, item 1).
-      { to: '/approvals', labelKey: 'approvals', icon: CheckCircle2, resource: 'goals' },
-      { to: '/pautas', labelKey: 'pautas', icon: Newspaper, resource: 'goals' },
-      { to: '/activity', labelKey: 'activity', icon: Activity, resource: 'scheduler' },
     ],
   },
   {
@@ -105,13 +99,11 @@ const navGroups: NavGroup[] = [
     key: 'configuracoes',
     collapsible: true,
     items: [
+      // Backups/Usuários/Papéis/Auditoria não aparecem no menu: são abas de
+      // /settings (?tab=backups|users|roles|audit). Menú com 5 links p/ a
+      // mesma página é ruído, não navegação.
       { to: '/settings', labelKey: 'settings', icon: Settings, resource: 'config' },
-      { to: '/backups', labelKey: 'backups', icon: HardDriveDownload, resource: 'config' },
       { to: '/templates', labelKey: 'templates', icon: Layout, resource: 'templates' },
-      // Admins enxergam; demais papéis sem permissão simplesmente não veem.
-      { to: '/users', labelKey: 'users', icon: Users, resource: 'users' },
-      { to: '/roles', labelKey: 'roles', icon: Shield, resource: 'users' },
-      { to: '/audit', labelKey: 'audit', icon: ScrollText, resource: 'audit' },
     ],
   },
 ]

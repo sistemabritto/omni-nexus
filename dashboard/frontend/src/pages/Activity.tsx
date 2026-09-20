@@ -327,7 +327,7 @@ const PERIOD_TABS: { key: PeriodFilter; label: string }[] = [
   { key: 'all', label: 'All' },
 ]
 
-export default function ActivityPage() {
+export default function ActivityPage({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
   const [items, setItems] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -534,15 +534,19 @@ export default function ActivityPage() {
         }
       `}</style>
 
-      <div className="max-w-[1200px] mx-auto">
+      <div className={embedded ? '' : 'max-w-[1200px] mx-auto'}>
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">
-            {t('nav.activity')}
-          </h1>
-          <p className="text-[#667085] text-sm mt-1">
-            Execution log across routines, heartbeats and triggers
-          </p>
+        <div className={embedded ? 'mb-2' : 'mb-6'}>
+          {!embedded && (
+            <>
+              <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">
+                {t('nav.activity')}
+              </h1>
+              <p className="text-[#667085] text-sm mt-1">
+                Execution log across routines, heartbeats and triggers
+              </p>
+            </>
+          )}
         </div>
 
         {/* Filters — sticky after header */}

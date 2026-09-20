@@ -132,7 +132,7 @@ function RelativeTime({ dateStr }: { dateStr: string | null }) {
   }
 }
 
-export default function OrchestrationPage() {
+export default function OrchestrationPage({ embedded = false }: { embedded?: boolean }) {
   const [jobs, setJobs] = useState<OrchestrationJob[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -231,17 +231,26 @@ export default function OrchestrationPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Orquestração</h1>
-          <p className="text-[#667085] mt-1">Acompanhe jobs multi-agente disparados via Telegram/Chat</p>
+      {/* Header — versão compacta quando embutido no cockpit */}
+      {embedded ? (
+        <div className="flex items-center justify-end">
+          <button onClick={fetchJobs} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-medium text-[#D0D5DD] border border-[#344054]">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Atualizar
+          </button>
         </div>
-        <button onClick={fetchJobs} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-[#D0D5DD] border border-[#344054]">
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
-        </button>
-      </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Orquestração</h1>
+            <p className="text-[#667085] mt-1">Acompanhe jobs multi-agente disparados via Telegram/Chat</p>
+          </div>
+          <button onClick={fetchJobs} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-[#D0D5DD] border border-[#344054]">
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 bg-[#131a2a] border border-[#344054] rounded-lg p-4">

@@ -269,8 +269,11 @@ const translations = {
       referenceCancel: 'Cancelar',
     },
     overview: {
-      title: 'Visão geral',
+      title: 'Cockpit',
       subtitle: 'Panorama do workspace',
+      tabs: {
+        visao: 'Visão',
+      },
       activeAgents: 'Agentes ativos',
       pendingTasks: 'Tarefas pendentes',
       totalMemories: 'Total de memórias',

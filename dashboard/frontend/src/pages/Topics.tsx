@@ -211,7 +211,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
       })
       onCreated(res as TicketItem)
     } catch (err: any) {
-      setError(err?.message ||'Failed to create ticket')
+      setError(err?.message ||'Failed to create task')
     } finally {
       setSaving(false)
     }
@@ -222,7 +222,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
       <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
           <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-            <Ticket size={16} className="text-[#00FFA7]" /> New Ticket
+            <Ticket size={16} className="text-[#00FFA7]" /> New Task
           </h2>
           <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
             <X size={16} />
@@ -509,7 +509,7 @@ export default function Topics() {
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 transition-colors"
           >
-            <Plus size={13} /> New Ticket
+            <Plus size={13} /> New Task
           </button>
           <button
             onClick={fetchTickets}

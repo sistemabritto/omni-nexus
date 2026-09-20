@@ -1093,11 +1093,11 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
             className="w-full text-left px-3 py-2 text-xs text-[#e6edf3] hover:bg-white/5 border-b border-[#21262d] flex items-center gap-2"
             style={{ color: accentColor }}
           >
-            <Plus size={12} /> Create new ticket
+            <Plus size={12} /> Create new task
           </button>
           {tickets.length === 0 ? (
             <div className="px-3 py-3 text-[11px] text-[#98A2B3] italic">
-              No open tickets for @{agent}
+              No open tasks for @{agent}
             </div>
           ) : (
             tickets.map(t => (

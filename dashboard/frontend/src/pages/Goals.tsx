@@ -58,6 +58,7 @@ interface GoalProject {
   id: number
   slug: string
   mission_id: number | null
+  company_id?: number | null
   title: string
   description: string | null
   workspace_folder_path: string | null
@@ -65,6 +66,14 @@ interface GoalProject {
   created_at: string
   updated_at: string
   goals?: Goal[]
+}
+
+interface Company {
+  id: number
+  name: string
+  slug: string
+  domain: string | null
+  status: string
 }
 
 interface Mission {
@@ -683,6 +692,8 @@ export default function Goals() {
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [dueFilter, setDueFilter] = useState<DueFilter>('all')
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [companyFilter, setCompanyFilter] = useState<number | 'all'>('all')
   const [createGoalForProject, setCreateGoalForProject] = useState<number | null>(null)
   const [createTaskForGoal, setCreateTaskForGoal] = useState<number | null>(null)
   const [showCreateMission, setShowCreateMission] = useState(false)
@@ -713,6 +724,12 @@ export default function Goals() {
         }))
       )
       setMissions(enriched)
+      try {
+        const comps = await apiFetch('/api/companies')
+        setCompanies(Array.isArray(comps) ? comps : [])
+      } catch {
+        setCompanies([])
+      }
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -768,17 +785,19 @@ export default function Goals() {
   function filterMission(mission: Mission): Mission {
     return {
       ...mission,
-      projects: (mission.projects || []).map((proj) => ({
-        ...proj,
-        goals: (proj.goals || []).filter(filterGoal),
-      })).filter((proj) => (proj.goals?.length ?? 0) > 0 || statusFilter === 'all'),
+      projects: (mission.projects || [])
+        .filter((proj) => companyFilter === 'all' || proj.company_id === companyFilter)
+        .map((proj) => ({
+          ...proj,
+          goals: (proj.goals || []).filter(filterGoal),
+        })).filter((proj) => (proj.goals?.length ?? 0) > 0 || statusFilter === 'all'),
     }
   }
 
-  const filteredMissions = missions.map(filterMission)
+  const filteredMissions = missions.map(filterMission).filter((m) => (m.projects || []).length > 0)
 
-  // Compute top urgent goals for header stats
-  const allGoals = missions.flatMap((m) =>
+  // Compute top urgent goals for header stats (respects company filter)
+  const allGoals = filteredMissions.flatMap((m) =>
     (m.projects || []).flatMap((p) => (p.goals || []))
   )
   const urgentGoals = allGoals
@@ -810,7 +829,7 @@ export default function Goals() {
           <Target size={20} className="text-[#00FFA7]" />
           <div>
             <h1 className="text-white font-semibold text-lg">{t('goals.title')}</h1>
-            <p className="text-xs text-[#98A2B3]">Mission → Project → Goal → Task hierarchy</p>
+            <p className="text-xs text-[#98A2B3]">Company → Mission → Task hierarchy</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -854,6 +873,21 @@ export default function Goals() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
+        {companies.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-[#98A2B3]">Empresa:</span>
+            <select
+              value={String(companyFilter)}
+              onChange={(e) => setCompanyFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="bg-[#161b22] border border-[#21262d] text-xs text-white px-2.5 py-1.5 rounded-lg focus:border-[#00FFA7]/40 outline-none max-w-[180px]"
+            >
+              <option value="all">Todas</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-[#98A2B3]">Status:</span>
           {(['all', 'active', 'achieved', 'on-hold', 'cancelled'] as StatusFilter[]).map((s) => (

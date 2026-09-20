@@ -33,7 +33,7 @@ function statusLabel(share: ShareRecord): { label: string; color: string } {
   return { label: 'Ativo', color: '#00FFA7' }
 }
 
-export default function ShareLinks() {
+export default function ShareLinks({ embedded = false }: { embedded?: boolean }) {
   const [shares, setShares] = useState<ShareRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -79,33 +79,35 @@ export default function ShareLinks() {
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+    <div style={embedded ? undefined : { maxWidth: '1100px', margin: '0 auto' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(0,255,167,0.1)',
-              border: '1px solid rgba(0,255,167,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Share2 size={18} style={{ color: 'var(--evo-green)' }} />
+        {!embedded && (
+          <div className="flex items-center gap-3">
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: 'rgba(0,255,167,0.1)',
+                border: '1px solid rgba(0,255,167,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Share2 size={18} style={{ color: 'var(--evo-green)' }} />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Links de Compartilhamento
+              </h1>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Gerencie os links públicos de arquivos do workspace
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Links de Compartilhamento
-            </h1>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Gerencie os links públicos de arquivos do workspace
-            </p>
-          </div>
-        </div>
+        )}
         <button
           onClick={load}
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors"

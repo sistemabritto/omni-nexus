@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { Cpu, Zap, Terminal, Package, Plug, Database, Brain, Library, DollarSign } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -25,7 +24,6 @@ const CATALOG = [
 
 export default function Intelligence() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
   const { hasPermission } = useAuth()
 
   const cardClass = (enabled: boolean) =>
@@ -38,10 +36,10 @@ export default function Intelligence() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-xl font-semibold text-white mb-1">
-        {t('nav.groups.inteligencia')}
+        Integrações
       </h1>
       <p className="text-sm text-[#667085] mb-6">
-        Tudo que dá cérebro à operação — em um só lugar.
+        Tudo que dá cérebro à operação — provedores, conhecimento, memória e integrações.
       </p>
 
       <section className="mb-8">

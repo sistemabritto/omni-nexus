@@ -6,9 +6,9 @@ import NotificationBell from './NotificationBell'
 import {
   LayoutDashboard, Bot, Clock, Layout,
   LogOut, Menu, X, BookOpen,
-  ArrowUpCircle, ChevronDown, Webhook, Share2, Heart, Target,
-  Puzzle, Columns3, FolderKanban, Video,
-  Sparkles, Cpu, FolderOpen, Settings,
+  ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
+  Puzzle, Columns3, FolderKanban,
+  Plug, FolderOpen, Settings,
 } from 'lucide-react'
 import {
   getAllPluginSidebarGroups,
@@ -64,35 +64,29 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    key: 'agentes',
+    key: 'inteligencia',
     collapsible: true,
     items: [
-      // O time: identidade + o que acorda cada um (heartbeat/rotina/trigger).
+      // Tudo que dá cérebro à operação, num grupo só (agentes + o hub de
+      // integrações). O item "Integrações" aponta pro hub antigo /inteligencia,
+      // agora renomeado: reúne Provedores (harness→provider→modelo) +
+      // Conhecimento (RAG) + Memória + MemPalace + Custos + Skills + MCP +
+      // Plugins + Integrações de API. /providers sai do menu — já vive dentro.
       { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
       { to: '/triggers', labelKey: 'triggers', icon: Webhook, resource: 'triggers' },
+      { to: '/inteligencia', labelKey: 'integrations', icon: Plug, resource: null },
     ],
   },
   {
-    key: 'inteligencia',
+    key: 'materiais',
     collapsible: true,
     items: [
-      // Hub único: catálogo (skills/MCP/plugins/integrações) + conhecimento
-      // (RAG/memória/mempalace) + custos. /providers fica no menu porque é a
-      // configuração mais mexida (harness→provider→modelo).
-      { to: '/inteligencia', labelKey: 'intelligenceHub', icon: Sparkles, resource: null },
-      { to: '/providers', labelKey: 'providers', icon: Cpu, resource: 'config' },
-    ],
-  },
-  {
-    key: 'workspace',
-    collapsible: true,
-    items: [
-      // Arquivos do negócio: workspace, mídias e shares (links públicos).
+      // Arquivos do negócio numa página só: árvore de arquivos + mídias +
+      // shares viraram abas em /workspace (?mat=). 3 links do menu apontando
+      // pra 1 tela era ruído.
       { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
-      { to: '/media', labelKey: 'media', icon: Video, resource: 'media_jobs' },
-      { to: '/shares', labelKey: 'shareLinks', icon: Share2, resource: 'workspace' },
     ],
   },
   {

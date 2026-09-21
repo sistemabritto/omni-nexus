@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useCompanies, type Company } from '../context/CompanyContext'
 import CompanyManagerModal from './CompanyManagerModal'
+import CompanyListModal from './CompanyListModal'
 import NotificationBell from './NotificationBell'
 import {
   LayoutDashboard, Bot, Clock,
@@ -111,18 +112,17 @@ function CompanySwitcher({
   companies,
   activeCompanyId,
   onSelect,
-  onManage,
   onCreate,
   t,
 }: {
   companies: Company[]
   activeCompanyId: number | null
   onSelect: (id: number | null) => void
-  onManage: (id: number) => void
   onCreate: () => void
   t: (key: string) => string
 }) {
   const [open, setOpen] = useState(false)
+  const [showList, setShowList] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -131,7 +131,7 @@ function CompanySwitcher({
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') { setOpen(false); setShowList(false) }
     }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
@@ -162,12 +162,12 @@ function CompanySwitcher({
         aria-haspopup="menu"
         aria-expanded={open}
         title={t('nav.companies.activeLabel')}
-        className={`flex items-center gap-1.5 min-w-0 text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#00FFA7]/60 ${
+        className={`flex items-center gap-1.5 min-w-0 w-full text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#00FFA7]/60 ${
           open ? 'text-[#D0D5DD]' : ''
         }`}
       >
         {mark(active)}
-        <span className="text-xs truncate group-hover:text-[#D0D5DD] text-[#98A2B3] transition-colors">
+        <span className="text-xs truncate min-w-0 group-hover:text-[#D0D5DD] text-[#98A2B3] transition-colors">
           {active ? active.name : t('nav.companies.all')}
         </span>
         <ChevronDown
@@ -227,11 +227,11 @@ function CompanySwitcher({
 
           <button
             role="menuitem"
-            onClick={() => { onManage(activeCompanyId ?? companies[0]?.id ?? 0); setOpen(false) }}
+            onClick={() => { setShowList(true); setOpen(false) }}
             className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
           >
             <Settings2 size={14} className="shrink-0 opacity-70" />
-            {t('nav.companies.manage')}
+            {t('nav.companies.manageAll')}
           </button>
 
           <button
@@ -244,6 +244,8 @@ function CompanySwitcher({
           </button>
         </div>
       )}
+
+      {showList && <CompanyListModal onClose={() => setShowList(false)} />}
     </div>
   )
 }
@@ -439,12 +441,21 @@ export default function Sidebar() {
                     companies={companies}
                     activeCompanyId={activeCompanyId}
                     onSelect={setActiveCompanyId}
-                    onManage={(id) => setManageCompany(id || companies[0]?.id || null)}
                     onCreate={() => setManageCompany('new')}
                     t={t}
                   />
                 ) : (
-                  <span className="sr-only">{t('nav.companies.all')}</span>
+                  <button
+                    onClick={() => setManageCompany('new')}
+                    className="flex items-center gap-1.5 min-w-0 w-full text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#00FFA7]/60"
+                  >
+                    <span className="flex items-center justify-center rounded-md bg-white/5 text-[#98A2B3] shrink-0" style={{ width: 14, height: 14 }}>
+                      <Plus size={11} />
+                    </span>
+                    <span className="text-xs truncate min-w-0 group-hover:text-[#D0D5DD] text-[#98A2B3] transition-colors">
+                      {t('nav.companies.addFirst')}
+                    </span>
+                  </button>
                 )}
               </div>
               <NavLink

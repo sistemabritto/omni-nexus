@@ -198,8 +198,31 @@ def patch_company(company_id: int):
         c.logo_path = data["logo_path"] or None
     c.updated_at = _now()
     db.session.commit()
-    audit(current_user, "update", "goals", f"Updated company #{c.id}: {c.name}")
+    audit(current_user, "update", "goals", f"Updated company #{company_id}: {c.name}")
     return jsonify(c.to_dict())
+
+
+@bp.route("/api/companies/<int:company_id>", methods=["DELETE"])
+def delete_company(company_id: int):
+    denied = _require("manage")
+    if denied:
+        return denied
+    c = Company.query.get_or_404(company_id)
+    # SQLite não enforce FKs por padrão — SET NULL manual nos filhos antes de apagar.
+    for table in ("projects", "goals", "media_jobs"):
+        db.session.execute(
+            db.text(f"UPDATE {table} SET company_id = NULL WHERE company_id = :cid"),
+            {"cid": company_id},
+        )
+    if c.logo_path:
+        logo_file = WORKSPACE / c.logo_path
+        if logo_file.exists():
+            logo_file.unlink(missing_ok=True)
+    name = c.name
+    db.session.delete(c)
+    db.session.commit()
+    audit(current_user, "delete", "goals", f"Deleted company #{company_id}: {name}")
+    return jsonify({"status": "ok"})
 
 
 @bp.route("/api/companies/<int:company_id>/logo", methods=["POST", "DELETE"])

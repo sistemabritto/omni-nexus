@@ -677,7 +677,7 @@ class Company(db.Model):
             "domain": self.domain,
             "status": self.status,
             "logo_url": (
-                f"/api/workspace/download?path={self.logo_path}&inline=1"
+                f"/api/companies/{self.id}/logo"
                 if self.logo_path
                 else None
             ),

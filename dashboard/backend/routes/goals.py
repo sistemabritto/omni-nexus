@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from flask_login import current_user
 from models import db, Mission, GoalProject, Goal, GoalTask, Company, has_permission, audit
 from routes._helpers import raw_conn
@@ -225,8 +225,21 @@ def delete_company(company_id: int):
     return jsonify({"status": "ok"})
 
 
-@bp.route("/api/companies/<int:company_id>/logo", methods=["POST", "DELETE"])
+@bp.route("/api/companies/<int:company_id>/logo", methods=["GET", "POST", "DELETE"])
 def company_logo(company_id: int):
+    c = Company.query.get_or_404(company_id)
+    if request.method == "GET":
+        # Serve inline. Logos ficam em assets/company-logos (repo-root), fora do
+        # /workspace do workspace-download (que daria 403 "admin path").
+        denied = _require("view")
+        if denied:
+            return denied
+        if not c.logo_path:
+            return jsonify({"error": "no logo"}), 404
+        full = WORKSPACE / c.logo_path
+        if not full.exists():
+            return jsonify({"error": "File not found", "code": "not_found"}), 404
+        return send_file(str(full), as_attachment=False, download_name=full.name)
     denied = _require("manage")
     if denied:
         return denied

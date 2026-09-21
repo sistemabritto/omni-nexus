@@ -4,6 +4,20 @@
 
 - User prefers thorough, structured codebase audits with numbered investigation points covering specific areas
   - Prefer inline error states over alert() for user-facing error messages in UI components.
+- When renaming routes in Next.js App Router, preserve query parameters by creating a redirect component that captures location.search and forwards it to the new route
+
+## Empresas (multi-tenant)
+
+Companies are a first-class entity in the dashboard: missions/projects/goals scope to a company via `company_id`, and the active company is a per-user UI state (localStorage `evo:active_company`).
+
+- **Model** (`dashboard/backend/models.py:656`): `companies` — `cnpj` (String 18, unique, nullable), `name` (200, required), `slug` (200, unique, auto-generated from name if omitted), `domain` (300), `status` (default `active`), `logo_path` (workspace-relative). Logo served via `/api/workspace/download?path=<logo_path>&inline=1`.
+- **API** (`dashboard/backend/routes/goals.py:140-241`, auth via `_require("view"|"manage")`):
+  - `GET /api/companies` — lista ordenada por id
+  - `POST /api/companies` — body `{name, slug?, cnpj?, domain?}`; 400 sem name; 409 slug/CNPJ duplicado; retorna 201 com o objeto. Empresa nova nasce vazia (sem mission/project clone — P4 fase 2 `/empresa` Magneto).
+  - `PATCH /api/companies/<id>` — aceita `cnpj | name | domain | status | logo_path` (logo_path null remove o logo)
+  - `POST /api/companies/<id>/logo` (multipart `file`; png/webp/jpg/svg; salva em `assets/company-logos/<slug><ext>`, sobrescreve) e `DELETE` (remove arquivo + campo)
+- **Frontend**: seleção no card do perfil da sidebar (`src/components/Sidebar.tsx` → `CompanySwitcher`, popover com "Gerenciar empresa" e "Nova empresa"); form criar/editar em `src/components/CompanyManagerModal.tsx` (slug auto-gerado editável, CNPJ com máscara, logo só pós-criação); contexto em `src/context/CompanyContext.tsx` (estado ativo em localStorage, `reload()` após mutações). i18n: chaves em `nav.companies.*` nos 3 locales (pt-BR/en-US/es) — sempre use esse prefixo, senão a chave literal aparece na UI.
+- **DB vivo**: SQLite em `/workspace/dashboard/data/evonexus.db` DENTRO do container do serviço swarm `evonexus_evonexus_dashboard` (não há `/opt/evo-nexus/dashboard/data/evonexus.db` no host — stale). Consulta ad-hoc: `docker exec <container> python3 -c "import sqlite3; ..."`.
 
 ## graphify
 

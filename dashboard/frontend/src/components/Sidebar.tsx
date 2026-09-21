@@ -10,7 +10,7 @@ import {
   LogOut, Menu, X,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
-  Plug, FolderOpen, Settings, Building2, Settings2, Check,
+  Plug, FolderOpen, Settings, Building2, Settings2, Check, Plus,
 } from 'lucide-react'
 import {
   getAllPluginSidebarGroups,
@@ -112,12 +112,14 @@ function CompanySwitcher({
   activeCompanyId,
   onSelect,
   onManage,
+  onCreate,
   t,
 }: {
   companies: Company[]
   activeCompanyId: number | null
   onSelect: (id: number | null) => void
   onManage: (id: number) => void
+  onCreate: () => void
   t: (key: string) => string
 }) {
   const [open, setOpen] = useState(false)
@@ -231,6 +233,15 @@ function CompanySwitcher({
             <Settings2 size={14} className="shrink-0 opacity-70" />
             {t('nav.companies.manage')}
           </button>
+
+          <button
+            role="menuitem"
+            onClick={() => { onCreate(); setOpen(false) }}
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs font-medium text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors mt-0.5"
+          >
+            <Plus size={14} className="shrink-0" />
+            {t('nav.companies.newTitle')}
+          </button>
         </div>
       )}
     </div>
@@ -242,7 +253,7 @@ function CompanySwitcher({
 export default function Sidebar() {
   const { user, logout, hasPermission } = useAuth()
   const { companies, activeCompanyId, activeCompany, setActiveCompanyId } = useCompanies()
-  const [manageCompany, setManageCompany] = useState<number | null>(null)
+  const [manageCompany, setManageCompany] = useState<number | 'new' | null>(null)
   const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null)
@@ -429,34 +440,35 @@ export default function Sidebar() {
                     activeCompanyId={activeCompanyId}
                     onSelect={setActiveCompanyId}
                     onManage={(id) => setManageCompany(id || companies[0]?.id || null)}
+                    onCreate={() => setManageCompany('new')}
                     t={t}
                   />
                 ) : (
                   <span className="sr-only">{t('nav.companies.all')}</span>
                 )}
               </div>
+              <NavLink
+                to="/settings"
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) =>
+                  `p-2 rounded-xl transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
+                    isActive
+                      ? 'bg-[#00FFA7]/15 text-[#00FFA7]'
+                      : 'bg-white/5 text-[#98A2B3] hover:bg-white/10 hover:text-[#D0D5DD]'
+                  }`
+                }
+                title={t('nav.settings')}
+              >
+                <Settings size={20} />
+              </NavLink>
+              <button
+                onClick={logout}
+                className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60"
+                title={t('nav.logout')}
+              >
+                <LogOut size={16} />
+              </button>
             </div>
-            <NavLink
-              to="/settings"
-              onClick={() => setMobileOpen(false)}
-              className={({ isActive }) =>
-                `p-2 rounded-xl transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
-                  isActive
-                    ? 'bg-[#00FFA7]/15 text-[#00FFA7]'
-                    : 'bg-white/5 text-[#98A2B3] hover:bg-white/10 hover:text-[#D0D5DD]'
-                }`
-              }
-              title={t('nav.settings')}
-            >
-              <Settings size={20} />
-            </NavLink>
-            <button
-              onClick={logout}
-              className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60"
-              title={t('nav.logout')}
-            >
-              <LogOut size={16} />
-            </button>
           </div>
         </div>
       )}
@@ -494,9 +506,9 @@ export default function Sidebar() {
         </a>
       </div>
 
-      {manageCompany !== null && companies.find((c) => c.id === manageCompany) && (
+      {manageCompany !== null && (
         <CompanyManagerModal
-          company={companies.find((c) => c.id === manageCompany)!}
+          company={manageCompany === 'new' ? null : companies.find((c) => c.id === manageCompany) ?? null}
           onClose={() => setManageCompany(null)}
         />
       )}

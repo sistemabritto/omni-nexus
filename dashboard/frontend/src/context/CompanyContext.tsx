@@ -17,6 +17,9 @@ export interface Company {
   id: number
   name: string
   slug: string
+  cnpj?: string | null
+  domain?: string | null
+  status?: string
   logo_url?: string | null
 }
 

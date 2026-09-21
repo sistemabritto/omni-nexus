@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { useCompanies } from '../context/CompanyContext'
+import { useCompanies, type Company } from '../context/CompanyContext'
 import CompanyManagerModal from './CompanyManagerModal'
 import NotificationBell from './NotificationBell'
 import {
@@ -10,7 +10,7 @@ import {
   LogOut, Menu, X,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
-  Plug, FolderOpen, Settings, Building2, Settings2,
+  Plug, FolderOpen, Settings, Building2, Settings2, Check,
 } from 'lucide-react'
 import {
   getAllPluginSidebarGroups,
@@ -103,6 +103,141 @@ const roleBadgeClass: Record<string, string> = {
   operator: 'bg-blue-500/20 text-blue-400',
   viewer: 'bg-gray-500/20 text-gray-400',
 }
+
+// W3 (2026-09-20): switcher de empresa — popover no rodapé, junto ao perfil.
+// Substitui o <select> nativo (que abria a lista do browser, tosco e sem logo).
+// Menu abre pra cima, fecha com Esc/clique fora; check no item ativo.
+function CompanySwitcher({
+  companies,
+  activeCompanyId,
+  onSelect,
+  onManage,
+  t,
+}: {
+  companies: Company[]
+  activeCompanyId: number | null
+  onSelect: (id: number | null) => void
+  onManage: (id: number) => void
+  t: (key: string) => string
+}) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDown(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const active = companies.find((c) => c.id === activeCompanyId) ?? null
+
+  const mark = (company: Company | null, size = 14) =>
+    company?.logo_url ? (
+      <img src={company.logo_url} alt="" className="rounded-md object-cover shrink-0" style={{ width: size, height: size }} />
+    ) : (
+      <span className="flex items-center justify-center rounded-md bg-white/5 text-[#98A2B3] shrink-0" style={{ width: size, height: size }}>
+        <Building2 size={size * 0.9} />
+      </span>
+    )
+
+  // Renderizado DENTRO do card do perfil (linha 2 da conta). O wrapper do
+  // card é o posicionamento (relative): o menu abre pra cima na largura do
+  // card, sem estourar a sidebar. Fecha com Esc/clique fora.
+  return (
+    <div ref={rootRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title={t('nav.companies.activeLabel')}
+        className={`flex items-center gap-1.5 min-w-0 text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#00FFA7]/60 ${
+          open ? 'text-[#D0D5DD]' : ''
+        }`}
+      >
+        {mark(active)}
+        <span className="text-xs truncate group-hover:text-[#D0D5DD] text-[#98A2B3] transition-colors">
+          {active ? active.name : t('nav.companies.all')}
+        </span>
+        <ChevronDown
+          size={12}
+          className={`text-[#475467] transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : 'group-hover:text-[#98A2B3]'}`}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute bottom-full -left-3 right-0 mb-1.5 z-50 rounded-xl border border-white/10 bg-[#0C111D]/95 backdrop-blur-md shadow-2xl shadow-black/60 p-1"
+        >
+          <div className="px-2.5 pt-1.5 pb-1 text-[10px] uppercase tracking-wider text-[#475467] font-semibold select-none">
+            {t('nav.companies.activeLabel')}
+          </div>
+
+          <button
+            role="menuitemradio"
+            aria-checked={activeCompanyId === null}
+            onClick={() => { onSelect(null); setOpen(false) }}
+            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
+              activeCompanyId === null
+                ? 'text-white bg-[#00FFA7]/10'
+                : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5'
+            }`}
+          >
+            <Building2 size={15} className="shrink-0 opacity-70" />
+            <span className="flex-1 truncate font-medium">{t('nav.companies.all')}</span>
+            {activeCompanyId === null && <Check size={14} className="text-[#00FFA7] shrink-0" />}
+          </button>
+
+          <div className="my-1 h-px bg-white/10" />
+
+          {companies.map((c) => (
+            <button
+              key={c.id}
+              role="menuitemradio"
+              aria-checked={c.id === activeCompanyId}
+              onClick={() => { onSelect(c.id); setOpen(false) }}
+              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
+                c.id === activeCompanyId
+                  ? 'text-white bg-[#00FFA7]/10'
+                  : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5'
+              }`}
+            >
+              {mark(c, 22)}
+              <span className="flex-1 min-w-0">
+                <span className="block truncate font-medium">{c.name}</span>
+                <span className="block text-[10px] opacity-70 truncate">{c.slug}</span>
+              </span>
+              {c.id === activeCompanyId && <Check size={14} className="text-[#00FFA7] shrink-0" />}
+            </button>
+          ))}
+
+          <div className="my-1 h-px bg-white/10" />
+
+          <button
+            role="menuitem"
+            onClick={() => { onManage(activeCompanyId ?? companies[0]?.id ?? 0); setOpen(false) }}
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+          >
+            <Settings2 size={14} className="shrink-0 opacity-70" />
+            {t('nav.companies.manage')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
 
 export default function Sidebar() {
   const { user, logout, hasPermission } = useAuth()
@@ -273,45 +408,33 @@ export default function Sidebar() {
 
       {user && (
         <div className="px-3 py-3 border-t border-[#344054] space-y-2">
-          {/* W3 (2026-09-20): empresa ativa ao lado da conta — mesma linha visual
-              do perfil, não compete com o logo do topo. */}
-          {companies.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              <span
-                title={t('nav.companies.activeLabel')}
-                className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/5 text-[#98A2B3] shrink-0"
-              >
-                <Building2 size={13} />
-              </span>
-              <select
-                value={activeCompanyId ?? ''}
-                onChange={(e) => setActiveCompanyId(e.target.value === '' ? null : Number(e.target.value))}
-                aria-label={t('nav.companies.activeLabel')}
-                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#D0D5DD] focus:outline-none focus:ring-1 focus:ring-[#00FFA7]/50 cursor-pointer"
-              >
-                <option value="">{t('nav.companies.all')}</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => setManageCompany(activeCompanyId ?? companies[0]?.id ?? null)}
-                title={t('nav.companies.manage')}
-                className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/10 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60"
-              >
-                <Settings2 size={14} />
-              </button>
-            </div>
-          )}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#00FFA7]/20 text-[#00FFA7] flex items-center justify-center text-sm font-bold shrink-0">
-              {(user.display_name || user.username).charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white font-medium truncate">{user.display_name || user.username}</p>
-              <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${roleBadgeClass[user.role] || roleBadgeClass.viewer}`}>
-                {user.role}
-              </span>
+          {/* W3 (2026-09-21): empresa INTEGRADA ao card do perfil — linha 2 do
+              perfil (logo + nome da empresa ativa), não uma linha solta acima.
+              Clicar abre o seletor; badge de role fica na linha 1, ao lado do nome. */}
+          <div className="relative">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#00FFA7]/20 text-[#00FFA7] flex items-center justify-center text-sm font-bold shrink-0">
+                {(user.display_name || user.username).charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <p className="text-sm text-white font-medium truncate">{user.display_name || user.username}</p>
+                  <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium ${roleBadgeClass[user.role] || roleBadgeClass.viewer}`}>
+                    {user.role}
+                  </span>
+                </div>
+                {companies.length > 0 ? (
+                  <CompanySwitcher
+                    companies={companies}
+                    activeCompanyId={activeCompanyId}
+                    onSelect={setActiveCompanyId}
+                    onManage={(id) => setManageCompany(id || companies[0]?.id || null)}
+                    t={t}
+                  />
+                ) : (
+                  <span className="sr-only">{t('nav.companies.all')}</span>
+                )}
+              </div>
             </div>
             <NavLink
               to="/settings"

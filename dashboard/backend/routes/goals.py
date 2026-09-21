@@ -229,8 +229,9 @@ def delete_company(company_id: int):
 def company_logo(company_id: int):
     c = Company.query.get_or_404(company_id)
     if request.method == "GET":
-        # Serve inline. Logos ficam em assets/company-logos (repo-root), fora do
-        # /workspace do workspace-download (que daria 403 "admin path").
+        # Serve inline. Endpoint dedicado (e não /api/workspace/download) para
+        # que o logo carregue com a permissão "view" de goals, sem depender das
+        # allowed roots do workspace-download.
         denied = _require("view")
         if denied:
             return denied
@@ -261,7 +262,9 @@ def company_logo(company_id: int):
     if ext not in (".png", ".webp", ".jpg", ".jpeg", ".svg"):
         return jsonify({"error": "allowed types: png, webp, jpg, svg"}), 400
     from werkzeug.utils import secure_filename
-    out_dir = WORKSPACE / "assets" / "company-logos"
+    # Salva DENTRO de /workspace/workspace (volume montado, persistente entre
+    # deploys). O repo-root /workspace/assets é efêmero e sumia a cada redeploy.
+    out_dir = WORKSPACE / "workspace" / "assets" / "company-logos"
     out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{secure_filename(c.slug)}{ext}"
     dest = out_dir / filename

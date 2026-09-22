@@ -60,3 +60,12 @@ instagram_client.py summary
 ## Rate Limits
 - Instagram Platform endpoints: `4800 × impressions` per 24h
 - Business Discovery / Hashtag: 200 calls/hour/user
+
+## Pagination (manual — recent_posts only fetches one page)
+
+`recent_posts()` / `instagram_client.py` fetches a SINGLE page via the `limit` param (IG max ~50/page) with no built-in pagination loop. To pull full history (e.g. "all posts since date X"), you must call the media endpoint yourself and paginate. Gotchas discovered debugging graph.instagram.com v23.0 responses (2026-09-22):
+
+- The pagination object key is **`paging`**, not `paging_info` (that's the older Facebook Graph API name and doesn't exist here).
+- `paging.next` is a full URL, not a cursor token — don't pass it as a request param.
+- The actual cursor tokens live at **`paging.cursors.before`** / **`paging.cursors.after`**. Pass `before` as a query param to walk OLDER posts (further back in time); `after` walks newer/forward.
+- Known quirk: the `before` cursor from page 1 can return 0 items on page 2 even when `media_count` on the profile implies more history exists (observed: 50/55 posts fetched, remaining ~5 older posts unreachable via a second page). Root cause unconfirmed — may be an IG Graph API feed limitation, not a script bug. Don't burn turns chasing the last few straggler posts near a media_count mismatch; proceed with analysis on what pagination did return.

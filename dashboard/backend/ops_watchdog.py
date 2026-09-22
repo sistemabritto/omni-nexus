@@ -50,6 +50,13 @@ ASSIGNEE_BY_TYPE = {
     "service": "vault-security",
 }
 
+# Job em pipeline (segurando lock) sem progresso além deste limite é reaptado de
+# volta para retryable_failure. 2h dá folga de segurança enorme: o render máximo
+# saudável de um HyperFrames é min(MEDIA_JOB_TIMEOUT, 1800s) ≈ 30min, e cada etapa
+# toca progress_message/updated_at. Só pega órfão mesmo (worker morre em redeploy
+# e deixa o job com lock estagnado — confirmado em produção: 9 jobs presos).
+MEDIA_REAP_HOURS = float(os.environ.get("WATCHDOG_MEDIA_REAP_HOURS", "2"))
+
 
 def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
@@ -162,6 +169,37 @@ def _self_heal_l1(anom: dict, conn: sqlite3.Connection) -> bool:
     return True
 
 
+def _reap_orphaned_media_jobs(conn: sqlite3.Connection) -> int:
+    """Reap jobs em pipeline (com lock) que estagnaram além de MEDIA_REAP_HOURS.
+
+    O media-worker atualiza progress_message/updated_at a cada etapa; se um job
+    fica 'preparing'/'generating'/'rendering' com updated_at velho, o worker que o
+    segurava morreu (ex.: redeploy do dashboard muda o VIP do Swarm e derruba o
+    DNS por alguns ciclos). Devolver pra retryable_failure + soltar o lock faz o
+    polling do worker reclamar de novo — mesmo mecanismo já usado pelo /run e
+    pelo self-heal do watchdog. Retorna quantos foram reaptados.
+    """
+    if MEDIA_REAP_HOURS <= 0:
+        return 0
+    cutoff = _iso(_now_utc() - timedelta(hours=MEDIA_REAP_HOURS))
+    cur = conn.execute(
+        """UPDATE media_jobs
+            SET status = 'retryable_failure',
+                last_error = 'auto-reap pelo watchdog (lock estagnado além do limite)',
+                locked_at = NULL, locked_by = NULL,
+                updated_at = ?
+          WHERE status IN ('preparing','generating','rendering','validating')
+            AND locked_at IS NOT NULL
+            AND (updated_at IS NULL OR updated_at < ?)""",
+        (_iso(), cutoff),
+    )
+    n = cur.rowcount
+    if n:
+        conn.commit()
+        log.info("watchdog: reapou %d job(s) de mídia órfão(s) -> retryable_failure", n)
+    return n
+
+
 def _create_ticket(anom: dict) -> str | None:
     """Cria o ticket de correção (dedup por source_agent). Devolve o id ou None."""
     if os.environ.get("WATCHDOG_AUTOTICKET", "1").lower() in ("0", "no", "false"):
@@ -221,6 +259,7 @@ def tick() -> dict:
     state = _load_state()
     conn = _connect()
     try:
+        reaped = _reap_orphaned_media_jobs(conn)
         anoms = detect(conn)
     finally:
         conn.close()
@@ -264,7 +303,8 @@ def tick() -> dict:
         log.info("ops_watchdog: %d nova(s) acumulada(s), card diário já enviado hoje", len(new_anoms))
 
     _save_state(state)
-    log.info("ops_watchdog.tick: anoms=%d novos=%d resolvidos=%d alertado=%s",
-             len(anoms), len(new_anoms), len(resolved), alerted_now)
+    log.info("ops_watchdog.tick: anoms=%d novos=%d resolvidos=%d alertado=%s media_reaped=%d",
+             len(anoms), len(new_anoms), len(resolved), alerted_now, reaped)
     return {"anomalies": len(anoms), "new": len(new_anoms), "resolved": len(resolved),
-            "tickets_created": sum(1 for v in tickets.values() if v), "alerted": alerted_now}
+            "tickets_created": sum(1 for v in tickets.values() if v), "alerted": alerted_now,
+            "media_reaped": reaped}

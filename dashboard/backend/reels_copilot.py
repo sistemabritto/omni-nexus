@@ -40,6 +40,15 @@ ARTIFACTS_DIR = WORKSPACE / "workspace" / "social" / "reels"
 
 BRT = timezone(timedelta(hours=-3))
 
+
+class ReelGenerationError(Exception):
+    """Geração de roteiro falhou após esgotar o budget do motor resiliente.
+
+    Lançada por `tick()` (não por `generate_reel`/`decide`/`revise_reel`) para o
+    heartbeat_runner gravar status='fail' — visível ao ops-watchdog. Os demais
+    callers tratam o dict {'ok': False, 'error': …} devolvido por generate_reel.
+    """
+
 OPENREPLY_VPS = os.environ.get("OPENREPLY_SSH_HOST", "")  # vazio = executa local (dashboard já roda na VPS)
 OPENREPLY_DB_CONTAINER = "postgres_postgres"
 OPENREPLY_WORKSPACE_ID = os.environ.get("OPENREPLY_WORKSPACE_ID", "cmtn8ppz700010jmsp15ul9s0")
@@ -53,6 +62,12 @@ MIRROR_PLATFORMS = ("youtube", "tiktok")
 REVIEW_STALE_HOURS = float(os.environ.get("REELS_REVIEW_STALE_HOURS", "24"))
 REELS_AUTO_ARCHIVE = os.environ.get("REELS_AUTO_ARCHIVE_PAST_REMINDER", "0").lower() in ("1", "true", "yes")
 NAG_STATE_PATH = WORKSPACE / "workspace" / "reports" / "reels-copilot" / "nag_state.json"
+GENERATION_FAIL_PATH = WORKSPACE / "workspace" / "reports" / "reels-copilot" / "gen_fail_state.json"
+# 2026-09-22: gerações falhas repetidas (ex.: lock disputado por outros agentic
+# runs) viravam 'success' mudo — o Felipe nunca sabia que o copilot não tinha
+# roteiro novo pronto. Dedup: alerta UMA vez a cada janela, depois segue quieto
+# mas ainda reporta o erro (o ops-watchdog enxerga falhas consecutivas).
+GEN_FAIL_ALERT_COOLDOWN_HOURS = float(os.environ.get("REELS_GEN_FAIL_ALERT_HOURS", "12"))
 
 
 def _now_iso() -> str:
@@ -182,7 +197,7 @@ def generate_reel(theme_hint: str | None = None) -> dict:
     theme_hint: tema opcional imposto pelo humano (/reel <tema> ou rejeição com
     crítica). Sem hint, o próprio LLM escolhe a partir da matriz de temas da skill.
     """
-    from provider_fallback import invoke_with_fallback
+    from provider_fallback import resilient_invoke
 
     hint = f"\nTema imposto pelo criador (OBRIGATÓRIO usá-lo como base): {theme_hint}\n" if theme_hint else ""
     prompt = (
@@ -195,12 +210,20 @@ def generate_reel(theme_hint: str | None = None) -> dict:
         + hint
         + "\n\n" + _REEL_SCHEMA_HINT
     )
-    result = invoke_with_fallback(
+    # 2026-09-22: troca de invoke_with_fallback -> resilient_invoke. Antes, quando
+    # outro agentic run segurava o lock do workspace ("workspace busy … held the
+    # lock for 320.0s"), a chamada devolvia "busy" NAO-retryável e generate_reel
+    # desistia na hora: o tick marcava success, não gravava reel, não mandava card —
+    # e a esteira inteira parava em silêncio (reel 2 arquivou em 17:30 mas nunca
+    # gerou o reel 3). resilient_invoke repete a cadeia enquanto houver vereda
+    # (busy/timeout), com backoff, dentro de um budget que cabe no heartbeat.
+    result = resilient_invoke(
         prompt=prompt,
         max_turns=6,
         timeout_seconds=300,
         agent="",
         routing_key="reels-copilot",
+        retry_budget_seconds=780,
     )
     if result.get("status") != "success":
         return {"ok": False, "error": f"LLM falhou: {result.get('error') or result.get('status')}"}
@@ -734,6 +757,68 @@ def _handle_stale_review(row: dict) -> dict | None:
     return {"generated": False, "reason": f"reel {seq:03d} >{REVIEW_STALE_HOURS:.0f}h em review; lembrete enviado={ok}"}
 
 
+def _load_gen_fail_state() -> dict:
+    try:
+        return json.loads(GENERATION_FAIL_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_gen_fail_state(state: dict) -> None:
+    GENERATION_FAIL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = GENERATION_FAIL_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(GENERATION_FAIL_PATH)
+
+
+def _report_generation_fail(reason: str) -> bool:
+    """Superficia uma geração falhada no Magneto — DEDUP por cooldown.
+
+    Antes era silêncio total: tick devolvia {'generated': False, 'reason': …} e o
+    heartbeat_runner gravava status='success' (o handler não lançou exceção), então
+    nem o Magneto nem o ops-watchdog viam que a esteira tinha parado. Aqui enviamos
+    UM alerta por janela de GEN_FAIL_ALERT_COOLDOWN_HOURS; dentro do cooldown só
+    incrementamos o contador (sem spam a cada 3h). Retorna True se enviou o card.
+    """
+    state = _load_gen_fail_state()
+    cur = state.get("current") or {}
+    now = datetime.now(timezone.utc)
+    # Falha de MESMA natureza em janela curta -> dedup (só conta).
+    try:
+        last = datetime.fromisoformat(cur["at"].replace("Z", "+00:00")) if cur.get("at") else None
+    except ValueError:
+        last = None
+    within_cooldown = (last is not None
+                       and (now - last).total_seconds() < GEN_FAIL_ALERT_COOLDOWN_HOURS * 3600)
+    streak = int(cur.get("streak", 0)) + 1
+    sent = False
+    if not within_cooldown:
+        try:
+            from notifications import send_telegram_alert
+            card = (
+                f"⚠️ <b>Copilot de reels</b> — não consegui gerar roteiro novo.\n"
+                f"<i>{_reason_brief(reason)}</i>\n\n"
+                f"Costuma ser o lock do workspace disputado por outros agentes. "
+                f"Vou tentar de novo na próxima rodada; se persistir {streak}x seguidas, "
+                f"abro ticket."
+            )
+            sent = bool(send_telegram_alert(card))
+        except Exception as exc:  # noqa: BLE001 — alerta nunca derruba o tick
+            log.warning("reels_copilot gen-fail alert: %s", exc)
+        cur = {"at": _now_iso(), "streak": streak, "reason": reason[:200]}
+        _save_gen_fail_state({"current": cur})
+    else:
+        cur["streak"] = streak
+        _save_gen_fail_state({"current": cur})
+    log.info("reels_copilot gen-fail reported=%s streak=%d reason=%s", sent, streak, reason[:120])
+    return sent
+
+
+def _reason_brief(reason: str) -> str:
+    r = (reason or "").strip().replace("\n", " ")
+    return r[:180]
+
+
 def tick() -> dict:
     """Handler do heartbeat: garante 1 reel em voo (gera se a fila estiver vazia)."""
     if not DB_PATH.exists():
@@ -751,7 +836,14 @@ def tick() -> dict:
         return {"generated": False, "reason": "já há reel em voo — 1 de cada vez"}
     res = generate_reel()
     if res.get("ok"):
-        # reel novo começou — zera lembrete pendente de outros
+        # reel novo começou — zera contador de falhas + lembrete pendente de outros
+        _save_gen_fail_state({})
         return {"generated": True, "seq": int(res["reel"]["seq"]),
-                "campaign": res["openreply"].get("status"), "card_sent": res["card_sent"]}
-    return {"generated": False, "reason": res.get("error")}
+                "campaign": res.get("openreply", {}).get("status"), "card_sent": res.get("card_sent")}
+    # Falha real de geração: NÃO fica em silêncio. (1) alerta no Magneto com
+    # dedup por cooldown, (2) levanta exceção para o heartbeat_runner gravar
+    # status='fail' — assim o ops-watchdog detecta 2+ fails consecutivos e abre
+    # ticket p/ hawk-debugger (self-heal P5) em vez da esteira morrer muda.
+    reason = res.get("error") or "desconhecido"
+    _report_generation_fail(reason)
+    raise ReelGenerationError(f"reels-copilot: geração falhou ({reason})")

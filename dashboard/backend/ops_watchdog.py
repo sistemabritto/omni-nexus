@@ -96,7 +96,8 @@ def detect(conn: sqlite3.Connection) -> list[dict]:
     out: list[dict] = []
 
     hbs = conn.execute(
-        "SELECT id, agent, interval_seconds, timeout_seconds, enabled FROM heartbeats WHERE enabled=1"
+        """SELECT id, agent, interval_seconds, timeout_seconds, enabled, wake_triggers
+           FROM heartbeats WHERE enabled=1"""
     ).fetchall()
 
     by_hb: dict[str, list] = {}
@@ -122,13 +123,17 @@ def detect(conn: sqlite3.Connection) -> list[dict]:
                 except ValueError:
                     pass
 
-        # (b) stalled: ligado sem nenhum run em interval×3
-        if runs:
+        # (b) stalled: ligado sem nenhum run em interval×3. Event-only (sem wake
+        # 'interval' — ex: goal-suggester/project-planner/goal-planner, que só
+        # acordam em project_created/mission_created/goal_created) fica parado por
+        # legítimo e NUNCA deve virar 'stalled'; só a varredura cíclica conta.
+        event_only = "interval" not in (json.loads(hb["wake_triggers"] or "[]"))
+        if event_only or runs:
             try:
-                last_run = max(datetime.fromisoformat(str(r["started_at"]).replace("Z", "+00:00")) for r in runs if r.get("started_at"))
+                last_run = max(datetime.fromisoformat(str(r["started_at"]).replace("Z", "+00:00")) for r in runs if r.get("started_at")) if runs else None
             except ValueError:
                 last_run = None
-            if last_run is None or (now - last_run).total_seconds() > hb["interval_seconds"] * STALLED_FACTOR:
+            if not event_only and (last_run is None or (now - last_run).total_seconds() > hb["interval_seconds"] * STALLED_FACTOR):
                 out.append({"key": f"stalled:{hid}", "type": "stalled", "hb": hid,
                             "severity": "p2", "detail": f"sem run novo há {int((now - (last_run or now)).total_seconds()//3600)}h"})
             continue

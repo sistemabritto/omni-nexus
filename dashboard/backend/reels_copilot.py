@@ -47,6 +47,13 @@ OPENREPLY_INSTRAM_ID = os.environ.get("OPENREPLY_INSTRAM_ID", "cmtn8t74m00040jms
 
 MIRROR_PLATFORMS = ("youtube", "tiktok")
 
+# B (2026-09-22): se um reel em 'review' fica sem decisão deste tempo, o copilot
+# manda UM lembrete no Telegram (dedup) em vez de correr o heartbeat 18x em silêncio.
+# Se REELS_AUTO_ARCHIVE_PAST_REMINDER=1, arquiva o reel e já gera o próximo.
+REVIEW_STALE_HOURS = float(os.environ.get("REELS_REVIEW_STALE_HOURS", "24"))
+REELS_AUTO_ARCHIVE = os.environ.get("REELS_AUTO_ARCHIVE_PAST_REMINDER", "0").lower() in ("1", "true", "yes")
+NAG_STATE_PATH = WORKSPACE / "workspace" / "reports" / "reels-copilot" / "nag_state.json"
+
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
@@ -667,6 +674,66 @@ def pipeline_summary() -> str:
     return line
 
 
+def _load_nag_state() -> dict:
+    try:
+        return json.loads(NAG_STATE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_nag_state(state: dict) -> None:
+    NAG_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = NAG_STATE_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(NAG_STATE_PATH)
+
+
+def _handle_stale_review(row: dict) -> dict | None:
+    """Se um reel 'review' ficou sem decisão além de REVIEW_STALE_HOURS, devolve um
+    resultado de tick (lembrete único / auto-arquivo). None se ainda não chegou na hora.
+
+    Sem isso o heartbeat roda a cada 3h, vê o mesmo reel pendente e só devolve
+    'generated:False' — 18 runs 'success' que são silêncio, e o Felipe não sabe
+    que o copilot tá esperando o dele. O lembrete é DEDUP por reel.id (uma vez).
+    """
+    if row["status"] != "review":
+        return None
+    age_h = (datetime.now(timezone.utc) - datetime.fromisoformat(
+        row["updated_at"].replace("Z", "+00:00"))).total_seconds() / 3600
+    if age_h < REVIEW_STALE_HOURS:
+        return None
+    seq = int(row["seq"])
+    state = _load_nag_state()
+    last_nag = state.get(str(row["id"]), {}).get("at")
+    if last_nag:
+        # já lembrou — agora ou arquiva (se ligado) ou fica quieto
+        if REELS_AUTO_ARCHIVE:
+            conn = _connect()
+            try:
+                conn.execute("UPDATE reels SET status='rejected', rejected_reason="
+                             "'arquivado: sem decisão além do prazo, copilot seguiu adiante', updated_at=? WHERE id=?",
+                             (_now_iso(), row["id"]))
+                conn.commit()
+            finally:
+                conn.close()
+            kicked = kick_next_theme("anterior arquivado por inatividade")
+            return {"generated": bool(kicked.get("ok")), "auto_archived": seq,
+                    "reason": f"reel {seq:03d} ficou >{REVIEW_STALE_HOURS:.0f}h sem decisão; arquivado e fila seguiu"}
+        return {"generated": False, "reason": f"reel {seq:03d} já recebeu lembrete de inatividade"}
+    # primeiro lembrete deste reel
+    from notifications import send_telegram_alert
+    from notifications import _esc
+    card = (
+        f"⏰ <b>Copilot de reels</b> — reel <b>{seq:03d}</b> te espera há {age_h:.0f}h.\n"
+        f"<i>{_esc(row['theme'])}</i>\n\n"
+        f"Responde por áudio ou <code>#reel:{seq:03d} aprova|rejeita|revisa</code>."
+    )
+    ok = send_telegram_alert(card)
+    state[str(row["id"])] = {"at": _now_iso(), "seq": seq, "reminded": bool(ok)}
+    _save_nag_state(state)
+    return {"generated": False, "reason": f"reel {seq:03d} >{REVIEW_STALE_HOURS:.0f}h em review; lembrete enviado={ok}"}
+
+
 def tick() -> dict:
     """Handler do heartbeat: garante 1 reel em voo (gera se a fila estiver vazia)."""
     if not DB_PATH.exists():
@@ -674,12 +741,17 @@ def tick() -> dict:
     conn = _connect()
     try:
         _ensure_reels_table(conn)
-        if get_in_flight(conn):
-            return {"generated": False, "reason": "já há reel em voo — 1 de cada vez"}
+        in_flight = get_in_flight(conn)
     finally:
         conn.close()
+    if in_flight:
+        stale = _handle_stale_review(dict(in_flight))
+        if stale is not None:
+            return stale
+        return {"generated": False, "reason": "já há reel em voo — 1 de cada vez"}
     res = generate_reel()
     if res.get("ok"):
+        # reel novo começou — zera lembrete pendente de outros
         return {"generated": True, "seq": int(res["reel"]["seq"]),
                 "campaign": res["openreply"].get("status"), "card_sent": res["card_sent"]}
     return {"generated": False, "reason": res.get("error")}

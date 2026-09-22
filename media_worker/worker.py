@@ -24,6 +24,8 @@ import time
 import traceback
 from pathlib import Path
 
+import requests  # noqa: E402
+
 BACKEND_DIR = Path(__file__).resolve().parent.parent / "dashboard" / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
@@ -44,6 +46,7 @@ JOB_TIMEOUT_SECONDS = int(os.environ.get("MEDIA_JOB_TIMEOUT_SECONDS", "3600"))
 MAX_FILE_SIZE_BYTES = int(os.environ.get("MEDIA_MAX_FILE_SIZE_BYTES", str(1024 * 1024 * 1024)))
 HEARTBEAT_FILE = Path(os.environ.get("MEDIA_WORKER_HEARTBEAT_FILE", "/tmp/media-worker.alive"))
 AGENT_NAME = "media-worker"
+_backoff_seconds = 0.0
 
 
 def _touch_heartbeat() -> None:
@@ -71,9 +74,20 @@ def _claim_next_job() -> dict | None:
     process (or a human clicking "Iniciar") wins the race, `/run` 409s and we
     just move on to the next candidate.
     """
+    global _backoff_seconds
     for status in ("queued", "retryable_failure"):
         try:
             jobs = evo.get("/api/media/jobs", params={"status": status, "limit": 5})
+        except requests.exceptions.HTTPError as exc:
+            if exc.response is not None and exc.response.status_code == 429:
+                # Rate-limited pelo dashboard — backoff exponencial em vez de
+                # martelar a API a cada 10s (a chuva de 429 no log). Teto de 5 min.
+                _backoff_seconds = min(max(_backoff_seconds * 2, POLL_SECONDS * 6), 300)
+                print(f"[media-worker] 429 no list {status} — backoff {_backoff_seconds:.0f}s", flush=True)
+                time.sleep(_backoff_seconds)
+                return None
+            print(f"[media-worker] failed to list {status} jobs: {traceback.format_exc()}", flush=True)
+            continue
         except Exception:
             print(f"[media-worker] failed to list {status} jobs: {traceback.format_exc()}", flush=True)
             continue
@@ -82,6 +96,7 @@ def _claim_next_job() -> dict | None:
                 return evo.post(f"/api/media/jobs/{job['id']}/run", {"agent": AGENT_NAME})
             except Exception:
                 continue
+    _backoff_seconds = 0
     return None
 
 

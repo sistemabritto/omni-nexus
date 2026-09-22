@@ -27,7 +27,6 @@ import logging
 import os
 import re
 import sqlite3
-import subprocess
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -53,6 +52,16 @@ OPENREPLY_VPS = os.environ.get("OPENREPLY_SSH_HOST", "")  # vazio = executa loca
 OPENREPLY_DB_CONTAINER = "postgres_postgres"
 OPENREPLY_WORKSPACE_ID = os.environ.get("OPENREPLY_WORKSPACE_ID", "cmtn8ppz700010jmsp15ul9s0")
 OPENREPLY_INSTRAM_ID = os.environ.get("OPENREPLY_INSTRAM_ID", "cmtn8t74m00040jmsxi8dbbzo")
+# 2026-09-22: conexão POSTGRES DIRETA pela rede interna do swarm. O container do
+# dashboard NÃO tem nem `docker` nem `ssh` no PATH, então o caminho antigo
+# (`sh -c "docker exec … psql"`) falhava sempre -> 3 campanhas 'failed' seguidas.
+# Por DNS interno (`postgres_postgres:5432`) + psycopg2 (já no venv) dá.
+OPENREPLY_DATABASE_URL = os.environ.get("OPENREPLY_DATABASE_URL", "").strip()
+OPENREPLY_PG_HOST = os.environ.get("OPENREPLY_PG_HOST", "postgres_postgres")
+OPENREPLY_PG_PORT = int(os.environ.get("OPENREPLY_PG_PORT", "5432"))
+OPENREPLY_PG_USER = os.environ.get("OPENREPLY_PG_USER", "postgres")
+OPENREPLY_PG_PASSWORD = os.environ.get("OPENREPLY_PG_PASSWORD", "")
+OPENREPLY_PG_DB = os.environ.get("OPENREPLY_PG_DB", "openreply")
 
 MIRROR_PLATFORMS = ("youtube", "tiktok")
 
@@ -300,48 +309,64 @@ def _cuid_like(prefix_len: int = 25) -> str:
     return ("c" + ts + rand)[:prefix_len]
 
 
+def _openreply_pg_connect():
+    """Conexão psycopg2 direta ao Postgres compartilhado do OpenReply.
+
+    Ordem: OPENREPLY_DATABASE_URL (completo) > OPENREPLY_PG_* host/port/user/
+    password/db. Retorna None se não há senha configurada (evita conexão cega).
+    """
+    import psycopg2
+    if OPENREPLY_DATABASE_URL:
+        return psycopg2.connect(OPENREPLY_DATABASE_URL, connect_timeout=10)
+    if not OPENREPLY_PG_PASSWORD:
+        return None
+    return psycopg2.connect(
+        host=OPENREPLY_PG_HOST, port=OPENREPLY_PG_PORT,
+        user=OPENREPLY_PG_USER, password=OPENREPLY_PG_PASSWORD,
+        dbname=OPENREPLY_PG_DB, connect_timeout=10,
+    )
+
+
 def create_openreply_campaign(row: dict) -> dict:
     """Cria a campanha 'próximo reel' (pendingNextReel=true) — o worker do
-    OpenReply amarra sozinho ao próximo reel publicado. Best-effort: SSH/Postgres
-    indisponível devolve status='failed' e a geração segue."""
+    OpenReply amarra sozinho ao próximo reel publicado. Best-effort: falha de DB
+    devolve status='failed' e a geração segue (não derruba o roteiro/card)."""
     keyword = f"{int(row['seq']):02d}"
     name = f"Reels Copilot {keyword} — próximo Reel"
-    dm_message = f"Opa {{username}}! Aqui está a recompensa que você pediu: veja {row['bait_text'] or 'o material completo'} 👇 {{link}}"
-    public_reply = f"Aqui está! Confere {row['bait_text'] or 'o guia'} que preparei p/ você 😉 @{{username}}"
+    dm_message = f"Opa {{username}}! Aqui está a recompensa que você pediu: veja {row.get('bait_text') or 'o material completo'} 👇 {{link}}"
+    public_reply = f"Aqui está! Confere {row.get('bait_text') or 'o guia'} que preparei p/ você 😉 @{{username}}"
     aid = _cuid_like()
 
-    sql = f"""INSERT INTO "Automation" (
-      id, "workspaceId", "instagramAccountId", name, goal, "postId", "postUrl",
-      "pendingNextReel", "matchAnyPost", keywords, "matchAnyWord", "dmTriggerEnabled",
-      "dmMessage", "openingDmEnabled", "openingDmMessage", "openingDmButtonLabel",
-      "linkButtonLabel", "requireFollow", "followPromptMessage", "followPromptButtonLabel",
-      "followUpEnabled", "followUpMessage", "followUpDelayMinutes",
-      "publicReplyEnabled", "publicReplyMessage", "publicReplyMessages",
-      "isActive", "wholeWordMatch", "reportShareSlug", "reportShareEnabled",
-      "createdAt", "updatedAt")
-    VALUES ('{aid}', '{OPENREPLY_WORKSPACE_ID}', '{OPENREPLY_INSTRAM_ID}',
-      '{name}', NULL, NULL, NULL, true, false, ARRAY['{keyword}'], false, true,
-      '{dm_message.replace(chr(39), chr(39)*2)}', false, NULL, NULL, 'Abrir o guia',
-      false, NULL, NULL, false, NULL, 0, true, NULL, ARRAY['{public_reply.replace(chr(39), chr(39)*2)}'],
-      true, true, NULL, true, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'));"""
-
-    psql_cmd = (
-        f"docker exec $(docker ps -q -f name={OPENREPLY_DB_CONTAINER}) psql -U postgres "
-        f"-d openreply -c \"SET search_path=public; {sql.replace(chr(10), ' ')}\""
+    sql = (
+        'INSERT INTO "Automation" ('
+        'id, "workspaceId", "instagramAccountId", name, goal, "postId", "postUrl", '
+        '"pendingNextReel", "matchAnyPost", keywords, "matchAnyWord", "dmTriggerEnabled", '
+        '"dmMessage", "openingDmEnabled", "openingDmMessage", "openingDmButtonLabel", '
+        '"linkButtonLabel", "requireFollow", "followPromptMessage", "followPromptButtonLabel", '
+        '"followUpEnabled", "followUpMessage", "followUpDelayMinutes", '
+        '"publicReplyEnabled", "publicReplyMessage", "publicReplyMessages", '
+        '"isActive", "wholeWordMatch", "reportShareSlug", "reportShareEnabled", '
+        '"createdAt", "updatedAt") '
+        'VALUES (%s,%s,%s,%s,NULL,NULL,NULL,true,false,ARRAY[%s],false,true,'
+        '%s,false,NULL,NULL,%s,'
+        'false,NULL,NULL,false,NULL,0,true,NULL,ARRAY[%s],'
+        'true,true,NULL,true,(now() AT TIME ZONE \'UTC\'),(now() AT TIME ZONE \'UTC\'))'
     )
+    params = (aid, OPENREPLY_WORKSPACE_ID, OPENREPLY_INSTRAM_ID, name, keyword,
+              dm_message, "Abrir o guia", public_reply)
     try:
-        if OPENREPLY_VPS:
-            cmd = ["ssh", OPENREPLY_VPS, psql_cmd]
-        else:
-            # Dashboard já roda na própria VPS — executa o docker exec direto, sem SSH.
-            cmd = ["sh", "-c", psql_cmd]
-        proc = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=60,
-        )
-        if proc.returncode == 0 and "INSERT" in proc.stdout:
-            return {"ok": True, "status": "created", "automation_id": aid, "name": name, "keyword": keyword}
-        return {"ok": False, "status": "failed", "error": (proc.stderr or proc.stdout)[:200]}
-    except Exception as exc:  # noqa: BLE001
+        conn = _openreply_pg_connect()
+        if conn is None:
+            return {"ok": False, "status": "failed",
+                    "error": "OpenReply Postgres não configurado (OPENREPLY_PG_PASSWORD / _DATABASE_URL)"}
+        try:
+            with conn.cursor() as cur:
+                cur.execute(sql, params)
+            conn.commit()
+        finally:
+            conn.close()
+        return {"ok": True, "status": "created", "automation_id": aid, "name": name, "keyword": keyword}
+    except Exception as exc:  # noqa: BLE001 — campanha é best-effort
         return {"ok": False, "status": "failed", "error": str(exc)[:200]}
 
 

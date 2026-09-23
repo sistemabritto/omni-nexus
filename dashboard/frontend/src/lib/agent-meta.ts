@@ -19,6 +19,10 @@ import {
   Navigation,
   History,
   Zap,
+  Crosshair,
+  Sparkles,
+  Ruler,
+  Clapperboard,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -33,7 +37,7 @@ export interface AgentMeta {
 }
 
 // ---------------------------------------------------------------------------
-// Static seed — 38 native agents (pre-hydration fallback, covers 100% of
+// Static seed — 42 native agents (pre-hydration fallback, covers 100% of
 // natives before the first fetch completes). Contract: getAgentMeta() is
 // always synchronous.
 // ---------------------------------------------------------------------------
@@ -49,6 +53,9 @@ const AGENT_META_SEED: Record<string, AgentMeta> = {
   'pulse-community': { icon: Users, color: '#2DD4BF', command: '/pulse', label: 'Community', avatar: '/avatar/avatar_pulse.webp' },
   'sage-strategy': { icon: Compass, color: '#818CF8', command: '/sage', label: 'Strategy', avatar: '/avatar/avatar_sage.webp' },
   oracle: { icon: BookOpen, color: '#F59E0B', command: '/oracle', label: 'Knowledge', avatar: '/avatar/avatar_oracle.webp' },
+  'project-planner': { icon: Ruler, color: '#38BDF8', command: '/project-planner', label: 'Project Planner', avatar: '/avatar/avatar_project_planner.webp' },
+  'goal-suggester': { icon: Sparkles, color: '#F472B6', command: '/goal-suggester', label: 'Goal Suggester', avatar: '/avatar/avatar_goal_suggester.webp' },
+  'goal-planner': { icon: Crosshair, color: '#FB923C', command: '/goal-planner', label: 'Goal Planner', avatar: '/avatar/avatar_goal_planner.webp' },
   'mako-marketing': { icon: Megaphone, color: '#FB923C', command: '/mako', label: 'Marketing', avatar: '/avatar/avatar_mako.webp' },
   'aria-hr': { icon: UserCheck, color: '#F472B6', command: '/aria', label: 'HR / People', avatar: '/avatar/avatar_aria.webp' },
   'zara-cs': { icon: Headphones, color: '#22D3EE', command: '/zara', label: 'Customer Success', avatar: '/avatar/avatar_zara.webp' },
@@ -76,6 +83,7 @@ const AGENT_META_SEED: Record<string, AgentMeta> = {
   'trail-tracer': { icon: Bot, color: '#34D399', command: '/trail-tracer', label: 'Tracer', avatar: '/avatar/avatar_trail.webp' },
   'vault-security': { icon: Bot, color: '#F87171', command: '/vault-security', label: 'Security Reviewer', avatar: '/avatar/avatar_vault.webp' },
   'zen-simplifier': { icon: Bot, color: '#A78BFA', command: '/zen-simplifier', label: 'Code Simplifier', avatar: '/avatar/avatar_zen.webp' },
+  'reels-copilot': { icon: Clapperboard, color: '#C084FC', command: '/reels-copilot', label: 'Reels Copilot', avatar: '/avatar/avatar_reels_copilot.webp' },
 }
 
 // ---------------------------------------------------------------------------

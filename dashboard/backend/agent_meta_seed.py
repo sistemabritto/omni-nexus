@@ -58,6 +58,18 @@ NATIVE_AGENT_SEED: Dict[str, Dict[str, Optional[str]]] = {
         "label": "Knowledge",
         "avatar_url": "/avatar/avatar_oracle.webp",
     },
+    "project-planner": {
+        "label": "Project Planner",
+        "avatar_url": "/avatar/avatar_project_planner.webp",
+    },
+    "goal-suggester": {
+        "label": "Goal Suggester",
+        "avatar_url": "/avatar/avatar_goal_suggester.webp",
+    },
+    "goal-planner": {
+        "label": "Goal Planner",
+        "avatar_url": "/avatar/avatar_goal_planner.webp",
+    },
     "mako-marketing": {
         "label": "Marketing",
         "avatar_url": "/avatar/avatar_mako.webp",
@@ -165,5 +177,9 @@ NATIVE_AGENT_SEED: Dict[str, Dict[str, Optional[str]]] = {
     "zen-simplifier": {
         "label": "Code Simplifier",
         "avatar_url": "/avatar/avatar_zen.webp",
+    },
+    "reels-copilot": {
+        "label": "Reels Copilot",
+        "avatar_url": "/avatar/avatar_reels_copilot.webp",
     },
 }

@@ -1,0 +1,1 @@
+When adding new UI elements requiring translation, systematically update all locales (pt-BR, en-US, es) for consistency, verify existing keys before adding new ones, and methodically work through state changes → rendering updates → prop passing → i18n updates → layout verification

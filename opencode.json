@@ -50,7 +50,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "options": {
         "apiKey": "{env:OPENAI_API_KEY}",
-        "baseURL": "{env:OPENAI_BASE_URL}"
+        "baseURL": "https://omni.sistemabritto.com.br/v1"
       }
     }
   }

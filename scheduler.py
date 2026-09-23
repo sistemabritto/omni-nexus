@@ -184,7 +184,12 @@ def run_adw(name: str, script: str, args: str = ""):
     """
     now = datetime.now().strftime("%H:%M")
     basename = Path(script).name
-    candidates = [ROUTINES_DIR / script, ROUTINES_DIR / basename, WORKSPACE / "scripts" / basename]
+    # /workspace/config é o único diretório do workspace em volume persistente no
+    # Swarm — scripts colocados ali sobrevivem a redeploy sem rebuild da imagem
+    # (scripts/refresh-omniroute-combos.py usa esse caminho, 2026-09-23).
+    cfg_dir = WORKSPACE / "config"
+    candidates = [ROUTINES_DIR / script, ROUTINES_DIR / basename,
+                  WORKSPACE / "scripts" / basename, cfg_dir / basename, cfg_dir / script]
     script_path = next((p for p in candidates if p.exists()), None)
     if script_path is None:
         print(f"  {now} ✗ {name} — script not found: {script}", flush=True)

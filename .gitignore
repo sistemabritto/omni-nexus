@@ -220,3 +220,4 @@ graphify-out/.graphify_python
 *.graphify-bak
 config/.bootstrap.lock
 graphify-out/.rebuild.lock
+config/omni_manage_key

@@ -39,7 +39,12 @@ Diagnóstico completo feito em 22/09/2026:
 - Token IGAA (Login do Instagram) criado 19/09 — **validade 60 dias (~expira 18/nov)**; sem Page Token configurado (`SOCIAL_INSTAGRAM_1_PAGE_TOKEN` vazio). Para expiração exata e para renovar, precisa **App Access Token** (app do Meta Business) — o `debug_token` com token de user dá OAuthException 100.
 - Token de user IGAA não autoriza `debug_token`; o token segue funcionando p/ leitura mesmo assim (perfis/posts/insights OK).
 - **Limitação de paginação**: `GET {node}/media` só devolve ~50 posts recentes; `paging.cursors.before` da página seguinte retorna lista VAZIA. Não há como paginar além disso via Graph API social — para histórico maior, usar export/backup ou insights por post individual.
-- Cliente: `.claude/skills/int-instagram/scripts/instagram_client.py` (`accounts|profile|recent_posts|top_posts|post_insights|account_insights|summary`).
+ - Cliente: `.claude/skills/int-instagram/scripts/instagram_client.py` (`accounts|profile|recent_posts|top_posts|post_insights|account_insights|summary`).
+
+### OpenReply (comentário→DM) — conexão do dashboard p/ criar campanhas do reels-copilot
+- O reels-copilot (`dashboard/backend/reels_copilot.py`) cria a campanha OpenReply de cada reel via `create_openreply_campaign`. **O container do dashboard NÃO tem `docker` nem `ssh` no PATH** — o caminho antigo `sh -c "docker exec … psql"` falhava sempre (`openreply_status='failed'` em todos os reels). Corrigido 22/09 (commit `20102dc`): conexão **Postgres DIRETA pela rede interna do swarm** (`postgres_postgres:5432`, resolvido por DNS interno do container) via `psycopg2` (já no venv), SQL parametrizado.
+- Credenciais por env no serviço `evonexus_evonexus_dashboard`: `OPENREPLY_PG_HOST=postgres_postgres`, `OPENREPLY_PG_PORT=5432`, `OPENREPLY_PG_USER=postgres`, `OPENREPLY_PG_PASSWORD=<senha p/ extrair de `docker service inspect openreply_openreply-web` → campo `DATABASE_URL`>`, `OPENREPLY_PG_DB=openreply`. **No redeploy, re-addar esses 5 junto com `APPROVAL_BRIDGE_TOKEN`/`APPROVAL_APPROVER_IDS`/`REELS_AUTO_ARCHIVE_PAST_REMINDER=1`** (caem sem `--env-add`). `OPENREPLY_DATABASE_URL` completo tem precedência sobre os campos individuais.
+- Postgres COMPARTILHADO (`postgres_postgres`, banco `openreply`) — tabela `"Automation"` (colunas CamelCase precisam de aspas duplas). Campanha do reel usa `pendingNextReel=true` → o worker do OpenReply amarra sozinho ao próximo reel publicado.
 
 ## graphify
 

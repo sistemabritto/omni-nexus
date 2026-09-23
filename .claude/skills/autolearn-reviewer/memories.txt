@@ -1,1 +1,3 @@
 User prefers outcome-based metrics (grana e mídia) over abstract counts for measuring success. When users express uncertainty about abstract targets, reframe them as concrete, observable outcomes tied to existing systems (e.g., 'dias autônomos' instead of 'operações sociais automatizadas').
+User prefers maintaining existing codebase patterns over introducing new approaches when fixing code, to maintain consistency.
+CSS specificity: Inline styles override CSS classes (including Tailwind pseudo-classes like 'last:'), so conditional styling should use inline styles or CSS variables rather than relying on class overrides.

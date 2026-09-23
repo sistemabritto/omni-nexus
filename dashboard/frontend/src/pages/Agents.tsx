@@ -27,6 +27,7 @@ import {
   Navigation,
   History,
   Lock,
+  ChevronDown,
   type LucideIcon,
 } from 'lucide-react'
 import { api } from '../lib/api'
@@ -76,6 +77,11 @@ const BUSINESS_AGENTS = new Set([
   'lex-legal',
   'nova-product',
   'dex-data',
+  'lumen-learning',
+  'goal-suggester',
+  'goal-planner',
+  'project-planner',
+  'reels-copilot',
 ])
 
 const ENGINEERING_TIERS: Record<EngTier, Set<string>> = {
@@ -631,23 +637,49 @@ function SectionHeader({
   count,
   color,
   description,
+  collapsed,
+  onToggle,
+  collapsedHint,
 }: {
   label: string
   count: number
   color: string
   description?: string
+  collapsed?: boolean
+  onToggle?: () => void
+  collapsedHint?: string
 }) {
   return (
     <div className="mb-3 flex items-end justify-between border-b border-[#21262d] pb-2">
       <div className="flex items-baseline gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-[#e6edf3]" style={{ color }}>
-          {label}
-        </h2>
+        {onToggle ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            title={collapsed ? (collapsedHint || 'Expandir') : 'Recolher'}
+            className="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-left transition-colors hover:bg-[#0d1117]"
+          >
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#e6edf3]" style={{ color }}>
+              {label}
+            </h2>
+            <ChevronDown
+              size={14}
+              className={`text-[#8b949e] transition-transform ${collapsed ? '-rotate-90' : ''}`}
+            />
+          </button>
+        ) : (
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#e6edf3]" style={{ color }}>
+            {label}
+          </h2>
+        )}
         <span className="rounded-full bg-[#0d1117] px-2 py-0.5 text-[11px] font-medium text-[#8b949e] border border-[#21262d]">
           {count}
         </span>
+        {collapsed && collapsedHint && (
+          <span className="hidden text-[11px] text-[#484F58] md:inline">{collapsedHint}</span>
+        )}
       </div>
-      {description && (
+      {!collapsed && description && (
         <p className="hidden md:block text-[11px] text-[#98A2B3]">{description}</p>
       )}
     </div>
@@ -667,6 +699,16 @@ function SubSectionHeader({ label, count }: { label: string; count: number }) {
 // Recent agents — persisted in localStorage
 const RECENT_KEY = 'evo:recent-agents'
 const MAX_RECENT = 6
+const ENG_COLLAPSED_KEY = 'evo:agents-engineering-collapsed'
+
+function getEngineeringCollapsed(): boolean {
+  try {
+    // Default hidden (true) — first read falls back to collapsed.
+    return localStorage.getItem(ENG_COLLAPSED_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
 
 function getRecentAgents(): string[] {
   try {
@@ -697,6 +739,19 @@ export default function Agents() {
   const [filter, setFilter] = useState<FilterValue>('all')
   const [query, setQuery] = useState('')
   const [recentNames] = useState(getRecentAgents)
+  const [engCollapsed, setEngCollapsed] = useState(getEngineeringCollapsed)
+
+  const toggleEngCollapsed = () => {
+    setEngCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(ENG_COLLAPSED_KEY, String(next))
+      } catch {
+        // localStorage indisponível (modo privado) — prefere só o estado em memória
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     api.get('/agents')
@@ -778,6 +833,8 @@ export default function Agents() {
       )
     })
   }, [agents, filter, query])
+
+  const searching = query.trim().length > 0 || filter !== 'all'
 
   const grouped = useMemo(() => {
     let oracle: Agent | null = null
@@ -1036,7 +1093,11 @@ export default function Agents() {
                 }
                 color={CATEGORY_META.engineering.color}
                 description={CATEGORY_META.engineering.description}
+                collapsed={!searching && engCollapsed}
+                onToggle={toggleEngCollapsed}
+                collapsedHint="camada de dev — sub-agentes do dev-autopilot"
               />
+              {(searching || !engCollapsed) && <>
               {(['reasoning', 'execution', 'speed'] as EngTier[]).map((tier) =>
                 grouped.engineering[tier].length > 0 ? (
                   <div key={tier}>
@@ -1059,6 +1120,7 @@ export default function Agents() {
                   </div>
                 </div>
               )}
+              </>}
             </section>
           )}
 

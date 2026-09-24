@@ -28,10 +28,18 @@ bp = Blueprint("metricas", __name__)
 
 @bp.route("/api/metricas/acquisition", methods=["GET"])
 def acquisition_evidence():
-    """Credential-free agent access to aggregate evidence from the host collector."""
+    """Full cross-source evidence is restricted until company memberships exist.
+
+    A company_id query parameter or the frontend's localStorage company switcher
+    does not prove tenant membership. The report includes site, CRM, Cakto and
+    Instagram data without company tags, so filtering Plausible alone would
+    expose another company's acquisition data to a goals:view user.
+    """
     denied = _require("view")
     if denied:
         return denied
+    if current_user.role != "admin":
+        return jsonify({"error": "Company-scoped acquisition access unavailable"}), 403
     path = Path(os.environ.get("GROWTH_EVIDENCE_PATH", "/workspace/workspace/reports/growth/latest.json"))
     try:
         data = json.loads(path.read_text())

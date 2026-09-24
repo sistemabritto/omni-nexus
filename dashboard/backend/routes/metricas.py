@@ -38,8 +38,6 @@ def acquisition_evidence():
     denied = _require("view")
     if denied:
         return denied
-    if current_user.role != "admin":
-        return jsonify({"error": "Company-scoped acquisition access unavailable"}), 403
     path = Path(os.environ.get("GROWTH_EVIDENCE_PATH", "/workspace/workspace/reports/growth/latest.json"))
     try:
         data = json.loads(path.read_text())
@@ -53,6 +51,11 @@ def acquisition_evidence():
 def _require(action: str):
     if not has_permission(current_user.role, "goals", action):
         return jsonify({"error": "Forbidden"}), 403
+    # The historical metricas_crescimento table has no company_id. Until its
+    # rows and queries are tenant-scoped, goals permissions alone would expose
+    # another company's growth series to a non-admin dashboard user.
+    if current_user.role != "admin":
+        return jsonify({"error": "Company-scoped metrics access unavailable"}), 403
     return None
 
 

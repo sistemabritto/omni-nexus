@@ -9,6 +9,10 @@ properties. For Sistema Britto, register sistemabritto.com.br as site and
 blog.sistemabritto.com.br as blog under company_id 1. Without it, the legacy
 PLAUSIBLE_SITE_ID remains readable but is marked unscoped. This collector does
 not enforce per-user tenant access to the aggregate report endpoint.
+
+SUPABASE_SITE_COMPANY_ID explicitly identifies the company owning the site
+project. Cakto and EvoCRM are still collected as whole accounts/instances for
+the admin report; agent context does not receive those unpartitioned sources.
 """
 from __future__ import annotations
 import argparse,json,os
@@ -173,8 +177,13 @@ def collect_cakto(start,end):
             'account_order_count':data.get('count')}
 
 def collect(start,end,host=False):
+    site_company_id=os.environ.get('SUPABASE_SITE_COMPANY_ID','').strip()
+    if site_company_id and (not site_company_id.isdecimal() or int(site_company_id)<1):
+        raise ValueError('SUPABASE_SITE_COMPANY_ID must be a positive integer')
     report={'collected_at':datetime.now(timezone.utc).isoformat(),'start_inclusive':start.isoformat(),
-            'end_exclusive':end.isoformat(),'sources':{},'policy':'read-only; no lead messages; no PII exports'}
+            'end_exclusive':end.isoformat(),'sources':{},
+            'source_company_ids':{'site':int(site_company_id) if site_company_id else None},
+            'policy':'read-only; no lead messages; no PII exports'}
     for name,fn in [('site',collect_site),('plausible',collect_plausible),('instagram',collect_instagram),('cakto',collect_cakto)]:
         try:report['sources'][name]={'status':'ok','data':fn(start,end)}
         except Exception as exc:report['sources'][name]={'status':'unavailable','error':str(exc) if isinstance(exc,RuntimeError) else type(exc).__name__}

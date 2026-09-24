@@ -29,6 +29,36 @@ def _plausible_summary(data: dict, company_id: int | None) -> dict:
     return {'properties':selected}
 
 
+def _instagram_summary(data: dict, company_id: int | None, owner_company_id: int | None) -> dict:
+    if company_id is None or owner_company_id != company_id:
+        return {'status':'company_scope_required'}
+    if not isinstance(data,dict):
+        return {'status':'unavailable'}
+    profile=data.get('profile') or {}
+    media=data.get('media') or []
+    if not isinstance(profile,dict) or not isinstance(media,list):
+        return {'status':'unavailable'}
+    reels=[]
+    for row in media:
+        if not isinstance(row,dict):
+            continue
+        permalink=row.get('permalink')
+        if row.get('media_product_type')!='REELS' and not (isinstance(permalink,str) and '/reel/' in permalink):
+            continue
+        if not isinstance(permalink,str) or not permalink.startswith('https://www.instagram.com/reel/'):
+            continue
+        insights=row.get('insights') or {}
+        reach=insights.get('reach') if isinstance(insights,dict) else None
+        reels.append({'permalink':permalink,'timestamp':row.get('timestamp'),
+                      'likes':row.get('like_count') if isinstance(row.get('like_count'),int) else None,
+                      'comments':row.get('comments_count') if isinstance(row.get('comments_count'),int) else None,
+                      'reach':reach if isinstance(reach,int) else None})
+    reels.sort(key=lambda row:row['timestamp'] if isinstance(row['timestamp'],str) else '',reverse=True)
+    return {'status':'ok','username':profile.get('username'),'followers':profile.get('followers_count'),
+            'reels_in_window':len(reels),'latest_reel_at':reels[0]['timestamp'] if reels else None,
+            'latest_reels':reels[:3],'pagination_truncated':bool(data.get('pagination_truncated'))}
+
+
 def load_context(company_id: int | None = None) -> str:
     path=Path(os.environ.get('GROWTH_EVIDENCE_PATH','/workspace/workspace/reports/growth/latest.json'))
     try:
@@ -44,6 +74,8 @@ def load_context(company_id: int | None = None) -> str:
                  'source_status':{k:v['status'] for k,v in sources.items()},
                  'site':{k:site.get(k) for k in ['visits','bio_cohort','classroom_cohort','leads','purchases']},
                  'plausible':_plausible_summary(plausible_data,company_id),
+                 'instagram':_instagram_summary(sources.get('instagram',{}).get('data'),company_id,
+                                                source_company_ids.get('instagram')),
                  # These collectors still aggregate whole accounts/instances.
                  # They need product and pipeline company mapping before an
                  # agent may see their data in a company-scoped prompt.

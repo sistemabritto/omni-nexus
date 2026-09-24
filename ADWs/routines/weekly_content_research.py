@@ -656,7 +656,10 @@ def pautas_do_x(quantas: int, ja_escolhidas: list[str], noticias: str = "") -> l
 
     evitar = "\n".join(f"- {k}" for k in ja_escolhidas[:40])
     from growth_context import load_context
-    growth_evidence = load_context()
+    # Esta rotina é do blog Sistema Britto; o ID é configurado por ambiente.
+    # Sem mapeamento explícito, o contexto de aquisição não expõe outra empresa.
+    company_id = os.environ.get("SISTEMA_BRITTO_COMPANY_ID", "").strip()
+    growth_evidence = load_context(company_id=int(company_id) if company_id.isdecimal() and int(company_id)>0 else None)
     prompt = (
         "Você acha pauta de blog vasculhando o que está sendo discutido AGORA no X "
         "e na web, em português do Brasil.\n\n"

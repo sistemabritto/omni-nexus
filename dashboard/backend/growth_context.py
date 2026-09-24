@@ -6,17 +6,14 @@ from pathlib import Path
 def _plausible_summary(data: dict, company_id: int | None) -> dict:
     if not data:
         return {'status':'unavailable'}
+    if company_id is None:
+        return {'status':'company_scope_required'}
     properties=data.get('properties')
     if not isinstance(properties,list):
         return {'status':'company_scope_required'}
-    scopes={p.get('company_id') for p in properties if isinstance(p,dict)}
-    if None in scopes and company_id is None:
-        return {'status':'company_scope_required','property_count':len(properties)}
-    if company_id is None and len(scopes)>1:
-        return {'status':'company_scope_required','property_count':len(properties)}
     selected=[]
     for prop in properties:
-        if not isinstance(prop,dict) or (company_id is not None and prop.get('company_id')!=company_id):
+        if not isinstance(prop,dict) or prop.get('company_id')!=company_id:
             continue
         stats=prop.get('stats') or {}
         aggregate=stats.get('aggregate') or {}
@@ -43,7 +40,7 @@ def _legacy_sources_match_scope(plausible_data: dict, company_id: int | None) ->
     if not isinstance(properties,list) or not properties:
         return False
     scopes={p.get('company_id') for p in properties if isinstance(p,dict)}
-    return len(scopes)==1 and None not in scopes and (company_id is None or company_id in scopes)
+    return company_id is not None and scopes=={company_id}
 
 def load_context(company_id: int | None = None) -> str:
     path=Path(os.environ.get('GROWTH_EVIDENCE_PATH','/workspace/workspace/reports/growth/latest.json'))

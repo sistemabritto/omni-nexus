@@ -3,6 +3,12 @@
 
 Uses the Supabase read-only query API, Plausible Stats API and official Meta
 and Cakto APIs. Failed sources remain unavailable, never converted into zeros.
+
+PLAUSIBLE_PROPERTIES_JSON is an optional array of {company_id, site_id, role}
+properties. For Sistema Britto, register sistemabritto.com.br as site and
+blog.sistemabritto.com.br as blog under company_id 1. Without it, the legacy
+PLAUSIBLE_SITE_ID remains readable but is marked unscoped. This collector does
+not enforce per-user tenant access to the aggregate report endpoint.
 """
 from __future__ import annotations
 import argparse,json,os
@@ -71,17 +77,39 @@ def collect_site(start,end):
 
 def collect_plausible(start,end):
     base=os.environ['PLAUSIBLE_BASE_URL'].rstrip('/')
-    params={'site_id':os.environ['PLAUSIBLE_SITE_ID'],'period':'custom',
-            'date':start.date().isoformat()+','+(end-timedelta(days=1)).date().isoformat()}
     headers={'Authorization':'Bearer '+os.environ['PLAUSIBLE_API_KEY']}
-    result={}
-    for name,route,extra in [
-        ('aggregate','aggregate',{'metrics':'visitors,pageviews,visits,bounce_rate,visit_duration'}),
-        ('pages','breakdown',{'property':'event:page','metrics':'visitors,pageviews','limit':100}),
-        ('sources','breakdown',{'property':'visit:source','metrics':'visitors,visits','limit':50}),
-        ('goals','breakdown',{'property':'event:goal','metrics':'visitors,events','limit':50})]:
-        try:result[name]=request('GET',base+'/api/v1/stats/'+route,headers=headers,params={**params,**extra})
-        except Exception as exc:result[name]={'status':'unavailable','error':str(exc)}
+    configured=os.environ.get('PLAUSIBLE_PROPERTIES_JSON')
+    properties=json.loads(configured) if configured else [
+        {'company_id':None,'site_id':os.environ['PLAUSIBLE_SITE_ID'],'role':'legacy'}]
+    if not isinstance(properties,list) or not properties:
+        raise ValueError('PLAUSIBLE_PROPERTIES_JSON must be a non-empty array')
+    result={'properties':[]}
+    seen=set()
+    for prop in properties:
+        if not isinstance(prop,dict):raise ValueError('Invalid Plausible property')
+        site_id=prop.get('site_id')
+        company_id=prop.get('company_id')
+        role=prop.get('role')
+        if (not isinstance(site_id,str) or not site_id or '/' in site_id or
+            not isinstance(role,str) or not role or
+            (company_id is not None and (not isinstance(company_id,int) or isinstance(company_id,bool) or company_id<1)) or
+            site_id in seen):
+            raise ValueError('Invalid or duplicate Plausible property')
+        seen.add(site_id)
+        params={'site_id':site_id,'period':'custom',
+                'date':start.date().isoformat()+','+(end-timedelta(days=1)).date().isoformat()}
+        stats={}
+        for name,route,extra in [
+            ('aggregate','aggregate',{'metrics':'visitors,pageviews,visits,bounce_rate,visit_duration'}),
+            ('pages','breakdown',{'property':'event:page','metrics':'visitors,pageviews','limit':100}),
+            ('sources','breakdown',{'property':'visit:source','metrics':'visitors,visits','limit':50}),
+            ('goals','breakdown',{'property':'event:goal','metrics':'visitors,events','limit':50})]:
+            try:stats[name]=request('GET',base+'/api/v1/stats/'+route,headers=headers,params={**params,**extra})
+            except Exception as exc:stats[name]={'status':'unavailable','error':str(exc)}
+        aggregate=stats.get('aggregate') or {}
+        status='ok' if isinstance(aggregate.get('results'),dict) else 'unavailable'
+        result['properties'].append({'company_id':company_id,'site_id':site_id,'role':role,
+                                     'status':status,'stats':stats})
     return result
 
 def collect_instagram(start,end):

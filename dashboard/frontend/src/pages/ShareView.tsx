@@ -20,6 +20,7 @@ type ViewState =
 export default function ShareView() {
   const { token } = useParams<{ token: string }>()
   const [state, setState] = useState<ViewState>({ status: 'loading' })
+  const [mediaError, setMediaError] = useState(false)
 
   useEffect(() => {
     if (!token) {
@@ -29,6 +30,7 @@ export default function ShareView() {
 
     const load = async () => {
       try {
+        setMediaError(false)
         // Probe without counting a view. HTML must navigate to the response
         // carrying its CSP, not srcDoc (which discards the server headers).
         const probe = await fetch(`${API_BASE}/api/shares/${token}/view`, { method: 'HEAD' })
@@ -36,8 +38,20 @@ export default function ShareView() {
           setState({ status: 'error', message: 'Este link expirou ou não está mais disponível.' })
           return
         }
-        if ((probe.headers.get('content-type') || '').includes('text/html')) {
+        const probeContentType = probe.headers.get('content-type') || ''
+        if (probeContentType.includes('text/html')) {
           setState({ status: 'html' })
+          return
+        }
+        // Let the browser stream and seek media directly. A blob URL is blocked
+        // by the dashboard's CSP and requires downloading the whole file first.
+        const mediaUrl = `${API_BASE}/api/shares/${token}/view`
+        if (probeContentType.startsWith('video/')) {
+          setState({ status: 'video', url: mediaUrl, mime: probeContentType })
+          return
+        }
+        if (probeContentType.startsWith('audio/')) {
+          setState({ status: 'audio', url: mediaUrl, mime: probeContentType })
           return
         }
         const res = await fetch(`${API_BASE}/api/shares/${token}/view`)
@@ -60,22 +74,6 @@ export default function ShareView() {
           const blob = await res.blob()
           const url = URL.createObjectURL(blob)
           setState({ status: 'image', url, mime: contentType })
-          return
-        }
-
-        // Video: binary response
-        if (contentType.startsWith('video/')) {
-          const blob = await res.blob()
-          const url = URL.createObjectURL(blob)
-          setState({ status: 'video', url, mime: contentType })
-          return
-        }
-
-        // Audio: binary response
-        if (contentType.startsWith('audio/')) {
-          const blob = await res.blob()
-          const url = URL.createObjectURL(blob)
-          setState({ status: 'audio', url, mime: contentType })
           return
         }
 
@@ -213,15 +211,19 @@ export default function ShareView() {
         )}
 
         {state.status === 'video' && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 24px 80px', minHeight: '60vh' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', padding: '32px 24px 80px', minHeight: '60vh' }}>
             <video
               controls
               autoPlay={false}
+              preload="metadata"
+              onError={() => setMediaError(true)}
               style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: '8px' }}
             >
               <source src={state.url} type={state.mime} />
               Seu navegador não suporta a reprodução de vídeo.
             </video>
+            {mediaError && <span role="alert">Não foi possível reproduzir o vídeo neste navegador.</span>}
+            <a href={state.url} target="_blank" rel="noreferrer">Abrir vídeo diretamente</a>
           </div>
         )}
 

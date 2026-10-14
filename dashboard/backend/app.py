@@ -1142,6 +1142,8 @@ with app.app_context():
         _cur.execute("ALTER TABLE media_jobs ADD COLUMN progress_message TEXT")
     if "result_json" not in _mj_cols:
         _cur.execute("ALTER TABLE media_jobs ADD COLUMN result_json TEXT")
+    from media_retry import migrate_retry_state
+    migrate_retry_state(_conn)
     _conn.commit()
     # --- End esteira-de-video migration ---
 

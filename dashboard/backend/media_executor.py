@@ -16,6 +16,7 @@ is getting the agent to produce ./project (the composition) and
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from provider_fallback import invoke_with_fallback
@@ -85,6 +86,13 @@ def run_opencode_media_job(
     manifest_path = job_workspace / manifest_relpath
     if not manifest_path.is_file():
         raise MediaExecutionError(f"Manifesto de entrada não encontrado: {manifest_path}")
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict):
+            raise ValueError("esperado objeto JSON")
+    except (ValueError, UnicodeError) as exc:
+        raise MediaExecutionError(f"Manifesto de entrada inválido: {exc}") from exc
 
     effective_timeout = min(int(timeout_seconds), MAX_COMPOSITION_TIMEOUT_SECONDS)
     prompt = build_composition_prompt(manifest_relpath)

@@ -114,6 +114,7 @@ COPY media_worker/worker.py /workspace/media_worker/worker.py
 COPY dashboard/backend/sdk_client.py \
      dashboard/backend/provider_fallback.py \
      dashboard/backend/media_executor.py \
+     dashboard/backend/media_retry.py \
      dashboard/backend/media_render.py \
      dashboard/backend/media_validation.py \
      dashboard/backend/media_manifest.py \

@@ -42,7 +42,7 @@ def live_status():
     if not _origin_allowed():
         return _reply({'error': 'origin_forbidden'}, 403)
     config = LiveConfig.environment()
-    return _reply({'enabled': bool(config.ready), 'freeTierVerified': bool(config.ready)})
+    return _reply(config.status_payload())
 
 
 @bp.before_app_request

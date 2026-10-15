@@ -69,7 +69,8 @@ def test_real_app_auth_order_and_cookie_only_live(client):
         session['_fresh'] = True
     response = client.get('/api/live/status')
     assert response.status_code == 200
-    assert response.json == {'enabled': False, 'freeTierVerified': False}
+    assert {k:response.json[k] for k in ('enabled','freeTierVerified')} == {'enabled': False, 'freeTierVerified': False}
+    assert response.json['activeModel'] is None
     assert response.headers['Cache-Control'] == 'no-store'
     assert client.get('/api/live/ws', headers={'Origin': 'http://localhost', 'Upgrade': 'websocket', 'Connection': 'Upgrade'}).status_code == 403
 

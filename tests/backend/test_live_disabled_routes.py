@@ -41,7 +41,8 @@ def test_cookie_status_is_disabled_and_no_store_even_with_env_flags(client,monke
     with patch('socket.socket.connect',side_effect=AssertionError('network forbidden')):
         r=client.get('/api/live/status')
     assert r.status_code==200
-    assert r.json=={'enabled':False,'freeTierVerified':False}
+    assert {k:r.json[k] for k in ('enabled','freeTierVerified')}=={'enabled':False,'freeTierVerified':False}
+    assert r.json['activeModel'] is None
     assert r.headers['Cache-Control']=='no-store'
     assert 'fixture-not-used' not in r.text
 

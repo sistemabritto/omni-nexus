@@ -8,7 +8,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'dashboard/backend'))
 from live_transport import LiveConfig, LeaseStore, parse_audio, translate, run_session, open_gemini
 
-CONFIG = LiveConfig(True, True, 'fixture-model', 'fixture-not-a-key')
+CONFIG = LiveConfig(True, True, 'gemini-3.8-live', 'fixture-not-a-key')
 
 class Client:
     def __init__(self, inputs=()):
@@ -71,7 +71,7 @@ def test_setup_audio_interruption_transcripts_and_goaway():
     assert 'responseModalities' not in setup and 'tools' not in setup
     assert setup['realtimeInputConfig']['activityHandling'] == 'START_OF_ACTIVITY_INTERRUPTS'
     assert p.sent[1]['realtimeInput']['audio']['mimeType'] == 'audio/pcm;rate=16000'
-    assert c.sent == [{'status': 'ready'}, {'interrupted': True}, {'audio': 'AAAAAA=='}, {'transcript': 'Oi', 'role': 'user'}, {'transcript': 'Olá', 'role': 'model'}, {'status': 'listening'}, {'status': 'reconnect_required'}]
+    assert [e for e in c.sent if 'event' not in e] == [{'status': 'ready'}, {'interrupted': True}, {'audio': 'AAAAAA=='}, {'transcript': 'Oi', 'role': 'user'}, {'transcript': 'Olá', 'role': 'model'}, {'status': 'listening'}, {'status': 'reconnect_required', 'reason': 'go_away', 'activeModel': 'gemini-3.8-live', 'contextPreserved': False}]
     assert p.closed and not c.connected
 
 
@@ -83,14 +83,14 @@ def test_reject_untrusted_messages(raw):
 def test_early_audio_rejected_and_both_connections_closed():
     p = Provider([]); c = Client(['{"audio":"AAAAAA=="}'])
     run_session(c, CONFIG, lambda _: p)
-    assert c.sent == [{'error': 'invalid_audio_or_provider_protocol'}]
+    assert [e for e in c.sent if 'event' not in e] == [{'error': 'invalid_audio_or_provider_protocol'}]
     assert p.closed and not c.connected
 
 
 def test_provider_failure_does_not_disclose_exception():
     c = Client(); p = Provider([ValueError('key=private')])
     run_session(c, CONFIG, lambda _: p)
-    assert c.sent == [{'error': 'provider_unavailable'}]
+    assert [e for e in c.sent if 'event' not in e] == [{'error': 'provider_unavailable'}]
     assert p.closed
 
 

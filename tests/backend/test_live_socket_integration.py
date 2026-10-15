@@ -23,7 +23,7 @@ def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path, hos
     from live_transport import run_session
     monkeypatch.setenv('GEMINI_LIVE_ENABLED', 'true')
     monkeypatch.setenv('GEMINI_FREE_TIER_VERIFIED', 'true')
-    monkeypatch.setenv('GEMINI_LIVE_MODEL', 'fixture-model')
+    monkeypatch.setenv('GEMINI_LIVE_MODEL', 'gemini-3.8-live')
     monkeypatch.setenv('GEMINI_API_KEY', 'fixture-never-transmitted')
     stopped = threading.Event()
     providers = []
@@ -65,7 +65,8 @@ def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path, hos
         cookie = browser.get_cookie('session', domain=hostname).value
         status = browser.get('/api/live/status', base_url=origin, headers={'Origin': origin})
         assert status.status_code == 200
-        assert status.json == {'enabled': True, 'freeTierVerified': True}
+        assert {k:status.json[k] for k in ('enabled','freeTierVerified')} == {'enabled': True, 'freeTierVerified': True}
+        assert status.json['activeModel'] is None
         with browser.session_transaction() as session:
             assert session['_user_id'] == '1'
         # Flask may re-sign freshness metadata; the original signed login
@@ -82,6 +83,11 @@ def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path, hos
         assert not providers
         # Existing signed login cookie is reused without reset or migration.
         with connect(url, origin=origin, additional_headers=headers, proxy=None) as ws:
+            attempt = json.loads(ws.recv(timeout=2))
+            assert attempt['event'] == 'model_attempt' and attempt['model'] == 'gemini-3.8-live'
+            active = json.loads(ws.recv(timeout=2))
+            assert active['event'] == 'model_active' and active['activeModel'] == 'gemini-3.8-live'
+            assert active['contextPreserved'] is False
             assert json.loads(ws.recv(timeout=2)) == {'status': 'ready'}
             # Duplicate session is accepted only to return a redacted limit error,
             # without constructing another provider.

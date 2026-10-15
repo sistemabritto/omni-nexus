@@ -62,9 +62,14 @@ faceless, marque face como não aplicável com justificativa, sem inventar rosto
 QA não é só ffprobe: mantenha a inspeção audiovisual humana e registre achados.
 
 Entregue vídeo e evidências para revisão do Felipe. `ready_for_review` não é
-aprovação. Só após aprovação final específica use `/jobs/<id>/approve`; depois,
-com conteúdo, destino e horário autorizados, use `create-draft` e `schedule`.
-O planejador nunca chama esses endpoints. Não trate aprovação do beat sheet
-como aprovação do vídeo final ou autorização de agendamento. Não gere mídia
+aprovação. Para a aprovação final vinculada ao hash/versão do render e à
+copy/conta/calendário de cada rede, siga [references/release.md](references/release.md).
+O registro persistido exige digest atual e sessão humana; alterações invalidam
+a aprovação. O adapter mantém ID, estado, URL e checkpoints por canal, sem
+recriar posts em resultados ambíguos. Os endpoints antigos de draft/schedule
+retornam 409 para impedir atalho sem essa vinculação.
+
+O planejador editorial nunca distribui automaticamente. Não trate aprovação do
+beat sheet como aprovação final ou autorização de agendamento. Não gere mídia
 paga, instale repositórios, altere credenciais ou publique como consequência da
 leitura desta skill.

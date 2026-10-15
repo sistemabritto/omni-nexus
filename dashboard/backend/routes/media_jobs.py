@@ -19,17 +19,19 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
+from sqlalchemy.exc import IntegrityError
 
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, jsonify, request, send_file, g
 from flask_login import current_user
 
-from models import db, GoalProject, MediaJob, has_permission, audit
+from models import db, GoalProject, MediaJob, MediaRelease, has_permission, audit
 from media_state_machine import assert_transition, can_transition, InvalidTransition, allowed_targets
 from media_workspace import ensure_job_scaffold, new_job_id, media_workspace_root, PathSecurityError
 from media_retry import MAX_ATTEMPTS, failure_state
 from sqlalchemy import or_
-from postiz_client import PostizClient, PostizError, MEDIA_JOB_PLATFORMS, build_platform_settings
+from postiz_client import PostizClient, PostizError, MEDIA_JOB_PLATFORMS, build_platform_settings, providers_for
 from media_editorial import build_editorial_plan, EditorialPlanError
+from media_release import canonical, digest_of, make_snapshot, render_binding, assert_current, distribute, ReleaseError
 
 bp = Blueprint("media_jobs", __name__)
 
@@ -124,6 +126,165 @@ def plan_editorial_media():
     except EditorialPlanError as exc:
         return jsonify({"error": "invalid_editorial_plan", "detail": str(exc)}), 400
     return jsonify(plan)
+
+
+def _claim_release(release):
+    result = db.session.execute(db.update(MediaRelease).where(
+        MediaRelease.job_id == release.job_id, MediaRelease.busy.is_(False),
+        MediaRelease.digest == release.digest,
+    ).values(busy=True).execution_options(synchronize_session=False))
+    db.session.commit()
+    db.session.refresh(release)
+    return result.rowcount == 1
+
+
+@bp.route("/api/media/channels")
+def media_release_channels():
+    denied = _require("manage")
+    if denied:
+        return denied
+    client = PostizClient.from_env()
+    if client is None:
+        return jsonify({"error": "postiz_not_configured"}), 400
+    try:
+        connected = client.list_integrations()
+    except PostizError as exc:
+        return jsonify({"error": "postiz_error", "detail": str(exc)}), 502
+    return jsonify([{"id": item["id"], "name": item.get("name") or item["id"],
+                     "platform": platform, "provider": item["identifier"]}
+                    for item in connected if isinstance(item, dict) and item.get("id") and not item.get("disabled")
+                    for platform in MEDIA_JOB_PLATFORMS if item.get("identifier") in providers_for(platform)])
+
+
+@bp.route("/api/media/jobs/<string:job_id>/release", methods=["GET", "PUT"])
+def media_release_plan(job_id):
+    denied = _require("view" if request.method == "GET" else "manage")
+    if denied:
+        return denied
+    job = MediaJob.query.get_or_404(job_id)
+    release = db.session.get(MediaRelease, job_id)
+    if request.method == "GET":
+        if not release:
+            return jsonify({"error": "no_release"}), 404
+        result = release.to_dict()
+        try:
+            assert_current(job, release)
+        except ReleaseError as exc:
+            result.update(approval_valid=False, invalidated_reason=str(exc))
+        return jsonify(result)
+    if job.status not in ("ready_for_review", "approved") or job.postiz_post_id:
+        return jsonify({"error": "render_review_required_or_legacy_post_exists"}), 409
+    data = request.get_json(silent=True)
+    try:
+        snapshot = make_snapshot(job, data, (release.revision + 1) if release else 1)
+    except (ReleaseError, ValueError) as exc:
+        return jsonify({"error": "invalid_release", "detail": str(exc)}), 400
+    if release:
+        if not isinstance(data, dict) or data.get("expected_digest") != release.digest:
+            return jsonify({"error": "stale_release_revision"}), 409
+        if not _claim_release(release):
+            return jsonify({"error": "release_busy"}), 409
+        progress = json.loads(release.progress_json)
+        if any(c.get("post_id") or c.get("state") in ("creating_draft", "unknown")
+               for c in progress.get("channels", {}).values()):
+            release.busy = False
+            db.session.commit()
+            return jsonify({"error": "reconcile_existing_posts_before_replacing_release"}), 409
+    else:
+        release = MediaRelease(job_id=job_id, progress_json="{}")
+        db.session.add(release)
+    release.revision = snapshot["revision"]
+    release.snapshot_json = canonical(snapshot)
+    release.digest = digest_of(snapshot)
+    release.approved_digest = release.approved_at = release.approved_by = None
+    release.invalidated_reason = "nova revisão exige aprovação humana"
+    release.progress_json = "{}"
+    release.busy = False
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "release_revision_conflict"}), 409
+    audit(current_user, "manage", "media_jobs", f"release revision {release.revision} for {job_id}")
+    return jsonify(release.to_dict())
+
+
+@bp.route("/api/media/jobs/<string:job_id>/release/approve", methods=["POST"])
+def approve_media_release(job_id):
+    denied = _require("manage")
+    if denied:
+        return denied
+    if getattr(g, "auth_via_api_token", False):
+        return jsonify({"error": "human_session_required"}), 403
+    job = MediaJob.query.get_or_404(job_id)
+    release = db.get_or_404(MediaRelease, job_id)
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict) or data.get("digest") != release.digest:
+        return jsonify({"error": "stale_release_revision"}), 409
+    try:
+        if render_binding(job) != json.loads(release.snapshot_json)["binding"]:
+            raise ReleaseError("job mudou; criar nova revisão")
+    except ReleaseError as exc:
+        return jsonify({"error": "approval_stale", "detail": str(exc)}), 409
+    if job.status not in ("ready_for_review", "approved") or not _claim_release(release):
+        return jsonify({"error": "release_busy_or_not_ready"}), 409
+    try:
+        if render_binding(job) != json.loads(release.snapshot_json)["binding"]:
+            raise ReleaseError("job mudou; criar nova revisão")
+    except ReleaseError as exc:
+        release.busy = False
+        db.session.commit()
+        return jsonify({"error": "approval_stale", "detail": str(exc)}), 409
+    release.approved_digest = release.digest
+    release.approved_by = current_user.username
+    release.approved_at = _now()
+    release.invalidated_reason = None
+    release.busy = False
+    if job.status == "ready_for_review":
+        _transition(job, "approved")
+    job.approved_at = release.approved_at
+    db.session.commit()
+    audit(current_user, "manage", "media_jobs", f"approved release {release.digest} for {job_id}")
+    return jsonify(release.to_dict())
+
+
+@bp.route("/api/media/jobs/<string:job_id>/release/distribute", methods=["POST"])
+@bp.route("/api/media/jobs/<string:job_id>/release/refresh", methods=["POST"])
+def distribute_media_release(job_id):
+    denied = _require("manage")
+    if denied:
+        return denied
+    job = MediaJob.query.get_or_404(job_id)
+    release = db.get_or_404(MediaRelease, job_id)
+    refresh_only = request.path.endswith("/refresh")
+    if not _claim_release(release):
+        return jsonify({"error": "release_busy"}), 409
+    try:
+        if not refresh_only:
+            assert_current(job, release)
+        client = PostizClient.from_env()
+        if client is None:
+            return jsonify({"error": "postiz_not_configured"}), 400
+
+        def save(progress):
+            release.progress_json = canonical(progress)
+            db.session.commit()
+
+        distribute(job, release, client, save, refresh_only=refresh_only)
+        release.busy = False
+        db.session.commit()
+        return jsonify(release.to_dict())
+    except ReleaseError as exc:
+        if not refresh_only:
+            release.approved_digest = None
+            release.invalidated_reason = str(exc)
+            db.session.commit()
+        return jsonify({"error": "approval_stale_or_account_unavailable", "detail": str(exc)}), 409
+    except PostizError as exc:
+        return jsonify({"error": "postiz_error", "detail": str(exc)}), 502
+    finally:
+        release.busy = False
+        db.session.commit()
 
 @bp.route("/api/media/jobs")
 def list_media_jobs():
@@ -325,6 +486,22 @@ def update_media_job(job_id):
     data = request.get_json() or {}
 
     target_status = data.get("status")
+    if target_status in ("approved", "uploading", "creating_draft", "draft_created", "scheduling", "scheduled", "published") and can_transition(job.status, target_status):
+        return jsonify({"error": "dedicated_publication_action_required"}), 403
+    release = db.session.get(MediaRelease, job_id)
+    if release:
+        if release.busy:
+            return jsonify({"error": "release_busy"}), 409
+        changed = any(field in data and data[field] != getattr(job, field)
+                      for field in ("title", "caption", "render_path", "render_sha256")) or target_status is not None
+        if changed:
+            result = db.session.execute(db.update(MediaRelease).where(
+                MediaRelease.job_id == job_id, MediaRelease.busy.is_(False),
+            ).values(approved_digest=None, invalidated_reason="job editado; nova revisão/aprovação obrigatória")
+              .execution_options(synchronize_session=False))
+            if result.rowcount == 0:
+                db.session.rollback()
+                return jsonify({"error": "release_busy"}), 409
     if target_status:
         try:
             assert_transition(job.status, target_status)
@@ -424,6 +601,15 @@ def cancel_media_job(job_id):
     job = MediaJob.query.get_or_404(job_id)
     if not can_transition(job.status, "cancelled"):
         return _invalid_transition_response(job, "cancelled")
+    release = db.session.get(MediaRelease, job_id)
+    if release:
+        result = db.session.execute(db.update(MediaRelease).where(
+            MediaRelease.job_id == job_id, MediaRelease.busy.is_(False),
+        ).values(approved_digest=None, invalidated_reason="job cancelado")
+          .execution_options(synchronize_session=False))
+        if result.rowcount == 0:
+            db.session.rollback()
+            return jsonify({"error": "release_busy"}), 409
     _transition(job, "cancelled")
     job.locked_at = None
     job.locked_by = None
@@ -438,6 +624,10 @@ def approve_media_job(job_id):
     if denied:
         return denied
     job = MediaJob.query.get_or_404(job_id)
+    if getattr(g, "auth_via_api_token", False):
+        return jsonify({"error": "human_session_required"}), 403
+    if db.session.get(MediaRelease, job_id):
+        return jsonify({"error": "use_bound_release_approval"}), 409
     if not can_transition(job.status, "approved"):
         return _invalid_transition_response(job, "approved")
     _transition(job, "approved")
@@ -467,131 +657,15 @@ def reject_media_job(job_id):
 
 
 @bp.route("/api/media/jobs/<string:job_id>/create-draft", methods=["POST"])
-def create_draft_media_job(job_id):
-    """Upload the render + create a Postiz draft. I/O-bound (HTTP calls to
-    Postiz), so it runs synchronously here rather than in the media-worker —
-    per the briefing, rendering must be worker-isolated; upload/draft
-    creation is explicitly "backend OU worker".
-
-    Idempotent (ADR-7): re-POSTing a job that already has postiz_media_id/
-    postiz_post_id never re-uploads or re-creates — it returns the existing
-    state.
-    """
-    denied = _require("manage")
-    if denied:
-        return denied
-    job = MediaJob.query.get_or_404(job_id)
-
-    if job.status == "draft_created" and job.postiz_post_id:
-        return jsonify(job.to_dict())  # already done — idempotent no-op
-
-    if job.status not in ("approved", "retryable_failure", "uploading", "creating_draft"):
-        return _invalid_transition_response(job, "uploading")
-
-    if not job.render_path or not Path(job.render_path).is_file():
-        return jsonify({"error": "render_missing", "detail": "MediaJob não tem um render válido em disco."}), 400
-
-    client = PostizClient.from_env()
-    if client is None:
-        return jsonify({"error": "postiz_not_configured", "detail": "POSTIZ_URL/POSTIZ_API_KEY não configurados."}), 400
-
-    if job.status == "approved":
-        _transition(job, "uploading")
-        db.session.commit()
-    elif job.status == "retryable_failure":
-        # Resume into whichever create-draft substage makes sense given what
-        # already succeeded before the failure — never re-do a completed
-        # step (ADR-7 idempotency).
-        _transition(job, "creating_draft" if job.postiz_media_id else "uploading")
-        db.session.commit()
-
-    try:
-        if not job.postiz_media_id:
-            uploaded = client.upload_file(Path(job.render_path))
-            job.postiz_media_id = uploaded["id"]
-            job.postiz_media_path = uploaded["path"]
-            job.postiz_media_name = uploaded["name"]
-            db.session.commit()  # persist immediately — idempotency checkpoint
-
-        if job.status == "uploading":
-            _transition(job, "creating_draft")
-            db.session.commit()
-
-        if not job.postiz_post_id:
-            integrations = client.list_integrations()
-            integration = client.select_integration(job.platform, integrations)
-            if not integration:
-                raise PostizError(f"Nenhuma integração Postiz ativa e inequívoca para {job.platform!r}.")
-            settings = _resolve_platform_settings(job)
-            media = [{"id": job.postiz_media_id, "path": job.postiz_media_path}]
-            # If this job will be scheduled later, store the real target date now —
-            # PUT /posts/{id}/status only *resumes* publishing "at its stored date",
-            # it cannot set a new one (confirmed against docs.postiz.com).
-            draft_date = job.scheduled_at_utc if (job.publication_mode == "schedule" and job.scheduled_at_utc) else _now()
-            created = client.create_draft(
-                integration_id=integration["id"], content=job.caption or "", media=media,
-                settings=settings, now_iso_utc=draft_date,
-            )
-            post_ids = [item.get("postId") for item in created if isinstance(item, dict) and item.get("postId")]
-            if not post_ids:
-                raise PostizError(f"Postiz não retornou postId: {created!r}")
-            job.postiz_post_id = post_ids[0]
-            db.session.commit()
-
-        _transition(job, "draft_created")
-        job.locked_at = None
-        job.locked_by = None
-        db.session.commit()
-    except (PostizError, ValueError) as exc:
-        _transition(job, "retryable_failure")
-        job.last_error = str(exc)
-        db.session.commit()
-        return jsonify({"error": "postiz_error", "detail": str(exc)}), 502
-
-    audit(current_user, "manage", "media_jobs", f"created postiz draft for media job {job_id}")
-    return jsonify(job.to_dict())
-
-
 @bp.route("/api/media/jobs/<string:job_id>/schedule", methods=["POST"])
-def schedule_media_job(job_id):
+def legacy_publication_requires_bound_release(job_id):
+    """Do not retain an unbound publication bypass alongside release approvals."""
     denied = _require("manage")
     if denied:
         return denied
-    job = MediaJob.query.get_or_404(job_id)
-
-    if job.publication_mode != "schedule":
-        return jsonify({"error": "not_schedule_mode", "detail": "publication_mode do job não é 'schedule'."}), 400
-    if not job.scheduled_at_utc:
-        return jsonify({"error": "missing_scheduled_at", "detail": "scheduled_at não definido para este job."}), 400
-    try:
-        scheduled_dt = datetime.strptime(job.scheduled_at_utc, "%Y-%m-%dT%H:%M:%S.000Z").replace(tzinfo=timezone.utc)
-    except ValueError:
-        return jsonify({"error": "invalid_scheduled_at", "detail": job.scheduled_at_utc}), 400
-    if scheduled_dt <= datetime.now(timezone.utc):
-        return jsonify({"error": "scheduled_at_not_future", "detail": "scheduled_at_utc precisa estar no futuro."}), 400
-    if not job.postiz_post_id:
-        return jsonify({"error": "missing_postiz_post_id", "detail": "Job ainda não tem draft criado no Postiz."}), 400
-    if not can_transition(job.status, "scheduling"):
-        return _invalid_transition_response(job, "scheduling")
-
-    client = PostizClient.from_env()
-    if client is None:
-        return jsonify({"error": "postiz_not_configured"}), 400
-
-    _transition(job, "scheduling")
-    db.session.commit()
-    try:
-        client.change_status(job.postiz_post_id, "schedule")
-    except PostizError as exc:
-        _transition(job, "retryable_failure")
-        job.last_error = str(exc)
-        db.session.commit()
-        return jsonify({"error": "postiz_error", "detail": str(exc)}), 502
-
-    _transition(job, "scheduled")
-    db.session.commit()
-    audit(current_user, "manage", "media_jobs", f"scheduled media job {job_id}")
-    return jsonify(job.to_dict())
+    MediaJob.query.get_or_404(job_id)
+    return jsonify({"error": "bound_release_required",
+                    "detail": "Revise copy/canais/calendário em /release, aprove o digest e use /release/distribute."}), 409
 
 
 # ── Observability ────────────────────────────────────────────────────────

@@ -14,3 +14,5 @@ Carregar SKILL.md e contrast.md antes da revisão. Evidências do criador são c
 | Movimento e acesso | Quando afetado, observar reduced motion, foco/teclado e feedback percepível; só declarar o que foi exercitado. |
 
 Testes/build e cálculo de contraste apoiam correção funcional; nenhum script determina qualidade estética. Usabilidade e composição exigem julgamento contextual e observação. Sem renderizador, entregar achados textuais/de código com inspeção visual e interações NÃO TESTADAS; não declarar o material aprovado visualmente.
+
+Para esses fluxos, ler também [heurísticas UX](ux-heuristics.md) e registrar tarefa→problema→princípio→mudança→teste→evidência, incluindo limitações de dispositivo/leitor/microfone.

@@ -22,6 +22,8 @@ def setup(tmp_path,monkeypatch):
         spec = importlib.util.spec_from_file_location(name, path)
         module = importlib.util.module_from_spec(spec)
         monkeypatch.setitem(sys.modules, name, module)
+        parent, child = name.rsplit('.', 1)
+        monkeypatch.setattr(sys.modules[parent], child, module, raising=False)
         spec.loader.exec_module(module)
         modules[name] = module
     mod = modules['routes.managed_live_context']

@@ -1,0 +1,18 @@
+{
+  "run": 38676739135,
+  "test_commit": "091c6bd6c88386d04313f61296a18e525d27f6e1",
+  "image_revision": "caf161273777366fab96fc3f35e33ec6d70d3c63",
+  "image_digest": "sha256:eafe5f27d9187194bd5f3ec8b857ce947ac8060661b4d99b8146b01d4773b05d",
+  "flask_harness_smoke": "passed_again",
+  "default_supervisor_smoke": "blocked",
+  "supervisor_exit_code": 1,
+  "oom_killed": false,
+  "failure_marker": "Failed to download",
+  "missing_dependency": "pytest==9.0.3",
+  "startup_command": "uv run python /workspace/dashboard/backend/app.py",
+  "network": "none",
+  "security_relaxed": false,
+  "production_access": false,
+  "real_credentials": false,
+  "fixture_container_and_volumes_removed": true
+}

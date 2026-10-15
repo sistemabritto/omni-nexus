@@ -4,6 +4,7 @@ Callers supply authenticated identity and a current server ACL, never model IDs.
 No provider calls, legacy ingestion, policy editing, or generated summarization.
 """
 import json
+import hashlib
 import sqlite3
 import time
 import uuid
@@ -22,7 +23,7 @@ class Principal:
     company_id: int
 
 
-KINDS = frozenset({'transcript', 'fact', 'inference', 'decision', 'pending', 'preference'})
+KINDS = frozenset({'transcript', 'fact', 'inference', 'decision', 'pending', 'preference', 'progress', 'result'})
 
 
 class ConversationStore:
@@ -58,6 +59,10 @@ class ConversationStore:
             db.execute('''CREATE TABLE IF NOT EXISTS summaries (
                 conversation_id TEXT PRIMARY KEY, revision INTEGER NOT NULL,
                 payload TEXT NOT NULL)''')
+            db.execute('''CREATE TABLE IF NOT EXISTS receipts (
+                conversation_id TEXT NOT NULL, request_key TEXT NOT NULL, fingerprint TEXT NOT NULL,
+                event_id TEXT NOT NULL, revision INTEGER NOT NULL,
+                PRIMARY KEY(conversation_id,request_key))''')
             db.execute('PRAGMA user_version=1')
             yield db
             db.commit()
@@ -85,13 +90,18 @@ class ConversationStore:
             self._refresh(db, cid)
         return cid
 
-    def latest(self, p):
+    def latest(self, p, *, create_if_missing=False):
         """Resume default; no implicit creation. No content leaks for revoked IDs."""
         self._guard(p)
         with self._db() as db:
             rows = db.execute('SELECT id FROM conversations WHERE user_id=? AND company_id=? ORDER BY activity DESC,rowid DESC',
                               (p.user_id, p.company_id)).fetchall()
             cid = next((r['id'] for r in rows if self.allowed(p, r['id'])), None)
+            if cid is None and create_if_missing:
+                cid = uuid.uuid4().hex
+                self._guard(p)
+                db.execute('INSERT INTO conversations(id,user_id,company_id) VALUES(?,?,?)', (cid,p.user_id,p.company_id))
+                self._refresh(db,cid)
             self._guard(p, cid)
             return cid
 
@@ -108,7 +118,7 @@ class ConversationStore:
         mapping = {'fact': 'facts', 'inference': 'inferences', 'decision': 'decisions',
                    'pending': 'pending', 'preference': 'preferences'}
         for r in current:
-            if r['retracted'] or r['kind'] == 'transcript':
+            if r['retracted'] or r['kind'] in ('transcript', 'progress', 'result'):
                 continue
             # Unverified claims never become facts/decisions/preferences.
             bucket = mapping[r['kind']] if r['verified'] else 'inferences'
@@ -119,7 +129,7 @@ class ConversationStore:
         db.execute('UPDATE conversations SET activity=? WHERE id=?', (time.time_ns(), cid))
 
     def record(self, p, cid, *, kind, text, source, verified=False,
-               event_id=None, expected_revision=None, retract=False):
+               event_id=None, expected_revision=None, retract=False, request_key=None):
         """Source/verified come from a trusted adapter or explicit user confirmation.
 
         A model suggestion MUST be stored unverified. Corrections require CAS;
@@ -132,9 +142,19 @@ class ConversationStore:
             raise ValueError('invalid_event')
         if kind == 'inference' and verified:
             raise ValueError('inference_cannot_be_verified_fact')
+        if request_key is not None and (not isinstance(request_key, str) or not 1 <= len(request_key) <= 128):
+            raise ValueError('invalid_request_key')
+        fingerprint = hashlib.sha256(json.dumps([kind,text,source,verified,event_id,expected_revision,retract]).encode()).hexdigest()
         eid = event_id or uuid.uuid4().hex
         with self._db() as db:
             self._owned(db, p, cid)
+            if request_key is not None:
+                receipt = db.execute('SELECT * FROM receipts WHERE conversation_id=? AND request_key=?', (cid,request_key)).fetchone()
+                if receipt is not None:
+                    if receipt['fingerprint'] != fingerprint:
+                        raise ValueError('idempotency_conflict')
+                    self._guard(p, cid)
+                    return {'event_id':receipt['event_id'],'revision':receipt['revision']}
             previous = db.execute('SELECT MAX(revision) FROM events WHERE conversation_id=? AND event_id=?', (cid, eid)).fetchone()[0]
             if previous is None:
                 if event_id is not None or expected_revision is not None or retract:
@@ -147,6 +167,8 @@ class ConversationStore:
             db.execute('INSERT INTO events(conversation_id,event_id,revision,kind,text,source,verified,retracted) VALUES(?,?,?,?,?,?,?,?)',
                        (cid, eid, revision, kind, text, source, verified, retract))
             self._refresh(db, cid)
+            if request_key is not None:
+                db.execute('INSERT INTO receipts VALUES(?,?,?,?,?)', (cid,request_key,fingerprint,eid,revision))
             self._guard(p, cid)
         return {'event_id': eid, 'revision': revision}
 
@@ -168,3 +190,14 @@ class ConversationStore:
                                          'source': r['source'], 'verified': bool(r['verified'])}
                                         for r in self._current(db, cid) if not r['retracted']][-history_limit:],
                     'context_kind': 'untrusted_reference_data'}
+
+    def events_since(self, p, cid, *, after=0, limit=100):
+        """Revision stream for UI upsert by event_id; tombstones remove old content."""
+        self._guard(p, cid)
+        if type(after) is not int or after < 0 or type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError('invalid_cursor')
+        with self._db() as db:
+            self._owned(db, p, cid)
+            rows = db.execute('SELECT seq,event_id,revision,kind,text,source,verified,retracted FROM events WHERE conversation_id=? AND seq>? ORDER BY seq LIMIT ?', (cid, after, limit)).fetchall()
+            self._guard(p, cid)
+            return [dict(r) for r in rows]

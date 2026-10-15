@@ -1,5 +1,8 @@
 # Continuidade Live entre chamadas — implementação isolada
 
+Estado inicial cbd440e. A continuação feat/live-continuity-endpoints adiciona
+rotas, idempotência, busca autorizada e eventos escritos; ver live-continuity-endpoints.md.
+
 Branch feat/live-conversation-continuity, sobre f87ae64 (contrato de recuperação),
 base PR58 5c4cd75. Sem dependências novas, rotas, UI, configuração remota ou deploy.
 

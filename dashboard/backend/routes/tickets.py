@@ -1129,10 +1129,10 @@ def unarchive_thread(ticket_id: str):
     return jsonify(ticket.to_dict())
 
 
-def read_company_ticket_page(company_id, *, statuses=(), limit=0):
+def read_company_ticket_page(company_id, *, statuses=(), limit=0, query=""):
     """Reuse the list endpoint and its ACL with server-selected filters only."""
     from werkzeug.datastructures import MultiDict
-    args = MultiDict([('company_id', str(company_id)), ('limit', str(limit)), ('offset', '0')])
+    args = MultiDict([('company_id', str(company_id)), ('limit', str(limit)), ('offset', '0'), ('q', query)])
     for status in statuses:
         args.add('status', status)
     return _list_tickets(args)

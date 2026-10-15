@@ -79,7 +79,7 @@ def _claim_next_job() -> dict | None:
     global _backoff_seconds
     for status in ("queued", "retryable_failure"):
         try:
-            jobs = evo.get("/api/media/jobs", params={"status": status, "eligible": "true", "limit": 5})
+            jobs = evo.get("/api/media/jobs", params={"status": status, "eligible": "true", "limit": 5, "recording_batch": "v1"})
         except requests.exceptions.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 429:
                 # Rate-limited pelo dashboard — backoff exponencial em vez de
@@ -95,7 +95,7 @@ def _claim_next_job() -> dict | None:
             continue
         for job in jobs or []:
             try:
-                return evo.post(f"/api/media/jobs/{job['id']}/run", {"agent": AGENT_NAME})
+                return evo.post(f"/api/media/jobs/{job['id']}/run", {"agent": AGENT_NAME, "recording_batch": "v1"})
             except Exception:
                 continue
     _backoff_seconds = 0

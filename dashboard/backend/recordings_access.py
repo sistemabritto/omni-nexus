@@ -28,6 +28,10 @@ def require_recording_job_access(job_id):
     g.recording_scoped = True
     recording = m.db.session.get(m.Recording, version.recording_id)
     require_company(recording.company_id, edit=request.method != "GET")
+    if request.method == "POST" and request.path.endswith("/run"):
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or data.get("recording_batch") != "v1":
+            abort(409, description="recording_worker_upgrade_required")
     if request.method == "PATCH":
         data = request.get_json(silent=True) or {}
         if not isinstance(data, dict):

@@ -35,6 +35,13 @@ a path outside `./`, treat it as a bug in the manifest and stop — do not
 
 ## Step by step
 
+For briefs explicitly using the new editorial workflow (faceless photo montage
+or personal footage), consult `video-editorial-pipeline`'s worker-context rule.
+Read only approved local planning artifacts and relevant execution references;
+do not call its planning API or create other jobs from this isolated workspace.
+Personal footage uses the existing cut pipeline, not an invented social_clip
+editor. Generic existing jobs and the publication manifest schema are unchanged.
+
 1. **Read the manifest** — `input/job.json`. It contains at minimum:
    `job_id`, `title`, `brief`, `platform` (`instagram` | `youtube` |
    `linkedin` | `tiktok`), `format` (`vertical` | `horizontal` | `square`),

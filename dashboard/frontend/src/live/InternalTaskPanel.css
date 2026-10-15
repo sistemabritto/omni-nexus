@@ -1,0 +1,11 @@
+.managed-messages>.live-internal-tasks{max-height:none;overflow:visible;border-bottom:1px solid var(--border,#354052)}
+.live-internal-tasks h2{font-size:15px;font-weight:600;margin:0 0 8px}
+.managed-messages .live-internal-tasks form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 0;border:0}
+.live-internal-tasks label{display:grid;gap:6px;min-width:0}
+.live-internal-tasks :is(input,select){width:100%;min-width:0;min-height:46px;border:1px solid var(--border,#354052);border-radius:8px;background:var(--bg-card,#101722);color:var(--text-primary,#f2f5f7);font:inherit}
+.managed-messages .live-internal-tasks button{width:auto;max-width:100%;display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;min-height:46px;line-height:1.4;margin:4px 8px 4px 0}
+.live-internal-tasks form>button{grid-column:1/-1;justify-self:start}
+.live-internal-tasks article{padding-top:12px;border-top:1px solid var(--border,#354052)}
+.live-internal-tasks .live-task-output{max-height:320px;overflow:auto}
+.live-internal-tasks small{display:block;line-height:1.6}
+@media(max-width:540px){.managed-messages .live-internal-tasks form{grid-template-columns:1fr}}

@@ -36,6 +36,8 @@ else:
 
 assert request('/api/live/status')[0] == 401
 assert request('/api/auth/me')[0] == 401
+assert request('/api/live/omni-context/options')[0] == 401
+assert request('/api/live/omni-context/options', headers={'Authorization': 'Bearer fixture-agent-token'})[0] == 403
 assert request('/api/live/status', headers={'Authorization': 'Bearer fixture-agent-token'})[0] == 403
 assert request('/api/live/status')[0] == 401
 status, _, html = request('/live')
@@ -43,7 +45,9 @@ assert status == 200 and b'<html' in html
 main = re.search(rb'<script[^>]+src="([^"]+\.js)"', html)
 assert main
 status, _, bundle = request(main.group(1).decode())
-assert status == 200 and b'LiveConversation-' in bundle
+assert status == 200 and b'LiveConversation-' in bundle and b'ManagedNexusLive-' in bundle
+managed = re.search(rb'ManagedNexusLive-[A-Za-z0-9_-]+\.js', bundle)
+assert managed and request('/assets/' + managed.group().decode())[0] == 200
 chunk = re.search(rb'LiveConversation-[A-Za-z0-9_-]+\.js', bundle)
 assert chunk
 assert request('/assets/' + chunk.group().decode())[0] == 200
@@ -62,6 +66,9 @@ for hostname in ['nexus.workflowapi.com.br', 'nexus.sistemabritto.com.br']:
     payload = json.loads(raw)
     assert {k:payload[k] for k in ('enabled','freeTierVerified')} == {'enabled': False, 'freeTierVerified': False}
     assert payload['activeModel'] is None
+    managed_status, managed_headers, managed_body = request('/api/live/omni-context/options', headers=headers)
+    assert managed_status == 503 and json.loads(managed_body)['error'] == 'personal_access_not_configured'
+    assert managed_headers.get('Cache-Control') == 'no-store'
     assert response_headers.get('Cache-Control') == 'no-store'
     for supplied_origin, expected in [(origin, 503), ('https://evil.invalid', 403)]:
         try:
@@ -76,7 +83,8 @@ result = {'image_flask_boot': True, 'live_assets': True, 'anonymous_status': 401
           'bearer_status': 403, 'authenticated_live_enabled': False,
           'same_origin_disabled_upgrade': 503, 'bad_origin_upgrade': 403,
           'hosts': ['nexus.workflowapi.com.br', 'nexus.sistemabritto.com.br'],
-          'network': 'none', 'google_calls': 0, 'default_entrypoint_tested': False}
+          'managed_live_assets': True, 'managed_live_missing_config_fails_closed': True,
+          'elevenlabs_calls': 0, 'network': 'none', 'google_calls': 0, 'default_entrypoint_tested': False}
 if os.environ.get('SMOKE_SUPERVISOR') == '1':
     with urllib.request.urlopen('http://127.0.0.1:32352/api/health', timeout=5) as health:
         assert health.status == 200

@@ -59,6 +59,17 @@ jobs:
       - name: Sync Python dependencies
         run: uv sync --frozen --dev
 
+      - name: Set up Node for real runtime HTTP fixture
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/terminal-server/package-lock.json
+
+      - name: Install runtime fixture dependencies
+        working-directory: dashboard/terminal-server
+        run: npm ci
+
       # tests/goals, tests/tickets e tests/heartbeats nunca rodavam em PR —
       # eram 47 dos ~50 arquivos de teste no ponto cego. Todos os defeitos da
       # auditoria de 2026-07-27 (CHECK sem 'archived', HTML não escapado no

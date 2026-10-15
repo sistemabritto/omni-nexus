@@ -1,0 +1,32 @@
+[
+  {
+    "width": 375,
+    "height": 667,
+    "overflow": false,
+    "noAutomaticStatusRequest": true,
+    "noMicOnMountOrBlockedAttempt": true,
+    "blockedStateHonest": true,
+    "keyboard": true,
+    "fixture": true
+  },
+  {
+    "width": 812,
+    "height": 375,
+    "overflow": false,
+    "noAutomaticStatusRequest": true,
+    "noMicOnMountOrBlockedAttempt": true,
+    "blockedStateHonest": true,
+    "keyboard": true,
+    "fixture": true
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "noAutomaticStatusRequest": true,
+    "noMicOnMountOrBlockedAttempt": true,
+    "blockedStateHonest": true,
+    "keyboard": true,
+    "fixture": true
+  }
+]

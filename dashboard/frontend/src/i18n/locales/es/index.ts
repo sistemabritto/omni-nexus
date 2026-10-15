@@ -10,6 +10,7 @@ const translations = {
     // OmniNexus Live global navigation (2026-10-15).
     shell: {
       "links": {
+            "live": "Live",
             "root": "Conversación central",
             "omninexus": "Conversación central",
             "overview": "Panel operativo",

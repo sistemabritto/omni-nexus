@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { encodePCM, Playback } from './audio'
+import { Mic, Square, AudioLines, ChevronDown, ShieldCheck } from 'lucide-react'
+import './LiveConversation.css'
 
 export default function LiveConversation() {
   const [status, setStatus] = useState('Pronto para iniciar')
@@ -67,14 +69,27 @@ export default function LiveConversation() {
       if (id === generation.current) { stop(); setStatus(error instanceof Error ? error.message : 'Não foi possível iniciar.') }
     }
   }
-  return <main style={{ maxWidth: 720, margin: '40px auto', padding: 24, fontFamily: 'system-ui', lineHeight: 1.6 }}>
-    <h1>OmniNexus Live</h1><p>Converse por voz em português brasileiro. Protótipo sem ferramentas de produção.</p>
-    <p role="status" aria-live="polite">{status}</p>
-    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-      <button style={{ minHeight: 44, padding: '8px 20px' }} disabled={active} onClick={() => void start()}>Iniciar conversa</button>
-      <button style={{ minHeight: 44, padding: '8px 20px' }} disabled={!active} onClick={() => { stop(); setStatus('Microfone desligado. Clique para iniciar novamente.') }}>Encerrar e desligar microfone</button>
+  const voiceState = active ? status.startsWith('Ouvindo') ? 'listening' : status.startsWith('Respondendo') ? 'speaking' : 'connecting' : 'off'
+  const voiceLabel = voiceState === 'listening' ? 'Ouvindo você' : voiceState === 'speaking' ? 'Respondendo' : voiceState === 'connecting' ? 'Preparando conexão' : 'Microfone desligado'
+  return <main className="live-immersive" data-voice-state={voiceState}>
+    <header className="live-heading">
+      <div><span className="live-eyebrow">OMNINEXUS LIVE</span><p>Conversa por voz · Português BR</p></div>
+      <span className="live-prototype">Prévia</span>
+    </header>
+    <section className="live-stage" aria-labelledby="live-title">
+      <div className="live-orbit" aria-hidden="true"><div className="live-orbit-ring" /><div className="live-core"><AudioLines size={52} strokeWidth={1.2} /></div></div>
+      <div className="live-intro"><h1 id="live-title">Vamos conversar.</h1><p>Sua voz, no centro da conversa.</p></div>
+      <div className="live-state"><span className="live-state-dot" aria-hidden="true" />{voiceLabel}</div>
+      <p className="live-status" role="status" aria-live="polite" aria-atomic="true">{status}</p>
+    </section>
+    <div className="live-controls" role="group" aria-label="Controles da conversa">
+      <button className="live-start" disabled={active} onClick={() => void start()}><Mic size={20} aria-hidden="true" />{active ? 'Conversa em andamento' : 'Iniciar conversa'}</button>
+      <button className="live-stop" title="Encerrar e desligar microfone" aria-label="Encerrar e desligar microfone" disabled={!active} onClick={() => { stop(); setStatus('Microfone desligado. Clique para iniciar novamente.') }}><Square size={18} aria-hidden="true" /></button>
     </div>
-    <p>O microfone só é solicitado após seu clique. Reconectar exige novo clique. Limite: dois minutos por sessão.</p>
-    <h2>Transcrição temporária</h2><p>{transcript || 'A conversa aparecerá aqui.'}</p>
+    <p className="live-privacy"><ShieldCheck size={16} aria-hidden="true" /><span>Microfone só após seu clique. Até 2 minutos por sessão.<br />Reconexão manual · Sem ferramentas de produção.</span></p>
+    <details className="live-transcript">
+      <summary><span>Transcrição desta sessão</span><ChevronDown size={16} aria-hidden="true" /></summary>
+      <div><p>{transcript || 'Ainda não há transcrição. O texto recebido durante a conversa aparecerá aqui.'}</p><small>Texto temporário desta página.</small></div>
+    </details>
   </main>
 }

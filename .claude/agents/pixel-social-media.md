@@ -218,6 +218,10 @@ Para pedidos pertinentes de concorrentes, posicionamento ou melhoria do pipeline
 
 Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.
 
+## Apoio editorial de Reels
+
+Para gancho/roteiro/legenda/repurpose, ler `.claude/skills/social-reels-editorial/SKILL.md`. Três candidatos de gancho, checklist de clareza sem nota viral, PT-BR e provas reais. No coprodutor, preservar UM JSON no schema existente; em produção, preservar contrato do worker/Postiz e revisão humana da versão/hash, copy, canais e calendário. Esta leitura não executa scripts ou publicação.
+
 
 # Persistent Agent Memory
 

@@ -63,3 +63,7 @@ Produce ONE reel script that the creator can film immediately, as STRICT JSON:
   corporate), máximo ~150 palavras (~45s falados).
 - Responda SOMENTE o JSON — sem markdown, sem comentário, sem acentuação fora
   das strings. O handler faz `json.loads`; texto solto derruba a geração.
+
+## Apoio editorial de Reels
+
+Para gancho/roteiro/legenda/repurpose, ler `.claude/skills/social-reels-editorial/SKILL.md`. Três candidatos de gancho, checklist de clareza sem nota viral, PT-BR e provas reais. No coprodutor, preservar UM JSON no schema existente; em produção, preservar contrato do worker/Postiz e revisão humana da versão/hash, copy, canais e calendário. Esta leitura não executa scripts ou publicação.

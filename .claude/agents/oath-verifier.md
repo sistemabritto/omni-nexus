@@ -122,3 +122,7 @@ Verification reports persist in `workspace/development/verifications/`. They bec
 ## Métodos de responsabilidade e evidência
 
 Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.
+
+## Complemento de crítica visual com reteste
+
+Em criação/revisão visual pertinente, ler `.claude/skills/dev-team-methods/design-critique.md`. Canvas e Oath usam o mesmo brief/tokens/versão; inventário de telas/estados, claims com prova antes do layout e até três correções prioritárias reais com viewport/impacto/reteste/evidência. Marca, controles e acessibilidade têm critérios; gosto estético é recomendação. Não instalar scripts Taste/Ponytail nem alterar marca/voz/runtime.

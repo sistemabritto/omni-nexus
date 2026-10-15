@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FOLDER = ROOT / '.claude/skills/dev-team-methods'
 AGENTS = ['clawdia-assistant', 'helm-conductor', 'compass-planner', 'bolt-executor',
           'hawk-debugger', 'mako-marketing', 'pixel-social-media', 'nex-sales',
-          'dex-data', 'lens-reviewer', 'oath-verifier']
+          'dex-data', 'lens-reviewer', 'oath-verifier', 'canvas-designer']
 
 
 @pytest.mark.parametrize('agent', AGENTS)
@@ -17,8 +17,9 @@ def test_runtime_recovers_role_and_references(agent):
     sys.path.insert(0, str(ROOT / 'dashboard/backend'))
     from provider_fallback import _agent_prompt, _embed_agent_for_openclaude
     pointer = '.claude/skills/dev-team-methods/SKILL.md'
-    assert pointer in _agent_prompt(agent)
-    assert pointer in _embed_agent_for_openclaude('Inspect fixture only', agent)
+    expected = '.claude/skills/dev-team-methods/design-critique.md' if agent == 'canvas-designer' else pointer
+    assert expected in _agent_prompt(agent)
+    assert expected in _embed_agent_for_openclaude('Inspect fixture only', agent)
     text = (FOLDER / 'SKILL.md').read_text()
     row = next(line for line in text.splitlines() if line.startswith('| ' + agent + ' |'))
     targets = row.split('|')[3].strip().split(', ')
@@ -51,3 +52,17 @@ def test_attribution_pins_and_notices_preserved():
     for name in ['LICENSE-agency-agents', 'LICENSE-superpowers']:
         notice = (FOLDER / name).read_text()
         assert 'MIT License' in notice and 'Copyright' in notice and 'Permission is hereby granted' in notice
+
+
+def test_creator_and_reviewer_recover_same_critique_module():
+    sys.path.insert(0, str(ROOT / 'dashboard/backend'))
+    from provider_fallback import _agent_prompt
+    pointer = '.claude/skills/dev-team-methods/design-critique.md'
+    for agent in ['canvas-designer', 'oath-verifier']:
+        assert pointer in _agent_prompt(agent)
+    assert (ROOT / pointer).is_file()
+    origin = (FOLDER / 'ORIGIN.md').read_text()
+    assert 'f624f37a8c650b9cc550253104925efe4c8de246' in origin
+    assert '84740e3d344b69b4a133201fa519eb37a62a2b2a' in origin
+    for name in ['LICENSE-taste-skill', 'LICENSE-ponytail']:
+        assert 'Permission is hereby granted' in (FOLDER / name).read_text()

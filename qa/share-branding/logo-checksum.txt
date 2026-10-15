@@ -1,0 +1,2 @@
+0f333730b7b6ae0278be5afbc1800226b9b96959bc5955f606d897c710f03c98  dashboard/frontend/public/branding/sistema-britto.png
+0f333730b7b6ae0278be5afbc1800226b9b96959bc5955f606d897c710f03c98  /home/sistemabritto/Documentos/sistemabritto-site/public/images/logo-sistema-britto.png

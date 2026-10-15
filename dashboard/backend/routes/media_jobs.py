@@ -35,6 +35,21 @@ from media_release import canonical, digest_of, make_snapshot, render_binding, a
 
 bp = Blueprint("media_jobs", __name__)
 
+
+@bp.before_request
+def recordings_tenant_boundary():
+    if request.view_args and request.view_args.get("job_id"):
+        from recordings_access import require_recording_job_access
+        require_recording_job_access(request.view_args["job_id"])
+
+
+@bp.after_request
+def private_recording_media(response):
+    if getattr(g, "recording_scoped", False):
+        response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
 _WORKER_PATCHABLE_FIELDS = (
     "render_path", "render_sha256", "render_size_bytes", "render_duration_seconds",
     "render_width", "render_height", "render_fps", "render_has_audio", "last_error",
@@ -218,6 +233,10 @@ def approve_media_release(job_id):
         return jsonify({"error": "human_session_required"}), 403
     job = MediaJob.query.get_or_404(job_id)
     release = db.get_or_404(MediaRelease, job_id)
+    from recordings_access import release_readiness_error
+    readiness = release_readiness_error(job)
+    if readiness:
+        return jsonify({"error": readiness}), 409
     data = request.get_json(silent=True) or {}
     if not isinstance(data, dict) or data.get("digest") != release.digest:
         return jsonify({"error": "stale_release_revision"}), 409
@@ -235,6 +254,11 @@ def approve_media_release(job_id):
         release.busy = False
         db.session.commit()
         return jsonify({"error": "approval_stale", "detail": str(exc)}), 409
+    readiness = release_readiness_error(job)
+    if readiness:
+        release.busy = False
+        db.session.commit()
+        return jsonify({"error": readiness}), 409
     release.approved_digest = release.digest
     release.approved_by = current_user.username
     release.approved_at = _now()
@@ -292,6 +316,13 @@ def list_media_jobs():
     if denied:
         return denied
     query = MediaJob.query
+    # Legacy jobs retain existing policy; private Gravações never leak through this list.
+    if current_user.role != "admin":
+        import models as m
+        linked = db.select(m.RecordingVersion.job_id)
+        allowed = db.select(m.RecordingVersion.job_id).join(m.Recording, m.Recording.id == m.RecordingVersion.recording_id).join(
+            m.RecordingAccess, m.RecordingAccess.company_id == m.Recording.company_id).where(m.RecordingAccess.user_id == int(current_user.id))
+        query = query.filter((~MediaJob.id.in_(linked)) | MediaJob.id.in_(allowed))
     status = request.args.get("status")
     if status:
         query = query.filter(MediaJob.status == status)
@@ -590,7 +621,13 @@ def run_media_job(job_id):
 
     db.session.refresh(job)
     audit(current_user, "execute", "media_jobs", f"run media job {job_id}")
-    return jsonify(job.to_dict())
+    payload = job.to_dict()
+    # Execution intent is the frozen closure snapshot, never worker-writable result_json.
+    import models as m
+    version = m.RecordingVersion.query.filter_by(job_id=job_id).first()
+    if version:
+        payload["result"] = json.loads(version.snapshot_json)
+    return jsonify(payload)
 
 
 @bp.route("/api/media/jobs/<string:job_id>/cancel", methods=["POST"])

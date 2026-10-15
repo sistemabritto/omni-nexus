@@ -97,6 +97,10 @@ def make_snapshot(job, data, revision):
 
 
 def assert_current(job, release):
+    from recordings_access import release_readiness_error
+    readiness = release_readiness_error(job)
+    if readiness:
+        raise ReleaseError(readiness)
     if job.status != "approved":
         raise ReleaseError("job precisa da aprovação final da revisão atual")
     snapshot = json.loads(release.snapshot_json)

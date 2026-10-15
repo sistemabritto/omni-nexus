@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 import requests
 from flask import Blueprint, current_app, g, jsonify, request
 from flask_login import current_user
-from models import Company, User, has_permission, has_agent_access
+from models import Company, User, TICKET_STATUSES, has_permission, has_agent_access
 from routes.agents import AGENTS_DIR
 from routes._helpers import WORKSPACE
 from routes.terminal_proxy import TERMINAL_HTTP_BASE
@@ -166,7 +166,21 @@ def read_context(context_id):
         company = _scope(row['company_id'], row['agent_name'])
         if company is None:
             return _reply({'error': 'scope_denied'}, 403)
-        return _reply({'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True})
+        from routes.tickets import read_company_ticket_page
+        def ticket_page(**kwargs):
+            result = read_company_ticket_page(company.id, **kwargs)
+            return None if isinstance(result, tuple) else result.get_json()
+        page = ticket_page(statuses=('open', 'in_progress', 'blocked', 'review'), limit=10)
+        if page is None:
+            return _reply({'error': 'ticket_access_denied'}, 403)
+        counts = {}
+        for status in TICKET_STATUSES:
+            count = ticket_page(statuses=(status,))
+            if count is None:
+                return _reply({'error': 'ticket_access_denied'}, 403)
+            counts[status] = count['total']
+        tasks = {'source': '/api/tickets', 'total': sum(counts.values()), 'byStatus': counts, 'pendingTotal': page['total'], 'pendingLimit': 10, 'pending': [{key: ticket.get(key) for key in ('id', 'title', 'status', 'priority', 'due_date', 'blocked_reason', 'requires_human_approval')} for ticket in page['tickets']]}
+        return _reply({'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks})
     except (requests.RequestException, ValueError, TypeError, AttributeError):
         return _reply({'error': 'runtime_context_unavailable'}, 503)
 

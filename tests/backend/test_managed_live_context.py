@@ -143,3 +143,17 @@ def test_presentation_groups_are_private_configuration_filtered_by_authorized_ca
     assert c.get('/api/live/omni-context/options').json['presentationGroups']=={'Fixture sector':['agent-a']}
     mapping.write_text('invalid json')
     assert c.get('/api/live/omni-context/options').json['presentationGroups']=={}
+
+
+def test_read_includes_only_bound_company_tasks_through_existing_acl(setup,monkeypatch):
+    app,c,login,mod,_,_=setup;login();ctx=create(c,7).json;link(c,ctx['contextId'])
+    from models import db,Ticket
+    with app.app_context():
+        db.session.add_all([Ticket(id='fixture-a',title='Fixture pending',company_id=7,status='blocked',blocked_reason='pending_human_approval',created_by='fixture',created_at='test',updated_at='test'),Ticket(id='fixture-b',title='Fixture done',company_id=7,status='resolved',created_by='fixture',created_at='test',updated_at='test'),Ticket(id='fixture-c',title='Other company private fixture',company_id=8,status='open',created_by='fixture',created_at='test',updated_at='test')]);db.session.commit()
+    response=read(c,ctx['contextId']);assert response.status_code==200
+    tasks=response.json['tasks'];assert tasks['source']=='/api/tickets';assert tasks['total']==2;assert tasks['pendingTotal']==1;assert tasks['byStatus']['blocked']==1;assert tasks['byStatus']['resolved']==1;assert tasks['pending'][0]['title']=='Fixture pending'
+    assert 'Other company private fixture' not in response.text;assert 'workspace_path' not in response.text;assert 'lock_token' not in response.text
+    assert read(c,ctx['contextId'],companyId=8).status_code==400
+    import routes.tickets as tickets
+    monkeypatch.setattr(tickets,'has_permission',lambda *_:False)
+    assert read(c,ctx['contextId']).status_code==403

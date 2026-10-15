@@ -1,0 +1,47 @@
+[
+  {
+    "width": 375,
+    "scrollWidth": 375,
+    "accent": "#a3ff12",
+    "controls": 0,
+    "errors": [],
+    "createFailureVisible": true,
+    "memorySourceOpened": true
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "accent": "#a3ff12",
+    "controls": 0,
+    "errors": [],
+    "createFailureVisible": true,
+    "memorySourceOpened": true
+  },
+  {
+    "width": 1024,
+    "scrollWidth": 1024,
+    "accent": "#a3ff12",
+    "controls": 0,
+    "errors": [],
+    "createFailureVisible": true,
+    "memorySourceOpened": true
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "accent": "#a3ff12",
+    "controls": 0,
+    "errors": [],
+    "createFailureVisible": true,
+    "memorySourceOpened": true
+  },
+  {
+    "width": 812,
+    "scrollWidth": 812,
+    "accent": "#a3ff12",
+    "controls": 0,
+    "errors": [],
+    "createFailureVisible": true,
+    "memorySourceOpened": true
+  }
+]

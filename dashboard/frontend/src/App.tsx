@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus workspace entry; original EvoNexus console retained.
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -15,6 +16,7 @@ const Setup = lazyDefault(() => import('./pages/Setup'))
 const Login = lazyDefault(() => import('./pages/Login'))
 const ShareView = lazyDefault(() => import('./pages/ShareView'))
 const Docs = lazyDefault(() => import('./pages/Docs'))
+const OmniNexus = lazyDefault(() => import('./pages/OmniNexus'))
 const Overview = lazyDefault(() => import('./pages/Overview'))
 const Agents = lazyDefault(() => import('./pages/Agents'))
 const AgentDetail = lazyDefault(() => import('./pages/AgentDetail'))
@@ -249,7 +251,9 @@ function AppContent() {
                 </Suspense>
               } />
 
-              <Route path="/" element={<Overview />} />
+              <Route path="/" element={new URLSearchParams(location.search).has('tab') ? <RedirectPreserveQuery to="/overview" /> : <OmniNexus />} />
+              <Route path="/overview" element={<Overview />} />
+              <Route path="/omninexus" element={<OmniNexus />} />
               <Route path="/workspace/*" element={<Workspace />} />
               <Route path="/agents" element={<Agents />} />
               <Route path="/agents/:name" element={<AgentDetail />} />

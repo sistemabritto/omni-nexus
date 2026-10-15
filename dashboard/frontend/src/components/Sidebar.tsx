@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus workspace entry; original EvoNexus console retained.
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -310,7 +311,7 @@ export default function Sidebar() {
       }
     >
       <item.icon size={16} />
-      {t(`nav.${item.labelKey}`)}
+      {item.to === '/' ? 'OmniNexus' : t(`nav.${item.labelKey}`)}
     </NavLink>
   )
 

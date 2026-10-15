@@ -1,3 +1,70 @@
+<!-- Modified by Sistema Britto: evidence-based Live overview and contracts, 2026-10-15. -->
+<p align="center"><img src="public/cover.svg" alt="OmniNexus Live · distribuição derivada do EvoNexus" width="100%" /></p>
+<h1 align="center">OmniNexus Live</h1>
+<p align="center"><strong>Agnostic Live Voice Orchestrator</strong><br/>Uma interface de voz e texto para coordenar trabalho, contexto e resultados.</p>
+<p align="center"><a href="https://sistemabritto.com.br">Site oficial · Sistema Britto</a> · <a href="https://www.instagram.com/sistemabritto/">Instagram · @sistemabritto</a> · <a href="docs/specs/omninexus-live.md">Contrato e critérios de aceite</a> · <a href="docs/specs/omninexus-live-evidence.md">Estado e evidências</a></p>
+
+OmniNexus Live é a evolução da interface conversacional desta distribuição do **EvoNexus**. O objetivo é conectar uma conversa contínua a ferramentas, providers/modelos e executores intercambiáveis (harnesses), devolvendo progresso e artefatos ao chat. **A arquitetura agnóstica é um contrato em construção; não há suporte completo comprovado a todos os harnesses.** O nome de apresentação não altera o repositório nem os domínios existentes.
+
+### O que está disponível
+
+| Estado | Recurso | Limite atual |
+|---|---|---|
+| Entregue em produção, conforme relato do usuário | Voz ElevenLabs em `7e84d6b` | Conversa de voz testada pelo usuário; não comprova execução de trabalho |
+| Implementado no MVP | `read_current_omni_session` | Retorna sessão e tickets; criar sessão runtime **não despacha comandos** |
+| Em construção | Voz + texto na mesma sessão lógica, persona, memória, fatos da empresa e trabalhos anteriores | Continuidade backend em branch separada; UI em integração; sem RAG/persona/histórico automático no Live atual |
+| Em construção | Live → tools → providers/modelos → harness/dispatcher → resultado no chat | Prioridade de integração; ainda exige prova ponta a ponta real |
+| Planejado | Contrato extensível OpenCode/Claude Code e pools compatíveis | O bridge existente usa protocolo Claude/OpenClaude; isso não certifica um adaptador genérico |
+| **EM BREVE** | **Codex e Hermes** | Integrações não comprovadas; instalar um CLI no PC não integra o OmniNexus |
+| Candidato | Cursor | Depende de avaliação e contrato verificável |
+
+### Arquitetura de destino
+
+As linhas tracejadas representam integração pendente, não funcionalidades já disponíveis.
+
+```mermaid
+flowchart TD
+  UI[Live: voz e texto] --> Voice[Transporte de voz ElevenLabs / providers]
+  Voice --> Read[Tool atual: leitura de sessão e tickets]
+  UI -.-> Session[Sessão lógica + persona + memória autorizada]
+  Session -.-> Tools[Tools: intenção validada e ACL]
+  Tools -.-> Policy[Elegibilidade determinística: orçamento e capacidades]
+  Policy -.-> Pools[Pools de providers / modelos / harnesses]
+  Pools -.-> Dispatcher[Dispatcher + checkpoints + idempotência]
+  Dispatcher -.-> Adapter[Adaptadores versionados e isolados]
+  Adapter -.-> Result[Eventos, status e artefatos autorizados]
+  Result -.-> UI
+```
+
+### Exemplos e expectativas
+
+- **Hoje:** “Quais tickets estão associados a esta sessão?” usa a leitura de contexto disponível. Não significa que o agente executou um ticket.
+- **Aceite da próxima integração:** “Retome o relatório da empresa e me entregue o link aqui.” deve recuperar somente fatos e trabalhos autorizados, iniciar um job real, mostrar seu ID/status e devolver um artefato acessível. Sem fonte, o agente informa que não encontrou contexto.
+- **Falha esperada:** um pedido de visão com pool apenas textual deve retornar `no_eligible_target`, sem trocar silenciosamente de capacidade ou orçamento.
+
+### Preparação segura
+
+Comece em ambiente local isolado, sem dados ou credenciais de produção. Pré-requisitos e instalação da base estão em [Getting started](docs/getting-started.md); esse guia inclui métodos upstream e não comprova ativação do Live nesta distribuição. Para o código deste fork:
+
+```bash
+git clone https://github.com/sistemabritto/omni-nexus-live.git
+cd omni-nexus-live
+# Leia o setup antes de executar o wizard interativo:
+sed -n '1,150p' docs/getting-started.md
+# Em ambiente isolado, após instalar os pré-requisitos documentados:
+make setup
+```
+
+Configure apenas integrações necessárias pelo mecanismo privado do servidor. Nunca coloque chaves em README, browser, comandos compartilhados ou commits; revise os arquivos gerados antes de versionar. A presença de chave ou flag de custo não comprova gratuidade. Não reutilize configuração pessoal nem habilite fallback pago implicitamente. A instalação da base não habilita Codex, Hermes ou despacho Live automaticamente. Veja [contrato de modelos](docs/ops/live-model-policy-contract.md) e [limites de integração](docs/ops/live-voice-access-integration.md).
+
+### Evidência, limites e contribuição
+
+O [registro de evidências](docs/specs/omninexus-live-evidence.md) separa implementado, testado, produção e pendente por revisão. PR78 é candidato revisado, com publicação aguardando aprovação específica; testes simulados não são teste real de provider. O catálogo amplo não bloqueia fechar a integração existente.
+
+A base, seus créditos, avisos de marcas e **Apache 2.0 com condições adicionais EvoNexus** permanecem abaixo e em [LICENSE](LICENSE), [NOTICE](NOTICE), [NOTICE.md](NOTICE.md) e [TRADEMARKS.md](TRADEMARKS.md). Não se presume licença comercial irrestrita. Os guias operacionais abaixo descrevem outros subsistemas da distribuição: capacidades de memória ou execução desses subsistemas não devem ser atribuídas automaticamente ao Live.
+
+---
+
 <!-- Modified by Sistema Britto: clarify license metadata and verification scope (2026-10-15). -->
 <p align="center">
   <a href="https://evolutionfoundation.com.br">
@@ -9,7 +76,7 @@
   <img src="public/cover.svg" alt="EvoNexus" width="100%"/>
 </p>
 
-<h1 align="center">Omni-Nexus</h1>
+<h2 align="center">Base EvoNexus e guia operacional existente</h2>
 
 <p align="center">
   <b>Um time de agentes de IA que trabalha sozinho — e para em você para decidir.</b>
@@ -36,10 +103,7 @@
 
 <p align="center">
   <a href="https://sistemabritto.com.br"><img src="https://img.shields.io/badge/site-sistemabritto.com.br-111827?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Site" /></a>
-  <a href="https://instagram.com/sistemabritto"><img src="https://img.shields.io/badge/Instagram-@sistemabritto-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram" /></a>
-  <a href="https://blog.sistemabritto.com.br"><img src="https://img.shields.io/badge/blog-blog.sistemabritto.com.br-f59e0b?style=for-the-badge&logo=ghost&logoColor=white" alt="Blog" /></a>
-  <a href="https://youtube.com/@sistemabritto"><img src="https://img.shields.io/badge/YouTube-@sistemabritto-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube" /></a>
-  <a href="https://www.linkedin.com/in/fsbritto/"><img src="https://img.shields.io/badge/LinkedIn-fsbritto-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+  <a href="https://www.instagram.com/sistemabritto/"><img src="https://img.shields.io/badge/Instagram-@sistemabritto-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram" /></a>
 </p>
 
 <p align="center">
@@ -539,15 +603,11 @@ A inclusão dos arquivos e a correção dos metadados não constituem uma declar
 <p align="center">
   <b>Sistema Britto</b><br/>
   <a href="https://sistemabritto.com.br">sistemabritto.com.br</a> &middot;
-  <a href="https://blog.sistemabritto.com.br">blog.sistemabritto.com.br</a>
 </p>
 
 <p align="center">
-  <a href="https://instagram.com/sistemabritto"><img src="https://img.shields.io/badge/Instagram-@sistemabritto-E4405F?style=flat-square&logo=instagram&logoColor=white" alt="Instagram" /></a>
-  <a href="https://youtube.com/@sistemabritto"><img src="https://img.shields.io/badge/YouTube-@sistemabritto-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="YouTube" /></a>
-  <a href="https://www.linkedin.com/in/fsbritto/"><img src="https://img.shields.io/badge/LinkedIn-fsbritto-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+  <a href="https://www.instagram.com/sistemabritto/"><img src="https://img.shields.io/badge/Instagram-@sistemabritto-E4405F?style=flat-square&logo=instagram&logoColor=white" alt="Instagram" /></a>
   <a href="https://sistemabritto.com.br"><img src="https://img.shields.io/badge/Site-sistemabritto.com.br-111827?style=flat-square&logo=googlechrome&logoColor=white" alt="Site" /></a>
-  <a href="https://blog.sistemabritto.com.br"><img src="https://img.shields.io/badge/Blog-blog.sistemabritto.com.br-f59e0b?style=flat-square&logo=ghost&logoColor=white" alt="Blog" /></a>
 </p>
 
 <p align="center">

@@ -311,7 +311,7 @@ export default function Sidebar() {
       }
     >
       <item.icon size={16} />
-      {item.to === '/' ? 'OmniNexus' : t(`nav.${item.labelKey}`)}
+      {item.to === '/' ? 'OmniNexus Live' : t(`nav.${item.labelKey}`)}
     </NavLink>
   )
 

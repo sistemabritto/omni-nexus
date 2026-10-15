@@ -86,7 +86,7 @@ export default function OmniNexus() {
   const current = sessions.find(s => s.id === session)
   const attention = jobs.filter(j => j.status === 'failed').length
   return <div className="omni">
-    <header className="omni-top"><div><span className="omni-eyebrow">WORKSPACE DE AGENTES</span><h1>OmniNexus<span className="omni-preview">Prévia</span></h1><p>Uma conversa. Autoria clara. Trabalho acompanhável.</p></div><Link className="omni-link" to="/overview">Painel EvoNexus <ArrowUpRight size={16} aria-hidden="true" /></Link></header>
+    <header className="omni-top"><div><span className="omni-eyebrow">WORKSPACE DE AGENTES</span><h1>OmniNexus Live<span className="omni-preview">Prévia</span></h1><p>Uma conversa. Autoria clara. Trabalho acompanhável.</p></div><Link className="omni-link" to="/overview">Painel EvoNexus <ArrowUpRight size={16} aria-hidden="true" /></Link></header>
     <div className="omni-summary"><span><span className="omni-dot" /> APIs existentes · sem dados de demonstração</span><span><ShieldCheck size={16} aria-hidden="true" /> Aprovações no contexto da conversa</span></div>
     <a className="omni-mobile-jump" href="#omni-conversation">Ir à conversa ↓</a>
     <div className="omni-grid">

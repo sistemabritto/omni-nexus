@@ -7,7 +7,8 @@ export function encodePCM(samples: Float32Array): string {
 export class Playback {
   private nodes = new Set<AudioBufferSourceNode>();
   private next = 0;
-  constructor(private context: AudioContext) {}
+  private context: AudioContext;
+  constructor(context: AudioContext) { this.context = context; }
   play(data: string) {
     const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
     if (!bytes.length || bytes.length % 2) return;

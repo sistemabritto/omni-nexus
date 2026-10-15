@@ -209,16 +209,18 @@ def signed_session(context_id):
     key = os.environ.get('ELEVENLABS_API_KEY')
     if not key:
         return _reply({'error': 'provider_not_configured'}, 503)
+    from routes.live_voices import session_voice, VoiceUnavailable
     try:
+        voice = session_voice(row['company_id'])
         response = requests.get('https://api.elevenlabs.io/v1/convai/conversation/get-signed-url', params={'agent_id': agent_id}, headers={'xi-api-key': key}, timeout=(3, 10), allow_redirects=False)
         response.raise_for_status()
         signed_url = response.json().get('signed_url')
         parsed = urlsplit(signed_url) if isinstance(signed_url, str) else None
         if parsed is None or parsed.scheme != 'wss' or parsed.hostname != 'api.elevenlabs.io' or parsed.path != '/v1/convai/conversation':
             raise ValueError()
-        return _reply({'signedUrl': signed_url})
-    except (requests.RequestException, ValueError, TypeError, AttributeError):
-        return _reply({'error': 'provider_unavailable'}, 503)
+        return _reply({'signedUrl': signed_url, **voice})
+    except (requests.RequestException, ValueError, TypeError, AttributeError, VoiceUnavailable):
+        return _reply({'error': 'provider_or_saved_voice_unavailable'}, 503)
 
 
 def _presentation_groups(agents):

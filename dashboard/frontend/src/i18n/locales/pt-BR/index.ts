@@ -222,6 +222,7 @@ const translations = {
     },
 
     nav: {
+      live: 'Live',
       groups: {
         cockpit: 'Cockpit',
         projetos: 'Projetos',

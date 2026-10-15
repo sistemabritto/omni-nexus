@@ -323,7 +323,7 @@ export default function Sidebar() {
       }
     >
       <item.icon size={18} aria-hidden="true" />
-      {item.to === '/live' ? 'OmniNexus Live' : t(`nav.${item.labelKey}`)}
+      {item.to === '/live' ? 'Live' : t(`nav.${item.labelKey}`)}
     </NavLink>
   )
 

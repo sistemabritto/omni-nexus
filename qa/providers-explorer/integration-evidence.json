@@ -1,0 +1,28 @@
+{
+  "scope": "local integration only",
+  "base": "cb915fb0337de72ee503a9a79a2ab1089e1b38d4",
+  "published_ui_preserved": "53403b79e83d03932f0904698adb44eece9bacc6",
+  "checks": {
+    "catalog_runtime_pytest": "73 passed",
+    "paired_backend_client_pytest": "1 passed",
+    "node_contracts": "PASS actual Flask payloads + shipped TypeScript client, client invariants and SSR",
+    "typescript_vite_build": "PASS",
+    "focused_eslint": "PASS",
+    "chromium_actual_backend_payloads": "PASS 375x667 and1440x900; synthetic API delivery",
+    "chromium_existing_regressions": "PASS 404/409/stale response cancellation/legacy preservation",
+    "live_sidebar_match_published_ui": "PASS git diff --exit-code",
+    "diff_check": "PASS"
+  },
+  "provider_calls": 0,
+  "production_access": false,
+  "pushed": false,
+  "deployed": false,
+  "screenshots": "/tmp/providers-execution-qa",
+  "pending": [
+    "remote CI not run",
+    "exact combined revision review and publication/deployment authorization",
+    "real provider/runtime/model capability/cost attestation",
+    "inherited recordings worker rollout compatibility and human/device acceptance",
+    "audio c1d0e23 separate and not included"
+  ]
+}

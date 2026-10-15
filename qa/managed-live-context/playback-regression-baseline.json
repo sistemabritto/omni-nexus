@@ -1,0 +1,55 @@
+{
+  "synthetic_only": true,
+  "provider_calls": 0,
+  "microphone_permissions": 0,
+  "hardware_audio": false,
+  "source": "actual Playback/ManagedSession + installed ElevenLabs WebSocketConnection",
+  "checks": [
+    {
+      "name": "burst_does_not_silently_cancel_previously_scheduled_audio",
+      "status": "FAIL",
+      "evidence": {
+        "chunks": 7,
+        "seconds_per_chunk": 1,
+        "audio_clock_seconds": 0,
+        "stopped_nodes": 6,
+        "provider_interruption_events": 0
+      }
+    },
+    {
+      "name": "one_connection_and_one_audio_listener",
+      "status": "PASS",
+      "evidence": {
+        "connections": 1,
+        "audio_listeners": 1
+      }
+    },
+    {
+      "name": "continuity_poll_does_not_resend_context",
+      "status": "PASS",
+      "evidence": {
+        "before": 1,
+        "after": 1,
+        "polls": 3
+      }
+    },
+    {
+      "name": "interrupted_generation_stale_audio_is_discarded",
+      "status": "FAIL",
+      "evidence": {
+        "interruption_event_id": 20,
+        "late_audio_event_id": 10,
+        "nodes_before_late": 1,
+        "nodes_after_late": 2
+      }
+    },
+    {
+      "name": "audio_after_end_is_discarded",
+      "status": "PASS",
+      "evidence": {
+        "before": 2,
+        "after": 2
+      }
+    }
+  ]
+}

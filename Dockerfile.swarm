@@ -1,3 +1,4 @@
+# Modified by Sistema Britto: preserve upstream legal files and correct license metadata (2026-10-15).
 # ============================================================================
 # Dockerfile.swarm — EvoNexus runtime para Docker Swarm / Portainer
 #
@@ -144,7 +145,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 LABEL org.opencontainers.image.title="evo-nexus-runtime" \
       org.opencontainers.image.description="EvoNexus runtime for Swarm (telegram/scheduler/ad-hoc routines)" \
       org.opencontainers.image.source="https://github.com/EvolutionAPI/evo-nexus" \
-      org.opencontainers.image.licenses="MIT"
+      org.opencontainers.image.licenses="LicenseRef-EvoNexus"
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]

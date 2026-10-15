@@ -161,6 +161,11 @@ Examples of what to record:
 - Partnership negotiation patterns
 - Cycle time patterns by deal type
 
+## Métodos de responsabilidade e evidência
+
+Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.
+
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `/Users/etus_0104/Projects/claude_cowork_workspace/.claude/agent-memory/nex-sales/`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).

@@ -183,7 +183,7 @@ def read_context(context_id):
                 return _reply({'error': 'ticket_access_denied'}, 403)
             counts[status] = count['total']
         tasks = {'source': '/api/tickets', 'total': sum(counts.values()), 'byStatus': counts, 'pendingTotal': page['total'], 'pendingLimit': 10, 'pending': [{key: ticket.get(key) for key in ('id', 'title', 'status', 'priority', 'due_date', 'blocked_reason', 'requires_human_approval')} for ticket in page['tickets']]}
-        return _reply({'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})})
+        return _reply({'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})})
     except (requests.RequestException, ValueError, TypeError, AttributeError, sqlite3.Error, ContinuityDenied):
         return _reply({'error': 'runtime_context_unavailable'}, 503)
 
@@ -443,9 +443,14 @@ def _work_payload(row, query):
     from models import TicketComment
     stop = {'qual', 'quais', 'sobre', 'anterior', 'anteriores', 'trabalho', 'trabalhos', 'feito', 'fizemos', 'lembra', 'voce', 'você', 'para', 'como', 'está', 'esta'}
     terms = [t for t in re.findall(r'[^\W_]+(?:-[^\W_]+)*', query.lower()) if len(t) >= 4 and t not in stop][:4]
-    if not terms:
-        return {'kind': 'untrusted_reference_data', 'results': [], 'coverage': 'query_too_broad'}
     tickets = {}
+    if not terms:
+        # A fresh logical conversation has no user query yet. Show a bounded,
+        # honestly labelled completed-work sample through the same ticket ACL.
+        response = read_company_ticket_page(row['company_id'], statuses=('resolved', 'closed', 'archived'), limit=3)
+        if isinstance(response, tuple):
+            raise PermissionError()
+        tickets = {ticket['id']: ticket for ticket in response.get_json()['tickets']}
     for term in terms:
         response = read_company_ticket_page(row['company_id'], limit=3, query=term)
         if isinstance(response, tuple):
@@ -457,7 +462,7 @@ def _work_payload(row, query):
         if ticket.get('company_id') != row['company_id']:
             continue
         refs = []
-        comments = TicketComment.query.filter_by(ticket_id=ticket['id']).filter(
+        comments = [] if not terms else TicketComment.query.filter_by(ticket_id=ticket['id']).filter(
             or_(*(TicketComment.body.ilike('%' + term + '%') for term in terms))).order_by(TicketComment.created_at.desc()).limit(2).all()
         for comment in comments:
             refs.append({'reference': '/api/tickets/' + ticket['id'] + '/comments#' + comment.id,
@@ -472,7 +477,21 @@ def _work_payload(row, query):
     if _owned(row['id']) is None:
         raise PermissionError()
     return {'kind': 'untrusted_reference_data', 'source': 'authorized_company_tickets',
-            'results': results, 'limit': 3, 'coverage': 'tickets_and_matching_comments_only'}
+            'results': results, 'limit': 3, 'coverage': 'tickets_and_matching_comments_only' if terms else 'completed_ticket_sample_only'}
+
+
+def _agent_identity(row):
+    """Opt-in bounded catalog identity; never import persistent/global memory."""
+    root = AGENTS_DIR.resolve()
+    path = (root / (row['agent_name'] + '.md')).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise ContinuityDenied('agent_identity_unavailable')
+    text = path.read_text(encoding='utf-8')
+    for marker in ('# Persistent Agent Memory', '## MEMORY.md'):
+        text = text.split(marker, 1)[0]
+    return {'agentName': row['agent_name'], 'source': 'authorized_agent_catalog',
+            'persona': text[:2500], 'truncated': len(text) > 2500,
+            'legacyMemoryImported': False}
 
 
 def _previous_work_for_context(row):

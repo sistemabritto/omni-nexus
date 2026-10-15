@@ -236,7 +236,7 @@ def test_closed_batch_worker_to_human_release_and_simulated_channels(queue,monke
     assert response.status_code==201
     u=response.json;finish(c,r,u,data);closed,_=close(c,r,[u['id']]);v=closed['versions'][0]
     path=f"/api/media/jobs/{v['job']['id']}"
-    claimed=c.post(path+'/run',json={'agent':'local-test'});assert claimed.status_code==200
+    claimed=c.post(path+'/run',json={'agent':'local-test','recording_batch':'v1'});assert claimed.status_code==200
     spec=importlib.util.spec_from_file_location('recording_worker_test',Path(__file__).resolve().parents[2]/'media_worker/worker.py')
     worker=importlib.util.module_from_spec(spec);spec.loader.exec_module(worker)
     def patch(job_id,**fields):
@@ -286,5 +286,31 @@ def test_worker_intent_is_frozen_and_render_cannot_cross_job(queue,tmp_path):
     # Even service-writable diagnostic results cannot replace the approved closed batch intent.
     with queue.app_context():
         job=m.db.session.get(m.MediaJob,v['job']['id']);job.result_json='{"assets":[]}';m.db.session.commit()
-    claimed=c.post(path+'/run',json={});assert claimed.status_code==200
+    claimed=c.post(path+'/run',json={'recording_batch':'v1'});assert claimed.status_code==200
     assert claimed.json['result']['assets']==v['snapshot']['assets']
+
+
+def test_legacy_worker_cannot_claim_recordings_but_new_worker_can(queue,monkeypatch):
+    from flask import g,request
+    from pathlib import Path
+    @queue.before_request
+    def service_auth():
+        if request.headers.get('X-Test-Service'):g.auth_via_api_token=True
+    c=client(queue);r=create(c);u=init(c,r);finish(c,r,u);closed,_=close(c,r,[u['id']]);v=closed['versions'][0]
+    path='/api/media/jobs/'+v['job']['id'];headers={'X-Test-Service':'yes'}
+    assert not any(j['id']==v['job']['id'] for j in c.get('/api/media/jobs?status=queued&eligible=true',headers=headers).json)
+    assert c.post(path+'/run',json={'agent':'old-worker'},headers=headers).status_code==409
+    assert get(c,r)['versions'][0]['job']['status']=='queued'
+    spec=importlib.util.spec_from_file_location('capability_worker_test',Path(__file__).resolve().parents[2]/'media_worker/worker.py')
+    worker=importlib.util.module_from_spec(spec);spec.loader.exec_module(worker)
+    class LocalAPI:
+        def get(self,url,params):
+            response=c.get(url,query_string=params,headers=headers);assert response.status_code==200
+            return response.json
+        def post(self,url,data):
+            response=c.post(url,json=data,headers=headers);assert response.status_code==200,response.data
+            return response.json
+    monkeypatch.setattr(worker,'evo',LocalAPI())
+    claimed=worker._claim_next_job()
+    assert claimed['id']==v['job']['id'] and claimed['status']=='preparing'
+    assert claimed['result']['assets']==v['snapshot']['assets']

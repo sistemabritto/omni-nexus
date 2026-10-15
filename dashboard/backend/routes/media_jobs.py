@@ -316,6 +316,9 @@ def list_media_jobs():
     if denied:
         return denied
     query = MediaJob.query
+    # Old service workers must never route an unknown recording_batch to social_clip.
+    if getattr(g, "auth_via_api_token", False) and request.args.get("recording_batch") != "v1":
+        query = query.filter(MediaJob.job_type != "recording_batch")
     # Legacy jobs retain existing policy; private Gravações never leak through this list.
     if current_user.role != "admin":
         import models as m

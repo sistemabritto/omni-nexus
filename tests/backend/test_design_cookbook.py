@@ -91,3 +91,18 @@ def test_unsupported_colors_are_not_silently_certified(validator, color):
 def test_invalid_evidence_rejected(validator, ratio, size):
     with pytest.raises(ValueError):
         validator['assess_ratio'](ratio, size)
+
+
+def test_independent_reviewer_recovers_evidence_checklist():
+    sys.path.insert(0, str(ROOT / 'dashboard/backend'))
+    from provider_fallback import _agent_prompt
+    persona = _agent_prompt('oath-verifier')
+    for name in ['SKILL.md', 'review.md', 'contrast.md']:
+        relative = '.claude/skills/design-quality/' + name
+        assert relative in persona
+        assert (ROOT / relative).is_file()
+    # The runtime directs Oath to the source actually containing the review criteria.
+    checklist = (QUALITY / 'review.md').read_text()
+    for criterion in ['Marca e direção', 'Contraste', 'Responsividade', 'Controles reais']:
+        assert criterion in checklist
+    assert 'nenhum script determina qualidade estética' in checklist

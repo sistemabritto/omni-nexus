@@ -29,6 +29,7 @@ from media_workspace import ensure_job_scaffold, new_job_id, media_workspace_roo
 from media_retry import MAX_ATTEMPTS, failure_state
 from sqlalchemy import or_
 from postiz_client import PostizClient, PostizError, MEDIA_JOB_PLATFORMS, build_platform_settings
+from media_editorial import build_editorial_plan, EditorialPlanError
 
 bp = Blueprint("media_jobs", __name__)
 
@@ -106,6 +107,23 @@ def _resolve_platform_settings(job: MediaJob) -> dict:
 
 
 # ── CRUD ─────────────────────────────────────────────────────────────────
+
+@bp.route("/api/media/editorial/plan", methods=["POST"])
+def plan_editorial_media():
+    """Offline preview on the media API; never queues jobs or calls a provider.
+
+    Pixel presents the returned beat sheet to Felipe, then submits approved
+    work through existing /jobs actions. Client-supplied approval flags are
+    not accepted as authorization by this endpoint.
+    """
+    denied = _require("execute")
+    if denied:
+        return denied
+    try:
+        plan = build_editorial_plan(request.get_json(silent=True))
+    except EditorialPlanError as exc:
+        return jsonify({"error": "invalid_editorial_plan", "detail": str(exc)}), 400
+    return jsonify(plan)
 
 @bp.route("/api/media/jobs")
 def list_media_jobs():

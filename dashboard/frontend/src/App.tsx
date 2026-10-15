@@ -1,6 +1,7 @@
 // Modified 2026-10-15: OmniNexus workspace entry; original EvoNexus console retained.
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import LiveCompanyBinding from './live/LiveCompanyBinding'
 import { managedSession } from './live/managed-session'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { hydrateAgentMeta } from './lib/agent-meta'
@@ -232,6 +233,7 @@ function AppContent() {
   return (
     <NotificationProvider>
       <CompanyProvider>
+        <LiveCompanyBinding />
       <div className="omn-shell flex min-h-screen bg-[color:var(--bg-primary)]">
         <Sidebar />
 

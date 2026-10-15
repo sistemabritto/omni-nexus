@@ -48,6 +48,7 @@ app = Flask(__name__, static_folder=None)
 # Explicit opt-ins; defaults remain off and no credentials are loaded here.
 app.config['NEXUS_LIVE_CONTINUITY_ENABLED'] = os.environ.get('NEXUS_LIVE_CONTINUITY_ENABLED') == 'true'
 app.config['NEXUS_LIVE_TASKS_ENABLED'] = os.environ.get('NEXUS_LIVE_TASKS_ENABLED') == 'true'
+app.config['NEXUS_EXECUTION_ROUTING_ENABLED'] = os.environ.get('NEXUS_EXECUTION_ROUTING_ENABLED') == 'true'
 
 # Atrás do Traefik o scheme visto pelo Flask é http; sem honrar
 # X-Forwarded-Proto/Host, request.host_url gera redirect_uri http:// nos

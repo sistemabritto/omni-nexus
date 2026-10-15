@@ -721,3 +721,23 @@ def internal_task_result(job_id):
         return _reply({'jobId': job_id, **record, 'output': job.stage_result if job.status == 'success' else None})
     except TaskDenied:
         return _reply({'error': 'scope_denied'}, 403)
+
+
+@bp.get('/api/execution/decisions/<string:job_id>')
+def execution_decision_result(job_id):
+    """Private observed trace, guarded by the same live task ownership/resource ACL."""
+    from models import db, LiveTaskBinding, ExecutionRouteDecision
+    from live_task_dispatch import _scope, TaskDenied
+    denied = _guard()
+    if denied is not None:
+        return denied
+    binding = LiveTaskBinding.query.filter_by(job_id=job_id, user_id=int(current_user.get_id())).first()
+    decision = db.session.get(ExecutionRouteDecision, job_id) if binding else None
+    if (decision is None or decision.user_id != binding.user_id
+            or decision.company_id != binding.company_id):
+        return _reply({'error': 'scope_denied'}, 403)
+    try:
+        _scope(binding)
+        return _reply({'jobId': job_id, 'operation': decision.operation, **json.loads(decision.trace)})
+    except TaskDenied:
+        return _reply({'error': 'scope_denied'}, 403)

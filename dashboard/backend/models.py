@@ -1689,6 +1689,16 @@ class LiveTaskBinding(db.Model):
     execution = db.Column(db.Text, nullable=True)
 
 
+class ExecutionRouteDecision(db.Model):
+    """One private route decision per existing Live job; never contains prompt/key."""
+    __tablename__ = 'execution_route_decisions'
+    job_id = db.Column(db.String(36), db.ForeignKey('live_task_bindings.job_id'), primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    company_id = db.Column(db.Integer, nullable=False)
+    operation = db.Column(db.String(30), nullable=False)
+    trace = db.Column(db.Text, nullable=False)
+
+
 # Gravações: new tables only; historical Reels, files and MediaJobs are retained.
 class RecordingAccess(db.Model):
     __tablename__ = "recording_access"

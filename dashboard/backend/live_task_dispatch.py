@@ -87,6 +87,13 @@ def submit(row, logical_id, request_id, operation, ticket_id):
         db.session.add(job)
         db.session.flush()
         db.session.add(binding)
+        import execution_runtime
+        if execution_runtime.enabled():
+            from models import ExecutionRouteDecision
+            trace = execution_runtime.plan(binding.operation, binding.agent_name)
+            db.session.flush()
+            db.session.add(ExecutionRouteDecision(job_id=job.id, user_id=owner,
+                company_id=binding.company_id, operation=binding.operation, trace=json.dumps(trace)))
         db.session.commit()  # Queue row and ownership become visible together.
     except IntegrityError:
         db.session.rollback()
@@ -121,6 +128,9 @@ def payload(binding):
     record = {'recordType': 'live_task', 'recordId': job.id, 'reference': reference,
               'text': text, 'status': state, 'updatedAt': job.updated_at.isoformat(),
               'links': [{'label': 'Resultado da tarefa interna', 'url': reference}]}
+    from models import ExecutionRouteDecision
+    if db.session.get(ExecutionRouteDecision, job.id) is not None:
+        record['routeDecisionReference'] = '/api/execution/decisions/' + job.id
     record['revision'] = hashlib.sha256(json.dumps({k:v for k,v in record.items() if k != 'links'}, sort_keys=True).encode()).hexdigest()
     return ('result' if job.status in ('success', 'failed', 'cancelled') else 'progress'), record
 
@@ -151,6 +161,13 @@ def cancel(binding):
     if job.status == 'live_pending':
         changed = OrchestrationJob.query.filter_by(id=job.id, status='live_pending').update(
             {'status': 'cancelled', 'completed_at': datetime.now(timezone.utc)}, synchronize_session=False)
+        if changed:
+            from models import ExecutionRouteDecision
+            decision = db.session.get(ExecutionRouteDecision, job.id)
+            if decision is not None:
+                trace = json.loads(decision.trace)
+                trace.update(status='cancelled_before_attempt', delivery_status='cancelled')
+                decision.trace = json.dumps(trace)
         db.session.commit()
         db.session.refresh(job)
         if changed:
@@ -180,8 +197,29 @@ def run(job):
             root = Path(current_app.config.get('NEXUS_LIVE_TASK_WORKSPACE') or Path(__file__).resolve().parents[2] / 'workspace/live-tasks')
             cwd = root / job.id
             cwd.mkdir(parents=True, exist_ok=True)
-            result = invoke_with_fallback(job.prompt, agent='', routing_key=binding.agent_name,
-                cwd=cwd, tool_policy='no_tools')
+            import execution_runtime
+            from models import ExecutionRouteDecision
+            decision = db.session.get(ExecutionRouteDecision, job.id)
+            if decision is not None:
+                planned = json.loads(decision.trace)
+                def authorize():
+                    db.session.expire_all()
+                    current = db.session.get(LiveTaskBinding, job.id)
+                    _scope(current, executable=True)
+                    if current.cancel_requested:
+                        raise TaskDenied('execution_cancelled')
+                    if not enabled() or current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is not True:
+                        raise TaskDenied('live_tasks_disabled')
+                def persist(trace):
+                    decision.trace = json.dumps(trace)
+                    db.session.commit()
+                result = execution_runtime.execute(planned, binding.operation, binding.agent_name,
+                    job.prompt, cwd, authorize, persist)
+            elif execution_runtime.enabled():
+                raise TaskDenied('execution_plan_missing')
+            else:
+                result = invoke_with_fallback(job.prompt, agent='', routing_key=binding.agent_name,
+                    cwd=cwd, tool_policy='no_tools')
             identity = job.id
             # Serialize final output against cancellation/revocation writes.
             # No database write lock is held while the CLI runs.
@@ -198,18 +236,24 @@ def run(job):
             if binding.cancel_requested or job.status == 'cancelled':
                 job.status = 'cancelled'
                 job.stage_result = None
-            elif result.get('status') == 'success':
+            elif result.get('status') == 'success' and str(result.get('output') or '').strip():
                 job.status = 'success'
                 job.stage_result = str(result.get('output') or '')[:12000]
             else:
                 job.status = 'failed'
                 job.error = 'internal_task_provider_failed'
     except TaskDenied as exc:
-        job.status, job.error, job.stage_result = 'failed', str(exc), None
+        job.status, job.error, job.stage_result = ('cancelled' if str(exc) == 'execution_cancelled' else 'failed'), str(exc), None
     except Exception:
         db.session.rollback()
         job = db.session.get(OrchestrationJob, job.id)
         job.status, job.error, job.stage_result = 'failed', 'internal_task_failed', None
+    from models import ExecutionRouteDecision
+    route_decision = db.session.get(ExecutionRouteDecision, job.id)
+    if route_decision is not None:
+        trace = json.loads(route_decision.trace)
+        trace['delivery_status'] = 'result_delivered' if job.status == 'success' else job.status
+        route_decision.trace = json.dumps(trace)
     job.completed_at = datetime.now(timezone.utc)
     db.session.commit()
     if binding:

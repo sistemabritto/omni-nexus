@@ -6,6 +6,8 @@ import { useCompanies } from '../context/CompanyContext'
 import { Link } from 'react-router-dom'
 import VoicePicker from './VoicePicker'
 import { managedSession } from './managed-session'
+import { safeWorkLink } from './continuity-session'
+import LiveContinuityPanel from './LiveContinuityPanel'
 import './LiveConversation.css'
 import './ManagedNexusLive.css'
 type Options={companies:{id:number;name:string}[];agents:string[];consumptionApproved:boolean;presentationGroups?:Record<string,string[]>}
@@ -22,15 +24,17 @@ export default function ManagedNexusLive(){
   const state=useSyncExternalStore(managedSession.subscribe,managedSession.snapshot)
   const [options,setOptions]=useState<Options|null>(null),[agents,setAgents]=useState<Agent[]>([])
   const [agent,setAgent]=useState(''),[access,setAccess]=useState('Verificando acesso pessoal…')
-  const [checking,setChecking]=useState(true),[catalogLoading,setCatalogLoading]=useState(true)
+  const [checking,setChecking]=useState(false),[catalogLoading,setCatalogLoading]=useState(true)
   const [retry,setRetry]=useState(0)
-  function verifyAccess(){setChecking(true);setOptions(null);setAccess('Verificando acesso pessoal…');setCatalogLoading(true);setRetry(value=>value+1)}
   useEffect(()=>{
     let alive=true;const abort=new AbortController()
+    setChecking(true);setOptions(null);setAccess('Verificando acesso pessoal…')
     void loadManagedOptions().then(data=>{if(alive){setOptions(data);setAccess(data.consumptionApproved?'Acesso disponível.':'O consumo da conversa ainda não foi liberado no servidor.')}}).catch(error=>{if(alive)setAccess(error.message)}).finally(()=>{if(alive)setChecking(false)})
+    setCatalogLoading(true)
     void fetch('/api/agents',{credentials:'include',signal:abort.signal}).then(async response=>{if(!response.ok)throw Error();const data=await response.json();if(alive){const list=Array.isArray(data)?data:Array.isArray(data.agents)?data.agents:[];setAgents(list.filter((item:Agent)=>item&&typeof item.name==='string'))}}).catch(()=>{}).finally(()=>{if(alive)setCatalogLoading(false)})
     return()=>{alive=false;abort.abort()}
   },[retry])
+  const pendingWrite=state.continuity?.writeStatus==='saving'||state.continuity?.writeStatus==='error'
   const company=options?.companies.find(c=>c.id===activeCompanyId)
   const busy=state.phase!=='idle',selected=busy?state.agent:agent
   const groups=options?.presentationGroups||{}
@@ -48,11 +52,14 @@ export default function ManagedNexusLive(){
     <section className="live-stage"><div className="live-orbit" aria-hidden="true"><div className="live-orbit-ring"/><div className="live-core"><Radio size={42}/></div></div><div className="live-intro"><h1>OmniNexus Live</h1><p>Fale ou escreva. Continue na mesma conversa.</p></div><p className="live-status" role="status" aria-live="polite">{busy||state.company||state.contextChanged?state.status:access}</p>
       {state.runtimeSessionId&&<small className="managed-session-id">{state.company} · Sessão {state.runtimeSessionId}</small>}
     </section>
-    {!busy&&<section className="live-status" aria-label="Condições para iniciar"><p>{!options?access:!activeCompany?'Selecione uma empresa no menu global.':!company?'A empresa global não está disponível para esta conversa.':!available.includes(agent)?'Selecione um agente do squad.':!options.consumptionApproved?'O consumo da conversa ainda não foi liberado no servidor.':'Empresa e agente selecionados. A conexão será validada ao iniciar.'}</p>{(!options||!options.consumptionApproved)&&<button type="button" className="px-3 py-3 underline disabled:opacity-40" disabled={checking} onClick={verifyAccess}>{checking?'Verificando acesso…':'Verificar acesso novamente'}</button>}</section>}
-    <div className="live-controls">{!busy?<button disabled={!activeCompany||!company||!available.includes(agent)||!options?.consumptionApproved} onClick={()=>{if(company)void managedSession.start(company.id,company.name,agent)}}><Radio size={18}/>Iniciar conversa</button>:<><button disabled={state.phase!=='connected'} aria-pressed={state.mic} onClick={()=>void managedSession.toggleMic()}>{state.mic?<MicOff size={18}/>:<Mic size={18}/>} {state.mic?'Desligar microfone':'Ativar microfone'}</button><button onClick={()=>managedSession.end()}><Square size={16}/>Encerrar</button></>}</div>
-    <p className="live-privacy">Microfone somente ao ativar. Sem ações de escrita. Gravação e retenção seguem a configuração do agente ElevenLabs.</p>
+    {!busy&&<section className="live-status" aria-label="Condições para iniciar"><p>{!options?access:!activeCompany?'Selecione uma empresa no menu global.':!company?'A empresa global não está disponível para esta conversa.':!available.includes(agent)?'Selecione um agente do squad.':!options.consumptionApproved?'O consumo da conversa ainda não foi liberado no servidor.':'Empresa e agente selecionados. A conexão será validada ao iniciar.'}</p>{(!options||!options.consumptionApproved)&&<button type="button" className="px-3 py-3 underline disabled:opacity-40" disabled={checking} onClick={()=>{setChecking(true);setOptions(null);setRetry(value=>value+1)}}>{checking?'Verificando acesso…':'Verificar acesso novamente'}</button>}</section>}
+    <div className="live-controls">{!busy?<button disabled={pendingWrite||!activeCompany||!company||!available.includes(agent)||!options?.consumptionApproved} onClick={()=>{if(company)void managedSession.start(company.id,company.name,agent)}}><Radio size={18}/>Iniciar / retomar conversa</button>:<><button disabled={state.phase!=='connected'} aria-pressed={state.mic} onClick={()=>void managedSession.toggleMic()}>{state.mic?<MicOff size={18}/>:<Mic size={18}/>} {state.mic?'Desligar microfone':'Ativar microfone'}</button><button onClick={()=>managedSession.end()}><Square size={16}/>Encerrar</button></>}</div>
+    {!busy&&state.continuity?.logicalId&&<button className="px-4 py-3 underline disabled:opacity-40" disabled={pendingWrite||!company||!available.includes(agent)||!options?.consumptionApproved} onClick={()=>{if(company)void managedSession.start(company.id,company.name,agent,true)}}>Iniciar nova conversa separada</button>}
+    {state.continuity&&<section aria-label="Registros salvos da conversa" className="managed-messages"><p role="status">{state.continuity.status} · {state.continuity.writeStatus==='saved'?'Gravação confirmada':state.continuity.writeStatus==='saving'?'Gravando…':state.continuity.writeStatus==='error'?'Gravação pendente':'Sem novas gravações'}</p>{state.continuity.writeStatus==='error'&&<button className="px-4 py-3 underline" onClick={()=>void managedSession.retryWrites()?.catch(()=>{})}>Tentar gravar novamente</button>}{state.continuity.logicalId&&<small>Conversa lógica: {state.continuity.logicalId}</small>}{state.continuity.events.map(item=><article key={item.event_id}><strong>{item.kind==='transcript'?(item.source.startsWith('browser:user:')?'Você · registro salvo':'Nexus Live · registro salvo'):item.kind==='result'?'Resultado registrado':'Andamento registrado'}</strong><p>{item.text}</p><small>{item.verified?'Registro verificado':'Declaração não verificada'} · Fonte: {item.source} · revisão {item.revision}</small>{item.links?.map((link,i)=>{const href=safeWorkLink(link.url);return href?<a className="block underline py-3" key={i} href={href}>{link.label}</a>:null})}</article>)}</section>}
+    {state.phase==='connected'&&state.continuity?.logicalId&&<LiveContinuityPanel companyLabel={state.company} agentLabel={state.agent} agentRole={description||'Função não disponível'} gateway={managedSession.continuityGateway()} connectionActive={true} writeStatus={state.continuity.writeStatus} onResume={()=>managedSession.refreshContext()}/>}
+    <p className="live-privacy">Microfone somente ao ativar. Com continuidade habilitada, transcrições finais são salvas no OmniNexus. Não executa tarefas. Gravação do provedor e retenção seguem a configuração do agente ElevenLabs.</p>
     <section className="managed-messages" aria-label="Conversa"><div role="log" aria-live="polite">{state.messages.length?state.messages.map((m,i)=><article key={i}><strong>{m.author}</strong><p>{m.text}</p></article>):<p>As mensagens aparecerão aqui. Nenhuma conversa demonstrativa.</p>}</div><MessageComposer key={activeCompanyId??'no-company'} disabled={state.phase!=='connected'}/></section>
-    {company&&<VoicePicker key={company.id} companyId={company.id} busy={busy} connecting={state.phase==='connecting'} activeVoice={state.voiceName}/> }
+    {company&&<VoicePicker key={company.id} companyId={company.id} busy={busy} connecting={state.phase==='connecting'} activeVoice={state.voiceName}/>}
     <nav className="managed-links" aria-label="Contexto operacional"><Link to="/cockpit">Sessões, jobs e memória</Link><Link to="/live/gemini">Protótipo Gemini</Link></nav>
   </main>
 }

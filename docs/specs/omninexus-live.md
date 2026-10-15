@@ -90,6 +90,28 @@ Contexto montado no servidor: persona versionada, fatos da empresa com fonte/dat
 
 Reautorizar leitura, start, status, replay, cancel, resume e download. Negar acesso cruzado mesmo com ID válido. Chaves ficam no servidor, escopadas por tenant/provider; tokens efêmeros para browser somente quando o protocolo exigir, com validade/escopo mínimos e sem chave principal. Redigir logs e erros; limitar e auditar egress. Separar armazenamento, ambiente/processo, filesystem e orçamento por tenant. Revogação impede novas ações e leitura posterior; trabalhos em andamento seguem política explícita de encerramento.
 
+### Aprovação por voz e encaminhamento ao Telegram (proposta)
+
+O pedido “YOLO” foi esclarecido como **aprovar por voz**, preservando permissões, ACL, orçamento e gates da ferramenta. Não representa consentimento geral para ações futuras. Antes de pedir confirmação, o Live apresenta a ação concreta, alvo, parâmetros relevantes, efeito e custo/limite aplicável; uma fala ambígua não autoriza execução.
+
+O servidor emite uma solicitação versionada com `approvalId`, hash da ação exata e seus parâmetros, `userId`, `tenantId`, `companyId`, revisão da proposta/política e `expiresAt`. A confirmação deve corresponder a essa solicitação e ao usuário autenticado com permissão para aprová-la; transcrição isolada ou conteúdo recuperado não prova identidade nem consentimento. Mudança de ação, parâmetros, empresa ou versão invalida a aprovação anterior. Expiração, revogação ou perda de permissão bloqueiam o consumo. Revalidar todos esses vínculos imediatamente antes de executar.
+
+Persistir solicitação, decisão (`approved|denied|expired|revoked`), canal, autor, horário, versão e feedback sanitizado. Consumo atômico e idempotente vincula a aprovação a um único job/efeito: repetir a confirmação retorna o resultado já registrado. Decisões concorrentes entre voz e Telegram usam a mesma revisão, com primeira decisão válida persistida prevalecendo; decisão posterior recebe estado atual e não reabre a ação.
+
+Para ações críticas/urgentes, prever encaminhamento pelos mecanismos existentes de Telegram **Approve/Deny + feedback**, com decisão e estado devolvidos à mesma conversa Live por `approvalId`. Esse retorno integrado é proposta, não capacidade comprovada. Só enviar ao destinatário vinculado e autorizado, conforme configuração explícita; respeitar mute, dedupe, expiração e política de notificações existente. Não reativar heartbeats nem spam, não considerar entrega da mensagem como aprovação e não executar por timeout. Negação/feedback retornam ao Live; revisão da ação exige novo consentimento.
+
+Aceite: voz aprova somente a ação apresentada; mudança de empresa/parâmetro, replay, expiração e usuário sem ACL não executam; confirmações simultâneas voz/Telegram produzem uma decisão e um job; Deny+feedback chega ao Live; canal silenciado permanece silenciado.
+
+### Operador, cliente e escopos de memória (proposta de produto)
+
+Esta separação descreve o modelo desejado, **não acesso implantado ou permissões já concedidas**. O operador configura integrações, catálogo, versões, políticas e recursos de agentes/skills dentro do escopo autorizado. O cliente consulta seus trabalhos/dados e aprova ações para as quais tenha permissão; consultar ou aprovar não concede acesso a chaves, configuração de provider ou administração do tenant. O papel de operador também não implica acesso irrestrito aos dados de todos os clientes.
+
+Skills e definições de agentes podem ser reutilizadas como recursos versionados, separadas dos dados/contextos de execução. Credenciais, artefatos, histórico, índices e fatos permanecem isolados por tenant e empresa; reutilizar uma definição não copia memória ou segredo de outro cliente. Validar dependências e política antes de disponibilizar um recurso reutilizável a um tenant.
+
+Memória privada é escopada por `(tenantId, companyId, userId)`; memória compartilhada da empresa por `(tenantId, companyId)` e ACL explícita. A recuperação respeita esses escopos e registra proveniência. Compartilhar um fato privado exige ação autorizada e explícita, sem promoção automática por resumo, treinamento, índice ou reutilização de skill. Retração, revisão e retenção aplicam-se a cada escopo.
+
+Aceite: cliente consulta/aprova somente o que sua ACL permite e não altera configuração restrita; operador configura somente seu escopo; dois usuários da mesma empresa compartilham apenas fatos explicitamente compartilhados; outra empresa/tenant não recupera dados privados ou compartilhados, mesmo usando a mesma skill/agente.
+
 ## 5. Lifecycle oficial e atualização
 
 Registrar pacote/repositório oficial verificado, versão fixa, digest, licença e protocolo suportado. Não instalar `latest` em runtime; proibir auto-update durante sessão/job. Atualização: detectar versão candidata → preparar isoladamente → rodar contrato/regressão → drenar worker ocioso (sem lease/job/retomada ativa) → ativar canário → promover ou rollback. Não substituir binário usado por processo ativo.

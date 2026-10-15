@@ -1,0 +1,28 @@
+export type ExecutionRoute={harness_id:string;provider_id:string;model_id:string}
+export type ExecutionCatalog={catalog_revision:string;source_status:string;active_provider:string|null;harnesses:{id:string;state:string;runtime_version:string|null;adapter_id:string|null;runtime_capabilities:string[];proof_version:string|null}[];providers:{id:string;harness_id:string;credential_status:string}[];models:{id:string;provider_id:string;alias:string|null;upstream_model:string|null;cost_status:string;capabilities_status:string}[];pools:{id:string;routes:ExecutionRoute[]}[];operations:Record<string,{label:string}>}
+export type ExecutionPreview={catalog_revision:string;preferred:(ExecutionRoute&{ordinal:number;reasons:string[]})|null;candidates:(ExecutionRoute&{ordinal:number;eligible:boolean;reasons:string[]})[];reasons:string[];preview_fingerprint:string}
+export type PreviewSelection={operation:string;pool_id:string;selection:Partial<ExecutionRoute>}
+export class CatalogError extends Error {reload:boolean;constructor(message:string,reload=false){super(message);this.reload=reload}}
+const text=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=400&&Array.from(v).every(character=>character.charCodeAt(0)>=32)
+const nullable=(v:unknown):v is string|null=>v===null||text(v)
+const route=(v:ExecutionRoute)=>v&&text(v.harness_id)&&text(v.provider_id)&&text(v.model_id)
+export async function loadExecutionCatalog(signal?:AbortSignal):Promise<ExecutionCatalog>{
+  const response=await fetch('/api/execution/catalog',{credentials:'include',cache:'no-store',signal})
+  if(!response.ok)throw new CatalogError(response.status===404?'Catálogo ainda não integrado nesta versão. As configurações existentes continuam abaixo.':'Catálogo indisponível ou acesso não autorizado. Nenhuma capacidade foi presumida.')
+  const data=await response.json()
+  if(!data||data.mode!=='configuration_only'||data.runtime_routing_changed!==false||!text(data.catalog_revision)||!text(data.source_status)||!nullable(data.active_provider)||!Array.isArray(data.harnesses)||!Array.isArray(data.providers)||!Array.isArray(data.models)||!Array.isArray(data.pools)||!data.operations||typeof data.operations!=='object'||Array.isArray(data.operations))throw new CatalogError('Contrato de catálogo incompatível; capacidades desconhecidas.')
+  if(!data.harnesses.every((v:ExecutionCatalog['harnesses'][number])=>v&&text(v.id)&&text(v.state)&&nullable(v.runtime_version)&&nullable(v.adapter_id)&&nullable(v.proof_version)&&Array.isArray(v.runtime_capabilities)&&v.runtime_capabilities.every(text))||!data.providers.every((v:ExecutionCatalog['providers'][number])=>v&&text(v.id)&&text(v.harness_id)&&text(v.credential_status))||!data.models.every((v:ExecutionCatalog['models'][number])=>v&&text(v.id)&&text(v.provider_id)&&nullable(v.alias)&&nullable(v.upstream_model)&&text(v.cost_status)&&text(v.capabilities_status))||!data.pools.every((v:ExecutionCatalog['pools'][number])=>v&&text(v.id)&&Array.isArray(v.routes)&&v.routes.every(route))||!Object.entries(data.operations).every(([id,v])=>text(id)&&v&&typeof v==='object'&&text((v as {label:string}).label)))throw new CatalogError('Catálogo incompleto; nenhuma capacidade foi presumida.')
+  return data
+}
+export async function previewExecution(catalog:ExecutionCatalog,value:PreviewSelection,signal?:AbortSignal):Promise<ExecutionPreview>{
+  const pool=catalog.pools.find(item=>item.id===value.pool_id)
+  if(!pool||!Object.hasOwn(catalog.operations,value.operation)||Object.keys(value.selection).some(key=>!['harness_id','provider_id','model_id'].includes(key))||Object.values(value.selection).some(v=>v!==undefined&&!text(v)))throw new CatalogError('Escolha uma operação, pool e filtros válidos.')
+  const response=await fetch('/api/execution/decisions/preview',{method:'POST',credentials:'include',cache:'no-store',signal,headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({...value,selection:Object.fromEntries(Object.entries(value.selection).filter(([,v])=>v!==undefined)),expected_revision:catalog.catalog_revision})})
+  if(response.status===409)throw new CatalogError('A configuração mudou. Atualize o catálogo e refaça a prévia.',true)
+  if(!response.ok)throw new CatalogError('Prévia indisponível ou seleção não autorizada. Nenhuma execução foi solicitada.')
+  const data=await response.json()
+  if(data?.mode!=='preview'||data.catalog_revision!==catalog.catalog_revision||data.execution_allowed!==false||data.selected!==null||data.provider_calls!==0||data.runtime_routing_changed!==false||!Array.isArray(data.attempts)||data.attempts.length||!Array.isArray(data.reasons)||!data.reasons.every(text)||!Array.isArray(data.candidates)||!text(data.preview_fingerprint))throw new CatalogError('Resposta de prévia incompatível; resultado descartado.')
+  const valid=(item:ExecutionPreview['candidates'][number])=>route(item)&&Number.isInteger(item.ordinal)&&item.ordinal>0&&item.eligible===false&&Array.isArray(item.reasons)&&item.reasons.every(text)&&pool.routes.some(r=>r.harness_id===item.harness_id&&r.provider_id===item.provider_id&&r.model_id===item.model_id)
+  if(!data.candidates.every(valid)||(data.preferred!==null&&(!valid(data.preferred)||!data.candidates.some((item:ExecutionPreview['candidates'][number])=>item.ordinal===data.preferred.ordinal&&item.harness_id===data.preferred.harness_id&&item.provider_id===data.preferred.provider_id&&item.model_id===data.preferred.model_id))))throw new CatalogError('Candidatos incompatíveis com o pool; resultado descartado.')
+  return data
+}

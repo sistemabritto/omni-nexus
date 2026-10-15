@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react'
 import HubBackLink from '../components/HubBackLink'
+import ProviderExecutionExplorer from '../components/ProviderExecutionExplorer'
 import { api } from '../lib/api'
 import { useTranslation } from 'react-i18next'
 
@@ -386,6 +387,10 @@ export default function Providers() {
         <p className="text-[color:var(--text-muted)] text-sm mt-1">Configure and activate AI providers for your workspace</p>
       </div>
 
+      <ProviderExecutionExplorer />
+      <h2 className="text-base font-semibold mb-2">Configurações legadas de acesso</h2>
+      <p className="text-sm text-[color:var(--text-secondary)] mb-4">Configuração e autenticação existentes. Um acesso Codex OAuth aqui não comprova o adaptador de harness Codex, que permanece Em breve.</p>
+
       {/* Status bar */}
       {!loading && (
         <div className="omn-responsive-toolbar flex items-center gap-5 mb-6 px-4 py-3 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)]">
@@ -434,12 +439,12 @@ export default function Providers() {
                   isActive ? 'border-[color:var(--evo-green)]/30' : 'border-[color:var(--border)] hover:border-[color:var(--border)]'
                 }`}
               >
-                <div className="flex items-center gap-4 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-4 px-5 py-4">
                   {/* Color dot */}
                   <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
 
                   {/* Info */}
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 basis-40">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold text-white truncate">{prov.name}</h3>
                       <code className="text-[9px] px-1.5 py-0.5 rounded bg-[color:var(--border)] text-[color:var(--text-muted)] border border-[color:var(--border)] shrink-0">

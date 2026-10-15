@@ -72,6 +72,7 @@ jobs:
           tests/backend/test_share_publico.py
           tests/backend/test_telegram_provider_bot.py tests/backend/test_telegram_continuity.py
           tests/backend/test_runtime_preflight.py tests/backend/test_approval_expiration_state.py
+          tests/backend/test_openreply_draft_guard.py tests/backend/test_reels_card_ficha.py
           tests/goals tests/tickets tests/heartbeats
           tests/media/test_media_retry_loop.py tests/media/test_routes_media_jobs.py
           -q

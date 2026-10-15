@@ -1273,6 +1273,14 @@ def apply_outcome(heartbeat_id: str, agent: str, result: dict, conn) -> dict | N
         needs = (outcome.get("needs") or "").strip()
         title = _ticket_title(ticket_id, conn) if ticket_id else ""
         if ticket_id:
+            # Keep the machine-readable cause consistent with the other agent
+            # blocking path. Free-form details remain in the comment below;
+            # never overwrite a publish gate or a review-exhausted marker.
+            conn.execute(
+                "UPDATE tickets SET blocked_reason = 'agent_blocked' "
+                "WHERE id = ? AND (blocked_reason IS NULL OR TRIM(blocked_reason) = '')",
+                (ticket_id,),
+            )
             _move_ticket(ticket_id, "blocked", agent,
                          f"Bloqueado: {reason}" + (f"\nPrecisa: {needs}" if needs else ""), conn)
         return {

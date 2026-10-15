@@ -61,6 +61,10 @@ def _next_ticket(conn) -> sqlite3.Row | None:
           AND t.locked_at IS NULL
           AND t.assignee_agent IS NOT NULL
           AND t.assignee_agent NOT IN ('system')
+          AND EXISTS (
+              SELECT 1 FROM heartbeats h
+              WHERE h.agent = t.assignee_agent AND h.enabled = 1
+          )
           AND (t.status = 'open'
                OR t.updated_at IS NULL
                OR t.updated_at < datetime('now', '-15 minutes'))

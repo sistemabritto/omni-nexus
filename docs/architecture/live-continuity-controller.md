@@ -22,7 +22,8 @@ automática desse hook porque o client tool atual somente lê contexto; não exi
 resultado de execução para conectar sem inventar um dispatcher paralelo.
 
 Gravações pendentes ficam no singleton durante navegação SPA e término da voz.
-Não são colocadas em localStorage. A tela bloqueia nova conexão/conversa enquanto
+Não são colocadas em localStorage. Logout/desmontagem da área autenticada sempre
+encerra áudio/socket e limpa dados/fila da identidade anterior, mesmo com ACK pendente. A tela bloqueia nova conexão/conversa enquanto
 há erro ou ACK pendente e oferece retry. Fechar o navegador antes do ACK ainda pode
 perder a fila local; o aviso de saída não substitui armazenamento durável.
 

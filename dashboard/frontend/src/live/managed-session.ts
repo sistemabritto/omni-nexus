@@ -70,7 +70,7 @@ export class ManagedSession {
     this.end()
     const pending=this.state.continuity;this.patch({...initial,messages:[],continuity:pending?{...pending,logicalId:'',events:[]}:undefined,contextChanged:true,status:'Empresa alterada no menu global. A conversa anterior foi encerrada e o microfone desligado. Inicie uma nova conversa para usar a empresa atual.'})
   }
-  send(text:string){if(this.state.phase!=='connected' || !text.trim())return;const connection=this.connection,generation=this.generation,value=text.trim();this.message('Você · texto',value);void (async()=>{try{if(this.continuity?.state.logicalId)await this.continuity.record('user',value,crypto.randomUUID());if(generation===this.generation)connection?.sendMessage({type:'user_message',text:value})}catch{this.patch({status:'Mensagem preservada na tela, mas não enviada: gravação pendente.'})}})()}
+  send(text:string){if(this.state.phase!=='connected' || !text.trim())return;const connection=this.connection,generation=this.generation,value=text.trim();this.message('Você · texto',value);void (async()=>{try{if(this.continuity?.state.logicalId)await this.continuity.record('user',value,crypto.randomUUID());if(generation===this.generation)connection?.sendMessage({type:'user_message',text:value})}catch{if(generation===this.generation)this.patch({status:'Mensagem preservada na tela, mas não enviada: gravação pendente.'})}})()}
   async toggleMic(){
     if(this.state.mic){this.stopMic();this.patch({status:'Microfone desligado. Continue por texto na mesma conversa.'});return}
     const connection=this.connection,generation=this.generation
@@ -96,7 +96,7 @@ export class ManagedSession {
   async recordWork(recordType:'ticket'|'media_job',recordId:string){if(!this.continuity?.state.logicalId)throw Error('Continuidade indisponível.');await this.continuity.recordWork(recordType,recordId)}
   retryWrites(){return this.continuity?.flush()}
   end(status='Conversa encerrada. Microfone desligado.') {this.generation++;if(this.poll)clearInterval(this.poll);this.poll=null;this.tools?.disconnect();this.tools=null;const connection=this.connection;this.connection=null;this.stopMic();connection?.close();this.patch({phase:'idle',status})}
-  reset(){if(this.state.continuity?.writeStatus==='saving'||this.state.continuity?.writeStatus==='error')return;this.end();this.continuity=null;this.patch({...initial,messages:[]})}
+  reset(){this.end();this.continuity=null;this.patch({...initial,messages:[],continuity:undefined})}
 }
 export const managedSession=new ManagedSession()
 

@@ -712,3 +712,24 @@ class TestModelsRegression:
         assert "urgent" in TICKET_PRIORITIES
         assert "low" in TICKET_PRIORITIES
         assert len(TICKET_PRIORITIES) == 4
+
+
+def test_comment_refreshes_last_movement_for_stale_sweep(client, app):
+    from models import db, Ticket
+    from stale_ticket_sweep import _stale_in_progress
+    import sqlite3
+
+    tid = TestAtomicCheckout()._ticket_livre(app)
+    with app.app_context():
+        ticket = db.session.get(Ticket, tid)
+        ticket.status = 'in_progress'
+        ticket.updated_at = '2020-01-01T00:00:00.000000Z'
+        db.session.commit()
+    response = client.post(f'/api/tickets/{tid}/comments', json={'body': 'Avanço confirmado'})
+    assert response.status_code == 201
+    with app.app_context():
+        ticket = db.session.get(Ticket, tid)
+        assert ticket.updated_at != '2020-01-01T00:00:00.000000Z'
+        with sqlite3.connect(db.engine.url.database) as conn:
+            conn.row_factory = sqlite3.Row
+            assert _stale_in_progress(conn, 60) == []

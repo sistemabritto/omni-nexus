@@ -56,15 +56,18 @@ def _stale_in_progress(conn: sqlite3.Connection, minutes: int) -> list[sqlite3.R
     ).fetchall()
 
 
-def _flag_blocked(conn: sqlite3.Connection, t: sqlite3.Row) -> None:
+def _flag_blocked(conn: sqlite3.Connection, t: sqlite3.Row) -> bool:
     now = _now_iso()
     try:
-        conn.execute(
+        result = conn.execute(
             "UPDATE tickets SET status='blocked', updated_at=?, "
             "blocked_reason='Sem avanço desde in_progress (zumbi detectado pelo sweep)' "
-            "WHERE id=? AND status='in_progress'",
-            (now, t["id"]),
+            "WHERE id=? AND status='in_progress' AND locked_at IS NULL "
+            "AND updated_at IS ?",
+            (now, t["id"], t["updated_at"]),
         )
+        if result.rowcount == 0:
+            return False
         conn.execute(
             "INSERT INTO ticket_comments (id, ticket_id, author, body, created_at) "
             "VALUES (?,?,?,?,?)",
@@ -78,8 +81,10 @@ def _flag_blocked(conn: sqlite3.Connection, t: sqlite3.Row) -> None:
             "VALUES (?,?,?,?,?,?)",
             (str(uuid.uuid4()), t["id"], "agent:stale-ticket-sweep", "sweep_to_blocked", "{}", now),
         )
+        return True
     except Exception as exc:  # noqa: BLE001 — sweep nunca pode derrubar a run
         log.warning("stale_ticket_sweep flag failed for %s: %s", t["id"], exc)
+        return False
 
 
 def minutes_hint(updated_at) -> str:
@@ -117,8 +122,8 @@ def tick() -> dict:
         stale = _stale_in_progress(conn, minutes)
         flagged = []
         for t in stale:
-            _flag_blocked(conn, t)
-            flagged.append({"id": t["id"], "title": t["title"], "assignee_agent": t["assignee_agent"]})
+            if _flag_blocked(conn, t):
+                flagged.append({"id": t["id"], "title": t["title"], "assignee_agent": t["assignee_agent"]})
         conn.commit()
     finally:
         conn.close()

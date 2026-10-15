@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 from media_workspace import media_workspace_root, sha256_file
 from postiz_client import MEDIA_JOB_PLATFORMS, PostizError, PostizAPIError, build_platform_settings, providers_for
@@ -111,14 +112,48 @@ def assert_current(job, release):
     return snapshot
 
 
+def native_video_id(platform, url):
+    """Parse native permalinks only; inbox/profile/redirect URLs are not posts.
+
+    This validates Postiz's evidence shape, not anonymous availability on the
+    social network. No provider request or historical replay happens here.
+    """
+    if not isinstance(url, str):
+        return None
+    try:
+        parsed = urlparse(url)
+        if (parsed.scheme != "https" or parsed.username or parsed.password
+                or parsed.port not in (None, 443)):
+            return None
+    except ValueError:
+        return None
+    host = (parsed.hostname or "").lower()
+    if platform == "tiktok" and host in ("tiktok.com", "www.tiktok.com", "m.tiktok.com"):
+        match = re.fullmatch(r"/@[A-Za-z0-9_.]+/video/([0-9]{10,30})/?", parsed.path)
+        return match.group(1) if match else None
+    if platform == "youtube":
+        candidate = None
+        if host in ("youtube.com", "www.youtube.com", "m.youtube.com"):
+            if parsed.path == "/watch":
+                values = parse_qs(parsed.query).get("v", [])
+                candidate = values[0] if len(values) == 1 else None
+            else:
+                match = re.fullmatch(r"/shorts/([A-Za-z0-9_-]{11})/?", parsed.path)
+                candidate = match.group(1) if match else None
+        elif host in ("youtu.be", "www.youtu.be"):
+            candidate = parsed.path.strip("/")
+        return candidate if candidate and re.fullmatch(r"[A-Za-z0-9_-]{11}", candidate) else None
+    return None
+
+
 def observe_post(client, channel, post_id):
     date = parse_date(channel["scheduled_at_utc"])
     posts = client.list_posts(((date - timedelta(days=1)).isoformat(), (date + timedelta(days=1)).isoformat()))
     post = next((p for p in posts if p.get("id") == post_id), None)
     if not post:
-        return {"state": "awaiting_confirmation", "remote_state": None}
+        return {"state": "awaiting_confirmation", "remote_state": None, "release_url": None, "native_post_id": None, "error": None}
     raw = post.get("state")
-    result = {"state": "awaiting_confirmation", "remote_state": raw, "release_url": None}
+    result = {"state": "awaiting_confirmation", "remote_state": raw, "release_url": None, "native_post_id": None, "error": None}
     if raw == "ERROR":
         result.update(state="remote_error", error=str(post.get("error") or "Postiz ERROR"))
         return result
@@ -135,8 +170,31 @@ def observe_post(client, channel, post_id):
     if raw == "QUEUE":
         result["state"] = "scheduled"
     elif raw == "PUBLISHED":
-        result["state"] = "published"
+        platform, settings = channel.get("platform"), channel.get("settings") or {}
         url = post.get("releaseURL")
+        if platform in ("youtube", "tiktok"):
+            identity = native_video_id(platform, url)
+            result["native_post_id"] = identity
+            remote_settings = post.get("settings") or {}
+            if isinstance(remote_settings, str):
+                try:
+                    remote_settings = json.loads(remote_settings)
+                except ValueError:
+                    remote_settings = {}
+            visibility_key = "type" if platform == "youtube" else "privacy_level"
+            if (isinstance(remote_settings, dict) and visibility_key in remote_settings
+                    and remote_settings[visibility_key] != settings.get(visibility_key)):
+                result.update(state="remote_mismatch", error="Visibilidade remota diverge da revisão aprovada")
+                return result
+            public = settings.get(visibility_key) == ("public" if platform == "youtube" else "PUBLIC_TO_EVERYONE")
+            if not public:
+                result["error"] = "Vídeo entregue com acesso restrito; publicação pública não comprovada"
+                return result
+            if not identity:
+                result["error"] = ("TikTok requer conclusão no app e permalink do vídeo; caixa de entrada não comprova publicação"
+                                   if platform == "tiktok" else "YouTube sem permalink nativo do vídeo; publicação não comprovada")
+                return result
+        result["state"] = "published"
         if isinstance(url, str) and urlparse(url).scheme == "https" and urlparse(url).hostname:
             result["release_url"] = url
     return result

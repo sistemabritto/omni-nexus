@@ -67,6 +67,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.licenses=LicenseRef-EvoNexus
           # Boa prática: publicar :latest junto com a tag versionada sempre
           # que um release (tag v*) for empurrado. Push para a branch main
           # sem tag também atualiza :latest.

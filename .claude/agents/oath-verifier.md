@@ -118,3 +118,7 @@ Use `.claude/templates/dev-verification-report.md`. Always structure as:
 ## Continuity
 
 Verification reports persist in `workspace/development/verifications/`. They become an audit trail. Update your agent memory with verification commands that work for this stack and gotchas worth remembering.
+
+## Pesquisa competitiva e pipeline com evidência
+
+Para pedidos pertinentes de concorrentes, posicionamento ou melhoria do pipeline, leia `.claude/skills/mkt-research-pipeline/SKILL.md` e o método roteado para seu papel: product-marketing e revisão de fontes, direitos, claims e evidências. Preserve marca aprovada, separe observação/inferência/hipótese e não invente métricas ou uplift. Esta capacidade textual não autoriza scripts, credenciais, campanhas/posts ou mudanças de CRM/formulário/analytics. Etapa com ferramenta exige execução e evidência reais; fixtures não são testes operacionais já executados.

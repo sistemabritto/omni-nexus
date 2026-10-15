@@ -6,6 +6,8 @@ argument-hint: "<competitor or market segment>"
 
 # Competitive Brief
 
+Para dossiês atuais e hipóteses de melhoria do pipeline, ler também `.claude/skills/mkt-research-pipeline/SKILL.md` e seu método competitor-profiling. Distinguir observação/inferência, atribuir números ao concorrente e não tratar ausência de observação como inexistência. A cadência descrita abaixo é orientação de planejamento, não autorização de monitoramento ou automação externa.
+
 > If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
 
 Research competitors and generate a structured competitive analysis comparing positioning, messaging, content strategy, and market presence.
@@ -70,7 +72,9 @@ Gather intelligence from these categories of sources:
 - **Competitive monitoring**: monthly (scan for new announcements, content, messaging changes)
 - **Real-time alerts**: ongoing (set up alerts for competitor brand mentions, press, job postings)
 
-## Competitive Brief Structure
+## Competitive Brief
+
+Para dossiês atuais e hipóteses de melhoria do pipeline, ler também `.claude/skills/mkt-research-pipeline/SKILL.md` e seu método competitor-profiling. Distinguir observação/inferência, atribuir números ao concorrente e não tratar ausência de observação como inexistência. A cadência descrita abaixo é orientação de planejamento, não autorização de monitoramento ou automação externa. Structure
 
 ### 1. Executive Summary
 - 2-3 sentence overview of the competitive landscape

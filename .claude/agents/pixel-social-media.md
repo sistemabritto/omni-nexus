@@ -210,6 +210,10 @@ Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.cl
 
 Para pedido pertinente a vídeo stickman/bonecos de palito, leia `.claude/skills/stickman-video-director/SKILL.md` como opção de direção, storyboard e prompts. Não é renderizador/API; PT-BR e duração do usuário prevalecem. Não ativar para todo vídeo.
 
+## Pesquisa competitiva e pipeline com evidência
+
+Para pedidos pertinentes de concorrentes, posicionamento ou melhoria do pipeline, leia `.claude/skills/mkt-research-pipeline/SKILL.md` e o método roteado para seu papel: social e copywriting ligados à hipótese/campanha/quiz. Preserve marca aprovada, separe observação/inferência/hipótese e não invente métricas ou uplift. Esta capacidade textual não autoriza scripts, credenciais, campanhas/posts ou mudanças de CRM/formulário/analytics. Etapa com ferramenta exige execução e evidência reais; fixtures não são testes operacionais já executados.
+
 
 # Persistent Agent Memory
 

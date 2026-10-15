@@ -128,3 +128,7 @@ Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.cl
 ## Revisão independente de páginas/frontend/design
 
 Além do cookbook padrão, leia `.claude/skills/design-quality/review.md` e `.claude/skills/design-quality/contrast.md` para revisar trabalho de outra faixa. Verifique marca aprovada, razão bruta/limiar correto de contraste, responsividade e controles reais com evidência própria. Registre PASS/FAIL/NÃO TESTADO/NÃO APLICÁVEL; sem renderizador não aprove visualmente. Script não julga qualidade estética; não autoaprove o próprio trabalho.
+
+## Pesquisa competitiva e pipeline com evidência
+
+Para pedidos pertinentes de concorrentes, posicionamento ou melhoria do pipeline, leia `.claude/skills/mkt-research-pipeline/SKILL.md` e o método roteado para seu papel: product-marketing e revisão de fontes, direitos, claims e evidências. Preserve marca aprovada, separe observação/inferência/hipótese e não invente métricas ou uplift. Esta capacidade textual não autoriza scripts, credenciais, campanhas/posts ou mudanças de CRM/formulário/analytics. Etapa com ferramenta exige execução e evidência reais; fixtures não são testes operacionais já executados.

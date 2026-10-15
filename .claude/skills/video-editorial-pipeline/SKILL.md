@@ -1,6 +1,6 @@
 ---
 name: video-editorial-pipeline
-description: Planejar e revisar vídeos faceless com fotos/montagem/overlays ou edição de brutos pessoais no OmniNexus, com mapa temporal, beat sheet e aprovação do Felipe antes de agendar. Use na preparação editorial ou handoff para os MediaJobs existentes.
+description: Planejar e revisar vídeos faceless com fotos/montagem/overlays ou edição de brutos pessoais no OmniNexus, com mapa temporal, beat sheet e aprovação do Felipe antes de agendar. Use na preparação editorial, seleção de referências ou handoff para os MediaJobs existentes.
 ---
 
 # Edição com referências aplicáveis
@@ -44,6 +44,7 @@ revalide o volume compartilhado e as correções de manifesto/retries (PR32/PR53
 
 - Faceless: leia [references/faceless.md](references/faceless.md).
 - Bruto pessoal: leia [references/personal-footage.md](references/personal-footage.md).
+- Para escolher uma referência pelo problema, leia [references/reference-catalog.md](references/reference-catalog.md): catálogo com versões/licenças, gates obrigatórios de legendas/proveniência e um único motor por padrão.
 - Consulte [references/sources.md](references/sources.md) quando usar uma referência;
   as fontes sugerem decisões, não autorizam copiar código, clipes ou mídia.
 

@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       image_boot_smoke:
-        description: Boot the pinned reviewed caf1612 dashboard image with isolated fixture data
+        description: Boot a reviewed digest-pinned dashboard image with isolated fixture data
         type: boolean
         default: false
       smoke_image_digest:

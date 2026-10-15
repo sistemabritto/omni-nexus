@@ -1,16 +1,16 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { VoiceRuntimeBoundary } = require('../../src/voice/runtime-boundary');
-const actor = { userId:'user-a', authenticated:true, authMethod:'cookie' };
+const actor = { userId:'user-a', authenticated:true, authMethod:'cookie', sessionExpiresAt:1000000 };
 const selection = { companyId:1, agentName:'agent-a', sessionId:'session-a' };
 function fixture(overrides = {}) {
   let allowed = true, now = 1000;
   const record = { ownerUserId:'user-a', companyId:1, agentName:'agent-a', sdkSessionId:'sdk-existing', history:['prior conversation'], active:false };
   const calls = [], stops = [];
-  const boundary = new VoiceRuntimeBoundary({ resolveSession:async id => id === 'session-a' ? record : null,
+  const boundary = new VoiceRuntimeBoundary({ authorizedUserId:'user-a', resolveSession:async id => id === 'session-a' ? record : null,
     authorize:async ({operation,toolName}) => allowed && (operation !== 'tool_call' || toolName === 'read-approved'),
     runTurn:async () => 'done', executeTool:async args => { calls.push(args); return 'result'; }, stopAudio:(...args) => stops.push(args), clock:() => now, ...overrides });
-  return { boundary, record, calls, stops, revoke:() => { allowed=false; }, expire:() => { now=122000; } };
+  return { boundary, record, calls, stops, advance:value=>{now+=value;}, revoke:() => { allowed=false; }, expire:() => { now=actor.sessionExpiresAt+1; } };
 }
 test('binds only canonical owner/company/agent; no legacy adoption or UI/model identity override', async () => {
   const {boundary,record} = fixture();
@@ -49,13 +49,13 @@ test('no execution default, no exception secrets, no token/provider route',async
   const f=fixture({runTurn:undefined}),{bindingId}=await f.boundary.open(actor,selection);await assert.rejects(f.boundary.startTurn(actor,bindingId,'hi'),{code:'runtime_port_unavailable'});
   const g=fixture({runTurn:async()=>{throw Error('secret-provider-error')}}),bound=await g.boundary.open(actor,selection);await assert.rejects((await g.boundary.startTurn(actor,bound.bindingId,'hello')).completion,{message:'runtime_turn_failed'});
 });
-test('two legitimate tenants keep independent bindings, output and tool scope',async()=>{
-  const actorB={...actor,userId:'user-b'},selectionB={companyId:2,agentName:'agent-b',sessionId:'session-b'};
-  const records=new Map([['session-a',{ownerUserId:'user-a',companyId:1,agentName:'agent-a'}],['session-b',{ownerUserId:'user-b',companyId:2,agentName:'agent-b'}]]),effects=[];
-  const boundary=new VoiceRuntimeBoundary({resolveSession:async id=>records.get(id),authorize:async()=>true,
+test('two authorized companies keep independent bindings, output and tool scope',async()=>{
+  const actorB={...actor},selectionB={companyId:2,agentName:'agent-b',sessionId:'session-b'};
+  const records=new Map([['session-a',{ownerUserId:'user-a',companyId:1,agentName:'agent-a'}],['session-b',{ownerUserId:'user-a',companyId:2,agentName:'agent-b'}]]),effects=[];
+  const boundary=new VoiceRuntimeBoundary({authorizedUserId:'user-a',clock:()=>1000,resolveSession:async id=>records.get(id),authorize:async()=>true,
     runTurn:async ({context,tools,onEvent})=>{await tools.call('read',{company_id:context.companyId});onEvent(context.companyId);},executeTool:async call=>effects.push(call.context)});
   const a=await boundary.open(actor,selection),b=await boundary.open(actorB,selectionB),seenA=[],seenB=[];
-  await assert.rejects(boundary.startTurn(actor,b.bindingId,'cross'),{code:'unauthorized'});
+  await assert.rejects(boundary.startTurn({...actor,userId:'user-b'},b.bindingId,'cross'),{code:'unauthorized'});
   const turns=await Promise.all([boundary.startTurn(actor,a.bindingId,'a',e=>seenA.push(e)),boundary.startTurn(actorB,b.bindingId,'b',e=>seenB.push(e))]);await Promise.all(turns.map(t=>t.completion));
   assert.deepEqual(seenA,[1]);assert.deepEqual(seenB,[2]);assert.deepEqual(effects.map(x=>x.companyId).sort(),[1,2]);
 });
@@ -72,4 +72,11 @@ test('minimal managed-agent read returns only authorized session metadata',async
 test('closing voice lease keeps canonical session available for a later binding',async()=>{
  const f=fixture(),first=await f.boundary.open(actor,selection);await f.boundary.close(actor,first.bindingId);await assert.rejects(f.boundary.readSession(actor,first.bindingId),{code:'binding_not_found'});
  const next=await f.boundary.open(actor,selection);assert.notEqual(next.bindingId,first.bindingId);assert.deepEqual(f.record.history,['prior conversation']);assert.equal(f.record.sdkSessionId,'sdk-existing');
+});
+test('personal access is mandatory even when another authenticated user owns a session',async()=>{
+ assert.throws(()=>new VoiceRuntimeBoundary({resolveSession:()=>{},authorize:()=>true}),{code:'personal_identity_required'});
+ const f=fixture();f.record.ownerUserId='user-b';await assert.rejects(f.boundary.open({...actor,userId:'user-b'},selection),{code:'unauthorized'});
+});
+test('no fixed 120-second cap; binding lasts only as long as authenticated session authority',async()=>{
+ const f=fixture(),{bindingId}=await f.boundary.open(actor,selection);f.advance(121000);assert.equal((await f.boundary.readSession(actor,bindingId)).companyId,1);f.expire();await assert.rejects(f.boundary.readSession(actor,bindingId),{code:'binding_expired'});
 });

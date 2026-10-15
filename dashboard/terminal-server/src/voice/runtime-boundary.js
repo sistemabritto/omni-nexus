@@ -19,15 +19,16 @@ function checkScope(input, context, depth = 0) {
 class VoiceRuntimeBoundary {
   #bindings = new Map();
   #sessions = new Map();
-  constructor({ resolveSession, authorize, runTurn, executeTool, stopAudio = () => {}, clock = Date.now, ttlMs = 120000 }) {
+  constructor({ authorizedUserId, resolveSession, authorize, runTurn, executeTool, stopAudio = () => {}, clock = Date.now }) {
     if (typeof resolveSession !== 'function' || typeof authorize !== 'function') fail('authority_required');
-    if (!Number.isInteger(ttlMs) || ttlMs < 1 || ttlMs > 120000) fail('invalid_lease');
+    if (!identifier(authorizedUserId)) fail('personal_identity_required');
+    this.authorizedUserId = authorizedUserId;
     this.resolveSession = resolveSession; this.authorize = authorize;
     // No implicit bridge to startSession: the integration must supply a turn-only port.
-    this.runTurn = runTurn; this.executeTool = executeTool; this.stopAudio = stopAudio; this.clock = clock; this.ttlMs = ttlMs;
+    this.runTurn = runTurn; this.executeTool = executeTool; this.stopAudio = stopAudio; this.clock = clock;
   }
   async #authority(actor, context, operation) {
-    if (!actor || actor.authenticated !== true || actor.authMethod !== 'cookie' || actor.userId !== context.userId) fail('unauthorized');
+    if (!actor || actor.authenticated !== true || actor.authMethod !== 'cookie' || actor.userId !== this.authorizedUserId || actor.userId !== context.userId) fail('unauthorized');
     const session = await this.resolveSession(context.sessionId);
     // Current legacy sessions lacking owner/company cannot be adopted by the browser.
     if (!session || session.ownerUserId !== context.userId || session.companyId !== context.companyId || session.agentName !== context.agentName) fail('session_scope_denied');
@@ -38,10 +39,11 @@ class VoiceRuntimeBoundary {
   async open(actor, selection) {
     if (!actor || !identifier(actor.userId) || !selection || !Number.isSafeInteger(selection.companyId) || selection.companyId < 1 || !identifier(selection.agentName) || !identifier(selection.sessionId)) fail('invalid_binding');
     const context = Object.freeze({ userId:actor.userId, companyId:selection.companyId, agentName:selection.agentName, sessionId:selection.sessionId });
+    if (!Number.isFinite(actor.sessionExpiresAt) || actor.sessionExpiresAt <= this.clock()) fail('authentication_expired');
     const session = await this.#authority(actor, context, 'bind');
     if (session.active || this.#sessions.has(context.sessionId)) fail('session_busy');
     const id = randomUUID();
-    this.#bindings.set(id, { context, expiresAt:this.clock() + this.ttlMs, turn:null, epoch:0 });
+    this.#bindings.set(id, { context, expiresAt:actor.sessionExpiresAt, turn:null, epoch:0 });
     this.#sessions.set(context.sessionId, id);
     return Object.freeze({ bindingId:id, context });
   }

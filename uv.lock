@@ -629,6 +629,7 @@ dependencies = [
     { name = "sqlparse" },
     { name = "tiktoken" },
     { name = "watchdog" },
+    { name = "websockets" },
 ]
 
 [package.optional-dependencies]
@@ -675,6 +676,7 @@ requires-dist = [
     { name = "sqlparse", specifier = ">=0.4,<1.0" },
     { name = "tiktoken", specifier = ">=0.7" },
     { name = "watchdog", specifier = ">=4.0" },
+    { name = "websockets", specifier = ">=15,<17" },
 ]
 provides-extras = ["knowledge-ml", "local-embeddings"]
 

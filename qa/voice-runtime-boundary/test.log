@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: binds only canonical owner/company/agent; no legacy adoption or UI/model identity override
+ok 1 - binds only canonical owner/company/agent; no legacy adoption or UI/model identity override
+  ---
+  duration_ms: 10.379094
+  type: 'test'
+  ...
+# Subtest: agent/company access revocation checked again for each turn
+ok 2 - agent/company access revocation checked again for each turn
+  ---
+  duration_ms: 1.630507
+  type: 'test'
+  ...
+# Subtest: reassignment of canonical runtime session invalidates old binding
+ok 3 - reassignment of canonical runtime session invalidates old binding
+  ---
+  duration_ms: 1.188158
+  type: 'test'
+  ...
+# Subtest: tool authority is enforced separately; recursive cross-tenant arguments denied before execution
+ok 4 - tool authority is enforced separately; recursive cross-tenant arguments denied before execution
+  ---
+  duration_ms: 4.150769
+  type: 'test'
+  ...
+# Subtest: revoking tool permission during a turn blocks further effects
+ok 5 - revoking tool permission during a turn blocks further effects
+  ---
+  duration_ms: 1.893145
+  type: 'test'
+  ...
+# Subtest: interrupt aborts only turn/audio, drops stale output and retains runtime history/id
+ok 6 - interrupt aborts only turn/audio, drops stale output and retains runtime history/id
+  ---
+  duration_ms: 28.199802
+  type: 'test'
+  ...
+# Subtest: expired or closed binding cannot be reused; cancellation does not invoke stopSession
+ok 7 - expired or closed binding cannot be reused; cancellation does not invoke stopSession
+  ---
+  duration_ms: 6.644141
+  type: 'test'
+  ...
+# Subtest: no execution default, no exception secrets, no token/provider route
+ok 8 - no execution default, no exception secrets, no token/provider route
+  ---
+  duration_ms: 2.445954
+  type: 'test'
+  ...
+# Subtest: two legitimate tenants keep independent bindings, output and tool scope
+ok 9 - two legitimate tenants keep independent bindings, output and tool scope
+  ---
+  duration_ms: 3.682867
+  type: 'test'
+  ...
+# Subtest: late abort for an older turn cannot cancel the next turn
+ok 10 - late abort for an older turn cannot cancel the next turn
+  ---
+  duration_ms: 7.693563
+  type: 'test'
+  ...
+# Subtest: minimal managed-agent read returns only authorized session metadata
+ok 11 - minimal managed-agent read returns only authorized session metadata
+  ---
+  duration_ms: 1.430467
+  type: 'test'
+  ...
+# Subtest: closing voice lease keeps canonical session available for a later binding
+ok 12 - closing voice lease keeps canonical session available for a later binding
+  ---
+  duration_ms: 0.858826
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 92.528708

@@ -901,3 +901,95 @@ def openai_logout():
     config["active_provider"] = "anthropic"
     _write_config(config)
     return jsonify({"status": "ok"})
+
+
+# New projection deliberately bypasses _read_config: that legacy reader can WRITE
+# merged defaults. These APIs never resolve credentials or invoke CLI/model discovery.
+def _execution_guard(preview=False):
+    from flask import g
+    from flask_login import current_user
+    from urllib.parse import urlsplit
+    if not current_user.is_authenticated:
+        return jsonify({"error": "unauthorized"}), 401
+    if getattr(g, "auth_via_api_token", False) or current_user.role != "admin":
+        return jsonify({"error": "admin_cookie_required"}), 403
+    origin = request.headers.get("Origin")
+    if preview:
+        try:
+            parsed = urlsplit(origin or "")
+            same_origin = (parsed.netloc == request.host and parsed.scheme == request.scheme
+                           and not parsed.username and not parsed.password
+                           and not parsed.query and not parsed.fragment and not parsed.path)
+        except ValueError:
+            same_origin = False
+        if not same_origin:
+            return jsonify({"error": "origin_forbidden"}), 403
+    return None
+
+
+def _execution_catalog():
+    import yaml
+    from execution_catalog import legacy_to_catalog
+    routing_config = WORKSPACE / "config" / "routing.yaml"
+    status = "loaded"
+    try:
+        config = json.loads(PROVIDERS_CONFIG.read_text(encoding="utf-8"))
+        if not isinstance(config, dict):
+            raise ValueError()
+    except (ValueError, OSError):
+        config, status = {}, "unavailable"
+    routing = {}
+    if os.environ.get("HEARTBEAT_ROUTING_POLICY", "1").lower() not in ("0", "false", "no"):
+        try:
+            routing = yaml.safe_load(routing_config.read_text(encoding="utf-8")) or {}
+        except (ValueError, OSError, yaml.YAMLError):
+            pass
+    return legacy_to_catalog(config, routing, source_status=status)
+
+
+def _execution_reply(payload):
+    response = jsonify(payload)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@bp.get("/api/execution/catalog")
+def execution_catalog():
+    denied = _execution_guard()
+    if denied:
+        return denied
+    from execution_operations import OPERATIONS
+    return _execution_reply({**_execution_catalog().payload(), "operations": OPERATIONS})
+
+
+@bp.get("/api/execution/templates")
+def execution_templates():
+    denied = _execution_guard()
+    if denied:
+        return denied
+    from execution_operations import execution_templates as project_templates
+    return _execution_reply(project_templates(_execution_catalog()))
+
+
+@bp.post("/api/execution/decisions/preview")
+def execution_preview():
+    denied = _execution_guard(preview=True)
+    if denied:
+        return denied
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or set(data) - {"operation", "pool_id", "selection", "expected_revision"}:
+        return _execution_reply({"error": "invalid_preview"}), 400
+    selection = data.get("selection", {})
+    if not isinstance(selection, dict) or any(not isinstance(v, str) or len(v) > 400 for v in selection.values()):
+        return _execution_reply({"error": "invalid_selection"}), 400
+    catalog = _execution_catalog()
+    if data.get("expected_revision") != catalog.payload()["catalog_revision"]:
+        return _execution_reply({"error": "catalog_changed", "reload_required": True}), 409
+    from execution_routing import select_route
+    try:
+        if not isinstance(data.get("operation"), str) or not isinstance(data.get("pool_id", "legacy-active"), str):
+            raise ValueError("invalid_preview")
+        result = select_route(catalog, data["operation"], pool_id=data.get("pool_id", "legacy-active"), selection=selection)
+    except ValueError as exc:
+        return _execution_reply({"error": str(exc)}), 422
+    return _execution_reply(result)

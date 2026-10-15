@@ -11,6 +11,12 @@ Provider configuration is exclusively server-side. The browser cannot supply a p
 
 The frontend contract additionally emits `status:listening` on turnComplete; the component now displays that state. GoAway closes both sockets and asks for a new click/new session. There is no resumption of conversation history.
 
+## Existing login on the old domain
+
+Both `https://nexus.workflowapi.com.br/live` and `https://nexus.sistemabritto.com.br/live` are supported. The frontend uses relative status requests and derives WSS from `location.host`, so Felipe can stay on the old domain and reuse its existing login cookie. No cookie domain, session key, password or authentication setting is changed; no password reset or cross-domain cookie migration is needed.
+
+The allowed Origin must match the host actually accessed: old→old and new→new pass; old→new, new→old, missing Origin, null and unknown origins fail. Allowlisting both hosts does not permit cross-origin sessions. Parameterized real loopback WebSocket tests exercise each public host through the same ProxyFix host/proto handling used in production, reusing a signed login cookie and validating audio/interruption/disconnect with an injected provider. This is host-routing evidence, not a production smoke test; rollout and activation remain pending.
+
 ## Disabled by default
 
 All of the following must be configured deliberately by the operator **after** project free-tier/cota evidence and authorized activation:

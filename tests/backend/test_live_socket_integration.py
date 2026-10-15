@@ -9,12 +9,14 @@ import pytest
 from flask import Flask, g
 from flask_login import LoginManager, UserMixin
 from werkzeug.serving import make_server
+from werkzeug.middleware.proxy_fix import ProxyFix
 from websockets.sync.client import connect
 from websockets.exceptions import InvalidStatus
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'dashboard/backend'))
 
 
-def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path):
+@pytest.mark.parametrize('hostname', ['nexus.workflowapi.com.br', 'nexus.sistemabritto.com.br'])
+def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path, hostname):
     import routes.live as routes
     from live_transport import run_session
     monkeypatch.setenv('GEMINI_LIVE_ENABLED', 'true')
@@ -35,7 +37,10 @@ def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path):
         def close(self): stopped.set()
     monkeypatch.setattr(routes, 'run_session', lambda client, config: run_session(client, config, lambda _: Provider()))
     app = Flask(__name__)
-    app.config.update(SECRET_KEY='fixture-only', LIVE_LIMITS_PATH=str(tmp_path/'limits.db'))
+    app.config.update(SECRET_KEY='fixture-only', SERVER_NAME=hostname, LIVE_LIMITS_PATH=str(tmp_path/'limits.db'))
+    # Match production's trusted reverse-proxy host/proto handling. Socket
+    # traffic stays on loopback; only the request's public host is simulated.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_proto=1)
     manager = LoginManager(app)
     class User(UserMixin): id = '1'
     @manager.user_loader
@@ -44,23 +49,36 @@ def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path):
     def auth_type(): g.auth_via_api_token = False
     app.register_blueprint(routes.bp)
     server = make_server('127.0.0.1', 0, app, threaded=True)
-    origin = f'http://127.0.0.1:{server.server_port}'
-    monkeypatch.setattr(routes, 'ALLOWED_ORIGINS', frozenset([origin]))
+    origin = f'https://{hostname}'
+    proxy_headers = {'X-Forwarded-Host': hostname, 'X-Forwarded-Proto': 'https'}
     thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
-    url = origin.replace('http:', 'ws:') + '/api/live/ws'
+    url = f'ws://127.0.0.1:{server.server_port}/api/live/ws'
     try:
         with pytest.raises(InvalidStatus) as error:
-            connect(url, origin=origin, proxy=None)
+            connect(url, origin=origin, additional_headers=proxy_headers, proxy=None)
         assert error.value.response.status_code == 401
         assert not providers
         browser = app.test_client()
         with browser.session_transaction() as session: session['_user_id'] = '1'; session['_fresh'] = True
-        cookie = browser.get_cookie('session').value
-        headers = {'Cookie': 'session=' + cookie}
+        cookie = browser.get_cookie('session', domain=hostname).value
+        status = browser.get('/api/live/status', base_url=origin, headers={'Origin': origin})
+        assert status.status_code == 200
+        assert status.json == {'enabled': True, 'freeTierVerified': True}
+        with browser.session_transaction() as session:
+            assert session['_user_id'] == '1'
+        # Flask may re-sign freshness metadata; the original signed login
+        # cookie must still authenticate the socket without a new login.
+        headers = {'Cookie': 'session=' + cookie, **proxy_headers}
         with pytest.raises(InvalidStatus) as error:
             connect(url, origin='https://evil.invalid', additional_headers=headers, proxy=None)
         assert error.value.response.status_code == 403
         assert not providers
+        other_host = 'nexus.sistemabritto.com.br' if hostname == 'nexus.workflowapi.com.br' else 'nexus.workflowapi.com.br'
+        with pytest.raises(InvalidStatus) as error:
+            connect(url, origin='https://' + other_host, additional_headers=headers, proxy=None)
+        assert error.value.response.status_code == 403
+        assert not providers
+        # Existing signed login cookie is reused without reset or migration.
         with connect(url, origin=origin, additional_headers=headers, proxy=None) as ws:
             assert json.loads(ws.recv(timeout=2)) == {'status': 'ready'}
             # Duplicate session is accepted only to return a redacted limit error,

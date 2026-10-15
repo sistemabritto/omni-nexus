@@ -28,7 +28,10 @@ export class ManagedSession {
       const connection=await this.connect(signed.signedUrl,signed.voiceId)
       if(generation!==this.generation){connection.close();return}
       this.connection=connection
-      connection.addListener(event=>{if(generation===this.generation && this.state.mic)this.playback?.play(event.audio_base_64)})
+      // Drain the SDK's mirrored output queue; playback uses raw events below to retain event_id.
+      // Without this consumer WebSocketConnection retains pendingAudioEvents indefinitely.
+      connection.addListener(()=>{})
+      let interruptedThrough=-1
       connection.onDisconnect(()=>{if(generation===this.generation)this.end('Conexão encerrada. Inicie novamente por um novo clique.')})
       const binding=tools.onConversationConnected(connection.conversationId)
       const continuity=new ContinuitySession(context.contextId,connection.conversationId,value=>{if(generation===this.generation)this.patch({continuity:value});else if(this.continuity===continuity)this.patch({continuity:{...value,logicalId:'',events:[]}})})
@@ -44,7 +47,17 @@ export class ManagedSession {
         if(event.type==='ping')connection.sendMessage({type:'pong',event_id:event.ping_event.event_id})
         if(event.type==='agent_response'){this.message('Nexus Live',event.agent_response_event.agent_response);save('assistant',event.agent_response_event.agent_response)}
         if(event.type==='user_transcript'){this.message('Você · voz',event.user_transcription_event.user_transcript);save('user',event.user_transcription_event.user_transcript)}
-        if(event.type==='interruption')this.playback?.stop()
+        if(event.type==='interruption'){
+          const id=event.interruption_event.event_id
+          if(!Number.isSafeInteger(id)||id<0){interruptedThrough=Infinity;this.stopMic();this.patch({status:'Áudio recebeu uma interrupção inválida. Microfone desligado; continue por texto ou reconecte por um clique.'})}
+          else if(id>interruptedThrough){interruptedThrough=id;this.playback?.stop()}
+        }
+        if(event.type==='audio'&&this.state.mic){
+          const {event_id:id,audio_base_64:data}=event.audio_event
+          if(Number.isSafeInteger(id)&&id>=0&&id>=interruptedThrough){
+            try{this.playback?.play(data)}catch{this.stopMic();this.patch({status:'Áudio excedeu o limite seguro ou está inválido. Microfone desligado; continue por texto ou reconecte por um clique.'})}
+          }
+        }
         if(event.type==='error')this.end('Falha na conversa. Microfone desligado.')
         if(event.type==='client_tool_call'){
           const call=event.client_tool_call

@@ -11,10 +11,13 @@ export class Playback {
   private sampleRate:number;
   constructor(context: AudioContext, sampleRate = 24000) { this.context = context; this.sampleRate=sampleRate; }
   play(data: string) {
+    // Bound decoded allocations, without cancelling speech already scheduled.
+    if (data.length > Math.ceil(this.sampleRate * 2 * 10 / 3) * 4) throw Error('Audio chunk exceeds limit');
     const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
     if (!bytes.length || bytes.length % 2) return;
-    // Bound latency and memory if a tab stalls.
-    if (this.next - this.context.currentTime > 5) this.stop();
+    // Provider bursts are not interruptions. Preserve order across the former 5s threshold.
+    // Fail explicitly at a hard memory/latency ceiling; the session reports this to the user.
+    if (Math.max(0, this.next - this.context.currentTime) + bytes.length / (2 * this.sampleRate) > 120) throw Error('Audio queue exceeds limit');
     const view = new DataView(bytes.buffer);
     const buffer = this.context.createBuffer(1, bytes.length / 2, this.sampleRate);
     const channel = buffer.getChannelData(0);

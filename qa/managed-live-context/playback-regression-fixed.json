@@ -1,0 +1,124 @@
+{
+  "synthetic_only": true,
+  "provider_calls": 0,
+  "microphone_permissions": 0,
+  "hardware_audio": false,
+  "source": "actual Playback/ManagedSession + installed ElevenLabs WebSocketConnection",
+  "checks": [
+    {
+      "name": "burst_does_not_silently_cancel_previously_scheduled_audio",
+      "status": "PASS",
+      "evidence": {
+        "chunks": 7,
+        "seconds_per_chunk": 1,
+        "audio_clock_seconds": 0,
+        "stopped_nodes": 0,
+        "provider_interruption_events": 0
+      }
+    },
+    {
+      "name": "burst_keeps_pcm_order",
+      "status": "PASS",
+      "evidence": {
+        "starts": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      }
+    },
+    {
+      "name": "explicit_stop_cancels_each_node_once",
+      "status": "PASS",
+      "evidence": {
+        "stops": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "queue_ceiling_is_explicit_without_silent_cancellation",
+      "status": "PASS",
+      "evidence": {
+        "overflow": true,
+        "scheduled": 120
+      }
+    },
+    {
+      "name": "one_connection_and_one_audio_listener",
+      "status": "PASS",
+      "evidence": {
+        "connections": 1,
+        "audio_listeners": 1
+      }
+    },
+    {
+      "name": "continuity_poll_does_not_resend_context",
+      "status": "PASS",
+      "evidence": {
+        "before": 1,
+        "after": 1,
+        "polls": 3
+      }
+    },
+    {
+      "name": "interrupted_generation_stale_audio_is_discarded",
+      "status": "PASS",
+      "evidence": {
+        "interruption_event_id": 20,
+        "late_audio_event_id": 10,
+        "nodes_before_late": 1,
+        "nodes_after_late": 1
+      }
+    },
+    {
+      "name": "new_generation_audio_plays_once_without_sdk_backlog",
+      "status": "PASS",
+      "evidence": {
+        "nodes": 2,
+        "pending_sdk_audio": 0
+      }
+    },
+    {
+      "name": "duplicate_interruption_does_not_cut_new_audio",
+      "status": "PASS",
+      "evidence": {
+        "stops_before": 1,
+        "stops_after": 1
+      }
+    },
+    {
+      "name": "later_interruption_advances_watermark",
+      "status": "PASS",
+      "evidence": {
+        "nodes": 2
+      }
+    },
+    {
+      "name": "invalid_audio_disables_mic_and_explains_failure",
+      "status": "PASS",
+      "evidence": {
+        "mic": false,
+        "status_explained": true
+      }
+    },
+    {
+      "name": "audio_after_end_is_discarded",
+      "status": "PASS",
+      "evidence": {
+        "before": 2,
+        "after": 2
+      }
+    }
+  ]
+}

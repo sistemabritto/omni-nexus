@@ -1,7 +1,7 @@
 # Por que este fork divergiu do EvoNexus da Evolution Foundation
 
 > **Upstream:** [`evolution-foundation/evo-nexus`](https://github.com/evolution-foundation/evo-nexus)
-> **Este fork:** [`sistemabritto/omni-nexus`](https://github.com/sistemabritto/omni-nexus)
+> **Este fork:** [`sistemabritto/omni-nexus-live`](https://github.com/sistemabritto/omni-nexus-live)
 > **Mantido por:** [Sistema Britto](https://sistemabritto.com.br) — [@sistemabritto](https://instagram.com/sistemabritto)
 > **Versão descrita:** `rc01`
 

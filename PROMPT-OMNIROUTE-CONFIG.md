@@ -3,7 +3,7 @@
 Este arquivo é um **prompt pronto pra copiar e colar** num agente de código
 (Claude Code, Codex CLI, ou qualquer agente com acesso a shell/HTTP) para
 **auditar e otimizar um OmniRoute remoto** — o gateway de IA da stack
-[Omni-Nexus](https://github.com/sistemabritto/omni-nexus#readme).
+[Omni-Nexus](https://github.com/sistemabritto/omni-nexus-live#readme).
 
 Contém a configuração de produção real da **Sistema Britto** (VPS Swarm),
 incluindo **triangulação de providers, fallback hierárquico, concurrency caps,

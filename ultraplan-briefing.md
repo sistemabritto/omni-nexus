@@ -147,7 +147,7 @@ botão "novo ticket" direto na página do Kanban.
   update --force` na VPS Swarm (sem SSH direto, comandos rodados por
   Felipe). Ver `.claude/rules/` e o histórico desta sessão se precisar do
   fluxo exato.
-- Repo: `sistemabritto/omni-nexus`, branch de trabalho
+- Repo: `sistemabritto/omni-nexus-live`, branch de trabalho
   `feat/chat-openclaude-provider-routing`, merge em `main`.
 - Qualquer dúvida de decisão de produto (não técnica) — perguntar ao
   Felipe explicitamente em vez de assumir, ele pediu isso.

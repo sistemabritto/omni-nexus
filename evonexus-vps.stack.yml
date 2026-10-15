@@ -37,6 +37,9 @@ services:
     image: excarplex/evo-nexus-dashboard:latest
 
     volumes:
+      # The API writes input/job.json; the worker reads it and writes the render.
+      # Both services need the same persistent volume, writable on each side.
+      - evonexus_media:/workspace/media:rw
       - evonexus_config:/workspace/config
       - evonexus_workspace:/workspace/workspace
       - evonexus_dashboard_data:/workspace/dashboard/data
@@ -73,6 +76,7 @@ services:
       ## or semicolon-separated (Vault V3, per-individual not per-chat).
       - APPROVAL_APPROVER_IDS=${APPROVAL_APPROVER_IDS}
       ## Postiz is called only by the dashboard after human approval.
+      - MEDIA_WORKSPACE=/workspace/media
       - POSTIZ_URL=${POSTIZ_URL}
       - POSTIZ_API_KEY=${POSTIZ_API_KEY}
       - POSTIZ_INTEGRATION_INSTAGRAM_ID=${POSTIZ_INTEGRATION_INSTAGRAM_ID}

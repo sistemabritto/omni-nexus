@@ -30,6 +30,8 @@ Para criar, editar ou revisar páginas/frontend/design, carregar este cookbook c
 - Conteúdo reflowa do mobile ao desktop e nas larguras intermediárias; verificar texto longo, zoom, imagens, tabelas e barras fixas/áreas seguras. Não ocultar overflow para mascarar conteúdo perdido. Toque tem alvo adequado ao contexto e alternativa a hover.
 - Movimento comunica estado/continuidade e respeita reduced motion; não adicionar animação só para cumprir o filtro.
 
+Para revisão independente pelo Oath, ler [checklist de revisão](review.md); não basta o criador citar seu próprio gate.
+
 ## Verificação e entrega
 
 Gate por item: **PASS / FAIL / NÃO TESTADO / NÃO APLICÁVEL**, com evidência real, contexto e motivo. PASS exige teste/inspeção efetiva; FAIL descreve falha e correção; NÃO TESTADO registra limitação e próximo passo; NÃO APLICÁVEL explica por que o item não pertence ao escopo. Não forçar PASS nem ocultar falhas para entregar relatório. Um resultado sem verificação suficiente permanece rascunho com pendências.

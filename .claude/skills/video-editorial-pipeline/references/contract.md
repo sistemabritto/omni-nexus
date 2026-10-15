@@ -38,6 +38,7 @@ executor deve aplicar `resolve_within` ao materializar no workspace isolado.
 Na revisão 2+, `previous_revision` deve apontar para a anterior. Isso registra a
 linhagem, não faz backup por si só. Preserve fisicamente o artefato anterior.
 Campos `approved`, `scheduled` ou `approver` do cliente não eliminam gates.
+A aprovação final usa o contrato persistido de [release.md](release.md).
 O endpoint sempre retorna `awaiting_beat_sheet_review` e `auto_queue=false` /
 `auto_schedule=false`; apresentar a revisão ao Felipe é responsabilidade do
 agente que chamou. Nenhum webhook/heartbeat/gate Telegram novo é criado.

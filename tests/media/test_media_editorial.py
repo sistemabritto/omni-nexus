@@ -42,7 +42,7 @@ def test_real_api_selects_existing_workflow_without_queue_or_provider(admin_clie
     assert created.status_code == 201
     assert created.get_json()["job_type"] == entry
     assert created.get_json()["status"] == "queued"
-    assert admin_client.post(f"/api/media/jobs/{created.get_json()['id']}/schedule").status_code == 400
+    assert admin_client.post(f"/api/media/jobs/{created.get_json()['id']}/schedule").status_code == 409
 
 
 def test_removed_time_and_caption_sync():

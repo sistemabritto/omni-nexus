@@ -4,10 +4,10 @@ Este handoff descreve só a reconciliação e os novos testes/correções. O est
 escopo funcional continuam nas PRs56/72 e no handoff original de Gravações.
 
 Branch: `fix/recordings-production-integration`. Base exata: `7e84d6b`.
-Checkout de entrega: `task-3/recordings-integration-local` (Git independente,
-objetos compartilhados por leitura). A worktree inicial `recordings-integration`
-ficou com cherry-pick pendente quando a execução elevada desconectou. Não usar
-aquela cópia para integração; este checkout e o ramo remoto são a entrega.
+Worktree de entrega: `task-3/recordings-integration`, limpa e reconciliada por
+fast-forward com o ramo remoto. Durante a queda da execução elevada, o trabalho
+continuou em `recordings-integration-local`, checkout temporário com Git gravável;
+os commits foram depois transferidos para a worktree original, sem conflito pendente.
 
 ## Commits / fatias e dependências
 
@@ -64,8 +64,9 @@ formatos validados nem geramos mídia paga para testá-los.
 
 ## Verificação e ferramentas
 
-- Regressão de150 testes passou antes do guard; guard+retry passou em34 testes.
-  A regressão final com o guard foi executada novamente (resultado no PR).
+- Regressão final: **151 testes passaram**, incluindo fila/ACL/worker, MediaRelease,
+  retry, stack, sete cenários de codecs e testes de wiring/disabled de Live.
+  Guard+retry também passou isolado em34 testes.
 - TypeScript e build Vite passaram usando cópia local já existente do SDK
   @elevenlabs/client1.28.0. Sem npm install ou alteração de package/lockfile.
 - Lint dos componentes RecordingsQueue e MediaReleasePanel passou. Media.tsx

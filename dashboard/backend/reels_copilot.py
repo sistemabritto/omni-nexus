@@ -200,6 +200,17 @@ def _parse_llm_json(raw: str) -> dict:
     return data
 
 
+def _editorial_guidance() -> str:
+    """Load local editorial knowledge; this in-process call has no persona."""
+    path = WORKSPACE / ".claude" / "skills" / "social-reels-editorial" / "SKILL.md"
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError:
+        log.warning("Reels editorial guidance unavailable; preserving existing protocol")
+        return ""
+    return "\n\nOrientação editorial local (preserve o schema JSON existente):\n" + content
+
+
 def generate_reel(theme_hint: str | None = None) -> dict:
     """Gera UM roteiro completo, grava como draft/review e devolve a row.
 
@@ -217,6 +228,7 @@ def generate_reel(theme_hint: str | None = None) -> dict:
         "pass de humanizer (24 padrões anti-AI) e isca numerada 01-21 do Desafio "
         "(mkt-iscas-desafio) compatível com a fase do funil."
         + hint
+        + _editorial_guidance()
         + "\n\n" + _REEL_SCHEMA_HINT
     )
     # 2026-09-22: troca de invoke_with_fallback -> resilient_invoke. Antes, quando

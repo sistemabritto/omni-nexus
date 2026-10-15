@@ -142,3 +142,7 @@ Code lives in `workspace/projects/` (under git). Implementation notes worth carr
 ## Cookbook padrão para páginas/frontend/design
 
 Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.
+
+## Métodos de responsabilidade e evidência
+
+Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.

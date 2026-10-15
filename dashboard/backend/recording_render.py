@@ -37,9 +37,9 @@ def assemble_recording(snapshot, output, work, *, width=720, height=1280, timeou
             meta=extract_metadata(source)
             command+=['-i',str(source)]
             if not meta.has_audio:command+=['-f','lavfi','-i','anullsrc=r=48000:cl=stereo']
-            command+=['-map','0:v:0','-map','0:a:0' if meta.has_audio else '1:a:0','-t',str(meta.duration_seconds),'-shortest']
+            command+=['-map','0:v:0','-map','0:a:0' if meta.has_audio else '1:a:0','-t',str(meta.duration_seconds),'-shortest','-af','apad']
         else:raise RecordingRenderError('tipo de mídia não suportado')
-        command+=['-vf',f'scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30',
+        command+=['-vf',f'scale=trunc(iw*sar/2)*2:ih,setsar=1,scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30',
                   '-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p','-c:a','aac','-ar','48000','-ac','2',str(segment)]
         run(command)
         meta=extract_metadata(segment)

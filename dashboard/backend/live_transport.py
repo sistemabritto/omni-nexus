@@ -169,7 +169,7 @@ def run_session(client, config, provider_factory=open_gemini, clock=time.monoton
                     peer.close()
                 except Exception:
                     pass
-        watchdog = threading.Timer(120, expire)
+        watchdog = threading.Timer(max(0, 120 - (clock() - start)), expire)
         watchdog.daemon = True
         watchdog.start()
         provider.send(json.dumps(setup_message(config.model)))

@@ -1,0 +1,21 @@
+{
+  "base": "2d397cf2190fd5879562d24ce13e8e63a61ccc54",
+  "branch": "review/live-transport-integrated",
+  "integrated_sources": [
+    "16e489467075ea8e29ffea21cd1be2c8c1205360",
+    "7defeedac8e60097bdc247431ffbf7d13b74b247",
+    "eed305f71f3001887e6cac12143607097c77a315"
+  ],
+  "backend_regression": {
+    "passed": 1019,
+    "skipped": 2
+  },
+  "final_live_focused": {
+    "passed": 35
+  },
+  "production_deploy": false,
+  "real_credentials_read": false,
+  "google_calls": 0,
+  "microphone_real_test": false,
+  "image_boot_test": false
+}

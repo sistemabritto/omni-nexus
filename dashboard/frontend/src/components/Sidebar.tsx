@@ -103,14 +103,14 @@ function loadCollapsedState(): Record<string, boolean> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) return JSON.parse(stored)
-  } catch {}
+  } catch { /* Unavailable storage or invalid JSON falls back to expanded groups. */ }
   return {}
 }
 
 function saveCollapsedState(state: Record<string, boolean>) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {}
+  } catch { /* Navigation remains usable when browser storage is unavailable. */ }
 }
 
 const roleBadgeClass: Record<string, string> = {

@@ -98,7 +98,7 @@ def test_disconnect_and_deadline_release_provider():
     c = Client(['disconnect']); p = Provider([])
     run_session(c, CONFIG, lambda _: p)
     assert p.closed
-    for ready, times in [(False, [0, 11]), (True, [0, 1, 121])]:
+    for ready, times in [(False, [0, 0, 11]), (True, [0, 0, 1, 121])]:
         c = Client(); p = Provider([{'setupComplete': {}}]); times = iter(times)
         run_session(c, CONFIG, lambda _: p, clock=lambda: next(times))
         assert c.sent[-1]['error'] == ('session_limit' if ready else 'setup_timeout')
@@ -131,3 +131,18 @@ def test_audio_rate_limit_stops_provider_and_cleans_up():
     assert c.sent[-1] == {'error': 'audio_rate_limit'}
     assert len(p.sent) == 5  # server setup + four permitted chunks
     assert p.closed
+
+
+def test_watchdog_includes_provider_connection_time(monkeypatch):
+    import live_transport
+    timers = []
+    class Timer:
+        def __init__(self, seconds, callback): timers.append(seconds)
+        def start(self): pass
+        def cancel(self): pass
+    monkeypatch.setattr(live_transport.threading, 'Timer', Timer)
+    ticks = iter([0, 5, 6])
+    c = Client(['disconnect']); p = Provider([])
+    run_session(c, CONFIG, lambda _: p, clock=lambda: next(ticks))
+    assert timers == [115]
+    assert p.closed and not c.connected

@@ -55,7 +55,7 @@ jobs:
           uv run python -m pytest
           tests/backend/test_auth_security.py
           tests/backend/test_health_routes.py tests/backend/test_live_disabled_routes.py
-          tests/backend/test_live_transport.py tests/backend/test_live_socket_integration.py
+          tests/backend/test_live_transport.py tests/backend/test_live_socket_integration.py tests/backend/test_live_app_wiring.py
           tests/backend/test_share_publico.py
           tests/backend/test_telegram_provider_bot.py tests/backend/test_telegram_continuity.py
           tests/backend/test_runtime_preflight.py tests/backend/test_approval_expiration_state.py

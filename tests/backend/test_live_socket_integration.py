@@ -3,6 +3,8 @@ import json
 import queue
 import sys
 import threading
+import sqlite3
+import time
 from pathlib import Path
 
 import pytest
@@ -91,5 +93,15 @@ def test_real_cookie_websocket_audio_and_cancellation(monkeypatch, tmp_path, hos
             assert events == [{'interrupted': True}, {'audio': 'AAAAAA=='}, {'transcript': 'Olá', 'role': 'model'}, {'status': 'listening'}]
             assert providers[0].sent[1]['realtimeInput']['audio']['mimeType'] == 'audio/pcm;rate=16000'
         assert stopped.wait(2), 'browser disconnect must close provider'
+        # Provider cleanup happens before the route's finally releases its
+        # shared lease; wait briefly and assert both lifecycle steps complete.
+        deadline = time.monotonic() + 2
+        while True:
+            with sqlite3.connect(tmp_path/'limits.db') as db:
+                active = db.execute('SELECT SUM(active) FROM live_leases').fetchone()[0]
+            if not active or time.monotonic() >= deadline:
+                break
+            time.sleep(0.01)
+        assert active == 0, 'browser disconnect must release the shared lease'
     finally:
         server.shutdown(); server.server_close(); thread.join(timeout=2)

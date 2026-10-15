@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Radio, Mic, MicOff, Send, Square } from 'lucide-react'
 import { useCompanies } from '../context/CompanyContext'
 import { Link } from 'react-router-dom'
+import VoicePicker from './VoicePicker'
 import { managedSession } from './managed-session'
 import './LiveConversation.css'
 import './ManagedNexusLive.css'
@@ -36,6 +37,7 @@ export default function ManagedNexusLive(){
     <div className="live-controls">{!busy?<button disabled={!activeCompany||!company||!available.includes(agent)||!options?.consumptionApproved} onClick={()=>{if(company)void managedSession.start(company.id,company.name,agent)}}><Radio size={18}/>Iniciar conversa</button>:<><button disabled={state.phase!=='connected'} aria-pressed={state.mic} onClick={()=>void managedSession.toggleMic()}>{state.mic?<MicOff size={18}/>:<Mic size={18}/>} {state.mic?'Desligar microfone':'Ativar microfone'}</button><button onClick={()=>managedSession.end()}><Square size={16}/>Encerrar</button></>}</div>
     <p className="live-privacy">Microfone somente ao ativar. Sem ações de escrita. Gravação e retenção seguem a configuração do agente ElevenLabs.</p>
     <section className="managed-messages" aria-label="Conversa"><div role="log" aria-live="polite">{state.messages.length?state.messages.map((m,i)=><article key={i}><strong>{m.author}</strong><p>{m.text}</p></article>):<p>As mensagens aparecerão aqui. Nenhuma conversa demonstrativa.</p>}</div><form onSubmit={e=>{e.preventDefault();send()}}><label className="sr-only" htmlFor="live-message">Mensagem</label><textarea id="live-message" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Escreva para Nexus Live…" disabled={state.phase!=='connected'} rows={2}/><button aria-label="Enviar mensagem" disabled={state.phase!=='connected'||!draft.trim()}><Send size={18}/></button></form></section>
+    {company&&<VoicePicker key={company.id} companyId={company.id} busy={busy} connecting={state.phase==='connecting'} activeVoice={state.voiceName}/> }
     <nav className="managed-links" aria-label="Contexto operacional"><Link to="/cockpit">Sessões, jobs e memória</Link><Link to="/live/gemini">Protótipo Gemini</Link></nav>
   </main>
 }

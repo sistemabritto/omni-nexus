@@ -18,6 +18,11 @@ on:
       - "uv.lock"
       - ".github/workflows/ci.yml"
   workflow_dispatch:
+    inputs:
+      image_boot_smoke:
+        description: Boot the pinned reviewed caf1612 dashboard image with isolated fixture data
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -111,3 +116,42 @@ jobs:
       - name: Build frontend
         working-directory: dashboard/frontend
         run: npm run build
+
+  image-boot-smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.image_boot_smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      IMAGE: excarplex/evo-nexus-dashboard@sha256:eafe5f27d9187194bd5f3ec8b857ce947ac8060661b4d99b8146b01d4773b05d
+      EXPECTED_REVISION: caf161273777366fab96fc3f35e33ec6d70d3c63
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check isolated runner capacity
+        run: |
+          df -h /var/lib/docker
+          available=$(df --output=avail -B1 /var/lib/docker | tail -1)
+          test "$available" -ge 18000000000
+      - name: Pull and verify reviewed immutable image
+        run: |
+          docker pull "$IMAGE"
+          actual=$(docker image inspect "$IMAGE" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')
+          test "$actual" = "$EXPECTED_REVISION"
+      - name: Boot Flask with ephemeral fixture data and no external network
+        run: |
+          docker run -d --name live-image-smoke --network none \
+            --cpus 2 --memory 3g --pids-limit 256 --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --tmpfs /workspace/dashboard/data:rw,size=256m \
+            --mount type=bind,src="$GITHUB_WORKSPACE/qa/live-image-smoke",dst=/smoke,readonly \
+            -e EVONEXUS_SECRET_KEY=fixture-image-smoke-only \
+            -e BRAIN_REPO_MASTER_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            -e DASHBOARD_API_TOKEN=fixture-agent-token \
+            -e GEMINI_LIVE_ENABLED=false -e GEMINI_FREE_TIER_VERIFIED=false \
+            -e GEMINI_API_KEY= -e GEMINI_LIVE_MODEL= -e TELEGRAM_CHAT_ID= \
+            --entrypoint /workspace/.venv/bin/python "$IMAGE" /smoke/boot.py
+      - name: Smoke assets, browser auth and disabled WebSocket
+        run: docker exec live-image-smoke /workspace/.venv/bin/python /smoke/check.py
+      - name: Remove ephemeral smoke container
+        if: always()
+        run: docker rm -f live-image-smoke 2>/dev/null || true

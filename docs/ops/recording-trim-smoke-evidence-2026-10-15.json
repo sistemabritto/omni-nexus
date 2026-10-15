@@ -1,0 +1,60 @@
+{
+  "fixture_only": true,
+  "render_count": 1,
+  "reused_existing_render_for_contract_resume": true,
+  "dimensions": [
+    160,
+    240
+  ],
+  "duration_seconds": 0.621333,
+  "expected_duration": 0.6,
+  "has_audio": true,
+  "time_map": [
+    {
+      "asset_id": "a0161ffd-4edd-482e-887e-0984f89f966f",
+      "edited_end": 0.3,
+      "edited_start": 0.0,
+      "source_end": 0.9,
+      "source_start": 0.6
+    },
+    {
+      "asset_id": "f78ab021-74a3-4d46-84f4-7afc9c887f35",
+      "edited_end": 0.6,
+      "edited_start": 0.3,
+      "source_end": 0.4,
+      "source_start": 0.1
+    }
+  ],
+  "pixels_rgb": {
+    "edited_.15": [
+      0,
+      255,
+      0
+    ],
+    "edited_.45": [
+      254,
+      0,
+      0
+    ]
+  },
+  "rms": {
+    "voiced": 2049.624594819134,
+    "silent": 0.0
+  },
+  "render_sha256": "33ee8a455b5e20e1faa4f59f4cd97ca088ea0f1fa66859f9461b5b080376e0ea",
+  "version_id": "3424c2fd-eb1c-4594-b482-37a7ec36c00c",
+  "approved_digest": "22a303ce9705db17f2228dcea88c2fdc7a5ff200a09b79a9780d799a857591ba",
+  "mock_postiz": {
+    "uploads": 1,
+    "created": [
+      "ig",
+      "li"
+    ],
+    "scheduled": [
+      "ig",
+      "li"
+    ]
+  },
+  "old_approval_blocked_after_reopen": true,
+  "new_version_requires_qa": true
+}

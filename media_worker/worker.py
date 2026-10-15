@@ -33,6 +33,7 @@ from sdk_client import evo  # noqa: E402
 from media_executor import run_opencode_media_job, MediaExecutionError  # noqa: E402
 from media_render import render_composition, run_doctor, RenderError  # noqa: E402
 from media_validation import validate_mp4, extract_metadata, ValidationError  # noqa: E402
+from recording_render import assemble_recording, RecordingRenderError
 from media_manifest import load_and_validate_manifest, ManifestValidationError  # noqa: E402
 from media_workspace import job_dir, media_workspace_root, sha256_file  # noqa: E402
 from media_audio import primeiro_corte, aplicar_corte_editorial, FalhaDeMidia  # noqa: E402
@@ -102,7 +103,9 @@ def _claim_next_job() -> dict | None:
 
 def process_job(job: dict) -> None:
     job_type = job.get("job_type") or "social_clip"
-    if job_type == "corte_bruto":
+    if job_type == "recording_batch":
+        process_recording_batch_job(job)
+    elif job_type == "corte_bruto":
         process_corte_bruto_job(job)
     elif job_type == "corte_editorial":
         process_corte_editorial_job(job)
@@ -670,6 +673,27 @@ def process_cortes_virais_job(job: dict) -> None:
         result_json=json.dumps({"cortes": resultados}, ensure_ascii=False),
     )
     print(f"[media-worker] cortes_virais job {job_id} ready_for_review ({len(resultados)} corte(s) renderizados)", flush=True)
+
+
+def process_recording_batch_job(job: dict) -> None:
+    """Closed-batch rough preview. Preserves order and source audio, no paid APIs."""
+    base = job_dir(job["id"])
+    try:
+        _patch(job["id"], status="generating", progress_message="Preparando montagem do lote fechado")
+        _patch(job["id"], status="rendering")
+        output = base / "output/final.mp4"
+        result = assemble_recording(job.get("result") or {}, output, base / "work",
+                                   width=int(job["width"]), height=int(job["height"]),
+                                   timeout_seconds=JOB_TIMEOUT_SECONDS)
+        _patch(job["id"], status="validating")
+        meta = validate_mp4(output, expected_width=int(job["width"]), expected_height=int(job["height"]),
+                            expected_duration_seconds=result["expected_duration"], expected_fps=30,
+                            max_size_bytes=MAX_FILE_SIZE_BYTES, workspace_root=media_workspace_root())
+        _patch(job["id"], status="ready_for_review", render_path=str(output), render_sha256=sha256_file(output),
+               result_json=json.dumps(result, ensure_ascii=False),
+               progress_message="Prévia de montagem pronta; legendas e edição editorial exigem revisão", **meta.to_dict())
+    except (RecordingRenderError, ValidationError, OSError, ValueError) as exc:
+        _fail_job(job["id"], f"Montagem dos brutos falhou: {exc}", terminal=True)
 
 
 def process_social_clip_job(job: dict) -> None:

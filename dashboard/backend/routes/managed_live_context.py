@@ -481,7 +481,7 @@ def _work_payload(row, query):
 
 
 def _agent_identity(row):
-    """Opt-in bounded catalog identity; never import persistent/global memory."""
+    """Publish only an explicitly curated Live identity, never the raw persona."""
     root = AGENTS_DIR.resolve()
     path = (root / (row['agent_name'] + '.md')).resolve()
     if not path.is_relative_to(root) or not path.is_file():
@@ -489,9 +489,19 @@ def _agent_identity(row):
     text = path.read_text(encoding='utf-8')
     for marker in ('# Persistent Agent Memory', '## MEMORY.md'):
         text = text.split(marker, 1)[0]
-    return {'agentName': row['agent_name'], 'source': 'authorized_agent_catalog',
-            'persona': text[:2500], 'truncated': len(text) > 2500,
-            'legacyMemoryImported': False}
+    heading = re.search(r'^## Live Identity\s*$', text, flags=re.MULTILINE)
+    identity = {'agentName': row['agent_name'], 'source': 'curated_live_identity',
+                'status': 'unavailable', 'persona': '', 'truncated': False,
+                'legacyMemoryImported': False}
+    if heading is None:
+        return identity
+    text = re.split(r'^#{1,2} ', text[heading.end():], maxsplit=1, flags=re.MULTILINE)[0].strip()
+    # Obvious credential material blocks the whole section. This is defense
+    # in depth; the explicit section still requires human editorial review.
+    sensitive = r'(?i)(?:api[_ -]?key|password|senha|secret|token)\s*[:=]\s*\S+|-----BEGIN [A-Z ]*PRIVATE KEY-----|https?://[^\s/]+:[^\s/]+@|\bAKIA[A-Z0-9]{16}\b'
+    if not text or re.search(sensitive, text):
+        return identity
+    return {**identity, 'status': 'available', 'persona': text[:2500], 'truncated': len(text) > 2500}
 
 
 def _previous_work_for_context(row):

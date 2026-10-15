@@ -60,3 +60,9 @@ Aceite: Felipe identifica a empresa selecionada, pergunta por um trabalho conclu
 6. Aprovação por voz somente com proposta concreta versionada, identidade humana e confirmação vinculada ao mesmo objeto; o LLM não recebe poder geral de aprovação.
 
 Sem alteração produtiva, geração externa, novos jobs, novos acessos ou importação de transcript nesta investigação.
+
+## Revisão de privacidade antes da publicação
+
+O recorte inicial de2.500 caracteres foi substituído: só a seção explícita `## Live Identity` é publicável. Arquivos do catálogo podem conter contexto pessoal antes dos marcadores de memória; esse conteúdo agora fica excluído por construção. Foi preparada uma seção curada para Clawdia, sem nomes de pessoas, integrações declaradas como já acessíveis ou contexto pessoal. Agentes sem a seção retornam `status=unavailable, persona=''`; não inventam identidade detalhada. Material evidente de credencial bloqueia a seção inteira. Esse detector não substitui a revisão humana do texto curado, nem oferece garantia de detectar toda PII.
+
+Testes adicionais verificam usuário diferente, empresa revogada, erros do runtime sem contexto inventado/cacheado e credencial evidente na seção. Resultado local desta revisão:28passed/1deselected (o caso loopback requer permissão de bind, já aprovado no lote anterior). O teste novo foi incluído na CI. A autorização posterior contempla publicar o lote com correções de revisão, ligar somente continuidade e anexar a leitura; não contempla executar tarefa, importar transcript antigo ou iniciar conversa automaticamente. O desenho seguinte harness/provider/model é independente.

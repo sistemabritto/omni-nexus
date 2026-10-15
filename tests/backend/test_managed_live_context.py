@@ -12,7 +12,19 @@ ORIGIN={'Origin':'https://example.test'}
 @pytest.fixture
 def setup(tmp_path,monkeypatch):
     from models import db,User,Company
-    import routes.managed_live_context as mod
+    # Other integration suites rebuild the models registry. Bind BOTH route
+    # modules to this fixture's canonical models instead of reusing a cached
+    # Ticket mapper from an earlier test app. Restore module mappings on teardown.
+    import importlib.util
+    modules = {}
+    for name in ('routes.tickets', 'routes.managed_live_context'):
+        path = Path(__file__).resolve().parents[2] / 'dashboard/backend' / (name.replace('.', '/') + '.py')
+        spec = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(spec)
+        monkeypatch.setitem(sys.modules, name, module)
+        spec.loader.exec_module(module)
+        modules[name] = module
+    mod = modules['routes.managed_live_context']
     app=Flask(__name__)
     app.config.update(TESTING=True,SECRET_KEY='test-only',SERVER_NAME='example.test',SQLALCHEMY_DATABASE_URI='sqlite://',SQLALCHEMY_TRACK_MODIFICATIONS=False,NEXUS_LIVE_USER_ID=31,NEXUS_LIVE_CONTEXT_DB=str(tmp_path/'contexts.db'))
     db.init_app(app);login=LoginManager(app)

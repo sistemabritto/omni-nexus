@@ -1,10 +1,12 @@
 <!-- Modified by Sistema Britto: evidence-based Live overview and contracts, 2026-10-15. -->
 <p align="center"><img src="public/cover.svg" alt="OmniNexus Live · distribuição derivada do EvoNexus" width="100%" /></p>
 <h1 align="center">OmniNexus Live</h1>
-<p align="center"><strong>Agnostic Live Voice Orchestrator</strong><br/>Uma interface de voz e texto para coordenar trabalho, contexto e resultados.</p>
+<p align="center"><strong>Voz e texto para coordenar o trabalho da empresa</strong><br/>Uma interface de voz e texto para coordenar trabalho, contexto e resultados.</p>
 <p align="center"><a href="https://sistemabritto.com.br">Site oficial · Sistema Britto</a> · <a href="https://www.instagram.com/sistemabritto/">Instagram · @sistemabritto</a> · <a href="docs/specs/omninexus-live.md">Contrato e critérios de aceite</a> · <a href="docs/specs/omninexus-live-evidence.md">Estado e evidências</a></p>
 
 OmniNexus Live é a evolução da interface conversacional desta distribuição do **EvoNexus**. O objetivo é conectar uma conversa contínua a ferramentas, providers/modelos e executores intercambiáveis (harnesses), devolvendo progresso e artefatos ao chat. **A arquitetura agnóstica é um contrato em construção; não há suporte completo comprovado a todos os harnesses.** O nome de apresentação não altera o repositório nem os domínios existentes.
+
+O conceito prevê independência em três camadas: **harness agnostic + provider agnostic + model agnostic**. As trocas dependem de compatibilidade e capacidades verificadas; não há promessa de qualquer combinação. **“Agnostic Live Voice Business Manager” é um posicionamento em discussão**, não um novo nome aprovado nem uma afirmação de desempenho comprovado.
 
 ### O que está disponível
 

@@ -41,6 +41,10 @@ Configuração pessoal reportada: usuário ID 1, chave presente e aceite de cust
 
 Orca não foi adotado nem instalado; a referência opcional não acrescenta dependência. Qualquer afirmação sobre sua licença/maturidade precisa estar vinculada à revisão consultada antes de adoção.
 
+## Refino editorial após `8fe0488`
+
+Independência explicitada em harness, provider e modelo, condicionada à combinação completa verificada. “Agnostic Live Voice Business Manager” permanece posicionamento em discussão; OmniNexus Live, repositório e domínios não foram renomeados. Nenhuma nova capacidade ou desempenho é dado como comprovado por esse refino.
+
 ## Entrega para integração
 
 Branch `docs/omninexus-live-contract`, baseada em `3a282bd`, somente README e specs. O integrador exclusivo é a thread `01a13c9a-dd49-73a0-a0fc-87b82fb29016`. Integrar apenas os commits documentais, conforme base escolhida pelo integrador; não promover PR78 implicitamente ao integrar documentação. Não executar testes pesados/build/containers para esta mudança.

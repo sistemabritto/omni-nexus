@@ -3,6 +3,18 @@
 
 Status: proposta normativa, não API já publicada. Prioridade P0: fechar **Live → tools → providers/modelos → harness/dispatcher → resultado**, com contexto autorizado, antes de expandir o catálogo. Estado real em [evidências](omninexus-live-evidence.md).
 
+## Posicionamento e independência nas três camadas
+
+**OmniNexus Live** permanece o nome do produto. “Agnostic Live Voice Business Manager” é um posicionamento em discussão; não autoriza renomear produto, repositório ou domínio. Não implica desempenho “superinteligente” comprovado.
+
+| Camada | Independência exigida | Condição para troca |
+|---|---|---|
+| Harness agnostic | Núcleo desacoplado do executor por adaptador canônico | Contrato e versão certificados; operações/capacidades exigidas verificadas |
+| Provider agnostic | Transporte, autenticação e particularidades do serviço ficam em adaptadores de provider | Endpoint oficial, credencial autorizada, política, health e limites compatíveis |
+| Model agnostic | Intenção e requisitos não dependem de um ID fixo de modelo | Modalidades, tools/schema, contexto, custo e compatibilidade verificados para o modelo exato |
+
+Independência permite substituir componentes **entre combinações elegíveis**; não garante que todo harness aceite todo provider ou modelo. O registro deve validar a combinação completa `(harness/version, adapter/version, provider, model/version)` e seus requisitos. Certificar pares isolados não certifica automaticamente o conjunto. Aceite: uma substituição compatível preserva intenção, ACL e contrato de resultado; uma combinação incompatível é rejeitada antes da chamada, com motivo verificável.
+
 ## 1. Fronteiras e adaptadores
 
 O núcleo não importa SDK nem interpreta stdout específico de harness. Adaptadores traduzem contratos canônicos para interfaces oficiais, com processos/ambientes isolados. Provider de voz, provider de inferência e harness executor têm identidades independentes; a existência de um modelo num gateway não prova compatibilidade com um executor.

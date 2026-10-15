@@ -288,6 +288,7 @@ export default function Sidebar() {
     document.body.style.overflow = 'hidden'
     drawerRef.current?.querySelector<HTMLButtonElement>('[data-close-menu]')?.focus()
     const onKey = (event: KeyboardEvent) => {
+      if (document.querySelector('dialog[data-omni-modal][open]')) return
       if (event.key === 'Escape') { setMobileOpen(false); return }
       if (event.key !== 'Tab') return
       const controls = Array.from(drawerRef.current?.querySelectorAll<HTMLElement>('a[href],button:not(:disabled),select,input,[tabindex="0"]') || []).filter(el => el.getBoundingClientRect().width > 0)

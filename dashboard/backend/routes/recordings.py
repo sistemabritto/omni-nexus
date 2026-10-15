@@ -15,6 +15,7 @@ from werkzeug.exceptions import HTTPException
 import models as m
 from media_workspace import ensure_job_scaffold
 from media_release import assert_current, ReleaseError
+from recording_edits import edit_decisions
 from recordings_access import require_company
 from recordings_storage import CHUNK_BYTES, atomic_write, hash_file, media_kind, private_path, valid_signature
 
@@ -298,7 +299,14 @@ def close_batch(recording_id):
     expected=integer(data.get('expected_revision'),'expected_revision')
     seconds=data.get('photo_seconds',3)
     if isinstance(seconds,bool) or not isinstance(seconds,(int,float)) or not 1<=seconds<=30:abort(400,description='invalid_photo_seconds')
-    signature=hashlib.sha256(encoded({'upload_ids':data.get('upload_ids'),'photo_seconds':seconds}).encode()).hexdigest()
+    selected=data.get('upload_ids')
+    if not isinstance(selected,list) or not selected or not all(isinstance(i,str) for i in selected) or len(set(selected))!=len(selected):
+        abort(400,description='select_uploaded_assets')
+    try: edits=edit_decisions(data.get('edits',{}),selected)
+    except ValueError as exc: abort(400,description=str(exc))
+    intent={'upload_ids':selected,'photo_seconds':seconds}
+    if edits:intent['edits']=edits
+    signature=hashlib.sha256(encoded(intent).encode()).hexdigest()
     if row.closed:
         version=m.RecordingVersion.query.filter_by(recording_id=row.id,batch=row.batch,script_revision=row.script_revision).order_by(m.RecordingVersion.number.desc()).first()
         snapshot=json.loads(version.snapshot_json) if version else {}
@@ -312,6 +320,7 @@ def close_batch(recording_id):
         abort(400,description='select_uploaded_assets')
     items=[i for i in all_items if i.id in selected]
     if any(i.status!='complete' for i in items):abort(400,description='select_complete_assets')
+    if any(i.id in edits and i.kind!='video' for i in items):abort(400,description='trim_requires_video')
     for item in items:
         if not private_path(item.storage_path).is_file() or hash_file(private_path(item.storage_path))!=item.sha256:abort(409,description='source_changed')
     script=m.RecordingScript.query.filter_by(recording_id=row.id,number=row.script_revision).one()
@@ -319,8 +328,8 @@ def close_batch(recording_id):
     version_id,job_id=uid(),uid();base=ensure_job_scaffold(job_id)
     snapshot={'recording_id':row.id,'version_id':version_id,'script_revision':row.script_revision,'script_sha256':script.sha256,
         'close_revision':expected,'close_signature':signature,'photo_seconds':seconds,
-        'assets':[{'id':i.id,'path':i.storage_path,'kind':i.kind,'sha256':i.sha256,'photo_seconds':seconds} for i in items],
-        'stage':'rough_assembly','automatic_transcription':False,'feedback_applied':False}
+        'assets':[{'id':i.id,'path':i.storage_path,'kind':i.kind,'sha256':i.sha256,'photo_seconds':seconds,**({'trim':edits[i.id]} if i.id in edits else {})} for i in items],
+        'edit_plan_version':1,'stage':'rough_assembly','automatic_transcription':False,'feedback_applied':False}
     job=m.MediaJob(id=job_id,company_id=row.company_id,created_by=current_user.username,job_type='recording_batch',
         title=row.title,brief='Montagem inicial dos arquivos na ordem aprovada; sem IA, transcrição, memes ou publicação.',
         caption='',platform='instagram',width=720,height=1280,fps=30,duration_seconds=0,publication_mode='draft',

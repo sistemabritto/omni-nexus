@@ -54,3 +54,11 @@ def test_examples_and_provenance():
     assert '7abd6fc2b11987c3940eb4ffc461478ff37c0b33' in origin
     assert 'referodesign/refero_skill' in origin
     assert 'Apache License' in (FOLDER / 'LICENSE').read_text()
+
+
+def test_runtime_personas_include_creative_brief_instruction():
+    sys.path.insert(0, str(ROOT / 'dashboard/backend'))
+    from provider_fallback import _agent_prompt
+    for agent in ['mako-marketing', 'pixel-social-media', 'canvas-designer']:
+        persona = _agent_prompt(agent)
+        assert '.claude/skills/mkt-creative-brief/SKILL.md' in persona, agent

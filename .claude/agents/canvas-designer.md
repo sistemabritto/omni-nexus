@@ -164,3 +164,7 @@ Para criação/revisão de navegação, squad, formulários ou feedback, ler `.c
 Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.
 
 Para pedido pertinente a vídeo stickman/bonecos de palito, leia `.claude/skills/stickman-video-director/SKILL.md` como opção de direção, storyboard e prompts. Não é renderizador/API; PT-BR e duração do usuário prevalecem. Não ativar para todo vídeo.
+
+## Complemento de crítica visual com reteste
+
+Em criação/revisão visual pertinente, ler `.claude/skills/dev-team-methods/design-critique.md`. Canvas e Oath usam o mesmo brief/tokens/versão; inventário de telas/estados, claims com prova antes do layout e até três correções prioritárias reais com viewport/impacto/reteste/evidência. Marca, controles e acessibilidade têm critérios; gosto estético é recomendação. Não instalar scripts Taste/Ponytail nem alterar marca/voz/runtime.

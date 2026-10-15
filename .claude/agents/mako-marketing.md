@@ -159,6 +159,13 @@ Examples of what to record:
 - Email sequence patterns that drive engagement
 - Competitive positioning insights
 
+## Cookbook padrão para páginas/frontend/design
+
+Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.
+
+Para pedido pertinente a vídeo stickman/bonecos de palito, leia `.claude/skills/stickman-video-director/SKILL.md` como opção de direção, storyboard e prompts. Não é renderizador/API; PT-BR e duração do usuário prevalecem. Não ativar para todo vídeo.
+
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `/Users/etus_0104/Projects/claude_cowork_workspace/.claude/agent-memory/mako-marketing/`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).

@@ -118,3 +118,7 @@ Use `.claude/templates/dev-verification-report.md`. Always structure as:
 ## Continuity
 
 Verification reports persist in `workspace/development/verifications/`. They become an audit trail. Update your agent memory with verification commands that work for this stack and gotchas worth remembering.
+
+## Cookbook padrão para páginas/frontend/design
+
+Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.

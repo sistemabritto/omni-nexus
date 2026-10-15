@@ -1184,6 +1184,33 @@ class MediaJob(db.Model):
         }
 
 
+class MediaRelease(db.Model):
+    """Versioned human approval and durable per-channel Postiz checkpoints.
+
+    Separate from worker-writable result_json. Existing installs get this
+    new table through the application's db.create_all(), no column rewrite.
+    """
+    __tablename__ = "media_releases"
+    job_id = db.Column(db.String(36), db.ForeignKey("media_jobs.id"), primary_key=True)
+    revision = db.Column(db.Integer, nullable=False, default=1)
+    snapshot_json = db.Column(db.Text, nullable=False)
+    digest = db.Column(db.String(64), nullable=False)
+    approved_digest = db.Column(db.String(64), nullable=True)
+    approved_by = db.Column(db.String(100), nullable=True)
+    approved_at = db.Column(db.String(30), nullable=True)
+    invalidated_reason = db.Column(db.Text, nullable=True)
+    progress_json = db.Column(db.Text, nullable=False, default="{}")
+    busy = db.Column(db.Boolean, nullable=False, default=False)
+
+    def to_dict(self):
+        return {"job_id": self.job_id, "revision": self.revision, "digest": self.digest,
+                "snapshot": json.loads(self.snapshot_json), "approved_by": self.approved_by,
+                "approved_at": self.approved_at,
+                "approval_valid": self.approved_digest == self.digest and not self.invalidated_reason,
+                "invalidated_reason": self.invalidated_reason, "busy": self.busy,
+                "progress": json.loads(self.progress_json)}
+
+
 class TicketComment(db.Model):
     __tablename__ = "ticket_comments"
 

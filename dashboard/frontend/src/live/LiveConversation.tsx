@@ -1,28 +1,39 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { encodePCM, Playback } from './audio'
 import { Mic, Square, AudioLines, ChevronDown, ShieldCheck } from 'lucide-react'
 import './LiveConversation.css'
+import { initialDiagnostics, modelDiagnostics, liveErrorMessage, reasonLabel } from './model-diagnostics'
 
 export default function LiveConversation() {
   const [status, setStatus] = useState('Pronto para iniciar')
   const [active, setActive] = useState(false)
   const [transcript, setTranscript] = useState('')
+  const [diagnostics, diagnose] = useReducer(modelDiagnostics, initialDiagnostics)
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/live/status', { credentials:'include', cache:'no-store', signal:controller.signal })
+      .then(async response => { if (!response.ok) throw Error(); const value = await response.json(); if (!controller.signal.aborted) diagnose({type:'config',value}) })
+      .catch(() => { if (!controller.signal.aborted) diagnose({type:'unavailable'}) })
+    return () => controller.abort()
+  }, [])
   const resources = useRef<{ socket?: WebSocket; stream?: MediaStream; context?: AudioContext; capture?: ScriptProcessorNode; playback?: Playback; timer?: ReturnType<typeof setTimeout> }>({})
   const generation = useRef(0)
   function stop() {
     generation.current++
     const r = resources.current; resources.current = {}
     clearTimeout(r.timer); r.capture?.disconnect(); r.playback?.stop(); r.stream?.getTracks().forEach(t => t.stop()); r.socket?.close(); void r.context?.close()
-    setActive(false)
+    setActive(false); diagnose({type:'stop'})
   }
   useEffect(() => () => { generation.current++; const r = resources.current; clearTimeout(r.timer); r.capture?.disconnect(); r.playback?.stop(); r.stream?.getTracks().forEach(t => t.stop()); r.socket?.close(); void r.context?.close() }, [])
   async function start() {
-    stop(); const id = generation.current
+    stop(); diagnose({type:'reset'}); const id = generation.current
     setActive(true); setStatus('Verificando disponibilidade…'); setTranscript('')
     try {
       const response = await fetch('/api/live/status', { credentials: 'include', cache: 'no-store' })
       if (!response.ok) throw Error('Live indisponível. Verifique sua sessão e a liberação do backend.')
       const availability = await response.json()
+      if (id !== generation.current) return
+      diagnose({type:'config',value:availability})
       if (!availability.enabled || !availability.freeTierVerified) throw Error('Teste real bloqueado: plano gratuito ainda não verificado.')
       if (id !== generation.current) return
       // Both resources are requested in this click flow, never on mount/reconnect.
@@ -41,7 +52,9 @@ export default function LiveConversation() {
         if (id !== generation.current) return
         try {
           const message = JSON.parse(event.data)
-          if (message.error) throw Error('Sessão indisponível. Corrija a configuração no servidor e tente novamente.')
+          diagnose({type:'event',value:message})
+          if (message.error) { stop(); setStatus(liveErrorMessage(message.error)); return }
+          if (message.event === 'model_switch') setStatus('Trocando modelo antes de conectar…')
           if (message.status === 'ready' && !resources.current.capture) {
             clearTimeout(resources.current.timer)
             setStatus('Ouvindo — pode falar em português')
@@ -56,7 +69,7 @@ export default function LiveConversation() {
             input.connect(capture); capture.connect(context.destination)
             resources.current.timer = setTimeout(() => { stop(); setStatus('Limite de teste de dois minutos atingido.') }, 120000)
           }
-          if (message.status === 'reconnect_required') { stop(); setStatus('O servidor solicitou uma nova sessão. Clique para reconectar.'); return }
+          if (message.status === 'reconnect_required') { stop(); setStatus(`Nova sessão necessária: ${reasonLabel(message.reason)}. Clique para iniciar; o contexto não será retomado.`); return }
           if (message.status === 'listening') setStatus('Ouvindo — pode falar em português')
           if (message.interrupted) { playback.stop(); setStatus('Ouvindo — resposta interrompida') }
           if (message.audio) { playback.play(message.audio); setStatus('Respondendo em português — você pode interromper falando') }
@@ -87,6 +100,17 @@ export default function LiveConversation() {
       <button className="live-stop" title="Encerrar e desligar microfone" aria-label="Encerrar e desligar microfone" disabled={!active} onClick={() => { stop(); setStatus('Microfone desligado. Clique para iniciar novamente.') }}><Square size={18} aria-hidden="true" /></button>
     </div>
     <p className="live-privacy"><ShieldCheck size={16} aria-hidden="true" /><span>Microfone só após seu clique. Até 2 minutos por sessão.<br />Reconexão manual · Sem ferramentas de produção.</span></p>
+    <section className="live-models" aria-label="Modelo da conversa">
+      <dl><div><dt>Configurado</dt><dd>{diagnostics.configuredModel || (diagnostics.unavailable ? 'Configuração indisponível' : diagnostics.loaded ? 'Não informado pelo servidor' : 'Consultando configuração…')}</dd></div><div><dt>Ativo nesta sessão</dt><dd>{diagnostics.activeModel || (diagnostics.attemptingModel ? `Conectando: ${diagnostics.attemptingModel}` : 'Nenhum modelo confirmado')}</dd></div></dl>
+      <details><summary>Diagnóstico de conexão <ChevronDown size={14} aria-hidden="true" /></summary><div className="live-model-details">
+        <p>Tentativa: {diagnostics.attempt ?? '—'} / {diagnostics.maxAttempts ?? 'não informado'}</p>
+        <p>Fallbacks elegíveis: {diagnostics.fallbackModels.join(', ') || 'Nenhum informado'}</p>
+        <p>Fallbacks bloqueados por falta de verificação de cota: {diagnostics.fallbackBlockedModels.join(', ') || 'Nenhum informado'}</p>
+        {diagnostics.contextReset && <p>Nova sessão, sem retomada de contexto. Reconectar exige novo clique.</p>}
+        <ol aria-label="Eventos desta sessão">{diagnostics.events.map((entry,index) => <li key={index}>{entry}</li>)}</ol>
+        {!diagnostics.events.length && <p>Ainda não há eventos de conexão.</p>}
+      </div></details>
+    </section>
     <details className="live-transcript">
       <summary><span>Transcrição desta sessão</span><ChevronDown size={16} aria-hidden="true" /></summary>
       <div><p>{transcript || 'Ainda não há transcrição. O texto recebido durante a conversa aparecerá aqui.'}</p><small>Texto temporário desta página.</small></div>

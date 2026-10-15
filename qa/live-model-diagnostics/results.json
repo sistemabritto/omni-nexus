@@ -1,0 +1,26 @@
+[
+  {
+    "width": 375,
+    "height": 667,
+    "httpDoesNotProveActive": true,
+    "noMicOrSocketOnMount": true,
+    "eventConfirmedActive": true,
+    "switchReason": true,
+    "quotaNoRetry": true,
+    "reconnectManualContextReset": true,
+    "overflow": false,
+    "simulatedTransport": true
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "httpDoesNotProveActive": true,
+    "noMicOrSocketOnMount": true,
+    "eventConfirmedActive": true,
+    "switchReason": true,
+    "quotaNoRetry": true,
+    "reconnectManualContextReset": true,
+    "overflow": false,
+    "simulatedTransport": true
+  }
+]

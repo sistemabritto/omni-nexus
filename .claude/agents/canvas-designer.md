@@ -149,6 +149,8 @@ Use `.claude/templates/dev-design-spec.md`. Always include:
 
 Design specs persist in `workspace/development/architecture/`. Update agent memory with the project's design system decisions and brand cues.
 
+Para criação/revisão de navegação, squad, formulários ou feedback, ler `.claude/skills/design-quality/ux-heuristics.md`; preservar DS e não alterar UI/voz sem pedido.
+
 ## Cookbook padrão para páginas/frontend/design
 
 Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.

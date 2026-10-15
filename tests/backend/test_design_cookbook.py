@@ -106,3 +106,12 @@ def test_independent_reviewer_recovers_evidence_checklist():
     for criterion in ['Marca e direção', 'Contraste', 'Responsividade', 'Controles reais']:
         assert criterion in checklist
     assert 'nenhum script determina qualidade estética' in checklist
+
+
+def test_design_and_reviewer_recover_ux_reference():
+    sys.path.insert(0, str(ROOT / 'dashboard/backend'))
+    from provider_fallback import _agent_prompt
+    relative = '.claude/skills/design-quality/ux-heuristics.md'
+    for agent in ['canvas-designer', 'oath-verifier']:
+        assert relative in _agent_prompt(agent)
+    assert (ROOT / relative).is_file()

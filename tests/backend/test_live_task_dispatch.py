@@ -207,3 +207,33 @@ def test_pending_approval_blocks_even_if_ticket_flags_are_stale(tasks):
             expires_at='2030-01-01T00:00:00.000000Z'))
         db.session.commit()
     assert submit(c,ctx).status_code==403;assert calls==[]
+
+
+def test_real_http_ui_dispatch_queue_and_result_in_chat(tasks, tmp_path):
+    """Run actual TypeScript controller against the fixture Flask API/worker."""
+    import subprocess
+    import threading
+    from pathlib import Path
+    from flask import request
+    from werkzeug.serving import make_server
+    app,c,_,_,_,calls,worker=tasks
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app=ProxyFix(app.wsgi_app,x_host=1)  # localhost reverse proxy fixture only
+    @app.after_request
+    def run_fixture_worker(response):
+        if request.path.endswith('/tasks') and request.method == 'POST' and response.status_code == 201:
+            worker.OrchestrationWorker(app)._process_next_job()
+        return response
+    server=make_server('127.0.0.1',0,app)
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    fixture=tmp_path/'http-fixture.json'
+    cookie=c.get_cookie('session',domain='example.test')
+    fixture.write_text(json.dumps({'base':f'http://127.0.0.1:{server.server_port}','cookie':'session='+cookie.value}))
+    root=Path(__file__).resolve().parents[2]
+    try:
+        result=subprocess.run(['node',str(root/'qa/managed-live-context/task-http-tests.cjs'),str(fixture)],cwd=root,text=True,capture_output=True,timeout=30)
+        assert result.returncode == 0,result.stderr
+        assert 'PASS actual localhost' in result.stdout
+        assert len(calls)==1  # same SDK action retry never executes twice
+    finally:
+        server.shutdown();thread.join(timeout=5)

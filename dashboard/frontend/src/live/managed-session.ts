@@ -55,7 +55,7 @@ export class ManagedSession {
             const internal=call.tool_name!=='read_current_omni_session'
             if(internal&&!enabled)throw Error('Continuidade indisponível.')
             const result=internal?await tools.runInternalTask(call.tool_name,call.parameters,call.tool_call_id):await tools.clientTools.read_current_omni_session(call.parameters)
-            if(internal&&generation===this.generation){this.message('Tarefa interna',result);await continuity.refresh()}
+            if(internal&&generation===this.generation){const receipt=JSON.parse(result),labels:Record<string,string>={pending:'aguardando execução',running:'em execução',success:'rascunho disponível',failed:'bloqueada por falha',cancel_requested:'cancelamento solicitado',cancelled:'cancelada'};this.message('Tarefa interna',`Tarefa ${receipt.jobId}: ${labels[receipt.status]||'estado recebido'}.`);await continuity.refresh()}
             if(result.length>24000)throw Error('Contexto excede orçamento.');
             if(generation===this.generation)connection.sendMessage({type:'client_tool_result',tool_call_id:call.tool_call_id,result,is_error:false})
           }catch{if(generation===this.generation)connection.sendMessage({type:'client_tool_result',tool_call_id:call.tool_call_id,result:'Contexto indisponível ou não autorizado.',is_error:true})}})()

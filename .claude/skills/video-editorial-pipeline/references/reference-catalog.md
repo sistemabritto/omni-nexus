@@ -14,6 +14,8 @@ específica de Reels mantida pelo executor de conhecimento.
 | Faceless com roteiro, mídia, voz e legenda | MoneyPrinterTurbo | Estudar as fronteiras entre etapas e falhas; continuar no runtime atual, sem instalar outro pipeline. |
 | Movimento de captions e composições curtas | motion-skills + packs iart | Escolher um padrão de hierarquia/entrada que melhore compreensão; manter palavras/tempos do contrato, sem refazer o corte. |
 | Storyboard, B-roll e coleta | get-brolls | Apresentar storyboard/prévia antes da coleta autorizada; guardar origem/direitos. Não expor storyboard sem autenticação. |
+| Motion de demo/lançamento | OneTake | Só estudar continuidade, ritmo e transições como conceitos; licença não comercial impede importar código/skill para esta esteira. Pro exige termos específicos. |
+| Animação 2D orientada por referência | ReelMimic | Analisar ritmo/câmera/composição; roteiro e ativos novos/autorizados. QA final aprovado é separado de estado done; nenhuma promessa de 3D. |
 | Demonstração/cena de produto | video-shotcraft | Descrever intenção do plano (enquadramento, movimento, luz, papel do produto), sem copiar o pacote; não aplicar receitas de produto automaticamente a bruto pessoal. |
 | Renderizar a composição | HyperFrames **ou** Remotion | Manter HyperFrames já pinado como padrão. Remotion só em decisão explícita de arquitetura/licença; nunca iniciar dois motores por omissão. |
 | Autocrop/extração de shorts | OpenShorts / Anil | Apenas referência de decomposição e QA até revisar licenças/dependências e provar a continuidade dos timestamps. |
@@ -52,6 +54,34 @@ e aprovação da revisão atual. Copy, contas/settings e calendário também int
 o digest; nada de reaproveitar aprovação antiga. Distribuir exclusivamente pelo
 release/Postiz do OmniNexus com checkpoints por canal; resultado incerto exige
 reconciliação. Não usar Upload-Post, publicadores embutidos ou contas externas.
+
+## Capacidade disponível versus método estudado
+
+No código do PR56 há planejador/contrato temporal, aprovação por digest e
+adapter Postiz com checkpoints; HyperFrames está pinado. Isso descreve o
+checkout, não comprova deploy, geração ou publicação real. **Nenhum motor deste
+catálogo foi integrado por esta mudança.**
+
+OneTake contribui apenas como referência conceitual de motion para demos e
+lançamentos. Não copiar sua skill, regras ou código. O README anuncia Pro como
+opção comercial, mas isso não demonstra autorização para incorporar fontes ou
+regras em ferramenta concorrente: termos específicos precisam ser verificados.
+Não comprar, instalar nem pressupor essa licença nesta tarefa.
+
+ReelMimic sugere um método de animação **2D** por referência: extrair descrição
+de ritmo, câmera e composição e criar roteiro/ativos originais ou autorizados,
+sem reproduzir a peça. É estudo de método, não uma função já disponível no
+OmniNexus. No pin consultado, `done` pode ocorrer sem crítica final aprovada:
+exigir `lastCritique.pass === true`, `lastCritique.must === 0`, nenhum bloqueio
+ou pedido pendente ao usuário e revisão humana antes de considerar aceitável.
+Esses sinais externos não substituem QA/legendas/proveniência nem o release do
+PR56. A rota Blender está desabilitada na triagem recebida; não prometer 3D.
+
+Não importar os defaults `danger-full-access` / `approval_policy=never` do
+adapter de agente dessa referência. A triagem recebida aponta serviço sem auth:
+qualquer avaliação futura precisa isolamento/autenticação antes de exposição,
+sem áudio privado ou credenciais. Neste lote, somente documentação; nenhuma
+execução. Não ativar Upload-Post nem substituir o Postiz existente.
 
 ## MoneyPrinterTurbo: contribuição limitada e verificável
 
@@ -92,6 +122,8 @@ o projeto a partir dessa fonte.
 | [OpenShorts core 89b4074](https://github.com/mutonby/openshorts/blob/89b4074986c2b5fa8ffcac862116f2d3368d4223/LICENSE) e [cloud/LICENSE](https://github.com/mutonby/openshorts/blob/89b4074986c2b5fa8ffcac862116f2d3368d4223/cloud/LICENSE) | Core MIT; diretório cloud/ usa **OpenShorts Commercial License**, explicitamente fora do MIT. | Só estudar a separação de etapas; não incorporar cloud/autopilot/billing/auth nem assumir a licença do core para todo o repo. |
 | [Ultralytics ea4b382](https://github.com/ultralytics/ultralytics/blob/ea4b3829ad46748b6335d8641b6e5ac00d3e6095/LICENSE) | GNU AGPLv3 no LICENSE consultado. OpenShorts pinou ultralytics==8.4.46 em [requirements.txt](https://github.com/mutonby/openshorts/blob/89b4074986c2b5fa8ffcac862116f2d3368d4223/requirements.txt); a licença dessa versão/dependência deve ser revista antes de adoção. | Dependências/modelos não herdam MIT do projeto chamador; nenhuma inclusão neste lote. |
 | [Anil-matcha 3d11f2e](https://github.com/Anil-matcha/AI-Youtube-Shorts-Generator/blob/3d11f2e6ecbbb9757d788e1bd05695c01f3e6c6c/LICENSE) | MIT. | Referência de etapas; testar offsets absolutos em vídeos longos antes de qualquer reaproveitamento. Não afirmar bug sem reprodução. Nenhum áudio enviado a backend hospedado. |
+| [OneTake 4157581](https://github.com/feitangyuan/onetake/blob/415758128aa45cc54340df40d8109363447f582e/LICENSE) e [README](https://github.com/feitangyuan/onetake/blob/415758128aa45cc54340df40d8109363447f582e/README.md) | **PolyForm Noncommercial License 1.0.0**, com Required Notice; Pro é uma oferta comercial distinta, cujos termos não foram concedidos/verificados aqui. | Conceitos de demos/lançamentos somente; não copiar código/skill/regras nem presumir licença para ferramenta concorrente. |
+| [ReelMimic 31f4922](https://github.com/edenfunf/reelmimic/blob/31f4922fb078c5d64269e4cff707d4d327489a23/LICENSE), [crítica final](https://github.com/edenfunf/reelmimic/blob/31f4922fb078c5d64269e4cff707d4d327489a23/app/server/final.ts) e [adapter de agentes](https://github.com/edenfunf/reelmimic/blob/31f4922fb078c5d64269e4cff707d4d327489a23/app/server/agents/index.ts) | MIT no código raiz; componentes/templates/assets têm escopo próprio a conferir. | Método 2D estudado, não instalado: done não basta; crítica passa, zero bloqueios e revisão humana. Não importar sandbox permissivo, serviço sem auth ou prometer Blender/3D desabilitado. |
 | [SeeCut 75c6ca3](https://github.com/YeJe-cpu/SeeCut/blob/75c6ca3c6ec00872ba03e8741b9a14df60dc6195/LICENSE) | **PolyForm Noncommercial License 1.0.0**, com Required Notice. | Só conceitos gerais; nenhum código/asset incorporado para uso comercial. |
 | [Hypit dc2b7a8](https://github.com/hypit-ai/hypit/blob/dc2b7a8f31b1ef1443a79ca448548d69e3ceb6a0/LICENSE) | **Open Source License** do projeto: Apache 2.0 **modificada** com condições adicionais para serviço multi-tenant/hosted/SaaS, redistribuição comercial e marcas/notices; não é Apache-2.0 pura. | Não incorporar como backend SaaS/multi-tenant nem inferir permissão pelo rótulo Apache; somente conceitos gerais neste lote. |
 | [OpenMontage e45f5b1](https://github.com/calesthio/OpenMontage/blob/e45f5b12bd46440b04f3675af9a77d0718e6a254/LICENSE) | GNU AGPLv3 no LICENSE consultado. | Referência conceitual, sem código/serviço novo. Experimental na triagem recebida; estabilidade não validada aqui. |

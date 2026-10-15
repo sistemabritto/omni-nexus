@@ -155,3 +155,45 @@ jobs:
       - name: Remove ephemeral smoke container
         if: always()
         run: docker rm -f live-image-smoke 2>/dev/null || true
+
+      - name: Prepare empty supervisor fixtures
+        run: |
+          docker volume create live-supervisor-data
+          docker volume create live-supervisor-config
+          docker run --rm --network none --cpus 2 --memory 1g --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --mount type=volume,src=live-supervisor-data,dst=/workspace/dashboard/data,volume-nocopy \
+            --mount type=volume,src=live-supervisor-config,dst=/workspace/config,volume-nocopy \
+            --mount type=bind,src="$GITHUB_WORKSPACE/qa/live-image-smoke",dst=/smoke,readonly \
+            --entrypoint /workspace/.venv/bin/python "$IMAGE" /smoke/seed-supervisor.py
+      - name: Boot unmodified default entrypoint and supervisor offline
+        run: |
+          docker run -d --name live-supervisor-smoke --network none \
+            --cpus 2 --memory 3g --pids-limit 256 --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --mount type=volume,src=live-supervisor-data,dst=/workspace/dashboard/data,volume-nocopy \
+            --mount type=volume,src=live-supervisor-config,dst=/workspace/config,volume-nocopy \
+            --mount type=bind,src="$GITHUB_WORKSPACE/qa/live-image-smoke",dst=/smoke,readonly \
+            -e UV_OFFLINE=true "$IMAGE"
+      - name: Smoke real supervisor Flask and terminal routes
+        run: docker exec -e SMOKE_SUPERVISOR=1 live-supervisor-smoke /workspace/.venv/bin/python /smoke/check.py
+      - name: Record bounded supervisor failure diagnostics
+        if: failure()
+        run: |
+          if docker inspect live-supervisor-smoke >/dev/null 2>&1; then
+            docker inspect live-supervisor-smoke --format 'container_status={{.State.Status}} exit_code={{.State.ExitCode}} oom={{.State.OOMKilled}}'
+            docker logs live-supervisor-smoke > "$RUNNER_TEMP/supervisor-private.log" 2>&1
+            python3 - <<'PY'
+          import pathlib, re
+          text = pathlib.Path('${{ runner.temp }}/supervisor-private.log').read_text()
+          for phrase in ['No solution found', 'offline', 'Failed to download', 'ModuleNotFoundError', 'a child process exited']:
+              if phrase.lower() in text.lower(): print('supervisor_failure_marker=' + phrase)
+          for package in re.findall(r'Failed to download `([A-Za-z0-9_.=<>-]+)`', text):
+              print('unavailable_package=' + package)
+          PY
+          fi
+      - name: Remove isolated supervisor and fixture volumes
+        if: always()
+        run: |
+          docker rm -f live-supervisor-smoke 2>/dev/null || true
+          docker volume rm live-supervisor-data live-supervisor-config 2>/dev/null || true

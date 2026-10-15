@@ -1,6 +1,8 @@
 """HTTP and real upgrade smoke inside the network-isolated image."""
 import http.cookiejar
 import json
+import os
+import sqlite3
 from pathlib import Path
 import re
 import time
@@ -71,5 +73,14 @@ result = {'image_flask_boot': True, 'live_assets': True, 'anonymous_status': 401
           'same_origin_disabled_upgrade': 503, 'bad_origin_upgrade': 403,
           'hosts': ['nexus.workflowapi.com.br', 'nexus.sistemabritto.com.br'],
           'network': 'none', 'google_calls': 0, 'default_entrypoint_tested': False}
+if os.environ.get('SMOKE_SUPERVISOR') == '1':
+    with urllib.request.urlopen('http://127.0.0.1:32352/api/health', timeout=5) as health:
+        assert health.status == 200
+    with sqlite3.connect('/workspace/dashboard/data/evonexus.db') as db:
+        tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        for name in ['heartbeat_runs', 'scheduled_tasks']:
+            if name in tables:
+                assert db.execute('SELECT COUNT(*) FROM ' + name).fetchone()[0] == 0
+    result.update(default_entrypoint_tested=True, terminal_health=True, fixture_jobs_executed=0)
 print(json.dumps(result, sort_keys=True))
 Path('/tmp/live-image-smoke-result.json').write_text(json.dumps(result, indent=2)+'\n')

@@ -146,6 +146,10 @@ jobs:
           node qa/managed-live-context/client-tests.cjs
           node qa/managed-live-context/session-tests.cjs
 
+      - name: Lint managed Live company lifecycle
+        working-directory: dashboard/frontend
+        run: npx --no-install eslint src/live/LiveCompanyBinding.tsx src/live/managed-session.ts src/live/ManagedNexusLive.tsx
+
   image-boot-smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.image_boot_smoke
     runs-on: ubuntu-latest

@@ -11,3 +11,5 @@ O contrato foi lido na implementação local de endpoints do executor de continu
 `writeStatus` deve refletir ACK real de gravação. Pending/error não são persistência confirmada; a UI impede iniciar outra conversa nessas condições. Nova conversa fica bloqueada com conexão ativa. Alterações/correções/retrações continuam no backend e não são implementadas neste PR.
 
 Para trocar empresa/usuário, o controlador deve descartar o gateway antigo, fechar conexão, invalidar resultados em voo e montar o painel com nova key e gateway autorizado. Nenhuma sessão legada sem dono é adotada. O componente também invalida resultados atrasados ao trocar gateway/empresa ou desmontar. Trocar voz não cria outra conversa lógica nem deve apagar transcrições; reconexão e gravação idempotente são responsabilidade do controlador/backend, ainda não integrados por esta preparação.
+
+O gateway deve ser memoizado pelo vínculo de contexto/provedor. Troca de identidade, empresa ou agente exige nova key; alteração de voz com o mesmo vínculo não deve recriar o gateway nem limpar o painel.

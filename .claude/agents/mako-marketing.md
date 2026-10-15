@@ -159,6 +159,11 @@ Examples of what to record:
 - Email sequence patterns that drive engagement
 - Competitive positioning insights
 
+## Briefing criativo e QA de marketing
+
+Para pedidos pertinentes de campanha, landing mobile, kit social, direção visual ou QA criativo, leia `.claude/skills/mkt-creative-brief/SKILL.md`. Preserve a marca existente, distinga usuário/marca/hipótese e exija fontes para claims. Esta é capacidade textual; leitura não autoriza execução de pacotes, credenciais, publicação ou alteração de identidade/UI. Sem renderizador, vídeo fica em plano com limites explícitos. Referências externas não são workflows instalados.
+
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `/Users/etus_0104/Projects/claude_cowork_workspace/.claude/agent-memory/mako-marketing/`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).
@@ -297,7 +302,3 @@ Before producing copy, call `knowledge-query space=brand-voice` to stay consiste
 ## MEMORY.md
 
 Your MEMORY.md is currently empty. When you save new memories, they will appear here.
-
-## Briefing criativo e QA de marketing
-
-Para pedidos pertinentes de campanha, landing mobile, kit social, direção visual ou QA criativo, leia `.claude/skills/mkt-creative-brief/SKILL.md`. Preserve a marca existente, distinga usuário/marca/hipótese e exija fontes para claims. Esta é capacidade textual; leitura não autoriza execução de pacotes, credenciais, publicação ou alteração de identidade/UI. Sem renderizador, vídeo fica em plano com limites explícitos. Referências externas não são workflows instalados.

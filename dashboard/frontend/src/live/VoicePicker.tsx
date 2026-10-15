@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './VoicePicker.css'
 type Voice={id:string;name:string;language:string;eligible:boolean;previewUrl:string|null}
-type Catalog={voices:Voice[];hasMore:boolean;nextCursor:string|null;current:Voice;saved:Voice|null;overrideAllowed:boolean}
-export default function VoicePicker({companyId,busy,connecting,activeVoice}:{companyId:number;busy:boolean;connecting:boolean;activeVoice:string}){
+type Catalog={voices:Voice[];hasMore:boolean;nextCursor:string|null;current:Voice;saved:Voice|null;overrideAllowed:boolean;preferenceSource?:string;personaSuggestion?:{voice:Voice;reason:string;personaSource:string;applied:false}|null}
+export default function VoicePicker({companyId,agentName,agentRole,busy,connecting,activeVoice}:{companyId:number;agentName:string;agentRole:string;busy:boolean;connecting:boolean;activeVoice:string}){
   const [data,setData]=useState<Catalog|null>(null),[voices,setVoices]=useState<Voice[]>([]),[choice,setChoice]=useState<string|null>(null)
   const [search,setSearch]=useState(''),[loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[notice,setNotice]=useState('')
   const abort=useRef(new AbortController()),audio=useRef<HTMLAudioElement>(null)
@@ -11,7 +11,7 @@ export default function VoicePicker({companyId,busy,connecting,activeVoice}:{com
   async function load(cursor?:string){
     setLoading(true);setNotice('')
     try{
-      const query=new URLSearchParams();if(search.trim())query.set('search',search.trim());if(cursor)query.set('cursor',cursor)
+      const query=new URLSearchParams({agent:agentName});if(search.trim())query.set('search',search.trim());if(cursor)query.set('cursor',cursor)
       const response=await fetch(`/api/live/voices/${companyId}?${query}`,{credentials:'include',cache:'no-store',signal:abort.current.signal})
       if(!response.ok)throw Error()
       const result:Catalog=await response.json();if(abort.current.signal.aborted)return
@@ -23,10 +23,10 @@ export default function VoicePicker({companyId,busy,connecting,activeVoice}:{com
   async function save(){
     setSaving(true);setNotice('')
     try{
-      const response=await fetch(`/api/live/voices/${companyId}/preference`,{method:'PUT',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({voiceId:choice}),signal:abort.current.signal})
+      const response=await fetch(`/api/live/voices/${companyId}/preference?${new URLSearchParams({agent:agentName})}`,{method:'PUT',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({voiceId:choice}),signal:abort.current.signal})
       if(!response.ok)throw Error()
       const result=await response.json();if(abort.current.signal.aborted)return
-      setData(previous=>previous?{...previous,saved:result.saved,overrideAllowed:result.overrideAllowed}:previous)
+      setData(previous=>previous?{...previous,saved:result.saved,preferenceSource:result.preferenceSource,overrideAllowed:result.overrideAllowed}:previous)
       setNotice(result.saved&&!result.overrideAllowed?'Preferência salva, mas a troca por conversa ainda não está permitida no agente. Sua próxima conversa ficará bloqueada até essa permissão ou até restaurar a voz padrão.':busy?'Preferência salva para a próxima conversa. A chamada atual e seu histórico continuam; encerre quando quiser e inicie novamente.':'Preferência salva. A próxima conversa será iniciada com esta escolha.')
     }catch{if(!abort.current.signal.aborted)setNotice('Não foi possível salvar: voz indisponível, sem permissão ou incompatível com o modelo atual. A preferência anterior foi mantida.')}
     finally{if(!abort.current.signal.aborted)setSaving(false)}
@@ -39,8 +39,10 @@ export default function VoicePicker({companyId,busy,connecting,activeVoice}:{com
   return <details className="live-voices" onToggle={e=>{if(e.currentTarget.open&&!data&&!loading)void load()}}>
     <summary>Voz e prévias existentes</summary>
     <div>
-      <p>Ouça gravações já disponíveis na conta. Não gera áudio de teste e ouvir não salva uma escolha.</p>
-      {data&&<dl><dt>Voz configurada no agente</dt><dd>{data.current.name}</dd><dt>Preferência salva nesta empresa</dt><dd>{data.saved?.name||'Usar a voz padrão do agente'}</dd>{busy&&<><dt>Voz solicitada na conversa atual</dt><dd>{activeVoice||'Voz padrão do agente'}</dd></>}</dl>}
+      <p><strong>{agentName.split('-').map(word=>word[0]?.toUpperCase()+word.slice(1)).join(' ')}</strong> · {agentRole}</p><p>Ouça gravações já disponíveis na conta. Não gera áudio de teste e ouvir não salva uma escolha.</p>
+      {data&&<dl><dt>Voz configurada no agente</dt><dd>{data.current.name}</dd><dt>Escolha salva para este agente</dt><dd>{data.saved?.name||'Usar a voz padrão do agente'}</dd>{busy&&<><dt>Voz solicitada na conversa atual</dt><dd>{activeVoice||'Voz padrão do agente'}</dd></>}</dl>}
+      {data?.preferenceSource==='company_choice'&&<p>Sua escolha anterior da empresa prevalece sobre sugestões até você confirmar outra voz para este agente.</p>}
+      {data?.personaSuggestion&&<aside aria-label="Sugestão revisável da persona"><strong>Sugestão da persona · {data.personaSuggestion.voice.name}</strong><p>{data.personaSuggestion.reason}</p><small>Fonte: {data.personaSuggestion.personaSource}. Não aplicada automaticamente; sua escolha prevalece.</small><button type="button" disabled={saving||connecting} onClick={()=>{setVoices(previous=>previous.some(v=>v.id===data.personaSuggestion!.voice.id)?previous:[data.personaSuggestion!.voice,...previous]);setChoice(data.personaSuggestion!.voice.id)}}>Selecionar sugestão para revisar</button></aside>}
       {data&&!data.overrideAllowed&&<p>A troca de voz por conversa não está habilitada no agente. Salvar uma preferência não habilita essa permissão.</p>}
       {busy&&<p>A conversa atual não será reiniciada. As prévias ficam pausadas durante a chamada; sua escolha vale para a próxima.</p>}
       <form onSubmit={e=>{e.preventDefault();void load()}}><label htmlFor="voice-search">Buscar vozes na conta</label><div className="voice-search"><input id="voice-search" value={search} onChange={e=>setSearch(e.target.value)} maxLength={100}/><button disabled={loading||saving}>Buscar</button></div></form>

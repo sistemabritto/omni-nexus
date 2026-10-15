@@ -188,6 +188,8 @@ jobs:
             --mount type=volume,src=live-supervisor-data,dst=/workspace/dashboard/data,volume-nocopy \
             --mount type=volume,src=live-supervisor-config,dst=/workspace/config,volume-nocopy \
             --mount type=bind,src="$GITHUB_WORKSPACE/qa/live-image-smoke",dst=/smoke,readonly \
+            --mount type=bind,src="$GITHUB_WORKSPACE/qa/live-image-smoke/fixture-key.txt",dst=/run/secrets/smoke_fixture_key,readonly \
+            -e GEMINI_API_KEY_FILE=/run/secrets/smoke_fixture_key \
             -e UV_OFFLINE=true "$IMAGE"
       - name: Smoke real supervisor Flask and terminal routes
         run: docker exec -e SMOKE_SUPERVISOR=1 live-supervisor-smoke /workspace/.venv/bin/python /smoke/check.py

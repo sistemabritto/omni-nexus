@@ -3,6 +3,7 @@ import http.cookiejar
 import json
 import os
 import sqlite3
+import subprocess
 from pathlib import Path
 import re
 import time
@@ -81,6 +82,23 @@ if os.environ.get('SMOKE_SUPERVISOR') == '1':
         for name in ['heartbeat_runs', 'scheduled_tasks']:
             if name in tables:
                 assert db.execute('SELECT COUNT(*) FROM ' + name).fetchone()[0] == 0
-    result.update(default_entrypoint_tested=True, terminal_health=True, fixture_jobs_executed=0)
+    # The mount's basename is NOT gemini_api_key, so auto-discovery cannot
+    # satisfy this assertion. Only the supported GEMINI_API_KEY_FILE bridge
+    # can populate the application's expected env name. Dummy value only.
+    bridged = False
+    for process in Path('/proc').iterdir():
+        if not process.name.isdigit():
+            continue
+        try:
+            if b'/workspace/dashboard/backend/app.py' not in (process/'cmdline').read_bytes().split(bytes([0])):
+                continue
+            bridged = subprocess.run(['grep', '-z', '-q', '-x', '-F',
+                'GEMINI_API_KEY=fixture-live-secret-file-smoke', str(process/'environ')],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+        except OSError:
+            continue
+    assert bridged, '_FILE secret must reach real Flask process without enabling Live'
+    result.update(default_entrypoint_tested=True, terminal_health=True, fixture_jobs_executed=0,
+                  secret_file_env_bridge_verified=True, live_stayed_disabled_with_fixture_key=True)
 print(json.dumps(result, sort_keys=True))
 Path('/tmp/live-image-smoke-result.json').write_text(json.dumps(result, indent=2)+'\n')

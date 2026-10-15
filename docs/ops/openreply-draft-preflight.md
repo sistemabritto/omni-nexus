@@ -11,3 +11,7 @@ Runtime preflight now mirrors existing clients: the Nexus SDK has a localhost/FL
 Tests use fake DB connections and fixture credentials only. They verify inactive messaging/report flags even when a generated row claims activation, UTC timestamps, rollback/redacted errors, SDK endpoint fallback, driver/interpreter guidance, cards and preserved human gates. No campaign, DM, CRM change or production deployment is performed by the tests.
 
 Material rollout behavior change: newly generated campaigns will remain drafts until link and activation review. Existing campaign repair and activation require their own scoped authorization. Coordinate this backend patch with any frontend integration rather than overwriting unrelated menu work.
+
+## Secret-file compatibility smoke
+
+The existing image entrypoint supports `GEMINI_API_KEY_FILE` before starting Flask, while the app consumes `GEMINI_API_KEY` from its process environment. The isolated default-supervisor CI mounts a clearly fictitious value at a differently named secret path and explicitly sets `_FILE`; a quiet equality check verifies the value reaches the real Flask process without printing it. The basename intentionally cannot auto-map to GEMINI_API_KEY, so this tests the `_FILE` mechanism independently of auto-discovery. Both Live flags remain false and container network remains none. No real secret is read, configured or sent to Google.

@@ -6,6 +6,7 @@ const fixture=require('../global-ui/fixture.cjs');
   for(const [width,height] of [[375,667],[1440,900]]){
     const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});
     await fixture(page);
+    await page.route('https://**',route=>route.abort());
     await page.addInitScript(()=>{
       localStorage.setItem('evo:active_company','7');window.__previews=0;
       HTMLMediaElement.prototype.play=function(){window.__previews++;return Promise.resolve()};
@@ -39,7 +40,7 @@ const fixture=require('../global-ui/fixture.cjs');
         if(message.type==='user_message')ws.send(JSON.stringify({type:'agent_response',agent_response_event:{agent_response:'Histórico fixture preservado',event_id:1}}));
       });
     });
-    await page.goto('http://127.0.0.1:5195/live',{waitUntil:'networkidle'});
+    await page.goto((process.env.QA_BASE_URL||'http://127.0.0.1:5195')+'/live',{waitUntil:'networkidle'});
     assert.equal(catalogReads,0);assert.equal(saves,0);assert.equal(connections,0);
     const picker=page.locator('.live-voices');await picker.locator('summary').click();
     await picker.getByText('Fixture A · pt',{exact:true}).waitFor();

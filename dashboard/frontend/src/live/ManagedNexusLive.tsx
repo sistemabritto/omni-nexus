@@ -22,13 +22,12 @@ export default function ManagedNexusLive(){
   const state=useSyncExternalStore(managedSession.subscribe,managedSession.snapshot)
   const [options,setOptions]=useState<Options|null>(null),[agents,setAgents]=useState<Agent[]>([])
   const [agent,setAgent]=useState(''),[access,setAccess]=useState('Verificando acesso pessoal…')
-  const [checking,setChecking]=useState(false),[catalogLoading,setCatalogLoading]=useState(true)
+  const [checking,setChecking]=useState(true),[catalogLoading,setCatalogLoading]=useState(true)
   const [retry,setRetry]=useState(0)
+  function verifyAccess(){setChecking(true);setOptions(null);setAccess('Verificando acesso pessoal…');setCatalogLoading(true);setRetry(value=>value+1)}
   useEffect(()=>{
     let alive=true;const abort=new AbortController()
-    setChecking(true);setOptions(null);setAccess('Verificando acesso pessoal…')
     void loadManagedOptions().then(data=>{if(alive){setOptions(data);setAccess(data.consumptionApproved?'Acesso disponível.':'O consumo da conversa ainda não foi liberado no servidor.')}}).catch(error=>{if(alive)setAccess(error.message)}).finally(()=>{if(alive)setChecking(false)})
-    setCatalogLoading(true)
     void fetch('/api/agents',{credentials:'include',signal:abort.signal}).then(async response=>{if(!response.ok)throw Error();const data=await response.json();if(alive){const list=Array.isArray(data)?data:Array.isArray(data.agents)?data.agents:[];setAgents(list.filter((item:Agent)=>item&&typeof item.name==='string'))}}).catch(()=>{}).finally(()=>{if(alive)setCatalogLoading(false)})
     return()=>{alive=false;abort.abort()}
   },[retry])
@@ -49,7 +48,7 @@ export default function ManagedNexusLive(){
     <section className="live-stage"><div className="live-orbit" aria-hidden="true"><div className="live-orbit-ring"/><div className="live-core"><Radio size={42}/></div></div><div className="live-intro"><h1>OmniNexus Live</h1><p>Fale ou escreva. Continue na mesma conversa.</p></div><p className="live-status" role="status" aria-live="polite">{busy||state.company||state.contextChanged?state.status:access}</p>
       {state.runtimeSessionId&&<small className="managed-session-id">{state.company} · Sessão {state.runtimeSessionId}</small>}
     </section>
-    {!busy&&<section className="live-status" aria-label="Condições para iniciar"><p>{!options?access:!activeCompany?'Selecione uma empresa no menu global.':!company?'A empresa global não está disponível para esta conversa.':!available.includes(agent)?'Selecione um agente do squad.':!options.consumptionApproved?'O consumo da conversa ainda não foi liberado no servidor.':'Empresa e agente selecionados. A conexão será validada ao iniciar.'}</p>{(!options||!options.consumptionApproved)&&<button type="button" className="px-3 py-3 underline disabled:opacity-40" disabled={checking} onClick={()=>setRetry(value=>value+1)}>{checking?'Verificando acesso…':'Verificar acesso novamente'}</button>}</section>}
+    {!busy&&<section className="live-status" aria-label="Condições para iniciar"><p>{!options?access:!activeCompany?'Selecione uma empresa no menu global.':!company?'A empresa global não está disponível para esta conversa.':!available.includes(agent)?'Selecione um agente do squad.':!options.consumptionApproved?'O consumo da conversa ainda não foi liberado no servidor.':'Empresa e agente selecionados. A conexão será validada ao iniciar.'}</p>{(!options||!options.consumptionApproved)&&<button type="button" className="px-3 py-3 underline disabled:opacity-40" disabled={checking} onClick={verifyAccess}>{checking?'Verificando acesso…':'Verificar acesso novamente'}</button>}</section>}
     <div className="live-controls">{!busy?<button disabled={!activeCompany||!company||!available.includes(agent)||!options?.consumptionApproved} onClick={()=>{if(company)void managedSession.start(company.id,company.name,agent)}}><Radio size={18}/>Iniciar conversa</button>:<><button disabled={state.phase!=='connected'} aria-pressed={state.mic} onClick={()=>void managedSession.toggleMic()}>{state.mic?<MicOff size={18}/>:<Mic size={18}/>} {state.mic?'Desligar microfone':'Ativar microfone'}</button><button onClick={()=>managedSession.end()}><Square size={16}/>Encerrar</button></>}</div>
     <p className="live-privacy">Microfone somente ao ativar. Sem ações de escrita. Gravação e retenção seguem a configuração do agente ElevenLabs.</p>
     <section className="managed-messages" aria-label="Conversa"><div role="log" aria-live="polite">{state.messages.length?state.messages.map((m,i)=><article key={i}><strong>{m.author}</strong><p>{m.text}</p></article>):<p>As mensagens aparecerão aqui. Nenhuma conversa demonstrativa.</p>}</div><MessageComposer key={activeCompanyId??'no-company'} disabled={state.phase!=='connected'}/></section>

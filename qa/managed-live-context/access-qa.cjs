@@ -4,7 +4,7 @@ const fixture=require('../global-ui/fixture.cjs');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.QA_BROWSER_EXECUTABLE,args:['--no-sandbox']});
  for(const [width,height] of [[375,667],[1440,900]]){
-  const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});await fixture(page);
+  const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});await fixture(page);await page.route('https://**',route=>route.abort());
   await page.addInitScript(()=>{localStorage.setItem('evo:active_company','7');window.__mic=0;navigator.mediaDevices.getUserMedia=async()=>{window.__mic++;throw Error('Real microphone prohibited in fixture')}});
   let mode='denied',created=0,signed=0,sockets=0,reads=0;
   const fulfill=(route,data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
@@ -16,7 +16,7 @@ const fixture=require('../global-ui/fixture.cjs');
    created++;assert.equal(r.request().postDataJSON().companyId,7);return fulfill(r,{contextId:12,runtimeSessionId:'fixture-runtime'});
   });
   await page.routeWebSocket('wss://api.elevenlabs.io/**',()=>{sockets++;throw Error('No provider allowed')});
-  await page.goto('http://127.0.0.1:5195/live',{waitUntil:'networkidle'});
+  await page.goto((process.env.QA_BASE_URL||'http://127.0.0.1:5195')+'/live',{waitUntil:'networkidle'});
   const agent=page.getByLabel('Agente da conversa'),start=page.getByRole('button',{name:'Iniciar conversa',exact:true}),conditions=page.getByRole('region',{name:'Condições para iniciar'});
   await conditions.getByText('O acesso Live ainda não foi configurado no servidor para seu usuário autenticado.',{exact:true}).waitFor();
   assert(await agent.isEnabled());await agent.selectOption('qa-agent');assert(await start.isDisabled());assert.equal(created,0);

@@ -1643,3 +1643,20 @@ class OrchestrationJob(db.Model):
             "started_at": self.started_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.started_at else None,
             "completed_at": self.completed_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.completed_at else None,
         }
+
+
+class LiveTaskBinding(db.Model):
+    """Ownership/idempotency for the existing orchestration queue, never legacy adoption."""
+    __tablename__ = 'live_task_bindings'
+    __table_args__ = (db.UniqueConstraint('user_id', 'company_id', 'request_id', name='uq_live_task_request'),)
+    job_id = db.Column(db.String(36), db.ForeignKey('orchestration_jobs.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    agent_name = db.Column(db.String(100), nullable=False)
+    logical_id = db.Column(db.String(128), nullable=False)
+    ticket_id = db.Column(db.String(36), nullable=False)
+    request_id = db.Column(db.String(128), nullable=False)
+    operation = db.Column(db.String(30), nullable=False)
+    input_revision = db.Column(db.String(64), nullable=False)
+    cancel_requested = db.Column(db.Boolean, nullable=False, default=False)
+    execution = db.Column(db.Text, nullable=True)

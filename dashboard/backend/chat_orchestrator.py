@@ -115,7 +115,7 @@ class OrchestrationWorker:
 
     def _process_next_job(self) -> None:
         """Pega o próximo job pendente e processa até o fim (ou falha)."""
-        job = OrchestrationJob.query.filter_by(status="pending").order_by(OrchestrationJob.created_at.asc()).first()
+        job = OrchestrationJob.query.filter(OrchestrationJob.status.in_(("pending", "live_pending"))).order_by(OrchestrationJob.created_at.asc()).first()
         if not job:
             return
 
@@ -124,9 +124,16 @@ class OrchestrationWorker:
 
         try:
             # Marca como running
-            job.status = "running"
-            job.started_at = datetime.now(timezone.utc)
+            claimed = OrchestrationJob.query.filter_by(id=job.id, status=job.status).update(
+                {"status": "running", "started_at": datetime.now(timezone.utc)}, synchronize_session=False)
             db.session.commit()
+            if not claimed:
+                return
+            db.session.refresh(job)
+            if job.stage == 'live_internal':
+                from live_task_dispatch import run
+                run(job)
+                return
 
             # Executa as etapas
             stages = AGENT_STAGES.get(job.agent, AGENT_STAGES["default"])

@@ -300,8 +300,8 @@ def tick() -> dict:
     if has_p1 or (new_anoms and state.get("last_daily_date") != today):
         card = build_card(anoms, tickets)
         try:
-            from notifications import send_telegram_alert
-            ok = send_telegram_alert(card)
+            from notifications import send_heartbeat_alert
+            ok = send_heartbeat_alert(card)
             alerted_now = ok
             if ok:
                 state["last_daily_card"] = _iso()

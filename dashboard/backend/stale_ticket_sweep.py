@@ -131,8 +131,8 @@ def tick() -> dict:
     alerted = False
     if flagged:
         try:
-            from notifications import send_telegram_alert
-            alerted = send_telegram_alert(_build_alert(flagged))
+            from notifications import send_heartbeat_alert
+            alerted = send_heartbeat_alert(_build_alert(flagged))
         except Exception as exc:  # noqa: BLE001
             log.warning("stale_ticket_sweep alert failed: %s", exc)
 

@@ -681,7 +681,7 @@ def step_alert_on_failure(heartbeat_id: str, result: dict) -> bool:
     # notifications._send_telegram swallowed it — meaning the failure alert
     # disappeared exactly when the error had a stack trace, which is exactly
     # when it mattered.
-    from notifications import _esc, send_telegram_alert
+    from notifications import _esc, send_heartbeat_alert
 
     error_preview = ""
     if result.get("error"):
@@ -707,7 +707,7 @@ def step_alert_on_failure(heartbeat_id: str, result: dict) -> bool:
 
     text = "\n".join(lines)
 
-    sent = send_telegram_alert(text)
+    sent = send_heartbeat_alert(text)
     if sent:
         print(f"[heartbeat_runner] alert sent for {heartbeat_id} fail ({category})", flush=True)
     else:
@@ -716,7 +716,7 @@ def step_alert_on_failure(heartbeat_id: str, result: dict) -> bool:
         # configured" mandava quem investigava conferir o .env, achar tudo
         # certo e descartar o log — o motivo real sai de _send_telegram.
         print(f"[heartbeat_runner] alert NOT sent for {heartbeat_id} "
-              f"(see the reason logged by notifications)", flush=True)
+              f"(heartbeat Telegram disabled or transport unavailable)", flush=True)
     return sent
 
 
@@ -818,12 +818,12 @@ def _step_report_success(heartbeat_id: str, result: dict) -> bool:
 
     text = "\n".join(lines)
 
-    from notifications import send_telegram_alert
-    sent = send_telegram_alert(text)
+    from notifications import send_heartbeat_alert
+    sent = send_heartbeat_alert(text)
     if sent:
         print(f"[heartbeat_runner] success report sent for {heartbeat_id}", flush=True)
     else:
-        print(f"[heartbeat_runner] success report NOT sent (Telegram not configured) for {heartbeat_id}", flush=True)
+        print(f"[heartbeat_runner] success report NOT sent (heartbeat Telegram disabled or transport unavailable) for {heartbeat_id}", flush=True)
     return sent
 
 
@@ -1216,12 +1216,10 @@ Ao final, responda APENAS o JSON do outcome (uma linha):
 
 
 def _send_heartbeat_notification(heartbeat_id: str, agent: str, result: dict, conn=None):
-    """Outcome-driven notification + kanban movement.
+    """Always apply outcomes; Telegram summaries require explicit policy opt-in.
 
-    Policy (decided with Felipe 2026-06-17): no more "Heartbeat OK". We only
-    message Telegram when an agent actually advanced/finished a task (the result)
-    or got blocked and needs intervention. Skips and empty runs stay silent.
-    See heartbeat_outcome.apply_outcome for the agent JSON contract.
+    Approval delivery inside apply_outcome remains independent of heartbeat
+    summaries, and no transport preference may skip kanban state updates.
     """
     from heartbeat_outcome import apply_outcome
 
@@ -1234,8 +1232,9 @@ def _send_heartbeat_notification(heartbeat_id: str, agent: str, result: dict, co
         if own_conn:
             conn.close()
 
-    if not spec:
-        return  # silence — nothing worth reporting
+    from notifications import heartbeat_telegram_enabled
+    if not spec or not heartbeat_telegram_enabled():
+        return  # outcomes persist above even when Telegram delivery is disabled
 
     kind = spec.get("kind")
     if kind == "result":

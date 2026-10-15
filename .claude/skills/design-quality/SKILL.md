@@ -21,6 +21,8 @@ Para criar, editar ou revisar páginas/frontend/design, carregar este cookbook c
 3. Aplicar o filtro: cada escolha visual deve servir hierarquia, identidade, conteúdo ou usabilidade. Gradientes, cards, glass, badges, dark mode, fontes e animação não são proibidos universalmente. Preferências da marca prevalecem sobre gosto de catálogo; não eliminar caráter visual para deixar tudo neutro.
 4. Para campanha/social/landing de oferta, se disponível ler `.claude/skills/mkt-creative-brief/SKILL.md`; para pedido específico de logo, se disponível ler `.claude/skills/logo-design/SKILL.md`. Esses módulos não são pré-requisitos desta branch. Stickman é opcional, apenas para pedido pertinente do formato: `.claude/skills/stickman-video-director/SKILL.md`.
 
+Ler [heurísticas UX aplicadas](ux-heuristics.md) para navegação, seleção de squad, formulários, toque e feedback/voz no escopo.
+
 ## Filtro antes de implementar
 
 - Conteúdo guia composição: seções e ritmo refletem a oferta/produto real, não uma sequência fixa de template. CTA explica a ação e tem destino existente.

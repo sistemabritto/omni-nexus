@@ -62,3 +62,7 @@ Rules:
 ## Python Tool Management
 
 - When fixing type errors, prefer to only fix newly introduced errors if pre-existing errors are already accepted by CI
+
+## Qualidade padrão de páginas/frontend/design
+
+Para tarefas de páginas, frontend ou design, ler `.claude/skills/design-quality/SKILL.md` junto de `.claude/skills/ui-ux-pro-max/SKILL.md`: direção/tokens aprovados primeiro, filtro de qualidade depois, sem substituir identidade. Backend sem interface não ativa. Stickman é opção apenas para pedido do formato em `.claude/skills/stickman-video-director/SKILL.md`.

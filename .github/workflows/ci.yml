@@ -23,6 +23,14 @@ on:
         description: Boot the pinned reviewed caf1612 dashboard image with isolated fixture data
         type: boolean
         default: false
+      smoke_image_digest:
+        description: Reviewed dashboard sha256 digest to boot (fixed repository)
+        type: string
+        default: sha256:eafe5f27d9187194bd5f3ec8b857ce947ac8060661b4d99b8146b01d4773b05d
+      smoke_image_revision:
+        description: Exact expected OCI application revision
+        type: string
+        default: caf161273777366fab96fc3f35e33ec6d70d3c63
 
 permissions:
   contents: read
@@ -122,13 +130,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      IMAGE: excarplex/evo-nexus-dashboard@sha256:eafe5f27d9187194bd5f3ec8b857ce947ac8060661b4d99b8146b01d4773b05d
-      EXPECTED_REVISION: caf161273777366fab96fc3f35e33ec6d70d3c63
+      IMAGE: excarplex/evo-nexus-dashboard@${{ inputs.smoke_image_digest }}
+      EXPECTED_REVISION: ${{ inputs.smoke_image_revision }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check isolated runner capacity
         run: |
+          python3 - <<'PY'
+          import os, re
+          assert re.fullmatch(r'excarplex/evo-nexus-dashboard@sha256:[a-f0-9]{64}', os.environ['IMAGE'])
+          assert re.fullmatch(r'[a-f0-9]{40}', os.environ['EXPECTED_REVISION'])
+          PY
           df -h /var/lib/docker
           available=$(df --output=avail -B1 /var/lib/docker | tail -1)
           test "$available" -ge 18000000000

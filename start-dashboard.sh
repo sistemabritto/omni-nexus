@@ -105,12 +105,21 @@ EOF
 # Heartbeat subprocesses (heartbeat_runner/provider_fallback) inherit this.
 export IS_SANDBOX=1
 
+# Images install production dependencies during build. Starting through uv run
+# would resolve/sync dev dependencies (including pytest) on every boot and can
+# require network or remove extra image-installed packages such as MemPalace.
+PYTHON_BIN=/workspace/.venv/bin/python
+if [ ! -x "$PYTHON_BIN" ]; then
+    echo "[start-dashboard] missing image Python venv: $PYTHON_BIN" >&2
+    exit 1
+fi
+
 # Start terminal-server in the background
 node /workspace/dashboard/terminal-server/bin/server.js --port "${TERMINAL_PORT}" &
 TERMINAL_PID=$!
 
 # Start Flask in the background
-uv run python /workspace/dashboard/backend/app.py &
+"$PYTHON_BIN" /workspace/dashboard/backend/app.py &
 FLASK_PID=$!
 
 # When this script exits for any reason, kill both children

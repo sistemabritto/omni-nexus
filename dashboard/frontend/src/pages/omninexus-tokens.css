@@ -1,0 +1,22 @@
+/* Extracted from Sistema Britto pages/index.tsx + styles/globals.css, 2026-10-15.
+   Portable tokens only. No site components/assets copied. Fonts fall back to system. */
+:root {
+  --sb-background: #080b12;
+  --sb-surface: #0d1320;
+  --sb-surface-raised: #101722;
+  --sb-accent: #a3ff12;
+  --sb-accent-hover: #c4ff72;
+  --sb-text: #ffffff;
+  --sb-text-muted: #cbd5e1;
+  --sb-font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --sb-font-body: 'DM Sans', system-ui, sans-serif;
+  --sb-space-1: 4px;
+  --sb-space-2: 8px;
+  --sb-space-3: 12px;
+  --sb-space-4: 16px;
+  --sb-space-6: 24px;
+  --sb-space-8: 32px;
+  --sb-radius-control: 12px;
+  --sb-radius-card: 24px;
+  --sb-control-height: 48px;
+}

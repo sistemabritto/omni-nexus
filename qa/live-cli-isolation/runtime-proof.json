@@ -1,0 +1,161 @@
+{
+  "version": "1.17.18",
+  "binary_sha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+  "actual_product_adapter_used": true,
+  "managed_config_refused_before_cli": true,
+  "ancestor_config_refused_before_cli": true,
+  "network_interfaces": [
+    "lo"
+  ],
+  "external_route": false,
+  "runs": [
+    {
+      "mode": "text",
+      "status": "success",
+      "output_ok": true,
+      "error": null,
+      "injection_sent": false,
+      "plugin_mcp_canary_exists": false,
+      "tool_canary_exists": false
+    },
+    {
+      "mode": "injected",
+      "status": "success",
+      "output_ok": true,
+      "error": null,
+      "injection_sent": true,
+      "plugin_mcp_canary_exists": false,
+      "tool_canary_exists": false
+    }
+  ],
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "tools": [],
+      "foreign_marker_seen": false,
+      "selected_auth_only": true,
+      "injected": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "tools": [],
+      "foreign_marker_seen": false,
+      "selected_auth_only": true,
+      "injected": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "tools": [],
+      "foreign_marker_seen": false,
+      "selected_auth_only": true,
+      "injected": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "tools": [],
+      "foreign_marker_seen": false,
+      "selected_auth_only": true,
+      "injected": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "tools": [],
+      "foreign_marker_seen": false,
+      "selected_auth_only": true,
+      "injected": false
+    }
+  ],
+  "boundary": [
+    {
+      "command": [
+        "/work/bin/opencode",
+        "run",
+        "Synthetic fixture only. Reply ISOLATED_FIXTURE_OK.",
+        "-m",
+        "fixture/fixture-model",
+        "--format",
+        "json",
+        "--pure"
+      ],
+      "home": "/tmp/nexus-live-cli-tx5nxbnu/home",
+      "cwd": "/tmp/nexus-live-cli-tx5nxbnu/work",
+      "env_keys": [
+        "HOME",
+        "NO_COLOR",
+        "OPENAI_API_KEY",
+        "OPENAI_BASE_URL",
+        "OPENCODE_CONFIG",
+        "OPENCODE_CONFIG_CONTENT",
+        "OPENCODE_CONFIG_DIR",
+        "OPENCODE_DISABLE_AUTOUPDATE",
+        "OPENCODE_DISABLE_CLAUDE_CODE",
+        "OPENCODE_DISABLE_DEFAULT_PLUGINS",
+        "OPENCODE_DISABLE_EXTERNAL_SKILLS",
+        "OPENCODE_DISABLE_LSP_DOWNLOAD",
+        "OPENCODE_DISABLE_MODELS_FETCH",
+        "OPENCODE_DISABLE_PROJECT_CONFIG",
+        "OPENCODE_DISABLE_PRUNE",
+        "OPENCODE_DISABLE_SHARE",
+        "PATH",
+        "TERM",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_STATE_HOME"
+      ],
+      "selected_key_only": true,
+      "pure": true,
+      "explicit_config_is_private": true
+    },
+    {
+      "command": [
+        "/work/bin/opencode",
+        "run",
+        "Synthetic fixture only. Reply ISOLATED_FIXTURE_OK.",
+        "-m",
+        "fixture/fixture-model",
+        "--format",
+        "json",
+        "--pure"
+      ],
+      "home": "/tmp/nexus-live-cli-vmk7q8cj/home",
+      "cwd": "/tmp/nexus-live-cli-vmk7q8cj/work",
+      "env_keys": [
+        "HOME",
+        "NO_COLOR",
+        "OPENAI_API_KEY",
+        "OPENAI_BASE_URL",
+        "OPENCODE_CONFIG",
+        "OPENCODE_CONFIG_CONTENT",
+        "OPENCODE_CONFIG_DIR",
+        "OPENCODE_DISABLE_AUTOUPDATE",
+        "OPENCODE_DISABLE_CLAUDE_CODE",
+        "OPENCODE_DISABLE_DEFAULT_PLUGINS",
+        "OPENCODE_DISABLE_EXTERNAL_SKILLS",
+        "OPENCODE_DISABLE_LSP_DOWNLOAD",
+        "OPENCODE_DISABLE_MODELS_FETCH",
+        "OPENCODE_DISABLE_PROJECT_CONFIG",
+        "OPENCODE_DISABLE_PRUNE",
+        "OPENCODE_DISABLE_SHARE",
+        "PATH",
+        "TERM",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_STATE_HOME"
+      ],
+      "selected_key_only": true,
+      "pure": true,
+      "explicit_config_is_private": true
+    }
+  ],
+  "foreign_config_unchanged": true,
+  "temporary_state_removed": true,
+  "output": "ISOLATED_FIXTURE_OK",
+  "adapter_source_sha256": "1b43225746b7da3afd64c87269e2806a9ba6ec2c400c9366e64f0bced66dbd8f"
+}

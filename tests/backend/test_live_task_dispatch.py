@@ -147,9 +147,9 @@ def test_restricted_cli_never_bypasses_or_exposes_tools(monkeypatch,tmp_path,cli
     captured=[]
     monkeypatch.setattr(mod,'_invoke_cli_run',lambda cmd,env,*a,**kw:captured.append((cmd,env)) or {'status':'success'})
     token=mod._CLI_TOOL_POLICY.set('no_tools')
-    try:result=mod._invoke_cli(cli,'fixture task',2,30,provider_id='fixture',model='fixture',cwd=tmp_path)
+    try:result=mod._invoke_cli(cli,'fixture task',2,30,provider_id='fixture',model='fixture',cwd=tmp_path,env_overrides={'OPENAI_BASE_URL':'http://127.0.0.1:1234/v1','OPENAI_API_KEY':'synthetic-selected'})
     finally:mod._CLI_TOOL_POLICY.reset(token)
-    if cli=='openclaude':assert result['status']=='fail';assert captured==[];return
+    if cli in ('claude','openclaude'):assert result['status']=='fail';assert captured==[];return
     cmd,env=captured[0];assert '--auto' not in cmd;assert '--dangerously-skip-permissions' not in cmd
     if cli=='claude':assert cmd[cmd.index('--tools')+1]=='';assert '--strict-mcp-config' in cmd
     else:

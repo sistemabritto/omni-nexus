@@ -29,6 +29,8 @@ import re
 import shutil
 import signal
 import subprocess
+import tempfile
+from urllib.parse import urlsplit
 import threading
 import time
 from dataclasses import dataclass, field
@@ -872,7 +874,83 @@ def _build_agent_run_env(env_overrides: dict | None = None) -> dict:
 
 # ── Core invocation ─────────────────────────────────────────────────────────────
 
+def _restricted_ancestor_config_present(root: Path) -> bool:
+    # OpenCode1.17.18 plugin bootstrap discovers ancestor config even when
+    # its later config resolver reports an empty plugin list. Refuse rather
+    # than load/override configuration outside the private call directory.
+    names = ('opencode.json', 'opencode.jsonc', '.opencode', 'AGENTS.md', 'CLAUDE.md', 'CONTEXT.md')
+    return any((parent / name).exists() for parent in root.parents for name in names)
+
+
 def _invoke_cli(
+    cli_command: str, prompt: str, max_turns: int, timeout_seconds: int,
+    agent: str = "", env_overrides: dict | None = None,
+    provider_id: str | None = None, model: str | None = None,
+    cwd: Path | None = None, on_stdout_line: "callable | None" = None,
+) -> dict:
+    args = dict(cli_command=cli_command, prompt=prompt, max_turns=max_turns,
+                timeout_seconds=timeout_seconds, agent=agent,
+                env_overrides=env_overrides, provider_id=provider_id, model=model,
+                cwd=cwd, on_stdout_line=on_stdout_line)
+    if _CLI_TOOL_POLICY.get() != 'no_tools':
+        return _invoke_cli_configured(**args)
+    # Only this adapter has an isolated, same-version runtime proof. Native
+    # login/other harnesses must not silently inherit credentials or hooks.
+    if cli_command != 'opencode':
+        return {'status': 'fail', 'error': 'restricted_adapter_unsupported', 'output': '', 'duration_ms': 0}
+    # Managed machine policy is outside this call's scope. Do not bypass it
+    # with test-only env overrides or risk plugin startup before tool gates.
+    if Path('/etc/opencode').exists():
+        return {'status': 'fail', 'error': 'restricted_managed_config_present', 'output': '', 'duration_ms': 0}
+    selected = env_overrides or {}
+    base_url, api_key = selected.get('OPENAI_BASE_URL'), selected.get('OPENAI_API_KEY')
+    try:
+        url = urlsplit(base_url) if isinstance(base_url, str) else None
+        valid_url = url and url.scheme in ('http', 'https') and url.hostname and not (
+            url.username or url.password or url.query or url.fragment)
+    except ValueError:
+        valid_url = False
+    if not valid_url or not isinstance(api_key, str) or not api_key or not provider_id or not model or agent:
+        return {'status': 'fail', 'error': 'restricted_explicit_provider_required', 'output': '', 'duration_ms': 0}
+    # The selected attempt provides exactly one credential and endpoint.
+    # Never copy parent env/config/auth stores, even if a provider entry supplies
+    # arbitrary env vars. Text-only work needs no repository working directory.
+    with tempfile.TemporaryDirectory(prefix='nexus-live-cli-') as temporary:
+        root = Path(temporary)
+        if _restricted_ancestor_config_present(root):
+            return {'status': 'fail', 'error': 'restricted_ancestor_config_present', 'output': '', 'duration_ms': 0}
+        work = root / 'work'
+        work.mkdir(mode=0o700)
+        env = {'PATH': '/usr/local/bin:/usr/bin:/bin', 'HOME': str(root / 'home'),
+               'OPENAI_API_KEY': api_key, 'OPENAI_BASE_URL': base_url,
+               'OPENCODE_CONFIG_CONTENT': '{}', 'NO_COLOR': '1', 'TERM': 'dumb'}
+        for name in ('CONFIG', 'DATA', 'CACHE', 'STATE'):
+            path = root / name.lower()
+            path.mkdir(mode=0o700)
+            env['XDG_' + name + '_HOME'] = str(path)
+        config_dir = root / 'config' / 'opencode'
+        config_dir.mkdir(mode=0o700)
+        empty_config = config_dir / 'opencode.json'
+        empty_config.write_text('{}', encoding='utf-8')
+        env['OPENCODE_CONFIG'] = str(empty_config)
+        env['OPENCODE_CONFIG_DIR'] = str(config_dir)
+        # Flags exist in the pinned OpenCode1.17.18 executable and are checked
+        # by the real-CLI fixture. --pure also blocks external plugin loading.
+        for flag in ('PROJECT_CONFIG', 'CLAUDE_CODE', 'EXTERNAL_SKILLS',
+                     'DEFAULT_PLUGINS', 'MODELS_FETCH', 'AUTOUPDATE',
+                     'LSP_DOWNLOAD', 'SHARE', 'PRUNE'):
+            env['OPENCODE_DISABLE_' + flag] = 'true'
+        args.update(cwd=work, isolated_env=env)
+        result = _invoke_cli_configured(**args)
+        if result.get('status') == 'success':
+            parsed = _parse_opencode_ndjson(str(result.get('output') or ''))
+            if parsed['saw_error'] or not parsed['text']:
+                return {**result, 'status': 'fail', 'output': '', 'error': 'restricted_text_result_required'}
+            result = {**result, 'output': parsed['text']}
+        return result
+
+
+def _invoke_cli_configured(
     cli_command: str,
     prompt: str,
     max_turns: int,
@@ -883,6 +961,7 @@ def _invoke_cli(
     model: str | None = None,
     cwd: Path | None = None,
     on_stdout_line: "callable | None" = None,
+    isolated_env: dict | None = None,
 ) -> dict:
     cli_bin = shutil.which(cli_command)
     if not cli_bin:
@@ -931,6 +1010,7 @@ def _invoke_cli(
 
     if no_tools and cli_command == 'opencode':
         cmd.remove('--auto')
+        cmd.append('--pure')
 
     # argv + envp compartilham o teto do kernel (ARG_MAX, ~2MB em Linux). Um
     # prompt que embute uma transcrição de vídeo inteira (ex.: cortes_virais
@@ -948,7 +1028,7 @@ def _invoke_cli(
         else:
             cmd = cmd[:-2]  # tira "--" e o prompt — claude/openclaude leem stdin sem eles
 
-    run_env = _build_agent_run_env(env_overrides)
+    run_env = dict(isolated_env) if isolated_env is not None else _build_agent_run_env(env_overrides)
     if cli_command == "opencode":
         # Browser sessions register their selected provider dynamically. Headless
         # Telegram/heartbeat runs need the same registration: OPENAI_MODEL alone
@@ -970,6 +1050,8 @@ def _invoke_cli(
                      'external_directory', 'lsp', 'todoread', 'todowrite', 'plan_enter', 'plan_exit')
             denied = {name: 'deny' for name in names}
             disabled = {name: False for name in names}
+            inline.update(enabled_providers=[provider_id], model=model_ref, small_model=model_ref,
+                          plugin=[], mcp={}, instructions=[], autoupdate=False, share='disabled', snapshot=False)
             inline['permission'] = denied
             inline['tools'] = disabled
             inline['agent']['build']['permission'] = denied

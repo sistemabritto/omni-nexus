@@ -20,6 +20,10 @@ on:
     tags: ['v*', 'rc*']
   workflow_dispatch:
     inputs:
+      dashboard_only:
+        description: Build only dashboard for a reviewed frontend integration
+        type: boolean
+        default: false
       core_only:
         description: Build only runtime and dashboard for Telegram and agent continuity fixes
         type: boolean
@@ -41,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.core_only && '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"}]' || inputs.media_only && '[{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"}]' || '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"},{"image":"omniroute","dockerfile":"scripts/Dockerfile.omniroute-runtime"}]') }}
+        include: ${{ fromJSON(inputs.dashboard_only && '[{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"}]' || inputs.core_only && '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"}]' || inputs.media_only && '[{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"}]' || '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"},{"image":"omniroute","dockerfile":"scripts/Dockerfile.omniroute-runtime"}]') }}
 
     steps:
       - name: Checkout

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useEffect } from 'react'
 import { GitBranch, RefreshCw, Tag, Unlink, AlertTriangle, CheckCircle, Loader2, Clock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -22,7 +23,7 @@ interface BrainRepoStatus {
   cancel_requested?: boolean
 }
 
-const inp = "w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20"
+const inp = "w-full px-4 py-3 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[color:var(--evo-green)]/60 focus:ring-1 focus:ring-[color:var(--evo-green)]/20"
 
 export default function BrainRepo() {
   const { t } = useTranslation()
@@ -128,7 +129,7 @@ export default function BrainRepo() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 size={24} className="text-[#98A2B3] animate-spin" />
+        <Loader2 size={24} className="text-[color:var(--text-muted)] animate-spin" />
       </div>
     )
   }
@@ -139,8 +140,8 @@ export default function BrainRepo() {
     <div className="max-w-2xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#e6edf3]">{t('brainRepoSettings.title')}</h1>
-        <p className="text-[#98A2B3] mt-1">{t('brainRepoSettings.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('brainRepoSettings.title')}</h1>
+        <p className="text-[color:var(--text-muted)] mt-1">{t('brainRepoSettings.subtitle')}</p>
       </div>
 
       {/* Crypto-broken banner — master key missing or cryptography module
@@ -157,15 +158,15 @@ export default function BrainRepo() {
       )}
 
       {/* Status card */}
-      <div className="rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)] mb-4">
-        <div className="px-6 py-5 border-b border-[#152030] flex items-center justify-between">
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)] mb-4">
+        <div className="px-6 py-5 border-b border-[color:var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`flex items-center justify-center w-9 h-9 rounded-xl border ${
               status?.connected
-                ? 'bg-[#00FFA7]/10 border-[#00FFA7]/20'
-                : 'bg-[#98A2B3]/10 border-[#98A2B3]/20'
+                ? 'bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]/20'
+                : 'bg-[color:var(--text-muted)]/10 border-[color:var(--text-muted)]/20'
             }`}>
-              <GitBranch size={16} className={status?.connected ? 'text-[#00FFA7]' : 'text-[#98A2B3]'} />
+              <GitBranch size={16} className={status?.connected ? 'text-[color:var(--evo-green)]' : 'text-[color:var(--text-muted)]'} />
             </div>
             <div>
               <p className="text-[14px] font-semibold text-[#e2e8f0]">
@@ -176,7 +177,7 @@ export default function BrainRepo() {
                   href={status.repo_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] text-[#00FFA7]/70 hover:text-[#00FFA7] transition-colors truncate max-w-xs block"
+                  className="text-[11px] text-[color:var(--evo-green)]/70 hover:text-[color:var(--evo-green)] transition-colors truncate max-w-xs block"
                 >
                   {status.repo_url}
                 </a>
@@ -184,8 +185,8 @@ export default function BrainRepo() {
             </div>
           </div>
           {status?.connected && (
-            <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#00FFA7]/10 border border-[#00FFA7]/20 text-[10px] font-semibold uppercase tracking-wider text-[#00FFA7]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#00FFA7]" />
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20 text-[10px] font-semibold uppercase tracking-wider text-[color:var(--evo-green)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--evo-green)]" />
               {t('brainRepoSettings.status.active')}
             </span>
           )}
@@ -194,21 +195,21 @@ export default function BrainRepo() {
         {status?.connected && (
           <div className="px-6 py-4 grid grid-cols-3 gap-4">
             <div>
-              <p className="text-[10px] font-semibold text-[#98A2B3] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.lastSync')}</p>
+              <p className="text-[10px] font-semibold text-[color:var(--text-muted)] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.lastSync')}</p>
               <div className="flex items-center gap-1.5 mt-1">
-                <Clock size={12} className="text-[#98A2B3]" />
+                <Clock size={12} className="text-[color:var(--text-muted)]" />
                 <p className="text-[13px] text-[#e2e8f0]">{formatDate(status.last_sync)}</p>
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#98A2B3] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.pending')}</p>
+              <p className="text-[10px] font-semibold text-[color:var(--text-muted)] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.pending')}</p>
               <p className={`text-[13px] mt-1 font-medium ${status.pending_count > 0 ? 'text-[#F59E0B]' : 'text-[#e2e8f0]'}`}>
                 {t('brainRepoSettings.status.pendingCount', { count: status.pending_count })}
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#98A2B3] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.autoSync')}</p>
-              <p className={`text-[13px] mt-1 ${status.sync_enabled ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`}>
+              <p className="text-[10px] font-semibold text-[color:var(--text-muted)] uppercase tracking-[0.08em]">{t('brainRepoSettings.status.autoSync')}</p>
+              <p className={`text-[13px] mt-1 ${status.sync_enabled ? 'text-[color:var(--evo-green)]' : 'text-[color:var(--text-muted)]'}`}>
                 {status.sync_enabled ? t('brainRepoSettings.status.enabled') : t('brainRepoSettings.status.disabled')}
               </p>
             </div>
@@ -219,17 +220,17 @@ export default function BrainRepo() {
       {status?.connected && (
         <>
           {/* Sync now */}
-          <div className="rounded-xl border border-[#152030] bg-[#0b1018] px-6 py-5 mb-4">
+          <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] px-6 py-5 mb-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[14px] font-semibold text-[#e2e8f0]">{t('brainRepoSettings.sync.title')}</p>
-                <p className="text-[11px] text-[#98A2B3] mt-0.5">{t('brainRepoSettings.sync.desc')}</p>
+                <p className="text-[11px] text-[color:var(--text-muted)] mt-0.5">{t('brainRepoSettings.sync.desc')}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSync}
                   disabled={busy}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
                 >
                   {busy ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                   {busy
@@ -251,7 +252,7 @@ export default function BrainRepo() {
             {syncMsg && (
               <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs ${
                 syncMsg.type === 'ok'
-                  ? 'bg-[#0a1a12] border-[#00FFA7]/20 text-[#4a9a6a]'
+                  ? 'bg-[#0a1a12] border-[color:var(--evo-green)]/20 text-[#4a9a6a]'
                   : 'bg-[#1a0a0a] border-[#3a1515] text-[#f87171]'
               }`}>
                 {syncMsg.type === 'ok' ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
@@ -261,9 +262,9 @@ export default function BrainRepo() {
           </div>
 
           {/* Create milestone */}
-          <div className="rounded-xl border border-[#152030] bg-[#0b1018] px-6 py-5 mb-4">
+          <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] px-6 py-5 mb-4">
             <p className="text-[14px] font-semibold text-[#e2e8f0] mb-1">{t('brainRepoSettings.milestone.title')}</p>
-            <p className="text-[11px] text-[#98A2B3] mb-3">{t('brainRepoSettings.milestone.desc')}</p>
+            <p className="text-[11px] text-[color:var(--text-muted)] mb-3">{t('brainRepoSettings.milestone.desc')}</p>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -276,7 +277,7 @@ export default function BrainRepo() {
               <button
                 onClick={handleMilestone}
                 disabled={busy || !milestoneInput.trim()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors disabled:opacity-40 flex-shrink-0"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors disabled:opacity-40 flex-shrink-0"
                 title={busy ? t('brainRepoSettings.sync.running') : undefined}
               >
                 {busy ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}
@@ -290,7 +291,7 @@ export default function BrainRepo() {
             {milestoneMsg && (
               <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs ${
                 milestoneMsg.type === 'ok'
-                  ? 'bg-[#0a1a12] border-[#00FFA7]/20 text-[#4a9a6a]'
+                  ? 'bg-[#0a1a12] border-[color:var(--evo-green)]/20 text-[#4a9a6a]'
                   : 'bg-[#1a0a0a] border-[#3a1515] text-[#f87171]'
               }`}>
                 {milestoneMsg.type === 'ok' ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
@@ -300,11 +301,11 @@ export default function BrainRepo() {
           </div>
 
           {/* Disconnect */}
-          <div className="rounded-xl border border-[#3a1515] bg-[#0b1018] px-6 py-5">
+          <div className="rounded-xl border border-[#3a1515] bg-[color:var(--bg-card)] px-6 py-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[14px] font-semibold text-[#e2e8f0]">{t('brainRepoSettings.disconnect.title')}</p>
-                <p className="text-[11px] text-[#98A2B3] mt-0.5">{t('brainRepoSettings.disconnect.desc')}</p>
+                <p className="text-[11px] text-[color:var(--text-muted)] mt-0.5">{t('brainRepoSettings.disconnect.desc')}</p>
               </div>
               <button
                 onClick={() => setConfirmDisconnect(true)}
@@ -323,7 +324,7 @@ export default function BrainRepo() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setConfirmDisconnect(false)}
-                    className="flex-1 py-2 rounded-lg border border-[#152030] text-[#98A2B3] text-sm font-medium transition-colors hover:text-[#e2e8f0]"
+                    className="flex-1 py-2 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] text-sm font-medium transition-colors hover:text-[#e2e8f0]"
                   >
                     {t('brainRepoSettings.disconnect.cancel')}
                   </button>
@@ -342,15 +343,15 @@ export default function BrainRepo() {
       )}
 
       {!status?.connected && (
-        <div className="rounded-xl border border-[#152030] bg-[#0b1018] px-6 py-8 text-center">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] px-6 py-8 text-center">
           <GitBranch size={32} className="text-[#2d3d4f] mx-auto mb-3" />
-          <p className="text-[14px] text-[#98A2B3]">{t('brainRepoSettings.empty.title')}</p>
+          <p className="text-[14px] text-[color:var(--text-muted)]">{t('brainRepoSettings.empty.title')}</p>
           <p className="text-[11px] text-[#2d3d4f] mt-1">
             {t('brainRepoSettings.empty.desc')}
           </p>
           <a
             href="/onboarding?reconfigure=brain"
-            className="inline-block mt-4 px-4 py-2 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors"
+            className="inline-block mt-4 px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors"
           >
             {t('brainRepoSettings.empty.btn')}
           </a>

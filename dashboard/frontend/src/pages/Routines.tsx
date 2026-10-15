@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useMemo, useState } from 'react'
 import {
   Clock, Play, Loader2, CheckCircle2, XCircle, Activity, DollarSign,
@@ -184,12 +185,12 @@ const SAUDE = {
 
 function Cartao({ label, valor, icone: Icone }: { label: string; valor: string | number; icone: any }) {
   return (
-    <div className="bg-[#161b22] border border-[#21262d] rounded-2xl p-4 sm:p-5">
-      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15 mb-3">
-        <Icone size={18} className="text-[#00FFA7]" />
+    <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-4 sm:p-5">
+      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15 mb-3">
+        <Icone size={18} className="text-[color:var(--evo-green)]" />
       </div>
-      <p className="text-2xl sm:text-3xl font-bold text-[#e6edf3] tracking-tight tabular-nums">{valor}</p>
-      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
+      <p className="text-2xl sm:text-3xl font-bold text-[color:var(--text-primary)] tracking-tight tabular-nums">{valor}</p>
+      <p className="text-sm text-[color:var(--text-muted)] mt-1">{label}</p>
     </div>
   )
 }
@@ -262,7 +263,7 @@ export default function Routines() {
       </span>
     )
     if (estado === 'success') return (
-      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20">
+      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20">
         <CheckCircle2 size={10} /> disparada
       </span>
     )
@@ -274,7 +275,7 @@ export default function Routines() {
     return (
       <button
         onClick={() => disparar(r)}
-        className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 hover:bg-[#00FFA7]/20 transition-colors"
+        className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20 hover:bg-[color:var(--evo-green)]/20 transition-colors"
         title={`Rodar ${r.nome} agora`}
       >
         <Play size={10} /> rodar
@@ -286,21 +287,21 @@ export default function Routines() {
     <div className="max-w-[1400px] mx-auto">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('routines.title')}</h1>
-          <p className="text-[#98A2B3] text-sm mt-1">
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('routines.title')}</h1>
+          <p className="text-[color:var(--text-muted)] text-sm mt-1">
             O que roda sozinho, quando roda de novo e quanto custa
           </p>
         </div>
         <button
           onClick={carregar}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors text-sm"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors text-sm"
         >
           <RefreshCw size={15} className={carregando ? 'animate-spin' : ''} /> Atualizar
         </button>
       </div>
 
       {/* Legenda do motor — a distinção que a página existe para deixar clara */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 text-xs text-[#98A2B3]">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 text-xs text-[color:var(--text-muted)]">
         <span className="flex items-center gap-1.5">
           <span aria-hidden>🐍</span> <strong className="text-[#60A5FA] font-medium">Python</strong>
           — determinística, não gasta token
@@ -325,8 +326,8 @@ export default function Routines() {
             onClick={() => setFiltro(chave)}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
               filtro === chave
-                ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/25'
-                : 'bg-[#161b22] text-[#98A2B3] border-[#21262d] hover:text-[#e6edf3]'
+                ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border-[color:var(--evo-green)]/25'
+                : 'bg-[color:var(--bg-card)] text-[color:var(--text-muted)] border-[color:var(--border)] hover:text-[color:var(--text-primary)]'
             }`}
           >
             {rotulo}
@@ -336,7 +337,7 @@ export default function Routines() {
           </button>
         ))}
         {filtro === 'todas' && (
-          <span className="text-[11px] text-[#98A2B3]">
+          <span className="text-[11px] text-[color:var(--text-muted)]">
             inclui histórico de rotinas que saíram do agendador
           </span>
         )}
@@ -345,11 +346,11 @@ export default function Routines() {
       {proxima && (
         <div className="flex items-center gap-2.5 mb-4 text-sm">
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FFA7] opacity-60" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FFA7]" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--evo-green)] opacity-60" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--evo-green)]" />
           </span>
-          <span className="text-[#98A2B3] truncate">
-            Próxima: <strong className="text-[#e6edf3] font-medium">{proxima.nome}</strong>
+          <span className="text-[color:var(--text-muted)] truncate">
+            Próxima: <strong className="text-[color:var(--text-primary)] font-medium">{proxima.nome}</strong>
             {' '}{proximaEm(proxima.proxima)}
           </span>
         </div>
@@ -361,10 +362,10 @@ export default function Routines() {
         </div>
       ) : visiveis.length === 0 ? (
         <div className="text-center py-16">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--bg-card)] border border-[color:var(--border)]">
             <Clock size={32} className="text-[#3F3F46]" />
           </div>
-          <p className="text-[#98A2B3]">Nenhuma rotina agendada</p>
+          <p className="text-[color:var(--text-muted)]">Nenhuma rotina agendada</p>
         </div>
       ) : (
         <>
@@ -372,13 +373,13 @@ export default function Routines() {
               não rola, só encolhe até ninguém conseguir ler. */}
           <div className="md:hidden space-y-3">
             {visiveis.map((r) => (
-              <div key={r.id} className="bg-[#161b22] border border-[#21262d] rounded-xl p-4">
+              <div key={r.id} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-4">
                 {/* Nome e motor na mesma linha: no telefone é a primeira coisa
                     que o olho pega, e "isso gasta token?" é a pergunta. */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[#e6edf3] font-medium text-sm leading-snug">{r.nome}</p>
-                    <p className="text-[11px] text-[#98A2B3] font-mono truncate mt-0.5">
+                    <p className="text-[color:var(--text-primary)] font-medium text-sm leading-snug">{r.nome}</p>
+                    <p className="text-[11px] text-[color:var(--text-muted)] font-mono truncate mt-0.5">
                       {r.script || '—'}
                     </p>
                   </div>
@@ -387,22 +388,22 @@ export default function Routines() {
 
                 {r.agendamento && (
                   <div className="flex items-baseline gap-2 mb-3 text-xs">
-                    <span className="text-[#D0D5DD]">{r.agendamento}</span>
+                    <span className="text-[color:var(--text-secondary)]">{r.agendamento}</span>
                     {r.proxima && (
-                      <span className="text-[#00FFA7]/70">{proximaEm(r.proxima)}</span>
+                      <span className="text-[color:var(--evo-green)]/70">{proximaEm(r.proxima)}</span>
                     )}
                   </div>
                 )}
 
                 {r.execucoes > 0 ? (
                   <div className="mb-3">
-                    <div className="h-1.5 rounded-full bg-[#21262d] overflow-hidden mb-1.5">
+                    <div className="h-1.5 rounded-full bg-[color:var(--border)] overflow-hidden mb-1.5">
                       <div
                         className="h-full rounded-full"
                         style={{ width: `${r.sucessoPct}%`, backgroundColor: SAUDE[r.saude].cor }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#98A2B3] tabular-nums">
+                    <div className="flex items-center justify-between text-[11px] text-[color:var(--text-muted)] tabular-nums">
                       <span>
                         <span style={{ color: SAUDE[r.saude].cor }}>{r.sucessoPct}%</span>
                         {' em '}{r.execucoes} execuções
@@ -416,8 +417,8 @@ export default function Routines() {
                   <p className="text-[11px] text-[#3F3F46] mb-3">ainda não rodou</p>
                 )}
 
-                <div className="flex items-center justify-between pt-2 border-t border-[#21262d]/60">
-                  <span className="text-[11px] text-[#98A2B3]">
+                <div className="flex items-center justify-between pt-2 border-t border-[color:var(--border)]/60">
+                  <span className="text-[11px] text-[color:var(--text-muted)]">
                     {r.ultimaExecucao ? `última ${tempoRelativo(r.ultimaExecucao)}` : 'nunca rodou'}
                   </span>
                   <BotaoRodar r={r} />
@@ -433,10 +434,10 @@ export default function Routines() {
               delas respondiam a mesma pergunta em pedaços: "quando" e
               "próxima" são o agendamento; "execuções" e "sucesso" são a
               confiabilidade. Juntas cabem numa coluna e leem melhor. */}
-          <div className="hidden md:block bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
+          <div className="hidden md:block bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden">
             <div className="grid grid-cols-[minmax(200px,2.4fr)_minmax(140px,1.4fr)_minmax(120px,1.1fr)_minmax(88px,0.8fr)_minmax(74px,0.7fr)_84px]
-                            gap-x-3 px-4 py-3 bg-[#0d1117]/50 border-b border-[#21262d]
-                            text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
+                            gap-x-3 px-4 py-3 bg-[color:var(--bg-primary)]/50 border-b border-[color:var(--border)]
+                            text-[color:var(--text-muted)] text-[11px] uppercase tracking-wider font-medium">
               <span>Rotina</span>
               <span>Agendamento</span>
               <span>Confiabilidade</span>
@@ -450,7 +451,7 @@ export default function Routines() {
                 <div
                   key={r.id}
                   className="grid grid-cols-[minmax(200px,2.4fr)_minmax(140px,1.4fr)_minmax(120px,1.1fr)_minmax(88px,0.8fr)_minmax(74px,0.7fr)_84px]
-                             gap-x-3 items-center px-4 py-3 border-t border-[#21262d]/60
+                             gap-x-3 items-center px-4 py-3 border-t border-[color:var(--border)]/60
                              hover:bg-white/[0.02] transition-colors"
                 >
                   {/* Rotina — o selo do motor vem junto do nome, que é onde a
@@ -460,19 +461,19 @@ export default function Routines() {
                       <span className="shrink-0" aria-hidden title={r.motor ? MOTOR[r.motor].ajuda : ''}>
                         {r.motor ? MOTOR[r.motor].emoji : '·'}
                       </span>
-                      <p className="text-[#e6edf3] font-medium text-[13px] truncate">{r.nome}</p>
+                      <p className="text-[color:var(--text-primary)] font-medium text-[13px] truncate">{r.nome}</p>
                     </div>
-                    <p className="text-[11px] text-[#98A2B3] font-mono truncate pl-6">
+                    <p className="text-[11px] text-[color:var(--text-muted)] font-mono truncate pl-6">
                       {r.script || '—'}
                     </p>
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-[#D0D5DD] text-[13px] truncate">
+                    <p className="text-[color:var(--text-secondary)] text-[13px] truncate">
                       {r.agendamento || <span className="text-[#3F3F46]">não agendada</span>}
                     </p>
                     {r.proxima && (
-                      <p className="text-[11px] text-[#98A2B3] truncate">{proximaEm(r.proxima)}</p>
+                      <p className="text-[11px] text-[color:var(--text-muted)] truncate">{proximaEm(r.proxima)}</p>
                     )}
                   </div>
 
@@ -481,13 +482,13 @@ export default function Routines() {
                   <div className="min-w-0">
                     {r.execucoes > 0 ? (
                       <>
-                        <div className="h-1.5 rounded-full bg-[#21262d] overflow-hidden mb-1">
+                        <div className="h-1.5 rounded-full bg-[color:var(--border)] overflow-hidden mb-1">
                           <div
                             className="h-full rounded-full transition-all"
                             style={{ width: `${r.sucessoPct}%`, backgroundColor: SAUDE[r.saude].cor }}
                           />
                         </div>
-                        <p className="text-[11px] text-[#98A2B3] tabular-nums">
+                        <p className="text-[11px] text-[color:var(--text-muted)] tabular-nums">
                           <span style={{ color: SAUDE[r.saude].cor }}>{r.sucessoPct}%</span>
                           {' · '}{r.execucoes}x
                         </p>
@@ -503,10 +504,10 @@ export default function Routines() {
                   <div className="text-right">
                     {r.custoTotal > 0 ? (
                       <>
-                        <p className="text-[#D0D5DD] tabular-nums text-[13px]">
+                        <p className="text-[color:var(--text-secondary)] tabular-nums text-[13px]">
                           {r.custoTotal.toFixed(2)}
                         </p>
-                        <p className="text-[11px] text-[#98A2B3] tabular-nums">
+                        <p className="text-[11px] text-[color:var(--text-muted)] tabular-nums">
                           {porExecucao >= 0.01 ? `${porExecucao.toFixed(2)}/x` : '<0,01/x'}
                         </p>
                       </>
@@ -515,7 +516,7 @@ export default function Routines() {
                     )}
                   </div>
 
-                  <p className="text-right text-[#98A2B3] text-[12px] truncate">
+                  <p className="text-right text-[color:var(--text-muted)] text-[12px] truncate">
                     {r.ultimaExecucao ? tempoRelativo(r.ultimaExecucao) : 'nunca'}
                   </p>
 

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { X, CheckCircle2, XCircle, Loader2, ExternalLink } from 'lucide-react'
@@ -198,17 +199,17 @@ export default function IntegrationDrawer({
         aria-modal="true"
         aria-label={integration ? `Configurar ${integration.name}` : 'Configuração'}
         onKeyDown={handleKeyDown}
-        className="fixed right-0 top-0 z-50 flex h-full w-full flex-col bg-[#0C111D] shadow-2xl transition-transform duration-300 ease-out sm:w-[400px]"
+        className="fixed right-0 top-0 z-50 flex h-full w-full flex-col bg-[color:var(--bg-primary)] shadow-2xl transition-transform duration-300 ease-out sm:w-[400px]"
         style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
         {integration && (
           <>
             {/* Header */}
-            <div className="flex items-start justify-between border-b border-[#21262d] px-5 py-4">
+            <div className="flex items-start justify-between border-b border-[color:var(--border)] px-5 py-4">
               <div className="flex items-center gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-semibold text-[#e6edf3]">
+                    <h2 className="text-base font-semibold text-[color:var(--text-primary)]">
                       {integration.name}
                     </h2>
                     <span
@@ -220,10 +221,10 @@ export default function IntegrationDrawer({
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-[#98A2B3] uppercase tracking-wider">
+                    <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wider">
                       {integration.type}
                     </span>
-                    <span className="text-xs text-[#98A2B3]">
+                    <span className="text-xs text-[color:var(--text-muted)]">
                       {isConnected ? '· Conectado' : '· Não configurado'}
                     </span>
                   </div>
@@ -234,7 +235,7 @@ export default function IntegrationDrawer({
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar"
-                className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
+                className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)] transition-colors"
               >
                 <X size={18} />
               </button>
@@ -243,13 +244,13 @@ export default function IntegrationDrawer({
             {/* Body */}
             <div className="flex-1 overflow-y-auto px-5 py-5">
               {meta?.description && (
-                <p className="text-sm text-[#98A2B3] mb-5">{meta.description}</p>
+                <p className="text-sm text-[color:var(--text-muted)] mb-5">{meta.description}</p>
               )}
 
               {meta?.oauthFlow ? (
                 /* OAuth integration */
-                <div className="rounded-xl border border-[#21262d] bg-[#161b22] p-5 text-center">
-                  <p className="text-sm text-[#98A2B3] mb-1">
+                <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] p-5 text-center">
+                  <p className="text-sm text-[color:var(--text-muted)] mb-1">
                     Esta integração usa autenticação OAuth.
                   </p>
                   <p className="text-xs text-[#3F3F46] mb-5">
@@ -257,7 +258,7 @@ export default function IntegrationDrawer({
                   </p>
                   <a
                     href={`/connect/${integration.name.toLowerCase()}`}
-                    className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 hover:bg-[#00FFA7]/20 transition-all"
+                    className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20 hover:bg-[color:var(--evo-green)]/20 transition-all"
                   >
                     <ExternalLink size={14} />
                     Conectar {integration.name}
@@ -278,7 +279,7 @@ export default function IntegrationDrawer({
                   />
                 ))
               ) : (
-                <p className="text-sm text-[#98A2B3]">
+                <p className="text-sm text-[color:var(--text-muted)]">
                   Nenhuma configuração disponível para esta integração.
                 </p>
               )}
@@ -288,7 +289,7 @@ export default function IntegrationDrawer({
                   href={meta.docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors mt-2"
+                  className="inline-flex items-center gap-1 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors mt-2"
                 >
                   <ExternalLink size={12} />
                   Documentação
@@ -298,10 +299,10 @@ export default function IntegrationDrawer({
 
             {/* Footer */}
             {!meta?.oauthFlow && effectiveFields && effectiveFields.length > 0 && (
-              <div className="border-t border-[#21262d] px-5 py-4 space-y-3">
+              <div className="border-t border-[color:var(--border)] px-5 py-4 space-y-3">
                 {/* Test result */}
                 {testState.status === 'ok' && (
-                  <div className="flex items-center gap-2 text-xs text-[#00FFA7]">
+                  <div className="flex items-center gap-2 text-xs text-[color:var(--evo-green)]">
                     <CheckCircle2 size={13} />
                     <span>{testState.message} · {testState.latency}ms</span>
                   </div>
@@ -319,7 +320,7 @@ export default function IntegrationDrawer({
                     type="button"
                     onClick={handleTest}
                     disabled={testState.status === 'loading' || !isConnected}
-                    className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--border)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {testState.status === 'loading' ? (
                       <Loader2 size={14} className="animate-spin" />
@@ -330,7 +331,7 @@ export default function IntegrationDrawer({
                     type="button"
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0C111D] font-semibold hover:bg-[#00e699] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold hover:bg-[#00e699] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {saving ? <Loader2 size={14} className="animate-spin" /> : null}
                     Salvar

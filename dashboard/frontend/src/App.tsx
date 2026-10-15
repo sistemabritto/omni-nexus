@@ -9,6 +9,7 @@ import PluginPageHost from './pages/PluginPageHost'
 import { NotificationProvider } from './context/NotificationContext'
 import { CompanyProvider } from './context/CompanyContext'
 import Sidebar from './components/Sidebar'
+import WorkspaceHeader from './components/WorkspaceHeader'
 import { FullPageLoader, SectionBoundary, SectionLoader } from './components/PageStates'
 import { lazyDefault, lazyNamed } from './lib/lazyImport'
 
@@ -76,7 +77,7 @@ function FullPageRoute({
   children: ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-[#0C111D]">
+    <div className="min-h-screen bg-[color:var(--bg-primary)]">
       <SectionBoundary key={locationKey} sectionName={sectionName}>
         <Suspense fallback={<FullPageLoader label={`Loading ${sectionName}...`} />}>
           {children}
@@ -215,7 +216,7 @@ function AppContent() {
   // Allow direct access to /onboarding regardless
   if (isOnboarding) {
     return (
-      <Suspense fallback={<div className="min-h-screen bg-[#080c14] flex items-center justify-center"><div className="text-[#98A2B3] text-sm">Loading...</div></div>}>
+      <Suspense fallback={<div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center"><div className="text-[color:var(--text-muted)] text-sm">Loading...</div></div>}>
         <Routes>
           <Route path="/onboarding/*" element={<OnboardingRouter />} />
         </Routes>
@@ -226,15 +227,16 @@ function AppContent() {
   return (
     <NotificationProvider>
       <CompanyProvider>
-      <div className="flex min-h-screen bg-[#0C111D]">
+      <div className="omn-shell flex min-h-screen bg-[color:var(--bg-primary)]">
         <Sidebar />
 
-        {/* Pages - responsive margin */}
+        <div className="omn-workspace-frame lg:ml-60" data-full={isAgentDetail || isWorkspace || isTicketDetail}>
+        <WorkspaceHeader />
         <main
           className={
             isAgentDetail || isWorkspace || isTicketDetail
-              ? 'flex-1 ml-0 lg:ml-60 pt-14 lg:pt-0 h-screen overflow-hidden'
-              : 'flex-1 ml-0 lg:ml-60 p-4 lg:p-8 pt-16 lg:pt-8 overflow-auto'
+              ? 'omn-page-full flex-1 min-h-0 overflow-hidden'
+              : 'omn-page flex-1 p-4 lg:p-8 overflow-auto'
           }
         >
           <DashboardRouteFrame locationKey={routeKey}>
@@ -242,12 +244,12 @@ function AppContent() {
               {/* Onboarding & Settings routes (lazy — keep their own suspense so they
                   can render even before Sidebar-scoped permissions load) */}
               <Route path="/onboarding/*" element={
-                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[#98A2B3] text-sm">Loading...</div></div>}>
+                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[color:var(--text-muted)] text-sm">Loading...</div></div>}>
                   <OnboardingRouter />
                 </Suspense>
               } />
               <Route path="/settings/brain-repo" element={
-                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[#98A2B3] text-sm">Loading...</div></div>}>
+                <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="text-[color:var(--text-muted)] text-sm">Loading...</div></div>}>
                   <BrainRepo />
                 </Suspense>
               } />
@@ -326,6 +328,7 @@ function AppContent() {
             </Routes>
           </DashboardRouteFrame>
         </main>
+        </div>
       </div>
       </CompanyProvider>
     </NotificationProvider>

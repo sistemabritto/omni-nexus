@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
@@ -124,18 +125,18 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
     <div className="flex flex-col h-full">
       {/* Header */}
       {!embedded && (
-        <div className="px-4 py-5 flex items-center justify-between border-b border-[#344054]">
+        <div className="px-4 py-5 flex items-center justify-between border-b border-[color:var(--border)]">
           <div className="flex items-center gap-2">
-            <BookOpen size={20} className="text-[#00FFA7]" />
+            <BookOpen size={20} className="text-[color:var(--evo-green)]" />
             <span className="text-lg font-bold">
-              <span className="text-[#00FFA7]">Evo</span>
+              <span className="text-[color:var(--evo-green)]">Evo</span>
               <span className="text-white">Nexus</span>
-              <span className="text-[#98A2B3] ml-1.5 text-sm font-normal">Docs</span>
+              <span className="text-[color:var(--text-muted)] ml-1.5 text-sm font-normal">Docs</span>
             </span>
           </div>
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-1 rounded hover:bg-white/10 text-[#98A2B3]"
+            className="lg:hidden p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)]"
           >
             <X size={20} />
           </button>
@@ -145,13 +146,13 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
       {/* Search */}
       <div className="px-3 py-3">
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-2.5 text-[#98A2B3]" />
+          <Search size={14} className="absolute left-2.5 top-2.5 text-[color:var(--text-muted)]" />
           <input
             type="text"
             placeholder="Search docs..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-sm bg-[#182230] border border-[#344054] rounded-lg text-[#D0D5DD] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg text-[color:var(--text-secondary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50"
           />
         </div>
       </div>
@@ -175,10 +176,10 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
           <div key={sec.slug} className="mb-2">
             <button
               onClick={() => toggleSection(sec.slug)}
-              className="w-full flex items-center gap-2 px-2 py-1.5 text-[11px] uppercase tracking-widest text-[#98A2B3] font-semibold hover:text-[#D0D5DD] transition-colors"
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-[11px] uppercase tracking-widest text-[color:var(--text-muted)] font-semibold hover:text-[color:var(--text-secondary)] transition-colors"
             >
               {collapsed[sec.slug] ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-              <Icon size={13} className="text-[#00FFA7]/60" />
+              <Icon size={13} className="text-[color:var(--evo-green)]/60" />
               {sec.title}
             </button>
             {!collapsed[sec.slug] && (
@@ -200,8 +201,8 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
                       onClick={() => handleNav(child.slug)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-0.5 block ${
                         activeSlug === child.slug
-                          ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-l-2 border-[#00FFA7]'
-                          : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
+                          ? 'text-[color:var(--evo-green)] bg-[color:var(--evo-green)]/10 border-l-2 border-[color:var(--evo-green)]'
+                          : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 border-l-2 border-transparent'
                       }`}
                     >
                       {child.title}
@@ -222,10 +223,10 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
 
       {/* Back to dashboard */}
       {!embedded && (
-        <div className="px-4 py-3 border-t border-[#344054]/50">
+        <div className="px-4 py-3 border-t border-[color:var(--border)]/50">
           <a
             href="/"
-            className="flex items-center justify-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
+            className="flex items-center justify-center gap-1.5 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors"
           >
             Back to Dashboard
           </a>
@@ -235,12 +236,12 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
   )
 
   return (
-    <div className={`flex ${embedded ? 'h-full' : 'min-h-screen'} bg-[#0C111D]`}>
+    <div className={`flex ${embedded ? 'h-full' : 'min-h-screen'} bg-[color:var(--bg-primary)]`}>
       {/* Mobile hamburger — só na rota standalone (a página pai já tem o dela) */}
       {!embedded && (
         <button
           onClick={() => setMobileOpen(true)}
-          className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[#182230] border border-[#344054] text-[#D0D5DD] hover:text-[#00FFA7] transition-colors"
+          className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[color:var(--text-secondary)] hover:text-[color:var(--evo-green)] transition-colors"
         >
           <Menu size={20} />
         </button>
@@ -259,8 +260,8 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
         className={embedded
           // Embutido: coluna estática em fluxo, largura fixa menor, sem offset
           // de viewport (a sidebar do dashboard continua à esquerda).
-          ? 'w-60 lg:w-64 flex-shrink-0 bg-[#0a0f1a] border-r border-[#344054] flex flex-col overflow-y-auto'
-          : `fixed left-0 top-0 bottom-0 w-64 bg-[#0a0f1a] border-r border-[#344054] flex flex-col z-50
+          ? 'w-60 lg:w-64 flex-shrink-0 bg-[color:var(--bg-sidebar)] border-r border-[color:var(--border)] flex flex-col overflow-y-auto'
+          : `fixed left-0 top-0 bottom-0 w-64 bg-[color:var(--bg-sidebar)] border-r border-[color:var(--border)] flex flex-col z-50
              transition-transform duration-200 ease-in-out
              lg:translate-x-0
               ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
@@ -272,7 +273,7 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
       <main className={`flex-1 p-4 lg:p-12 pt-16 lg:pt-12 overflow-auto ${embedded ? '' : 'ml-0 lg:ml-64'}`}>
         <div className="max-w-4xl mx-auto">
           {loading && sections.length > 0 ? (
-            <div className="text-[#98A2B3] text-sm">Loading...</div>
+            <div className="text-[color:var(--text-muted)] text-sm">Loading...</div>
           ) : (
             <article className="docs-content">
               <ReactMarkdown
@@ -282,14 +283,14 @@ export default function Docs({ embedded = false }: { embedded?: boolean }) {
                     <img
                       src={src?.startsWith('/api/') ? `${API}${src}` : src}
                       alt={alt || ''}
-                      className="rounded-lg border border-[#344054] my-4 max-w-full"
+                      className="rounded-lg border border-[color:var(--border)] my-4 max-w-full"
                       {...props}
                     />
                   ),
                   a: ({ href, children, ...props }) => (
                     <a
                       href={href}
-                      className="text-[#00FFA7] hover:underline"
+                      className="text-[color:var(--evo-green)] hover:underline"
                       target={href?.startsWith('http') ? '_blank' : undefined}
                       rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
                       {...props}

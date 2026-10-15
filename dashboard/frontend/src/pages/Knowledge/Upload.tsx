@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useRef, useEffect } from 'react'
 import { Upload as UploadIcon, X, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -28,14 +29,14 @@ interface Unit {
 }
 
 function PhaseBar({ phase }: { phase: FilePhase }) {
-  if (phase === 'done') return <div className="h-1.5 bg-[#00FFA7] rounded-full w-full" />
+  if (phase === 'done') return <div className="h-1.5 bg-[color:var(--evo-green)] rounded-full w-full" />
   if (phase === 'error') return <div className="h-1.5 bg-red-500 rounded-full w-full" />
   if (phase === 'queued') return <div className="h-1.5 bg-white/10 rounded-full w-full" />
   const idx = PHASES.indexOf(phase)
   const pct = Math.round(((idx + 1) / (PHASES.length - 1)) * 100)
   return (
-    <div className="h-1.5 bg-[#0C111D] rounded-full overflow-hidden">
-      <div className="h-full bg-[#00FFA7] transition-all duration-500" style={{ width: `${pct}%` }} />
+    <div className="h-1.5 bg-[color:var(--bg-primary)] rounded-full overflow-hidden">
+      <div className="h-full bg-[color:var(--evo-green)] transition-all duration-500" style={{ width: `${pct}%` }} />
     </div>
   )
 }
@@ -184,11 +185,11 @@ export default function KnowledgeUpload() {
   }
 
   if (!canManage) {
-    return <div className="text-center py-12 text-[#98A2B3] text-sm">You don&apos;t have permission to upload documents.</div>
+    return <div className="text-center py-12 text-[color:var(--text-muted)] text-sm">You don&apos;t have permission to upload documents.</div>
   }
 
   if (!activeConnectionId) {
-    return <div className="text-center py-12 text-[#98A2B3] text-sm">Select a connection using the switcher above.</div>
+    return <div className="text-center py-12 text-[color:var(--text-muted)] text-sm">Select a connection using the switcher above.</div>
   }
 
   const hasPending = files.some((f) => f.phase === 'queued')
@@ -198,22 +199,22 @@ export default function KnowledgeUpload() {
       {/* Space + Unit selectors */}
       <div className="flex items-center gap-3 flex-wrap">
         <div>
-          <label className="block text-xs text-[#98A2B3] mb-1">Space *</label>
+          <label className="block text-xs text-[color:var(--text-muted)] mb-1">Space *</label>
           <select
             value={selectedSpaceId}
             onChange={(e) => setSelectedSpaceId(e.target.value)}
-            className="bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#D0D5DD] focus:border-[#00FFA7] focus:outline-none"
+            className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-secondary)] focus:border-[color:var(--evo-green)] focus:outline-none"
           >
             {spaces.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
         {units.length > 0 && (
           <div>
-            <label className="block text-xs text-[#98A2B3] mb-1">Unit (optional)</label>
+            <label className="block text-xs text-[color:var(--text-muted)] mb-1">Unit (optional)</label>
             <select
               value={selectedUnitId}
               onChange={(e) => setSelectedUnitId(e.target.value)}
-              className="bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#D0D5DD] focus:border-[#00FFA7] focus:outline-none"
+              className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-secondary)] focus:border-[color:var(--evo-green)] focus:outline-none"
             >
               <option value="">No unit</option>
               {units.map((u) => <option key={u.id} value={u.id}>{u.title}</option>)}
@@ -229,12 +230,12 @@ export default function KnowledgeUpload() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
-          dragging ? 'border-[#00FFA7] bg-[#00FFA7]/5' : 'border-[#344054] hover:border-[#00FFA7]/40 hover:bg-white/2'
+          dragging ? 'border-[color:var(--evo-green)] bg-[color:var(--evo-green)]/5' : 'border-[color:var(--border)] hover:border-[color:var(--evo-green)]/40 hover:bg-white/2'
         }`}
       >
-        <UploadIcon size={28} className={`mx-auto mb-3 ${dragging ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`} />
-        <p className="text-sm font-medium text-[#D0D5DD]">Drag files here or click to browse</p>
-        <p className="text-xs text-[#98A2B3] mt-1">PDF, DOCX, PPTX, XLSX, HTML, EPUB, TXT, MD, CSV, JSON, images · Max 100 MB per file</p>
+        <UploadIcon size={28} className={`mx-auto mb-3 ${dragging ? 'text-[color:var(--evo-green)]' : 'text-[color:var(--text-muted)]'}`} />
+        <p className="text-sm font-medium text-[color:var(--text-secondary)]">Drag files here or click to browse</p>
+        <p className="text-xs text-[color:var(--text-muted)] mt-1">PDF, DOCX, PPTX, XLSX, HTML, EPUB, TXT, MD, CSV, JSON, images · Max 100 MB per file</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -254,31 +255,31 @@ export default function KnowledgeUpload() {
       {files.length > 0 && (
         <div className="space-y-2">
           {files.map((item) => (
-            <div key={item.id} className="bg-[#182230] border border-[#344054] rounded-xl p-4">
+            <div key={item.id} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#D0D5DD] truncate">{item.file.name}</p>
-                  <p className="text-xs text-[#98A2B3]">
+                  <p className="text-sm font-medium text-[color:var(--text-secondary)] truncate">{item.file.name}</p>
+                  <p className="text-xs text-[color:var(--text-muted)]">
                     {(item.file.size / 1024 / 1024).toFixed(1)} MB
                     {' · '}
                     {item.phase === 'done' ? (
-                      <span className="text-[#00FFA7]">Done</span>
+                      <span className="text-[color:var(--evo-green)]">Done</span>
                     ) : item.phase === 'error' ? (
                       <span className="text-red-400">{item.error}</span>
                     ) : item.phase === 'queued' ? (
                       <span>Queued</span>
                     ) : (
-                      <span className="capitalize text-[#00FFA7]">{item.phase}...</span>
+                      <span className="capitalize text-[color:var(--evo-green)]">{item.phase}...</span>
                     )}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {item.phase === 'done' && <CheckCircle size={16} className="text-[#00FFA7]" />}
+                  {item.phase === 'done' && <CheckCircle size={16} className="text-[color:var(--evo-green)]" />}
                   {item.phase === 'error' && <XCircle size={16} className="text-red-400" />}
                   {(item.phase !== 'scanning' && item.phase !== 'parsing' && item.phase !== 'chunking' && item.phase !== 'embedding' && item.phase !== 'storing' && item.phase !== 'classifying') && (
                     <button
                       onClick={() => removeFile(item.id)}
-                      className="p-1 rounded text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+                      className="p-1 rounded text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
                     >
                       <X size={12} />
                     </button>
@@ -293,14 +294,14 @@ export default function KnowledgeUpload() {
             <button
               onClick={handleUpload}
               disabled={uploading || !hasPending || !selectedSpaceId}
-              className="flex items-center gap-2 px-4 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg text-sm font-medium hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg text-sm font-medium hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
             >
               {uploading ? <RefreshCw size={14} className="animate-spin" /> : <UploadIcon size={14} />}
               Upload {hasPending ? `${files.filter((f) => f.phase === 'queued').length} file(s)` : ''}
             </button>
             <button
               onClick={() => setFiles([])}
-              className="px-4 py-2 bg-white/5 text-[#D0D5DD] rounded-lg text-sm hover:bg-white/10 transition-colors"
+              className="px-4 py-2 bg-white/5 text-[color:var(--text-secondary)] rounded-lg text-sm hover:bg-white/10 transition-colors"
             >
               Clear all
             </button>

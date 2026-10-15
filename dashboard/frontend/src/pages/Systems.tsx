@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useConfirm } from '../components/ConfirmDialog'
 import { ExternalLink, Play, Square, RefreshCw, Plus, Pencil, Trash2, X, Monitor, Container, Globe, AppWindow } from 'lucide-react'
@@ -130,21 +131,21 @@ export default function Systems() {
       <div className="flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
         <div className="flex items-center justify-between mb-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => setViewApp(null)} className="text-[#00FFA7] text-sm hover:underline">
+            <button onClick={() => setViewApp(null)} className="text-[color:var(--evo-green)] text-sm hover:underline">
               &larr; Back
             </button>
-            <h1 className="text-xl font-bold text-[#e6edf3]">{viewApp.name}</h1>
+            <h1 className="text-xl font-bold text-[color:var(--text-primary)]">{viewApp.name}</h1>
             {viewApp.running !== null && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${viewApp.running ? 'bg-[#00FFA7]/10 text-[#00FFA7]' : 'bg-red-500/10 text-red-400'}`}>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${viewApp.running ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]' : 'bg-red-500/10 text-red-400'}`}>
                 {viewApp.running ? 'Running' : 'Stopped'}
               </span>
             )}
           </div>
-          <a href={viewApp.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#00FFA7] transition-colors">
+          <a href={viewApp.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors">
             Open in new tab <ExternalLink size={12} />
           </a>
         </div>
-        <div className="flex-1 bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
+        <div className="flex-1 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl overflow-hidden">
           <iframe src={viewApp.url} className="w-full h-full border-0" title={viewApp.name} />
         </div>
       </div>
@@ -155,19 +156,19 @@ export default function Systems() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#e6edf3]">{t('systems.title')}</h1>
-          <p className="text-[#98A2B3] mt-1">Registered applications and services</p>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('systems.title')}</h1>
+          <p className="text-[color:var(--text-muted)] mt-1">Registered applications and services</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setLoading(true); fetchApps() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors"
           >
             <RefreshCw size={16} /> Refresh
           </button>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0d1117] font-semibold text-sm hover:bg-[#00FFA7]/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors"
           >
             <Plus size={16} /> Add System
           </button>
@@ -180,11 +181,11 @@ export default function Systems() {
         </div>
       ) : apps.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-[#161b22] border border-[#21262d] flex items-center justify-center mx-auto mb-4">
-            <Monitor size={28} className="text-[#98A2B3]" />
+          <div className="w-16 h-16 rounded-2xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center mx-auto mb-4">
+            <Monitor size={28} className="text-[color:var(--text-muted)]" />
           </div>
-          <p className="text-[#98A2B3] mb-4">No systems registered yet.</p>
-          <button onClick={openCreate} className="text-[#00FFA7] text-sm hover:underline">
+          <p className="text-[color:var(--text-muted)] mb-4">No systems registered yet.</p>
+          <button onClick={openCreate} className="text-[color:var(--evo-green)] text-sm hover:underline">
             Add your first system
           </button>
         </div>
@@ -194,7 +195,7 @@ export default function Systems() {
             const tc = getTypeConfig(app.type)
             const TypeIcon = tc.icon
             return (
-              <div key={app.id} className="bg-[#161b22] border border-[#21262d] rounded-xl p-5 hover:border-[#00FFA7]/30 transition-all group">
+              <div key={app.id} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5 hover:border-[color:var(--evo-green)]/30 transition-all group">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl" style={{ background: tc.bg, border: `1px solid ${tc.border}` }}>
@@ -202,7 +203,7 @@ export default function Systems() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2.5">
-                        <h3 className="text-[15px] font-semibold text-[#e6edf3]">{app.name}</h3>
+                        <h3 className="text-[15px] font-semibold text-[color:var(--text-primary)]">{app.name}</h3>
                         <span
                           className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border"
                           style={{ background: tc.bg, color: tc.text, borderColor: tc.border }}
@@ -211,7 +212,7 @@ export default function Systems() {
                           {tc.label}
                         </span>
                       </div>
-                      <p className="text-sm text-[#98A2B3] mt-0.5">{app.description}</p>
+                      <p className="text-sm text-[color:var(--text-muted)] mt-0.5">{app.description}</p>
                     </div>
                   </div>
 
@@ -219,9 +220,9 @@ export default function Systems() {
                     {/* Status */}
                     {app.running !== null && (
                       <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-                        app.running ? 'bg-[#00FFA7]/10 text-[#00FFA7]' : 'bg-red-500/10 text-red-400'
+                        app.running ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]' : 'bg-red-500/10 text-red-400'
                       }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${app.running ? 'bg-[#00FFA7] animate-pulse' : 'bg-red-400'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${app.running ? 'bg-[color:var(--evo-green)] animate-pulse' : 'bg-red-400'}`} />
                         {app.running ? 'Running' : 'Stopped'}
                       </span>
                     )}
@@ -230,7 +231,7 @@ export default function Systems() {
                     {app.url && (
                       <button
                         onClick={() => setViewApp(app)}
-                        className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20 border border-[#00FFA7]/20 transition-colors font-medium"
+                        className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 border border-[color:var(--evo-green)]/20 transition-colors font-medium"
                       >
                         <ExternalLink size={13} /> Open
                       </button>
@@ -253,7 +254,7 @@ export default function Systems() {
                           className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 border ${
                             app.running
                               ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20'
-                              : 'bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20 border-[#00FFA7]/20'
+                              : 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 border-[color:var(--evo-green)]/20'
                           }`}
                         >
                           {app.running ? <><Square size={13} /> Stop</> : <><Play size={13} /> Start</>}
@@ -262,22 +263,22 @@ export default function Systems() {
                     )}
 
                     {/* Edit / Delete */}
-                    <button onClick={() => openEdit(app)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-white/5 transition-colors" title="Edit">
+                    <button onClick={() => openEdit(app)} className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-white/5 transition-colors" title="Edit">
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => handleDelete(app)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
+                    <button onClick={() => handleDelete(app)} className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
                       <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
 
                 {/* Details */}
-                <div className="mt-4 pt-3 border-t border-[#21262d]/60 flex items-center gap-4 text-xs text-[#98A2B3]">
+                <div className="mt-4 pt-3 border-t border-[color:var(--border)]/60 flex items-center gap-4 text-xs text-[color:var(--text-muted)]">
                   {app.container && (
-                    <span>Container: <code className="text-[#e6edf3] bg-black/30 px-1.5 py-0.5 rounded font-mono">{app.container}</code></span>
+                    <span>Container: <code className="text-[color:var(--text-primary)] bg-black/30 px-1.5 py-0.5 rounded font-mono">{app.container}</code></span>
                   )}
                   {app.url && (
-                    <span>URL: <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-[#00FFA7] hover:underline">{app.url}</a></span>
+                    <span>URL: <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-[color:var(--evo-green)] hover:underline">{app.url}</a></span>
                   )}
                 </div>
               </div>
@@ -289,10 +290,10 @@ export default function Systems() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="bg-[#161b22] rounded-2xl border border-[#21262d] p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-[color:var(--bg-card)] rounded-2xl border border-[color:var(--border)] p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-[#e6edf3]">{editingId ? 'Edit System' : 'Add System'}</h2>
-              <button onClick={() => setModalOpen(false)} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors"><X size={18} /></button>
+              <h2 className="text-lg font-bold text-[color:var(--text-primary)]">{editingId ? 'Edit System' : 'Add System'}</h2>
+              <button onClick={() => setModalOpen(false)} className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"><X size={18} /></button>
             </div>
 
             {error && (
@@ -302,16 +303,16 @@ export default function Systems() {
             <div className="space-y-3">
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-[#e6edf3] mb-1">Name *</label>
+                  <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Name *</label>
                   <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                    className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                     placeholder="My App" />
                 </div>
                 <div className="w-20">
-                  <label className="block text-sm font-medium text-[#e6edf3] mb-1">Icon</label>
+                  <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Icon</label>
                   <div className="relative">
                     <select value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                      className="w-full px-2 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-white text-lg text-center focus:outline-none focus:border-[#00FFA7] appearance-none transition-colors">
+                      className="w-full px-2 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-white text-lg text-center focus:outline-none focus:border-[color:var(--evo-green)] appearance-none transition-colors">
                       {ICONS.map(i => <option key={i} value={i}>{i}</option>)}
                     </select>
                   </div>
@@ -319,30 +320,30 @@ export default function Systems() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#e6edf3] mb-1">Description</label>
+                <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Description</label>
                 <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                   placeholder="What this system does" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#e6edf3] mb-1">URL</label>
+                <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">URL</label>
                 <input type="text" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                   placeholder="http://localhost:3000" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-[#e6edf3] mb-1">Docker Container</label>
+                  <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Docker Container</label>
                   <input type="text" value={form.container} onChange={(e) => setForm({ ...form, container: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                    className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                     placeholder="my-container" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#e6edf3] mb-1">Type</label>
+                  <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Type</label>
                   <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors">
+                    className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors">
                     <option value="docker">Docker</option>
                     <option value="external">External URL</option>
                     <option value="iframe">Embedded (iframe)</option>
@@ -353,11 +354,11 @@ export default function Systems() {
 
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-[#98A2B3] text-sm hover:text-[#e6edf3] hover:bg-white/5 transition-colors">
+                className="px-4 py-2 rounded-lg text-[color:var(--text-muted)] text-sm hover:text-[color:var(--text-primary)] hover:bg-white/5 transition-colors">
                 Cancel
               </button>
               <button onClick={handleSubmit} disabled={submitting}
-                className="px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0d1117] font-semibold text-sm hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50">
+                className="px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50">
                 {submitting ? 'Saving...' : editingId ? 'Save' : 'Add System'}
               </button>
             </div>

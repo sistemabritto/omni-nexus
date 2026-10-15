@@ -7,8 +7,9 @@ import { useCompanies, type Company } from '../context/CompanyContext'
 import CompanyManagerModal from './CompanyManagerModal'
 import CompanyListModal from './CompanyListModal'
 import NotificationBell from './NotificationBell'
+import './Sidebar.css'
 import {
-  LayoutDashboard, Bot, Clock,
+  LayoutDashboard, MessageSquare, Brain, Workflow, Bot, Clock,
   LogOut, Menu, X,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
@@ -31,8 +32,10 @@ interface VersionInfo {
 
 interface NavItem {
   to: string
+  label?: string
   labelKey: string           // i18n key under nav.*
   icon: React.ComponentType<{ size?: number }>
+  action?: 'view' | 'manage'
   resource: string | null
   desktopOnly?: boolean
 }
@@ -48,40 +51,50 @@ interface NavSection {
 }
 
 const navSections: NavSection[] = [
-  {
-    key: 'cockpit',
-    title: 'Cockpit',
-    items: [
-      // Os 5 domínios viraram abas da única página /?tab=. 1 link no topo.
-      { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
-    ],
-  },
-   {
-    // Missões → Projetos → Metas → Tickets numa única árvore (W2, 2026-09-20 —
-    // a unificação dos zôms /projects e /goals). Ficam sem título, entre
-    // Cockpit e a seção Inteligência. Materiais vai no fim do bloco — abaixo do
-    // Kanban, logo acima do título Inteligência (decisão do dono, 20/09): é
-    // material de trabalho, não "cérebro".
-    key: 'projetos',
-    items: [
-      { to: '/missions', labelKey: 'missions', icon: Target, resource: 'goals' },
-      { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
-      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
-    ],
-  },
-  {
-    key: 'inteligencia',
-    title: 'Inteligência',
-    items: [
-      // Tudo que dá cérebro à operação: agentes + o que acorda cada um +
-      // o hub de integrações (APIs).
-      { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
-      { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
-      { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
-      { to: '/triggers', labelKey: 'triggers', icon: Webhook, resource: 'triggers' },
-      { to: '/inteligencia', labelKey: 'integrations', icon: Plug, resource: null },
-    ],
-  },
+  {key:'workspace',title:'Workspace',items:[
+    {to:'/',labelKey:'overview',label:'Conversa central',icon:MessageSquare,resource:null},
+    {to:'/agents',labelKey:'agents',label:'Squad de agentes',icon:Bot,resource:'agents'},
+    {to:'/approvals',labelKey:'kanban',label:'Aprovações',icon:Check,resource:'goals'},
+  ]},
+  {key:'work',title:'Trabalho',items:[
+    {to:'/missions',labelKey:'missions',label:'Projetos e missões',icon:Target,resource:'goals'},
+    {to:'/kanban',labelKey:'kanban',label:'Quadro de trabalho',icon:Columns3,resource:'tickets'},
+    {to:'/workspace',labelKey:'workspace',icon:FolderOpen,resource:'workspace'},
+  ]},
+  {key:'operations',title:'Operação',items:[
+    {to:'/overview',labelKey:'overview',label:'Painel operacional',icon:LayoutDashboard,resource:null},
+    {to:'/orquestracao',labelKey:'overview',label:'Jobs e bloqueios',icon:Workflow,resource:null},
+    {to:'/tasks',labelKey:'overview',label:'Tarefas',icon:Check,resource:null},
+    {to:'/activity',labelKey:'overview',label:'Atividade',icon:Clock,resource:'scheduler'},
+    {to:'/scheduler',labelKey:'overview',label:'Agenda',icon:Clock,resource:'scheduler'},
+    {to:'/routines',labelKey:'routines',icon:Clock,resource:'routines'},
+    {to:'/heartbeats',labelKey:'heartbeats',icon:Heart,resource:'heartbeats'},
+    {to:'/triggers',labelKey:'triggers',icon:Webhook,resource:'triggers'},
+    {to:'/media',labelKey:'overview',label:'Conteúdo e mídia',icon:FolderOpen,resource:'media_jobs'},
+  ]},
+  {key:'knowledge',title:'Memória e conhecimento',items:[
+    {to:'/memory',labelKey:'overview',label:'Memória e fontes',icon:Brain,resource:null},
+    {to:'/knowledge',labelKey:'overview',label:'Base de conhecimento',icon:Brain,resource:'knowledge'},
+    {to:'/skills',labelKey:'overview',label:'Skills',icon:Bot,resource:null},
+    {to:'/mempalace',labelKey:'overview',label:'Palácio de memória',icon:Brain,resource:null},
+  ]},
+  {key:'connections',title:'Conexões e ferramentas',items:[
+    {to:'/inteligencia',labelKey:'integrations',icon:Plug,resource:null},
+    {to:'/providers',labelKey:'overview',label:'Provedores',icon:Plug,resource:null},
+    {to:'/mcp-servers',labelKey:'overview',label:'Servidores MCP',icon:Plug,resource:null},
+    {to:'/plugins',labelKey:'overview',label:'Plugins',icon:Puzzle,resource:null},
+    {to:'/templates',labelKey:'overview',label:'Templates',icon:FolderOpen,resource:null},
+    {to:'/systems',labelKey:'overview',label:'Sistemas',icon:Settings2,resource:null},
+  ]},
+  {key:'administration',title:'Administração',items:[
+    {to:'/settings',labelKey:'overview',label:'Configurações',icon:Settings,resource:'config'},
+    {to:'/users',labelKey:'overview',label:'Usuários',icon:Building2,resource:'users'},
+    {to:'/roles',labelKey:'overview',label:'Papéis e permissões',icon:Settings2,resource:'users',action:'manage'},
+    {to:'/audit',labelKey:'overview',label:'Auditoria',icon:Check,resource:'audit'},
+    {to:'/backups',labelKey:'overview',label:'Backups',icon:FolderOpen,resource:'config'},
+    {to:'/shares',labelKey:'overview',label:'Compartilhamentos',icon:FolderOpen,resource:'workspace',action:'manage'},
+    {to:'/costs',labelKey:'overview',label:'Custos',icon:LayoutDashboard,resource:null},
+  ]},
 ]
 
 const STORAGE_KEY = 'sidebar-collapsed-groups'
@@ -148,7 +161,7 @@ function CompanySwitcher({
     company?.logo_url ? (
       <img src={company.logo_url} alt="" className="rounded-md object-cover shrink-0" style={{ width: size, height: size }} />
     ) : (
-      <span className="flex items-center justify-center rounded-md bg-white/5 text-[#98A2B3] shrink-0" style={{ width: size, height: size }}>
+      <span className="flex items-center justify-center rounded-md bg-white/5 text-[color:var(--text-muted)] shrink-0" style={{ width: size, height: size }}>
         <Building2 size={size * 0.9} />
       </span>
     )
@@ -160,27 +173,28 @@ function CompanySwitcher({
     <div ref={rootRef}>
       <button
         onClick={() => setOpen((v) => !v)}
+        aria-label={t('shell.selectCompany')}
         aria-haspopup="menu"
         aria-expanded={open}
         title={t('nav.companies.activeLabel')}
-        className={`flex items-center gap-1.5 min-w-0 w-full text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#00FFA7]/60 ${
-          open ? 'text-[#D0D5DD]' : ''
+        className={`flex items-center gap-1.5 min-w-0 w-full text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--evo-green)]/60 ${
+          open ? 'text-[color:var(--text-secondary)]' : ''
         }`}
       >
         {mark(active)}
-        <span className="text-xs truncate min-w-0 group-hover:text-[#D0D5DD] text-[#98A2B3] transition-colors">
+        <span className="text-xs truncate min-w-0 group-hover:text-[color:var(--text-secondary)] text-[color:var(--text-muted)] transition-colors">
           {active ? active.name : t('nav.companies.all')}
         </span>
         <ChevronDown
           size={12}
-          className={`text-[#475467] transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : 'group-hover:text-[#98A2B3]'}`}
+          className={`text-[#475467] transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : 'group-hover:text-[color:var(--text-muted)]'}`}
         />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute bottom-full -left-3 right-0 mb-1.5 z-50 rounded-xl border border-white/10 bg-[#0C111D]/95 backdrop-blur-md shadow-2xl shadow-black/60 p-1"
+          className="absolute bottom-full -left-3 right-0 mb-1.5 z-50 rounded-xl border border-white/10 bg-[color:var(--bg-primary)]/95 backdrop-blur-md shadow-2xl shadow-black/60 p-1"
         >
           <div className="px-2.5 pt-1.5 pb-1 text-[10px] uppercase tracking-wider text-[#475467] font-semibold select-none">
             {t('nav.companies.activeLabel')}
@@ -192,13 +206,13 @@ function CompanySwitcher({
             onClick={() => { onSelect(null); setOpen(false) }}
             className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
               activeCompanyId === null
-                ? 'text-white bg-[#00FFA7]/10'
-                : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5'
+                ? 'text-white bg-[color:var(--evo-green)]/10'
+                : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5'
             }`}
           >
             <Building2 size={15} className="shrink-0 opacity-70" />
             <span className="flex-1 truncate font-medium">{t('nav.companies.all')}</span>
-            {activeCompanyId === null && <Check size={14} className="text-[#00FFA7] shrink-0" />}
+            {activeCompanyId === null && <Check size={14} className="text-[color:var(--evo-green)] shrink-0" />}
           </button>
 
           <div className="my-1 h-px bg-white/10" />
@@ -211,8 +225,8 @@ function CompanySwitcher({
               onClick={() => { onSelect(c.id); setOpen(false) }}
               className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
                 c.id === activeCompanyId
-                  ? 'text-white bg-[#00FFA7]/10'
-                  : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5'
+                  ? 'text-white bg-[color:var(--evo-green)]/10'
+                  : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5'
               }`}
             >
               {mark(c, 22)}
@@ -220,7 +234,7 @@ function CompanySwitcher({
                 <span className="block truncate font-medium">{c.name}</span>
                 <span className="block text-[10px] opacity-70 truncate">{c.slug}</span>
               </span>
-              {c.id === activeCompanyId && <Check size={14} className="text-[#00FFA7] shrink-0" />}
+              {c.id === activeCompanyId && <Check size={14} className="text-[color:var(--evo-green)] shrink-0" />}
             </button>
           ))}
 
@@ -229,7 +243,7 @@ function CompanySwitcher({
           <button
             role="menuitem"
             onClick={() => { setShowList(true); setOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
           >
             <Settings2 size={14} className="shrink-0 opacity-70" />
             {t('nav.companies.manageAll')}
@@ -238,7 +252,7 @@ function CompanySwitcher({
           <button
             role="menuitem"
             onClick={() => { onCreate(); setOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs font-medium text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors mt-0.5"
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs font-medium text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/10 transition-colors mt-0.5"
           >
             <Plus size={14} className="shrink-0" />
             {t('nav.companies.newTitle')}
@@ -259,6 +273,31 @@ export default function Sidebar() {
   const [manageCompany, setManageCompany] = useState<number | 'new' | null>(null)
   const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [desktop, setDesktop] = useState(() => window.matchMedia('(min-width:1024px)').matches)
+  const drawerRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const media = window.matchMedia('(min-width:1024px)')
+    const change = (event: MediaQueryListEvent) => { setDesktop(event.matches); if (event.matches) setMobileOpen(false) }
+    media.addEventListener('change', change)
+    return () => media.removeEventListener('change', change)
+  }, [])
+  useEffect(() => {
+    if (!mobileOpen) return
+    const previous = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    drawerRef.current?.querySelector<HTMLButtonElement>('[data-close-menu]')?.focus()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setMobileOpen(false); return }
+      if (event.key !== 'Tab') return
+      const controls = Array.from(drawerRef.current?.querySelectorAll<HTMLElement>('a[href],button:not(:disabled),select,input,[tabindex="0"]') || []).filter(el => el.getBoundingClientRect().width > 0)
+      const first = controls[0], last = controls[controls.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; previous?.focus() }
+  }, [mobileOpen])
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState)
   // Wave 2.1: plugin sidebar groups — refreshed after registry hydration
@@ -301,59 +340,52 @@ export default function Sidebar() {
       end={item.to === '/'}
       onClick={() => setMobileOpen(false)}
       className={({ isActive }) =>
-        `items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
+        `omn-nav-link items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60 ${
           item.desktopOnly ? 'hidden lg:flex' : 'flex'
         } ${
           isActive
-            ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-l-2 border-[#00FFA7]'
-            : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 border-l-2 border-transparent'
+            ? 'text-[color:var(--evo-green)] bg-[color:var(--evo-green)]/10 border-l-2 border-[color:var(--evo-green)]'
+            : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 border-l-2 border-transparent'
         }`
       }
     >
-      <item.icon size={16} />
-      {item.to === '/' ? 'OmniNexus Live' : t(`nav.${item.labelKey}`)}
+      <item.icon size={18} aria-hidden="true" />
+      {item.label ? t(`shell.links.${item.to === '/' ? 'root' : item.to.slice(1).replaceAll('-', '_')}`, {defaultValue:item.label}) : t(`nav.${item.labelKey}`)}
     </NavLink>
   )
 
   const renderSection = (section: NavSection) => {
     const visibleItems = section.items.filter(
-      (item) => item.resource === null || hasPermission(item.resource, 'view')
+      (item) => item.resource === null || hasPermission(item.resource, item.action || 'view')
     )
     if (visibleItems.length === 0) return null
 
-    return (
-      <div key={section.key} className="mb-1">
-        {section.title && (
-          <div className="px-3 pt-3 pb-1">
-            <span className="text-[10px] uppercase tracking-wider text-[#475467] font-semibold">
-              {t(`nav.groups.${section.key}`)}
-            </span>
-          </div>
-        )}
-        <div className={`flex flex-col gap-0.5 ${section.title ? 'mt-0' : 'mt-2 first:mt-0'}`}>
-          {visibleItems.map(renderLink)}
-        </div>
-      </div>
-    )
+    const key = `native-${section.key}`
+    const isCollapsed = collapsed[key] ?? !['workspace', 'work'].includes(section.key)
+    return <section key={section.key} className="omn-nav-group">
+      <button className="omn-nav-group-toggle" aria-expanded={!isCollapsed} aria-controls={`nav-${section.key}`} onClick={() => setCollapsed(prev => { const next = {...prev, [key]: !isCollapsed}; saveCollapsedState(next); return next })}>{t(`shell.groups.${section.key}`, {defaultValue:section.title})}<ChevronDown size={14} aria-hidden="true" style={{transform:isCollapsed?'rotate(-90deg)':undefined}} /></button>
+      <div id={`nav-${section.key}`} hidden={isCollapsed}>{visibleItems.map(renderLink)}</div>
+    </section>
   }
 
   const sidebarContent = (
     <>
-      <div className="px-5 py-6 flex items-center justify-between">
+      <div className="omn-brand"><span>OmniNexus <strong>Live</strong></span><small>{t('shell.tagline')}</small></div>
+      <div className="omn-upstream-logo px-5 py-6 flex items-center justify-between">
         <img
           src={activeCompany?.logo_url ?? '/EVO_NEXUS.webp'}
-          alt={activeCompany?.name ?? 'EvoNexus'}
+          alt={activeCompany?.logo_url ? activeCompany.name : 'EvoNexus'}
           className="h-8 w-auto"
         />
         <div className="flex items-center gap-1">
           <NotificationBell />
-          <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1 rounded hover:bg-white/10 text-[#98A2B3]">
+          <button data-close-menu aria-label={t('shell.closeMenu')} onClick={() => setMobileOpen(false)} className="lg:hidden p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)]">
             <X size={20} />
           </button>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav aria-label={t('shell.navigation')} className="flex-1 overflow-y-auto px-3 pb-4">
         {navSections.map(renderSection)}
 
         {/* Wave 2.1: Plugin sidebar groups injected after native groups */}
@@ -371,19 +403,19 @@ export default function Sidebar() {
                   onClick={() => toggleGroup(storageKey)}
                   className="w-full flex items-center justify-between px-3 py-1.5 mt-2 group cursor-pointer"
                 >
-                  <span className="text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold select-none">
+                  <span className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold select-none">
                     {group.label}
                   </span>
                   <ChevronDown
                     size={12}
-                    className={`text-[#98A2B3] transition-transform duration-200 group-hover:text-[#D0D5DD] ${
+                    className={`text-[color:var(--text-muted)] transition-transform duration-200 group-hover:text-[color:var(--text-secondary)] ${
                       isCollapsed ? '-rotate-90' : ''
                     }`}
                   />
                 </button>
               ) : (
                 <div className="px-3 py-1.5">
-                  <span className="text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">
+                  <span className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">
                     {group.label}
                   </span>
                 </div>
@@ -402,10 +434,10 @@ export default function Sidebar() {
                         to={`/plugins-ui/${page.slug}/${page.path}`}
                         onClick={() => setMobileOpen(false)}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border-l-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
+                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border-l-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60 ${
                             isActive
-                              ? 'text-[#00FFA7] bg-[#00FFA7]/10 border-[#00FFA7]'
-                              : 'text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 border-transparent'
+                              ? 'text-[color:var(--evo-green)] bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]'
+                              : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 border-transparent'
                           }`
                         }
                       >
@@ -421,13 +453,13 @@ export default function Sidebar() {
       </nav>
 
       {user && (
-        <div className="px-3 py-3 border-t border-[#344054] space-y-2">
+        <div className="px-3 py-3 border-t border-[color:var(--border)] space-y-2">
           {/* W3 (2026-09-21): empresa INTEGRADA ao card do perfil — linha 2 do
               perfil (logo + nome da empresa ativa), não uma linha solta acima.
               Clicar abre o seletor; badge de role fica na linha 1, ao lado do nome. */}
           <div className="relative">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#00FFA7]/20 text-[#00FFA7] flex items-center justify-center text-sm font-bold shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] flex items-center justify-center text-sm font-bold shrink-0">
                 {(user.display_name || user.username).charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -448,12 +480,12 @@ export default function Sidebar() {
                 ) : (
                   <button
                     onClick={() => setManageCompany('new')}
-                    className="flex items-center gap-1.5 min-w-0 w-full text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#00FFA7]/60"
+                    className="flex items-center gap-1.5 min-w-0 w-full text-left bg-transparent border p-0 cursor-pointer group rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--evo-green)]/60"
                   >
-                    <span className="flex items-center justify-center rounded-md bg-white/5 text-[#98A2B3] shrink-0" style={{ width: 14, height: 14 }}>
+                    <span className="flex items-center justify-center rounded-md bg-white/5 text-[color:var(--text-muted)] shrink-0" style={{ width: 14, height: 14 }}>
                       <Plus size={11} />
                     </span>
-                    <span className="text-xs truncate min-w-0 group-hover:text-[#D0D5DD] text-[#98A2B3] transition-colors">
+                    <span className="text-xs truncate min-w-0 group-hover:text-[color:var(--text-secondary)] text-[color:var(--text-muted)] transition-colors">
                       {t('nav.companies.addFirst')}
                     </span>
                   </button>
@@ -463,10 +495,10 @@ export default function Sidebar() {
                 to="/settings"
                 onClick={() => setMobileOpen(false)}
                 className={({ isActive }) =>
-                  `p-2 rounded-xl transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60 ${
+                  `p-2 rounded-xl transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60 ${
                     isActive
-                      ? 'bg-[#00FFA7]/15 text-[#00FFA7]'
-                      : 'bg-white/5 text-[#98A2B3] hover:bg-white/10 hover:text-[#D0D5DD]'
+                      ? 'bg-[color:var(--evo-green)]/15 text-[color:var(--evo-green)]'
+                      : 'bg-white/5 text-[color:var(--text-muted)] hover:bg-white/10 hover:text-[color:var(--text-secondary)]'
                   }`
                 }
                 title={t('nav.settings')}
@@ -475,7 +507,7 @@ export default function Sidebar() {
               </NavLink>
               <button
                 onClick={logout}
-                className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60"
+                className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60"
                 title={t('nav.logout')}
               >
                 <LogOut size={16} />
@@ -487,15 +519,15 @@ export default function Sidebar() {
 
       {/* Version indicator */}
       {versionInfo && (
-        <div className="px-4 py-2 border-t border-[#344054]/50">
+        <div className="px-4 py-2 border-t border-[color:var(--border)]/50">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="text-[#98A2B3]">v{versionInfo.current}</span>
+            <span className="text-[color:var(--text-muted)]">v{versionInfo.current}</span>
             {versionInfo.update_available && versionInfo.release_url && (
               <a
                 href={versionInfo.release_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[#00FFA7] hover:text-[#00FFA7]/80 transition-colors"
+                className="flex items-center gap-1 text-[color:var(--evo-green)] hover:text-[color:var(--evo-green)]/80 transition-colors"
                 title={t('nav.updateAvailable', { version: versionInfo.latest })}
               >
                 <ArrowUpCircle size={12} />
@@ -507,14 +539,15 @@ export default function Sidebar() {
       )}
 
       {/* Credits */}
-      <div className="px-4 py-3 border-t border-[#344054]/50">
+      <div className="px-4 py-3 border-t border-[color:var(--border)]/50">
+        {activeCompany?.logo_url && <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-4 w-auto mx-auto mb-2" />}
         <a
           href="https://evolutionfoundation.com.br"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
+          className="flex items-center justify-center gap-1.5 text-[10px] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors"
         >
-          by <span className="font-semibold text-[#00FFA7]/60">Evolution Foundation</span>
+          by <span className="font-semibold text-[color:var(--evo-green)]/60">Evolution Foundation</span>
         </a>
       </div>
 
@@ -532,9 +565,10 @@ export default function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[#182230] border border-[#344054] text-[#D0D5DD] hover:text-[#00FFA7] transition-colors"
+        aria-label={t('shell.openMenu')} aria-expanded={mobileOpen} aria-controls="omn-navigation"
+        className="omn-menu-trigger fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[color:var(--text-secondary)] hover:text-[color:var(--evo-green)] transition-colors"
       >
-        <Menu size={20} />
+        <Menu size={20} aria-hidden="true" /><span>Menu</span>
       </button>
 
       {/* Mobile overlay */}
@@ -543,8 +577,8 @@ export default function Sidebar() {
       )}
 
       {/* Sidebar */}
-      <aside className={`
-        fixed left-0 top-0 bottom-0 w-60 bg-[#0a0f1a] border-r border-[#344054] flex flex-col z-50
+      <aside ref={drawerRef} id="omn-navigation" aria-label="OmniNexus Live" role={mobileOpen ? 'dialog' : undefined} aria-modal={mobileOpen || undefined} aria-hidden={!desktop && !mobileOpen} inert={!desktop && !mobileOpen} className={`omn-sidebar
+        fixed left-0 top-0 bottom-0 w-60 bg-[color:var(--bg-sidebar)] border-r border-[color:var(--border)] flex flex-col z-50
         transition-transform duration-200 ease-in-out
         lg:translate-x-0
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}

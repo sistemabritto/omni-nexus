@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -55,7 +56,7 @@ function MarketplaceTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-48">
-        <Loader2 size={20} className="text-[#00FFA7] animate-spin" />
+        <Loader2 size={20} className="text-[color:var(--evo-green)] animate-spin" />
       </div>
     )
   }
@@ -75,58 +76,58 @@ function MarketplaceTab() {
     <div>
       {/* Search */}
       <div className="relative mb-6">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('plugins.searchMarketplace')}
-          className="w-full bg-[#161b22] border border-[#21262d] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/40 transition-colors"
+          className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/40 transition-colors"
         />
       </div>
 
       {filtered.length === 0 ? (
         <div className="text-center py-12">
-          <Package size={32} className="text-[#344054] mx-auto mb-3" />
-          <p className="text-[#98A2B3] text-sm">{t('plugins.noMarketplaceResults')}</p>
+          <Package size={32} className="text-[color:var(--border)] mx-auto mb-3" />
+          <p className="text-[color:var(--text-muted)] text-sm">{t('plugins.noMarketplaceResults')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="group bg-[#161b22] border border-[#21262d] rounded-2xl p-5 transition-all duration-300 hover:border-[#00FFA7]/30 hover:shadow-[0_0_20px_rgba(0,255,167,0.04)]"
+              className="group bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-5 transition-all duration-300 hover:border-[color:var(--evo-green)]/30 hover:shadow-[0_0_20px_rgba(0,255,167,0.04)]"
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00FFA7]/15 to-transparent rounded-t-2xl" />
 
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15 shrink-0">
-                    <Package size={16} className="text-[#00FFA7]" />
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15 shrink-0">
+                    <Package size={16} className="text-[color:var(--evo-green)]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#e6edf3] truncate">{item.name}</p>
-                    <p className="text-xs text-[#98A2B3]">v{item.version}</p>
+                    <p className="text-sm font-semibold text-[color:var(--text-primary)] truncate">{item.name}</p>
+                    <p className="text-xs text-[color:var(--text-muted)]">v{item.version}</p>
                   </div>
                 </div>
                 {item.verified ? (
-                  <span className="flex items-center gap-1 text-[10px] font-medium text-[#00FFA7] bg-[#00FFA7]/10 px-2 py-0.5 rounded-full border border-[#00FFA7]/20 shrink-0">
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-[color:var(--evo-green)] bg-[color:var(--evo-green)]/10 px-2 py-0.5 rounded-full border border-[color:var(--evo-green)]/20 shrink-0">
                     <CheckCircle size={10} />
                     {t('plugins.verified')}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-medium text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full border border-[#344054] shrink-0">
+                  <span className="text-[10px] font-medium text-[color:var(--text-muted)] bg-[color:var(--border)] px-2 py-0.5 rounded-full border border-[color:var(--border)] shrink-0">
                     {t('plugins.community')}
                   </span>
                 )}
               </div>
 
-              <p className="text-xs text-[#98A2B3] mb-3 line-clamp-2">{item.description}</p>
+              <p className="text-xs text-[color:var(--text-muted)] mb-3 line-clamp-2">{item.description}</p>
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap gap-1">
                   {item.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="text-[10px] text-[#98A2B3] bg-[#0C111D] px-1.5 py-0.5 rounded">
+                    <span key={tag} className="text-[10px] text-[color:var(--text-muted)] bg-[color:var(--bg-primary)] px-1.5 py-0.5 rounded">
                       {tag}
                     </span>
                   ))}
@@ -137,7 +138,7 @@ function MarketplaceTab() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors flex items-center gap-1"
+                    className="text-[10px] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors flex items-center gap-1"
                   >
                     <Star size={10} />
                     {t('plugins.viewRepo')}
@@ -206,21 +207,21 @@ export default function Plugins() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('plugins.title')}</h1>
-          <p className="text-[#98A2B3] text-sm mt-1">{t('plugins.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('plugins.title')}</h1>
+          <p className="text-[color:var(--text-muted)] text-sm mt-1">{t('plugins.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={fetchPlugins}
             disabled={loading}
-            className="p-2 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+            className="p-2 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
             title={t('common.refresh')}
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             onClick={() => setShowInstall(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 transition-colors"
           >
             <Plus size={16} />
             {t('plugins.install')}
@@ -229,20 +230,20 @@ export default function Plugins() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-[#161b22] border border-[#21262d] rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-1 w-fit">
         {tabs.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
               tab === key
-                ? 'bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20'
-                : 'text-[#98A2B3] hover:text-[#D0D5DD]'
+                ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20'
+                : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)]'
             }`}
           >
             {label}
             {key === 'installed' && plugins.length > 0 && (
-              <span className="ml-1.5 text-[10px] bg-[#21262d] text-[#98A2B3] px-1.5 py-0.5 rounded-full">
+              <span className="ml-1.5 text-[10px] bg-[color:var(--border)] text-[color:var(--text-muted)] px-1.5 py-0.5 rounded-full">
                 {plugins.length}
               </span>
             )}
@@ -255,13 +256,13 @@ export default function Plugins() {
         <div>
           {/* Search */}
           <div className="relative mb-6">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('plugins.searchInstalled')}
-              className="w-full max-w-sm bg-[#161b22] border border-[#21262d] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/40 transition-colors"
+              className="w-full max-w-sm bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/40 transition-colors"
             />
           </div>
 
@@ -274,20 +275,20 @@ export default function Plugins() {
 
           {loading ? (
             <div className="flex items-center justify-center h-48">
-              <Loader2 size={20} className="text-[#00FFA7] animate-spin" />
+              <Loader2 size={20} className="text-[color:var(--evo-green)] animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#161b22] border border-[#21262d] mx-auto mb-4">
-                <Package size={28} className="text-[#344054]" />
+              <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[color:var(--bg-card)] border border-[color:var(--border)] mx-auto mb-4">
+                <Package size={28} className="text-[color:var(--border)]" />
               </div>
-              <p className="text-[#98A2B3] text-sm mb-4">
+              <p className="text-[color:var(--text-muted)] text-sm mb-4">
                 {plugins.length === 0 ? t('plugins.noPlugins') : t('common.noResults')}
               </p>
               {plugins.length === 0 && (
                 <button
                   onClick={() => setShowInstall(true)}
-                  className="text-sm text-[#00FFA7] hover:text-[#00FFA7]/80 transition-colors"
+                  className="text-sm text-[color:var(--evo-green)] hover:text-[color:var(--evo-green)]/80 transition-colors"
                 >
                   {t('plugins.installFirst')}
                 </button>

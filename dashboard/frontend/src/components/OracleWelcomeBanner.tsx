@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState } from 'react'
 import { X, BookOpen, Terminal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -38,7 +39,7 @@ export default function OracleWelcomeBanner() {
 
   return (
     <div
-      className="mb-5 flex items-center gap-4 px-4 py-3 rounded-xl border border-[#00FFA7]/20"
+      className="mb-5 flex items-center gap-4 px-4 py-3 rounded-xl border border-[color:var(--evo-green)]/20"
       style={{ backgroundColor: '#0b1a12' }}
     >
       {/* Icon */}
@@ -48,12 +49,12 @@ export default function OracleWelcomeBanner() {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-[#e6edf3]">
+        <p className="text-[13px] font-semibold text-[color:var(--text-primary)]">
           {t('agents.welcomeBanner.title')}
         </p>
         <p className="text-[11px] text-[#5a7a5a] mt-0.5 leading-snug">
           {t('agents.welcomeBanner.descriptionPart1')}
-          <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#0f2010] border border-[#00FFA7]/15 text-[#00FFA7]/80">
+          <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#0f2010] border border-[color:var(--evo-green)]/15 text-[color:var(--evo-green)]/80">
             <Terminal size={9} />
             /oracle
           </span>
@@ -64,7 +65,7 @@ export default function OracleWelcomeBanner() {
       {/* Dismiss */}
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e2e8f0] hover:bg-[#152030] transition-colors"
+        className="flex-shrink-0 p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[#e2e8f0] hover:bg-[color:var(--border)] transition-colors"
         aria-label={t('common.close')}
       >
         <X size={14} />

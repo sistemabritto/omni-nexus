@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -41,11 +42,11 @@ interface TicketItem {
 
 const STATUSES: Array<{ id: TicketStatus; label: string; icon: React.ReactNode; tone: string }> = [
   { id: 'open', label: 'Open', icon: <Clock size={13} />, tone: 'text-blue-400 border-blue-500/25 bg-blue-500/10' },
-  { id: 'in_progress', label: 'In Progress', icon: <RefreshCw size={13} />, tone: 'text-[#00FFA7] border-[#00FFA7]/25 bg-[#00FFA7]/10' },
+  { id: 'in_progress', label: 'In Progress', icon: <RefreshCw size={13} />, tone: 'text-[color:var(--evo-green)] border-[color:var(--evo-green)]/25 bg-[color:var(--evo-green)]/10' },
   { id: 'blocked', label: 'Blocked', icon: <AlertTriangle size={13} />, tone: 'text-red-400 border-red-500/25 bg-red-500/10' },
   { id: 'review', label: 'Review', icon: <Eye size={13} />, tone: 'text-purple-400 border-purple-500/25 bg-purple-500/10' },
   { id: 'resolved', label: 'Resolved', icon: <CheckCircle size={13} />, tone: 'text-gray-300 border-gray-500/25 bg-gray-500/10' },
-  { id: 'closed', label: 'Closed', icon: <XCircle size={13} />, tone: 'text-[#98A2B3] border-[#344054] bg-[#21262d]' },
+  { id: 'closed', label: 'Closed', icon: <XCircle size={13} />, tone: 'text-[color:var(--text-muted)] border-[color:var(--border)] bg-[color:var(--border)]' },
 ]
 
 const PRIORITY_ICON: Record<TicketPriority, React.ReactNode> = {
@@ -59,14 +60,14 @@ const PRIORITY_TONE: Record<TicketPriority, string> = {
   urgent: 'text-red-400 border-red-500/25 bg-red-500/10',
   high: 'text-orange-400 border-orange-500/25 bg-orange-500/10',
   medium: 'text-yellow-400 border-yellow-500/25 bg-yellow-500/10',
-  low: 'text-[#98A2B3] border-[#344054] bg-[#21262d]',
+  low: 'text-[color:var(--text-muted)] border-[color:var(--border)] bg-[color:var(--border)]',
 }
 
 const PRIORITY_RAIL: Record<TicketPriority, string> = {
   urgent: 'bg-red-500',
   high: 'bg-orange-400',
   medium: 'bg-yellow-400',
-  low: 'bg-[#344054]',
+  low: 'bg-[color:var(--border)]',
 }
 
 function formatAge(iso: string): string {
@@ -142,15 +143,15 @@ export default function Kanban() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0C111D]">
+    <div className="min-h-screen bg-[color:var(--bg-primary)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-            <Columns3 size={20} className="text-[#00FFA7]" />
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+            <Columns3 size={20} className="text-[color:var(--evo-green)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e6edf3]">Kanban</h1>
-            <p className="text-sm text-[#98A2B3]">{tickets.length} tickets ativos por status operacional</p>
+            <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">Kanban</h1>
+            <p className="text-sm text-[color:var(--text-muted)]">{tickets.length} tickets ativos por status operacional</p>
           </div>
         </div>
 
@@ -158,24 +159,24 @@ export default function Kanban() {
             de largura útil e rolava de lado antes mesmo do board. */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px] sm:flex-none">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar tickets..."
-              className="w-full sm:w-56 bg-[#161b22] border border-[#21262d] rounded-lg pl-9 pr-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+              className="w-full sm:w-56 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg pl-9 pr-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
             />
           </div>
           <button
             onClick={fetchTickets}
-            className="flex items-center gap-2 px-3 py-2 text-xs border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 rounded-lg transition-colors"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             Atualizar
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-semibold bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs font-semibold bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 transition-colors"
           >
             <Plus size={14} />
             Novo ticket
@@ -206,14 +207,14 @@ export default function Kanban() {
           return (
             <section
               key={column.id}
-              className="bg-[#161b22] border border-[#21262d] rounded-xl min-h-[320px] sm:min-h-[420px] w-[85vw] sm:w-auto min-w-0 shrink-0 sm:shrink flex flex-col snap-start sm:snap-align-none"
+              className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl min-h-[320px] sm:min-h-[420px] w-[85vw] sm:w-auto min-w-0 shrink-0 sm:shrink flex flex-col snap-start sm:snap-align-none"
             >
-              <header className="flex items-center justify-between px-3 py-3 border-b border-[#21262d]">
+              <header className="flex items-center justify-between px-3 py-3 border-b border-[color:var(--border)]">
                 <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium ${column.tone}`}>
                   {column.icon}
                   {column.label}
                 </span>
-                <span className="text-xs text-[#98A2B3]">{items.length}</span>
+                <span className="text-xs text-[color:var(--text-muted)]">{items.length}</span>
               </header>
 
               {/* Com o board quebrando em duas linhas, uma coluna com 40 tickets
@@ -222,16 +223,16 @@ export default function Kanban() {
                   impede que ela sequestre a rolagem da página ao chegar no fim. */}
               <div className="flex-1 p-2 space-y-2 sm:max-h-[calc(100vh-16rem)] sm:overflow-y-auto overscroll-contain">
                 {loading ? (
-                  <div className="text-xs text-[#98A2B3] px-2 py-6 text-center">Carregando...</div>
+                  <div className="text-xs text-[color:var(--text-muted)] px-2 py-6 text-center">Carregando...</div>
                 ) : items.length === 0 ? (
-                  <div className="text-xs text-[#98A2B3] px-2 py-6 text-center border border-dashed border-[#21262d] rounded-lg">
+                  <div className="text-xs text-[color:var(--text-muted)] px-2 py-6 text-center border border-dashed border-[color:var(--border)] rounded-lg">
                     Vazio
                   </div>
                 ) : (
                   items.map((ticket) => (
                     <article
                       key={ticket.id}
-                      className="group relative overflow-hidden bg-[#0C111D] border border-[#21262d] hover:border-[#344054] rounded-lg pl-3.5 pr-3 py-3 transition-colors"
+                      className="group relative overflow-hidden bg-[color:var(--bg-primary)] border border-[color:var(--border)] hover:border-[color:var(--border)] rounded-lg pl-3.5 pr-3 py-3 transition-colors"
                     >
                       <span
                         aria-hidden="true"
@@ -244,19 +245,19 @@ export default function Kanban() {
                       >
                         <div className="flex items-start gap-2">
                           {ticket.is_thread ? (
-                            ticket.assignee_agent ? <AgentIcon agent={ticket.assignee_agent} size={18} /> : <Ticket size={14} className="text-[#00FFA7] mt-0.5" />
+                            ticket.assignee_agent ? <AgentIcon agent={ticket.assignee_agent} size={18} /> : <Ticket size={14} className="text-[color:var(--evo-green)] mt-0.5" />
                           ) : (
-                            <Ticket size={14} className="text-[#98A2B3] mt-0.5" />
+                            <Ticket size={14} className="text-[color:var(--text-muted)] mt-0.5" />
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start gap-1.5">
-                              <h2 className="font-display text-[13.5px] font-semibold text-[#e6edf3] leading-snug tracking-tight line-clamp-2">
+                              <h2 className="font-display text-[13.5px] font-semibold text-[color:var(--text-primary)] leading-snug tracking-tight line-clamp-2">
                                 {ticket.title}
                               </h2>
                               {ticket.locked_at && <Lock size={12} className="text-orange-400 shrink-0 mt-0.5" aria-label={`Locked by ${ticket.locked_by || 'agent'}`} />}
                             </div>
                             {ticket.description && (
-                              <p className="mt-1 text-xs text-[#8b949e] leading-relaxed line-clamp-2">{ticket.description}</p>
+                              <p className="mt-1 text-xs text-[color:var(--text-muted)] leading-relaxed line-clamp-2">{ticket.description}</p>
                             )}
                           </div>
                         </div>
@@ -267,11 +268,11 @@ export default function Kanban() {
                           {PRIORITY_ICON[ticket.priority]}
                           {ticket.priority}
                         </span>
-                        <span className="font-ticket-mono text-[10px] text-[#98A2B3]">{formatAge(ticket.updated_at)}</span>
+                        <span className="font-ticket-mono text-[10px] text-[color:var(--text-muted)]">{formatAge(ticket.updated_at)}</span>
                       </div>
 
-                      <div className="mt-2.5 pt-2.5 border-t border-[#21262d]/60 flex items-center justify-between gap-2 min-w-0">
-                        <span className="font-ticket-mono text-[10px] text-[#98A2B3] truncate min-w-0">
+                      <div className="mt-2.5 pt-2.5 border-t border-[color:var(--border)]/60 flex items-center justify-between gap-2 min-w-0">
+                        <span className="font-ticket-mono text-[10px] text-[color:var(--text-muted)] truncate min-w-0">
                           {ticket.assignee_agent ? `@${ticket.assignee_agent}` : 'sem agente'}
                         </span>
                         {/* min-w-0 é o que permite encolher: o tamanho mínimo
@@ -281,7 +282,7 @@ export default function Kanban() {
                           value={ticket.status}
                           disabled={updating === ticket.id}
                           onChange={(e) => moveTicket(ticket, e.target.value as TicketStatus)}
-                          className="shrink-0 min-w-0 w-[104px] bg-[#161b22] border border-[#21262d] rounded-md px-2 py-1 text-[11px] text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50 disabled:opacity-60"
+                          className="shrink-0 min-w-0 w-[104px] bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-md px-2 py-1 text-[11px] text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50 disabled:opacity-60"
                           aria-label="Mover ticket"
                         >
                           {STATUSES.map((s) => (
@@ -299,11 +300,11 @@ export default function Kanban() {
       </div>
 
       {tickets.length === 0 && !loading && (
-        <div className="mt-2 flex items-center justify-center gap-3 text-xs text-[#98A2B3]">
+        <div className="mt-2 flex items-center justify-center gap-3 text-xs text-[color:var(--text-muted)]">
           Nenhum ticket ativo ainda.
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1.5 text-[#00FFA7] hover:underline"
+            className="flex items-center gap-1.5 text-[color:var(--evo-green)] hover:underline"
           >
             <Plus size={12} /> Criar o primeiro ticket
           </button>

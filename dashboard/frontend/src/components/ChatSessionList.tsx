@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState } from 'react'
 import { useConfirm } from './ConfirmDialog'
 import {
@@ -206,7 +207,7 @@ export default function ChatSessionList({
                   onKeyDown={handleRenameKey}
                   onBlur={commitRename}
                   onClick={(e) => e.stopPropagation()}
-                  className="flex-1 min-w-0 bg-[#0d1117] border border-[#30363d] rounded px-1.5 py-0.5 text-[12px] font-medium text-[#e6edf3] outline-none focus:border-[#58a6ff]"
+                  className="flex-1 min-w-0 bg-[color:var(--bg-primary)] border border-[#30363d] rounded px-1.5 py-0.5 text-[12px] font-medium text-[color:var(--text-primary)] outline-none focus:border-[#58a6ff]"
                 />
               ) : (
                 <p
@@ -238,7 +239,7 @@ export default function ChatSessionList({
               )}
             </div>
             {!isEditing && session.preview && (
-              <p className="text-[11px] text-[#98A2B3] truncate leading-tight">
+              <p className="text-[11px] text-[color:var(--text-muted)] truncate leading-tight">
                 {session.preview}
               </p>
             )}
@@ -290,7 +291,7 @@ export default function ChatSessionList({
             >
               <MessageSquare size={16} style={{ color: accentColor }} />
             </div>
-            <p className="text-[11px] text-[#98A2B3] text-center leading-relaxed">
+            <p className="text-[11px] text-[color:var(--text-muted)] text-center leading-relaxed">
               Nenhuma conversa ainda.<br />Inicie uma nova conversa abaixo.
             </p>
           </div>
@@ -308,7 +309,7 @@ export default function ChatSessionList({
               <div className={activeSessions.length > 0 ? 'mt-3' : ''}>
                 <button
                   onClick={() => setArchivedOpen(v => !v)}
-                  className="w-full flex items-center gap-1.5 px-1 py-1 text-[11px] text-[#98A2B3] hover:text-[#c9d1d9] transition-colors"
+                  className="w-full flex items-center gap-1.5 px-1 py-1 text-[11px] text-[color:var(--text-muted)] hover:text-[#c9d1d9] transition-colors"
                 >
                   {archivedOpen
                     ? <ChevronDown size={12} />
@@ -331,14 +332,14 @@ export default function ChatSessionList({
       {contextMenu && contextSession && (
         <div
           ref={menuRef}
-          className="fixed z-[200] rounded-lg border border-[#21262d] bg-[#161b22] shadow-2xl py-1 min-w-[160px]"
+          className="fixed z-[200] rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-2xl py-1 min-w-[160px]"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button
             className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#c9d1d9] hover:bg-white/5 transition-colors"
             onClick={() => startRename(contextSession)}
           >
-            <Edit2 size={13} className="text-[#98A2B3]" />
+            <Edit2 size={13} className="text-[color:var(--text-muted)]" />
             Renomear
           </button>
           <button
@@ -346,11 +347,11 @@ export default function ChatSessionList({
             onClick={() => handleArchive(contextSession)}
           >
             {contextSession.archived
-              ? <ArchiveRestore size={13} className="text-[#98A2B3]" />
-              : <Archive size={13} className="text-[#98A2B3]" />}
+              ? <ArchiveRestore size={13} className="text-[color:var(--text-muted)]" />
+              : <Archive size={13} className="text-[color:var(--text-muted)]" />}
             {contextSession.archived ? 'Desarquivar' : 'Arquivar'}
           </button>
-          <div className="border-t border-[#21262d] my-1" />
+          <div className="border-t border-[color:var(--border)] my-1" />
           <button
             className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 hover:bg-white/5 transition-colors"
             onClick={() => handleDelete(contextSession)}

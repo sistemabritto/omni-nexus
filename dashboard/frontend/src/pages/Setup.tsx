@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
@@ -164,27 +165,27 @@ export default function Setup() {
   }, [hasConfig, currentStep, ownerName, companyName, timezone, language, username, email, displayName, password, confirmPassword, refreshUser, t])
 
   if (hasConfig === null) return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center">
-      <div className="w-5 h-5 border-2 border-[#00FFA7]/20 border-t-[#00FFA7] rounded-full animate-spin" />
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center">
+      <div className="w-5 h-5 border-2 border-[color:var(--evo-green)]/20 border-t-[color:var(--evo-green)] rounded-full animate-spin" />
     </div>
   )
 
-  const inp = "w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20"
-  const lbl = "block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase"
+  const inp = "w-full px-4 py-3 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[color:var(--evo-green)]/60 focus:ring-1 focus:ring-[color:var(--evo-green)]/20"
+  const lbl = "block text-[11px] font-semibold text-[color:var(--text-muted)] mb-1.5 tracking-[0.08em] uppercase"
 
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 py-8 font-[Inter,-apple-system,sans-serif] relative">
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center px-4 py-8 font-[family-name:var(--sb-font-body)] relative">
       <NetworkCanvas />
 
       <div className="w-full max-w-[420px] relative z-10">
         {/* ── Card ── */}
-        <div className="rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
 
           {/* Header */}
-          <div className="px-7 pt-7 pb-5 border-b border-[#152030]">
+          <div className="px-7 pt-7 pb-5 border-b border-[color:var(--border)]">
             <div className="flex flex-col items-center gap-3 mb-4">
               <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-8 w-auto" />
-              <p className="text-[11px] text-[#4a5a6e]">{t('setup.appSubtitle')}</p>
+              <p className="text-[11px] text-[color:var(--text-muted)]">{t('setup.appSubtitle')}</p>
             </div>
 
             {/* Step nav */}
@@ -195,8 +196,8 @@ export default function Setup() {
                   onClick={() => currentStep > 1 && setCurrentStep(1)}
                   className={`flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors ${
                     currentStep === 1
-                      ? 'bg-[#00FFA7]/10 text-[#00FFA7]'
-                      : 'text-[#4a5a6e] hover:text-[#7a8a9e]'
+                      ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]'
+                      : 'text-[color:var(--text-muted)] hover:text-[#7a8a9e]'
                   }`}
                 >
                   {t('setup.tabWorkspace')}
@@ -205,8 +206,8 @@ export default function Setup() {
                   type="button"
                   className={`flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors ${
                     currentStep === 2
-                      ? 'bg-[#00FFA7]/10 text-[#00FFA7]'
-                      : 'text-[#4a5a6e]'
+                      ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]'
+                      : 'text-[color:var(--text-muted)]'
                   }`}
                   disabled
                 >
@@ -255,7 +256,7 @@ export default function Setup() {
                 </div>
 
                 <button type="submit"
-                  className="w-full py-3 mt-2 rounded-lg bg-[#00FFA7] text-[#080c14] text-sm font-semibold hover:bg-[#00e69a] active:bg-[#00cc88] transition-colors">
+                  className="w-full py-3 mt-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] text-sm font-semibold hover:bg-[#00e69a] active:bg-[#00cc88] transition-colors">
                   {t('common.continue')}
                 </button>
               </form>
@@ -265,7 +266,7 @@ export default function Setup() {
             {currentStep === 2 && (
               <form onSubmit={handleStep2} className="space-y-4">
                 {hasConfig && (
-                  <p className="text-[#98A2B3] text-xs mb-2">{t('setup.adminAccountHint')}</p>
+                  <p className="text-[color:var(--text-muted)] text-xs mb-2">{t('setup.adminAccountHint')}</p>
                 )}
                 <div>
                   <label className={lbl}>{t('common.username')}</label>
@@ -298,15 +299,15 @@ export default function Setup() {
                 <div className={`flex gap-2.5 mt-2 ${hasConfig ? '' : ''}`}>
                   {!hasConfig && (
                     <button type="button" onClick={() => setCurrentStep(1)}
-                      className="px-5 py-3 rounded-lg text-[#98A2B3] text-sm font-medium border border-[#1e2a3a] hover:border-[#2e3a4a] hover:text-[#8a9aae] transition-colors">
+                      className="px-5 py-3 rounded-lg text-[color:var(--text-muted)] text-sm font-medium border border-[color:var(--border)] hover:border-[#2e3a4a] hover:text-[#8a9aae] transition-colors">
                       {t('common.back')}
                     </button>
                   )}
                   <button type="submit" disabled={submitting}
                     className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40 ${
                       submitting
-                        ? 'bg-[#00FFA7]/60 text-[#080c14]'
-                        : 'bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] active:bg-[#00cc88]'
+                        ? 'bg-[color:var(--evo-green)]/60 text-[color:var(--bg-primary)]'
+                        : 'bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] active:bg-[#00cc88]'
                     }`}>
                     {submitting ? t('setup.creatingAccount') : t('setup.createAccount')}
                   </button>
@@ -316,20 +317,20 @@ export default function Setup() {
           </div>
 
           {/* Footer stats */}
-          <div className="px-7 py-3.5 border-t border-[#152030] flex items-center justify-between">
+          <div className="px-7 py-3.5 border-t border-[color:var(--border)] flex items-center justify-between">
             <div className="flex gap-4 text-[10px] text-[#3d4f65] font-medium tracking-wide uppercase">
               <span>38 Agents</span>
               <span>137 Skills</span>
               <span>Multi-AI</span>
             </div>
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00FFA7]/40" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[color:var(--evo-green)]/40" />
           </div>
         </div>
 
         {/* Attribution */}
         <p className="text-center mt-4 text-[10px] text-[#2d3d4f]">
           <a href="https://evolutionfoundation.com.br" target="_blank" rel="noopener noreferrer"
-            className="hover:text-[#4a5a6e] transition-colors">
+            className="hover:text-[color:var(--text-muted)] transition-colors">
             Evolution Foundation
           </a>
         </p>

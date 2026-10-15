@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, RefreshCw, AlertTriangle, XCircle, CheckCircle, Wifi, ArrowRight } from 'lucide-react'
@@ -8,12 +9,12 @@ import Wizard from './Wizard'
 
 function StatusBadge({ status }: { status: KnowledgeConnection['status'] }) {
   if (status === 'ready')
-    return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-[#00FFA7]/10 text-[#00FFA7]"><CheckCircle size={10} /> ready</span>
+    return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]"><CheckCircle size={10} /> ready</span>
   if (status === 'needs_migration')
     return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400"><AlertTriangle size={10} /> needs migration</span>
   if (status === 'error')
     return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400"><XCircle size={10} /> error</span>
-  return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/5 text-[#98A2B3]"><Wifi size={10} /> disconnected</span>
+  return <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/5 text-[color:var(--text-muted)]"><Wifi size={10} /> disconnected</span>
 }
 
 export default function KnowledgeConnections() {
@@ -50,7 +51,7 @@ export default function KnowledgeConnections() {
     return (
       <div className="space-y-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-20 bg-[#182230] border border-[#344054] rounded-xl animate-pulse" />
+          <div key={i} className="h-20 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -68,7 +69,7 @@ export default function KnowledgeConnections() {
         <div className="flex justify-end">
           <button
             onClick={() => setShowWizard(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg text-sm font-medium hover:bg-[#00FFA7]/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg text-sm font-medium hover:bg-[color:var(--evo-green)]/90 transition-colors"
           >
             <Plus size={14} /> New Connection
           </button>
@@ -76,16 +77,16 @@ export default function KnowledgeConnections() {
       )}
 
       {connections.length === 0 ? (
-        <div className="text-center py-16 bg-[#182230] border border-[#344054] rounded-xl">
-          <div className="w-16 h-16 rounded-2xl bg-[#00FFA7]/10 flex items-center justify-center mx-auto mb-4">
-            <Wifi size={28} className="text-[#00FFA7]" />
+        <div className="text-center py-16 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl">
+          <div className="w-16 h-16 rounded-2xl bg-[color:var(--evo-green)]/10 flex items-center justify-center mx-auto mb-4">
+            <Wifi size={28} className="text-[color:var(--evo-green)]" />
           </div>
-          <p className="text-[#F9FAFB] font-medium mb-1">No connections yet</p>
-          <p className="text-[#98A2B3] text-sm mb-6">Bring your own Postgres with pgvector to get started.</p>
+          <p className="text-[color:var(--text-primary)] font-medium mb-1">No connections yet</p>
+          <p className="text-[color:var(--text-muted)] text-sm mb-6">Bring your own Postgres with pgvector to get started.</p>
           {canManage && (
             <button
               onClick={() => setShowWizard(true)}
-              className="px-5 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg text-sm font-medium hover:bg-[#00FFA7]/90 transition-colors"
+              className="px-5 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg text-sm font-medium hover:bg-[color:var(--evo-green)]/90 transition-colors"
             >
               Add First Connection
             </button>
@@ -96,29 +97,29 @@ export default function KnowledgeConnections() {
           {connections.map((c) => (
             <div
               key={c.id}
-              className="bg-[#182230] border border-[#344054] rounded-xl p-4 hover:border-[#00FFA7]/30 transition-colors"
+              className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-4 hover:border-[color:var(--evo-green)]/30 transition-colors"
             >
               <div className="flex items-center gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <p className="text-sm font-semibold text-[#F9FAFB]">{c.name}</p>
+                    <p className="text-sm font-semibold text-[color:var(--text-primary)]">{c.name}</p>
                     <StatusBadge status={c.status} />
                   </div>
                   <div className="flex items-center gap-4 mt-1 flex-wrap">
                     {c.host && (
-                      <span className="text-xs text-[#98A2B3]">{c.host}{c.port ? `:${c.port}` : ''}</span>
+                      <span className="text-xs text-[color:var(--text-muted)]">{c.host}{c.port ? `:${c.port}` : ''}</span>
                     )}
                     {c.database_name && (
-                      <span className="text-xs text-[#98A2B3]">/{c.database_name}</span>
+                      <span className="text-xs text-[color:var(--text-muted)]">/{c.database_name}</span>
                     )}
                     {c.spaces_count != null && (
-                      <span className="text-xs text-[#98A2B3]">{c.spaces_count} space{c.spaces_count !== 1 ? 's' : ''}</span>
+                      <span className="text-xs text-[color:var(--text-muted)]">{c.spaces_count} space{c.spaces_count !== 1 ? 's' : ''}</span>
                     )}
                     {c.chunks_count != null && (
-                      <span className="text-xs text-[#98A2B3]">{c.chunks_count.toLocaleString()} chunks</span>
+                      <span className="text-xs text-[color:var(--text-muted)]">{c.chunks_count.toLocaleString()} chunks</span>
                     )}
                     {c.schema_version && (
-                      <span className="text-xs text-[#98A2B3]">schema {c.schema_version}</span>
+                      <span className="text-xs text-[color:var(--text-muted)]">schema {c.schema_version}</span>
                     )}
                   </div>
                 </div>
@@ -147,7 +148,7 @@ export default function KnowledgeConnections() {
                   )}
                   <button
                     onClick={() => navigate(`/knowledge/connections/${c.id}`)}
-                    className="p-2 text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 rounded-lg transition-colors"
+                    className="p-2 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 rounded-lg transition-colors"
                     title="View details"
                   >
                     <ArrowRight size={14} />

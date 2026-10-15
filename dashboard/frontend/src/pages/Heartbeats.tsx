@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, Fragment } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
@@ -47,7 +48,7 @@ interface Heartbeat {
 
 const STATUS_COLORS: Record<string, string> = {
   running: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  success: 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/20',
+  success: 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border-[color:var(--evo-green)]/20',
   fail: 'bg-red-500/10 text-red-400 border-red-500/20',
   timeout: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   killed: 'bg-red-500/10 text-red-400 border-red-500/20',
@@ -72,7 +73,7 @@ function formatCost(usd: number | null): string {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cls = STATUS_COLORS[status] || 'bg-[#21262d] text-[#98A2B3] border-[#21262d]'
+  const cls = STATUS_COLORS[status] || 'bg-[color:var(--border)] text-[color:var(--text-muted)] border-[color:var(--border)]'
   return (
     <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${cls}`}>
       {status === 'running' && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />}
@@ -164,7 +165,7 @@ export function HeartbeatsList() {
     return (
       <div>
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#e6edf3]">{t('heartbeats.title')}</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('heartbeats.title')}</h1>
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-20 rounded-xl" />)}
@@ -178,24 +179,24 @@ export function HeartbeatsList() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-            <Heart size={20} className="text-[#00FFA7]" />
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+            <Heart size={20} className="text-[color:var(--evo-green)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e6edf3]">{t('heartbeats.title')}</h1>
-            <p className="text-[#98A2B3] mt-0.5 text-sm">Proactive agents — wake on trigger, decide, act or sleep</p>
+            <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('heartbeats.title')}</h1>
+            <p className="text-[color:var(--text-muted)] mt-0.5 text-sm">Proactive agents — wake on trigger, decide, act or sleep</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setLoading(true); load() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors"
           >
             <RefreshCw size={16} />
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--evo-green)]/30 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors text-sm font-medium"
           >
             <Plus size={16} /> New Heartbeat
           </button>
@@ -204,22 +205,22 @@ export function HeartbeatsList() {
 
       {/* Table */}
       {heartbeats.length === 0 ? (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-12 text-center">
-          <Heart size={32} className="text-[#98A2B3] mx-auto mb-3" />
-          <p className="text-[#e6edf3] font-medium mb-1">No heartbeats configured</p>
-          <p className="text-[#98A2B3] text-sm mb-4">Create one or run <code className="font-mono">make heartbeat-lint</code> to sync from YAML</p>
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-12 text-center">
+          <Heart size={32} className="text-[color:var(--text-muted)] mx-auto mb-3" />
+          <p className="text-[color:var(--text-primary)] font-medium mb-1">No heartbeats configured</p>
+          <p className="text-[color:var(--text-muted)] text-sm mb-4">Create one or run <code className="font-mono">make heartbeat-lint</code> to sync from YAML</p>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[color:var(--evo-green)]/30 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors text-sm font-medium"
           >
             <Plus size={16} /> Create Heartbeat
           </button>
         </div>
       ) : (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[color:var(--text-muted)] text-xs uppercase tracking-wider bg-[color:var(--bg-primary)]/50 border-b border-[color:var(--border)]">
                 <th className="text-left p-4 font-medium">Heartbeat</th>
                 <th className="text-left p-4 font-medium">Agent</th>
                 <th className="text-left p-4 font-medium">Interval</th>
@@ -232,28 +233,28 @@ export function HeartbeatsList() {
             </thead>
             <tbody>
               {heartbeats.map((hb) => (
-                <tr key={hb.id} className="border-t border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
+                <tr key={hb.id} className="border-t border-[color:var(--border)]/50 hover:bg-white/[0.02] transition-colors">
                   <td className="p-4">
                     <button
                       onClick={() => navigate(`/heartbeats/${hb.id}`)}
-                      className="flex items-center gap-1.5 text-[#e6edf3] font-medium hover:text-[#00FFA7] transition-colors"
+                      className="flex items-center gap-1.5 text-[color:var(--text-primary)] font-medium hover:text-[color:var(--evo-green)] transition-colors"
                     >
                       {hb.id}
-                      <ChevronRight size={14} className="text-[#98A2B3]" />
+                      <ChevronRight size={14} className="text-[color:var(--text-muted)]" />
                     </button>
-                    <p className="text-[10px] text-[#98A2B3] mt-0.5">{hb.run_count} runs total</p>
+                    <p className="text-[10px] text-[color:var(--text-muted)] mt-0.5">{hb.run_count} runs total</p>
                   </td>
                   <td className="p-4">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#00FFA7]/8 border border-[#00FFA7]/20 text-[#00FFA7]">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)]">
                       @{hb.agent}
                     </span>
                   </td>
                   <td className="p-4">
-                    <code className="text-[11px] bg-[#0d1117] border border-[#21262d] px-2 py-1 rounded text-[#e6edf3] font-mono">
+                    <code className="text-[11px] bg-[color:var(--bg-primary)] border border-[color:var(--border)] px-2 py-1 rounded text-[color:var(--text-primary)] font-mono">
                       {formatInterval(hb.interval_seconds)}
                     </code>
                   </td>
-                  <td className="p-4 text-[#98A2B3] text-xs">
+                  <td className="p-4 text-[color:var(--text-muted)] text-xs">
                     {hb.last_run ? (
                       <div>
                         <div>{new Date(hb.last_run.started_at).toLocaleDateString()}</div>
@@ -262,15 +263,15 @@ export function HeartbeatsList() {
                     ) : '--'}
                   </td>
                   <td className="p-4">
-                    {hb.last_run ? <StatusBadge status={hb.last_run.status} /> : <span className="text-[#98A2B3] text-xs">never</span>}
+                    {hb.last_run ? <StatusBadge status={hb.last_run.status} /> : <span className="text-[color:var(--text-muted)] text-xs">never</span>}
                   </td>
-                  <td className="p-4 text-[#98A2B3] text-xs font-mono">
+                  <td className="p-4 text-[color:var(--text-muted)] text-xs font-mono">
                     {formatCost(hb.cost_7d)}
                   </td>
                   <td className="p-4">
                     <button
                       onClick={() => handleToggle(hb)}
-                      className={`transition-colors ${hb.enabled ? 'text-[#00FFA7] hover:text-[#00FFA7]/70' : 'text-[#98A2B3] hover:text-[#e6edf3]'}`}
+                      className={`transition-colors ${hb.enabled ? 'text-[color:var(--evo-green)] hover:text-[color:var(--evo-green)]/70' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}
                       title={hb.enabled ? 'Disable' : 'Enable'}
                     >
                       {hb.enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
@@ -281,7 +282,7 @@ export function HeartbeatsList() {
                       <button
                         onClick={() => handleRunNow(hb)}
                         disabled={running === hb.id}
-                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-primary)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors disabled:opacity-50"
                         title="Run Now"
                       >
                         {running === hb.id ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
@@ -289,14 +290,14 @@ export function HeartbeatsList() {
                       </button>
                       <button
                         onClick={() => navigate(`/heartbeats/${hb.id}`)}
-                        className="p-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#21262d] transition-colors"
+                        className="p-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-primary)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--border)] transition-colors"
                         title="View details"
                       >
                         <Info size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(hb)}
-                        className="p-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-red-400 hover:border-red-500/20 transition-colors"
+                        className="p-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-primary)] text-[color:var(--text-muted)] hover:text-red-400 hover:border-red-500/20 transition-colors"
                         title="Delete"
                       >
                         <Trash2 size={14} />
@@ -398,36 +399,36 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-[#e6edf3]">{t('heartbeats.createHeartbeat')}</h2>
-          <button onClick={onClose} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors">✕</button>
+          <h2 className="text-lg font-bold text-[color:var(--text-primary)]">{t('heartbeats.createHeartbeat')}</h2>
+          <button onClick={onClose} className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors">✕</button>
         </div>
 
         <div className="space-y-4">
           {/* ID */}
           <div>
-            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">ID (slug)</label>
+            <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">ID (slug)</label>
             <input
               type="text"
               value={form.id}
               onChange={e => setForm(f => ({ ...f, id: e.target.value }))}
               placeholder="atlas-4h"
-              className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50"
+              className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50"
             />
             {errors.id && <p className="text-red-400 text-xs mt-1">{errors.id}</p>}
           </div>
 
           {/* Agent */}
           <div>
-            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Agent</label>
+            <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">Agent</label>
             <input
               type="text"
               value={form.agent}
               onChange={e => setForm(f => ({ ...f, agent: e.target.value }))}
               list="agent-options"
               placeholder="atlas-project"
-              className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50"
+              className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50"
             />
             <datalist id="agent-options">
               {agents.map(a => <option key={a} value={a} />)}
@@ -437,47 +438,47 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Interval */}
           <div>
-            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Interval (seconds)</label>
+            <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">Interval (seconds)</label>
             <input
               type="number"
               min={60}
               value={form.interval_seconds}
               onChange={e => setForm(f => ({ ...f, interval_seconds: parseInt(e.target.value) || 60 }))}
-              className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50"
+              className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50"
             />
-            <p className="text-[10px] text-[#98A2B3] mt-1">= {formatInterval(form.interval_seconds)} — minimum 60s</p>
+            <p className="text-[10px] text-[color:var(--text-muted)] mt-1">= {formatInterval(form.interval_seconds)} — minimum 60s</p>
             {errors.interval_seconds && <p className="text-red-400 text-xs mt-1">{errors.interval_seconds}</p>}
           </div>
 
           {/* Max turns + Timeout */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Max turns</label>
+              <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">Max turns</label>
               <input
                 type="number"
                 min={1}
                 max={100}
                 value={form.max_turns}
                 onChange={e => setForm(f => ({ ...f, max_turns: parseInt(e.target.value) || 10 }))}
-                className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50"
+                className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Timeout (s)</label>
+              <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">Timeout (s)</label>
               <input
                 type="number"
                 min={30}
                 max={3600}
                 value={form.timeout_seconds}
                 onChange={e => setForm(f => ({ ...f, timeout_seconds: parseInt(e.target.value) || 300 }))}
-                className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50"
+                className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50"
               />
             </div>
           </div>
 
           {/* Wake triggers */}
           <div>
-            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Wake triggers</label>
+            <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">Wake triggers</label>
             <div className="flex flex-wrap gap-2">
               {WAKE_TRIGGER_OPTIONS.map(t => (
                 <button
@@ -486,8 +487,8 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
                   onClick={() => toggleTrigger(t)}
                   className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                     form.wake_triggers.includes(t)
-                      ? 'border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7]'
-                      : 'border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#e6edf3]'
+                      ? 'border-[color:var(--evo-green)]/30 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]'
+                      : 'border-[color:var(--border)] bg-[color:var(--bg-primary)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
                   }`}
                 >
                   {t}
@@ -499,25 +500,25 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Required secrets */}
           <div>
-            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Required secrets (comma-separated, optional)</label>
+            <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">Required secrets (comma-separated, optional)</label>
             <input
               type="text"
               value={form.required_secrets}
               onChange={e => setForm(f => ({ ...f, required_secrets: e.target.value }))}
               placeholder="STRIPE_KEY, OMIE_APP_KEY"
-              className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50"
+              className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50"
             />
           </div>
 
           {/* Decision prompt */}
           <div>
-            <label className="block text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-1.5">Decision prompt</label>
+            <label className="block text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-1.5">Decision prompt</label>
             <textarea
               value={form.decision_prompt}
               onChange={e => setForm(f => ({ ...f, decision_prompt: e.target.value }))}
               rows={4}
               placeholder="You are X. Check Y. Decide: should you act or skip? Respond with JSON: {action: 'work'|'skip', reason: '...'}"
-              className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50 resize-none font-mono"
+              className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50 resize-none font-mono"
             />
             {errors.decision_prompt && <p className="text-red-400 text-xs mt-1">{errors.decision_prompt}</p>}
           </div>
@@ -527,27 +528,27 @@ function HeartbeatCreateModal({ onClose, onCreated }: { onClose: () => void; onC
             <button
               type="button"
               onClick={() => setForm(f => ({ ...f, enabled: !f.enabled }))}
-              className={`transition-colors ${form.enabled ? 'text-[#00FFA7]' : 'text-[#98A2B3]'}`}
+              className={`transition-colors ${form.enabled ? 'text-[color:var(--evo-green)]' : 'text-[color:var(--text-muted)]'}`}
             >
               {form.enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
             </button>
-            <span className="text-sm text-[#98A2B3]">
+            <span className="text-sm text-[color:var(--text-muted)]">
               {form.enabled ? 'Enabled (will run on schedule)' : 'Disabled (safe — enable via toggle when ready)'}
             </span>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#21262d]">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[color:var(--border)]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
+            className="px-4 py-2 text-sm text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[color:var(--evo-green)]/30 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors text-sm font-medium disabled:opacity-50"
           >
             {saving ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
             Create
@@ -619,8 +620,8 @@ export function HeartbeatDetail() {
   if (!hb) {
     return (
       <div className="text-center py-20">
-        <p className="text-[#98A2B3]">Heartbeat not found</p>
-        <button onClick={() => navigate('/heartbeats')} className="mt-4 text-[#00FFA7] hover:underline text-sm">
+        <p className="text-[color:var(--text-muted)]">Heartbeat not found</p>
+        <button onClick={() => navigate('/heartbeats')} className="mt-4 text-[color:var(--evo-green)] hover:underline text-sm">
           Back to list
         </button>
       </div>
@@ -632,17 +633,17 @@ export function HeartbeatDetail() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/heartbeats')} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors text-sm">
+          <button onClick={() => navigate('/heartbeats')} className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors text-sm">
             Heartbeats
           </button>
-          <ChevronRight size={14} className="text-[#98A2B3]" />
+          <ChevronRight size={14} className="text-[color:var(--text-muted)]" />
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-              <Heart size={20} className="text-[#00FFA7]" />
+            <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+              <Heart size={20} className="text-[color:var(--evo-green)]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#e6edf3]">{hb.id}</h1>
-              <p className="text-[#98A2B3] mt-0.5 text-sm">@{hb.agent} · every {formatInterval(hb.interval_seconds)}</p>
+              <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{hb.id}</h1>
+              <p className="text-[color:var(--text-muted)] mt-0.5 text-sm">@{hb.agent} · every {formatInterval(hb.interval_seconds)}</p>
             </div>
           </div>
         </div>
@@ -651,8 +652,8 @@ export function HeartbeatDetail() {
             onClick={handleToggle}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm font-medium ${
               hb.enabled
-                ? 'border-[#00FFA7]/30 bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20'
-                : 'border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#e6edf3]'
+                ? 'border-[color:var(--evo-green)]/30 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20'
+                : 'border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
             }`}
           >
             {hb.enabled ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
@@ -661,14 +662,14 @@ export function HeartbeatDetail() {
           <button
             onClick={handleRunNow}
             disabled={running}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors text-sm disabled:opacity-50"
           >
             {running ? <RefreshCw size={16} className="animate-spin" /> : <Play size={16} />}
             Run Now
           </button>
           <button
             onClick={() => { setLoading(true); load() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"
           >
             <RefreshCw size={16} />
           </button>
@@ -677,8 +678,8 @@ export function HeartbeatDetail() {
 
       {/* Config */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-5">
-          <h3 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-4">Configuration</h3>
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5">
+          <h3 className="text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-4">Configuration</h3>
           <dl className="space-y-2">
             {[
               ['Agent', `@${hb.agent}`],
@@ -691,15 +692,15 @@ export function HeartbeatDetail() {
               ['Total runs', String(hb.run_count)],
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between text-sm">
-                <dt className="text-[#98A2B3]">{label}</dt>
-                <dd className="text-[#e6edf3] font-mono text-xs">{value}</dd>
+                <dt className="text-[color:var(--text-muted)]">{label}</dt>
+                <dd className="text-[color:var(--text-primary)] font-mono text-xs">{value}</dd>
               </div>
             ))}
           </dl>
         </div>
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-5">
-          <h3 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-4">Decision Prompt</h3>
-          <pre className="text-xs text-[#e6edf3] whitespace-pre-wrap font-mono leading-5 max-h-48 overflow-y-auto">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5">
+          <h3 className="text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-4">Decision Prompt</h3>
+          <pre className="text-xs text-[color:var(--text-primary)] whitespace-pre-wrap font-mono leading-5 max-h-48 overflow-y-auto">
             {hb.decision_prompt}
           </pre>
         </div>
@@ -707,19 +708,19 @@ export function HeartbeatDetail() {
 
       {/* Runs */}
       <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-base font-semibold text-[#e6edf3]">Run History</h2>
-        <span className="text-[11px] font-medium text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full">{runs.length}</span>
+        <h2 className="text-base font-semibold text-[color:var(--text-primary)]">Run History</h2>
+        <span className="text-[11px] font-medium text-[color:var(--text-muted)] bg-[color:var(--border)] px-2 py-0.5 rounded-full">{runs.length}</span>
       </div>
       {runs.length === 0 ? (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-8 text-center">
-          <Clock size={24} className="text-[#98A2B3] mx-auto mb-3" />
-          <p className="text-[#98A2B3] text-sm">No runs yet</p>
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-8 text-center">
+          <Clock size={24} className="text-[color:var(--text-muted)] mx-auto mb-3" />
+          <p className="text-[color:var(--text-muted)] text-sm">No runs yet</p>
         </div>
       ) : (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[color:var(--text-muted)] text-xs uppercase tracking-wider bg-[color:var(--bg-primary)]/50 border-b border-[color:var(--border)]">
                 <th className="text-left p-4 font-medium">Started</th>
                 <th className="text-left p-4 font-medium">Status</th>
                 <th className="text-left p-4 font-medium">Duration</th>
@@ -731,21 +732,21 @@ export function HeartbeatDetail() {
             <tbody>
               {runs.map((run) => (
                 <Fragment key={run.run_id}>
-                  <tr className="border-t border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
-                    <td className="p-4 text-[#98A2B3] text-xs">
+                  <tr className="border-t border-[color:var(--border)]/50 hover:bg-white/[0.02] transition-colors">
+                    <td className="p-4 text-[color:var(--text-muted)] text-xs">
                       {new Date(run.started_at).toLocaleString()}
                     </td>
                     <td className="p-4"><StatusBadge status={run.status} /></td>
-                    <td className="p-4 text-[#98A2B3] text-xs font-mono">{formatDuration(run.duration_ms)}</td>
+                    <td className="p-4 text-[color:var(--text-muted)] text-xs font-mono">{formatDuration(run.duration_ms)}</td>
                     <td className="p-4">
-                      <span className="text-[11px] text-[#98A2B3]">{run.triggered_by || '--'}</span>
+                      <span className="text-[11px] text-[color:var(--text-muted)]">{run.triggered_by || '--'}</span>
                     </td>
-                    <td className="p-4 text-[#98A2B3] text-xs font-mono">{formatCost(run.cost_usd)}</td>
+                    <td className="p-4 text-[color:var(--text-muted)] text-xs font-mono">{formatCost(run.cost_usd)}</td>
                     <td className="p-4">
                       {(run.prompt_preview || run.error) && (
                         <button
                           onClick={() => setExpandedRun(expandedRun === run.run_id ? null : run.run_id)}
-                          className="text-xs text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
+                          className="text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"
                         >
                           {expandedRun === run.run_id ? 'hide' : 'expand'}
                         </button>
@@ -753,7 +754,7 @@ export function HeartbeatDetail() {
                     </td>
                   </tr>
                   {expandedRun === run.run_id && (
-                    <tr className="border-t border-[#21262d]/50 bg-[#0d1117]/30">
+                    <tr className="border-t border-[color:var(--border)]/50 bg-[color:var(--bg-primary)]/30">
                       <td colSpan={6} className="p-4">
                         {run.error && (
                           <div className="mb-3">
@@ -765,8 +766,8 @@ export function HeartbeatDetail() {
                         )}
                         {run.prompt_preview && (
                           <div>
-                            <p className="text-xs font-medium text-[#98A2B3] mb-1">Prompt preview</p>
-                            <pre className="text-xs text-[#e6edf3] whitespace-pre-wrap bg-[#0d1117] border border-[#21262d] rounded-lg p-3 font-mono leading-5 max-h-40 overflow-y-auto">
+                            <p className="text-xs font-medium text-[color:var(--text-muted)] mb-1">Prompt preview</p>
+                            <pre className="text-xs text-[color:var(--text-primary)] whitespace-pre-wrap bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg p-3 font-mono leading-5 max-h-40 overflow-y-auto">
                               {run.prompt_preview}
                             </pre>
                           </div>

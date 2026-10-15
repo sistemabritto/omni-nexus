@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -50,7 +51,7 @@ function CollapsibleSection({
   const [open, setOpen] = useState(defaultOpen)
   if (items.length === 0) return null
   return (
-    <div className="border border-[#21262d] rounded-xl overflow-hidden">
+    <div className="border border-[color:var(--border)] rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         className={`w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium ${accent} hover:bg-white/5 transition-colors`}
@@ -62,10 +63,10 @@ function CollapsibleSection({
         <div className="px-4 pb-3 pt-1 space-y-2">
           {items.map(([capType, ids]) => (
             <div key={capType}>
-              <p className="text-[10px] text-[#98A2B3] uppercase tracking-wider mb-1">{capType}</p>
+              <p className="text-[10px] text-[color:var(--text-muted)] uppercase tracking-wider mb-1">{capType}</p>
               <ul className="space-y-0.5">
                 {ids.map((id) => (
-                  <li key={id} className="text-xs text-[#D0D5DD] font-mono truncate">{id}</li>
+                  <li key={id} className="text-xs text-[color:var(--text-secondary)] font-mono truncate">{id}</li>
                 ))}
               </ul>
             </div>
@@ -216,15 +217,15 @@ export default function UpdatePreviewModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-[#161b22] border border-[#344054] rounded-2xl w-full max-w-lg shadow-2xl">
+      <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl w-full max-w-lg shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
-          <h2 className="text-base font-semibold text-[#e6edf3]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
+          <h2 className="text-base font-semibold text-[color:var(--text-primary)]">
             {t('plugins.updatePreviewTitle', { slug })}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
           >
             <X size={16} />
           </button>
@@ -234,7 +235,7 @@ export default function UpdatePreviewModal({
         <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Loading */}
           {loading && (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-[#98A2B3]">
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-[color:var(--text-muted)]">
               <Loader2 size={16} className="animate-spin" />
               {t('plugins.updatePreviewLoading')}
             </div>
@@ -252,13 +253,13 @@ export default function UpdatePreviewModal({
               different ref (e.g. @main, a newer tag, or a different branch)
               without uninstalling. Default is the pinned install-time URL. */}
           {!loading && (
-            <div className="border border-[#21262d] rounded-xl overflow-hidden">
+            <div className="border border-[color:var(--border)] rounded-xl overflow-hidden">
               <button
                 type="button"
                 onClick={() => setSourceOverrideOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-[#D0D5DD] hover:bg-white/5 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
               >
-                <span>📦 Source <span className="text-[#98A2B3] font-mono">{effectiveSource}</span></span>
+                <span>📦 Source <span className="text-[color:var(--text-muted)] font-mono">{effectiveSource}</span></span>
                 {sourceOverrideOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
               </button>
               {sourceOverrideOpen && (
@@ -270,11 +271,11 @@ export default function UpdatePreviewModal({
                     placeholder={sourceUrl || 'github:owner/repo@main'}
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full bg-[#0d1117] border border-[#344054] rounded-lg px-3 py-2 text-xs font-mono text-[#e6edf3] placeholder:text-[#98A2B3] focus:outline-none focus:border-[#00FFA7]"
+                    className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-xs font-mono text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--evo-green)]"
                   />
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] text-[#98A2B3]">
-                      Override the pinned source (e.g. <code className="text-[#D0D5DD]">@main</code> or a newer tag) to discover updates beyond the installed version.
+                    <p className="text-[10px] text-[color:var(--text-muted)]">
+                      Override the pinned source (e.g. <code className="text-[color:var(--text-secondary)]">@main</code> or a newer tag) to discover updates beyond the installed version.
                     </p>
                     <button
                       type="button"
@@ -282,7 +283,7 @@ export default function UpdatePreviewModal({
                         setPreviewError(null)
                         setPreviewAttempt((n) => n + 1)
                       }}
-                      className="shrink-0 px-3 py-1.5 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/30 text-[#00FFA7] text-xs font-medium hover:bg-[#00FFA7]/20 transition-colors"
+                      className="shrink-0 px-3 py-1.5 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] text-xs font-medium hover:bg-[color:var(--evo-green)]/20 transition-colors"
                     >
                       Preview
                     </button>
@@ -295,11 +296,11 @@ export default function UpdatePreviewModal({
           {/* GitHub PAT input — for private repos. Always available for
               github: sources; auto-opens when preview fails with 401/404. */}
           {!loading && isGithubSource && (
-            <div className="border border-[#21262d] rounded-xl overflow-hidden">
+            <div className="border border-[color:var(--border)] rounded-xl overflow-hidden">
               <button
                 type="button"
                 onClick={() => setAuthTokenOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-[#D0D5DD] hover:bg-white/5 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
               >
                 <span>🔒 Private repository? (optional GitHub PAT)</span>
                 {authTokenOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -313,11 +314,11 @@ export default function UpdatePreviewModal({
                     placeholder="ghp_... or gho_..."
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full bg-[#0d1117] border border-[#344054] rounded-lg px-3 py-2 text-xs font-mono text-[#e6edf3] placeholder:text-[#98A2B3] focus:outline-none focus:border-[#00FFA7]"
+                    className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-xs font-mono text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--evo-green)]"
                   />
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] text-[#98A2B3]">
-                      Required for private repos. Scope: <code className="text-[#D0D5DD]">repo</code>. Never logged.
+                    <p className="text-[10px] text-[color:var(--text-muted)]">
+                      Required for private repos. Scope: <code className="text-[color:var(--text-secondary)]">repo</code>. Never logged.
                     </p>
                     <button
                       type="button"
@@ -326,7 +327,7 @@ export default function UpdatePreviewModal({
                         setPreviewAttempt((n) => n + 1)
                       }}
                       disabled={!authToken.trim()}
-                      className="shrink-0 px-3 py-1.5 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/30 text-[#00FFA7] text-xs font-medium hover:bg-[#00FFA7]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="shrink-0 px-3 py-1.5 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] text-xs font-medium hover:bg-[color:var(--evo-green)]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       Retry
                     </button>
@@ -338,7 +339,7 @@ export default function UpdatePreviewModal({
 
           {/* Up to date */}
           {!loading && !previewError && preview?.up_to_date && (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-[#00FFA7]">
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-[color:var(--evo-green)]">
               <CheckCircle size={18} />
               {t('plugins.updatePreviewUpToDate')}
             </div>
@@ -370,7 +371,7 @@ export default function UpdatePreviewModal({
           {!loading && !previewError && preview && !preview.up_to_date && (
             <>
               {/* Version line */}
-              <p className="text-xs text-[#98A2B3]">
+              <p className="text-xs text-[color:var(--text-muted)]">
                 {t('plugins.updatePreviewVersionLine', {
                   from: preview.from_version,
                   to: preview.to_version,
@@ -420,7 +421,7 @@ export default function UpdatePreviewModal({
                 label={t('plugins.updatePreviewAdded', { count: totalCount(preview.added) })}
                 items={sectionEntries(preview.added)}
                 defaultOpen={totalCount(preview.added) > 0}
-                accent="text-[#00FFA7]"
+                accent="text-[color:var(--evo-green)]"
               />
 
               {/* Removed */}
@@ -477,7 +478,7 @@ export default function UpdatePreviewModal({
               {totalCount(preview.added) === 0 &&
                 totalCount(preview.removed) === 0 &&
                 totalCount(preview.modified) === 0 && (
-                  <p className="text-xs text-[#98A2B3] text-center py-2">
+                  <p className="text-xs text-[color:var(--text-muted)] text-center py-2">
                     No capability changes detected.
                   </p>
                 )}
@@ -494,10 +495,10 @@ export default function UpdatePreviewModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#21262d]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[color:var(--border)]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+            className="px-4 py-2 text-sm text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
           >
             {t('common.cancel')}
           </button>
@@ -516,7 +517,7 @@ export default function UpdatePreviewModal({
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
                 scanVerdict === 'WARN'
                   ? 'bg-yellow-500 text-black hover:bg-yellow-400'
-                  : 'bg-[#00FFA7] text-black hover:bg-[#00FFA7]/90'
+                  : 'bg-[color:var(--evo-green)] text-black hover:bg-[color:var(--evo-green)]/90'
               }`}
             >
               {applying ? (
@@ -536,7 +537,7 @@ export default function UpdatePreviewModal({
           {preview?.up_to_date && (
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 transition-colors"
+              className="px-4 py-2 text-sm font-medium bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 transition-colors"
             >
               {t('common.close')}
             </button>

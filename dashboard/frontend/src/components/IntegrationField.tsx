@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
@@ -35,7 +36,7 @@ export default function IntegrationField({
       <div className="flex items-center gap-1.5 mb-1.5">
         <label
           htmlFor={envKey}
-          className="text-sm font-medium text-[#e6edf3]"
+          className="text-sm font-medium text-[color:var(--text-primary)]"
         >
           {label}
         </label>
@@ -43,7 +44,7 @@ export default function IntegrationField({
           <span className="text-xs text-[#EF4444]" aria-hidden="true">*</span>
         )}
         {!required && (
-          <span className="text-xs text-[#98A2B3]">(opcional)</span>
+          <span className="text-xs text-[color:var(--text-muted)]">(opcional)</span>
         )}
       </div>
 
@@ -60,14 +61,14 @@ export default function IntegrationField({
           aria-label={label}
           className={[
             'w-full rounded-lg px-3 py-2.5 text-sm font-mono',
-            'bg-[#0C111D] border text-[#e6edf3]',
+            'bg-[color:var(--bg-primary)] border text-[color:var(--text-primary)]',
             'placeholder:text-[#3F3F46]',
             'focus:outline-none focus:ring-1',
             'transition-colors duration-150',
             sensitive ? 'pr-10' : '',
             hasError && required && !value
               ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/30'
-              : 'border-[#21262d] focus:border-[#00FFA7]/40 focus:ring-[#00FFA7]/20',
+              : 'border-[color:var(--border)] focus:border-[color:var(--evo-green)]/40 focus:ring-[color:var(--evo-green)]/20',
           ].join(' ')}
           placeholder={sensitive ? '••••••••••••' : ''}
         />
@@ -77,7 +78,7 @@ export default function IntegrationField({
             type="button"
             onClick={() => setRevealed((v) => !v)}
             aria-label={revealed ? 'Ocultar valor' : 'Mostrar valor'}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"
             tabIndex={-1}
           >
             {revealed ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -90,7 +91,7 @@ export default function IntegrationField({
         <p className="mt-1 text-xs text-red-400">Campo obrigatório</p>
       )}
       {hint && !(hasError && required && !value) && (
-        <p className="mt-1 text-xs text-[#98A2B3]">{hint}</p>
+        <p className="mt-1 text-xs text-[color:var(--text-muted)]">{hint}</p>
       )}
     </div>
   )

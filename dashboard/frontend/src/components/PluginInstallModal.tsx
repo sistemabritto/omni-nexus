@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Link2, Eye, Download, CheckCircle, AlertTriangle, Loader2, Lock, Upload, ChevronDown, ChevronUp, Terminal } from 'lucide-react'
@@ -151,37 +152,37 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
   const installBtnClass =
     scanVerdict === 'WARN' && warnConfirmed
       ? 'flex items-center gap-2 px-4 py-2 text-sm font-medium bg-amber-400 text-black rounded-lg hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-      : 'flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+      : 'flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-[#161b22] border border-[#344054] rounded-2xl w-full max-w-lg shadow-2xl">
+      <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl w-full max-w-lg shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
           <div>
-            <h2 className="text-base font-semibold text-[#e6edf3]">{t('plugins.installPlugin')}</h2>
-            <p className="text-xs text-[#98A2B3] mt-0.5">{t('plugins.stepOf', { current: step, total: 3 })}</p>
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)]">{t('plugins.installPlugin')}</h2>
+            <p className="text-xs text-[color:var(--text-muted)] mt-0.5">{t('plugins.stepOf', { current: step, total: 3 })}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Step indicators */}
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-[#21262d]">
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-[color:var(--border)]">
           {([1, 2, 3] as Step[]).map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                s < step ? 'bg-[#00FFA7] text-black' :
-                s === step ? 'bg-[#00FFA7]/20 text-[#00FFA7] border border-[#00FFA7]/40' :
-                'bg-[#21262d] text-[#98A2B3]'
+                s < step ? 'bg-[color:var(--evo-green)] text-black' :
+                s === step ? 'bg-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/40' :
+                'bg-[color:var(--border)] text-[color:var(--text-muted)]'
               }`}>
                 {s < step ? <CheckCircle size={12} /> : s}
               </div>
-              {s < 3 && <div className={`flex-1 h-px w-8 ${s < step ? 'bg-[#00FFA7]/40' : 'bg-[#21262d]'}`} />}
+              {s < 3 && <div className={`flex-1 h-px w-8 ${s < step ? 'bg-[color:var(--evo-green)]/40' : 'bg-[color:var(--border)]'}`} />}
             </div>
           ))}
         </div>
@@ -192,8 +193,8 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#D0D5DD] mb-2 flex items-center gap-2">
-                  <Link2 size={14} className="text-[#00FFA7]" />
+                <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-2 flex items-center gap-2">
+                  <Link2 size={14} className="text-[color:var(--evo-green)]" />
                   {t('plugins.sourceUrl')}
                 </label>
                 <input
@@ -201,18 +202,18 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
                   value={sourceUrl}
                   onChange={(e) => { setSourceUrl(e.target.value); setUploadedPath(null) }}
                   placeholder="github:org/plugin-name or https://..."
-                  className="w-full bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-2.5 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2.5 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
                   onKeyDown={(e) => { if (e.key === 'Enter') handlePreview() }}
                 />
-                <p className="mt-2 text-xs text-[#98A2B3]">Formatos: github:owner/repo[@ref] · https://…/arquivo.tar.gz</p>
+                <p className="mt-2 text-xs text-[color:var(--text-muted)]">Formatos: github:owner/repo[@ref] · https://…/arquivo.tar.gz</p>
               </div>
 
               {/* Upload alternative */}
               <div className="relative">
                 <div className="flex items-center gap-3 my-1">
-                  <div className="flex-1 h-px bg-[#21262d]" />
-                  <span className="text-[10px] text-[#98A2B3] uppercase tracking-wider">ou</span>
-                  <div className="flex-1 h-px bg-[#21262d]" />
+                  <div className="flex-1 h-px bg-[color:var(--border)]" />
+                  <span className="text-[10px] text-[color:var(--text-muted)] uppercase tracking-wider">ou</span>
+                  <div className="flex-1 h-px bg-[color:var(--border)]" />
                 </div>
                 <input
                   ref={fileInputRef}
@@ -227,13 +228,13 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-dashed border-[#344054] rounded-lg text-sm text-[#D0D5DD] hover:border-[#00FFA7]/40 hover:bg-[#00FFA7]/5 disabled:opacity-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-dashed border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-secondary)] hover:border-[color:var(--evo-green)]/40 hover:bg-[color:var(--evo-green)]/5 disabled:opacity-50 transition-colors"
                 >
                   {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                   {uploadedPath ? 'Trocar arquivo' : 'Selecionar arquivo (.zip ou .tar.gz)'}
                 </button>
                 {uploadedPath && (
-                  <p className="mt-2 text-xs text-[#00FFA7] flex items-center gap-1.5">
+                  <p className="mt-2 text-xs text-[color:var(--evo-green)] flex items-center gap-1.5">
                     <CheckCircle size={12} /> Arquivo pronto — clique em Visualizar
                   </p>
                 )}
@@ -243,15 +244,15 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
               <div>
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
                 >
                   {showAdvanced ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                   Opções avançadas
                 </button>
                 {showAdvanced && (
                   <div className="mt-3">
-                    <label className="block text-xs font-medium text-[#D0D5DD] mb-1.5 flex items-center gap-1.5">
-                      <Lock size={12} className="text-[#00FFA7]" />
+                    <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
+                      <Lock size={12} className="text-[color:var(--evo-green)]" />
                       Personal Access Token (repos privados)
                     </label>
                     <input
@@ -259,10 +260,10 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
                       value={authToken}
                       onChange={(e) => setAuthToken(e.target.value)}
                       placeholder="ghp_..."
-                      className="w-full bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-2 text-xs text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+                      className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-xs text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
                       autoComplete="off"
                     />
-                    <p className="mt-1 text-[10px] text-[#98A2B3]">Usado apenas para baixar o arquivo; não é armazenado.</p>
+                    <p className="mt-1 text-[10px] text-[color:var(--text-muted)]">Usado apenas para baixar o arquivo; não é armazenado.</p>
                   </div>
                 )}
               </div>
@@ -302,24 +303,24 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
               )}
 
               {/* Manifest preview */}
-              <div className="bg-[#0C111D] border border-[#21262d] rounded-xl p-4">
+              <div className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Eye size={14} className="text-[#00FFA7]" />
-                  <span className="text-sm font-medium text-[#e6edf3]">{t('plugins.manifestPreview')}</span>
+                  <Eye size={14} className="text-[color:var(--evo-green)]" />
+                  <span className="text-sm font-medium text-[color:var(--text-primary)]">{t('plugins.manifestPreview')}</span>
                 </div>
                 <dl className="space-y-1.5 text-xs">
                   {['name', 'version', 'author', 'license', 'description'].map((k) =>
                     manifest[k] ? (
                       <div key={k} className="flex gap-2">
-                        <dt className="text-[#98A2B3] capitalize w-20 shrink-0">{k}</dt>
-                        <dd className="text-[#e6edf3] break-all">{String(manifest[k])}</dd>
+                        <dt className="text-[color:var(--text-muted)] capitalize w-20 shrink-0">{k}</dt>
+                        <dd className="text-[color:var(--text-primary)] break-all">{String(manifest[k])}</dd>
                       </div>
                     ) : null
                   )}
                   {Array.isArray(manifest['capabilities']) && (manifest['capabilities'] as string[]).length > 0 && (
                     <div className="flex gap-2">
-                      <dt className="text-[#98A2B3] capitalize w-20 shrink-0">capabilities</dt>
-                      <dd className="text-[#e6edf3]">{(manifest['capabilities'] as string[]).join(', ')}</dd>
+                      <dt className="text-[color:var(--text-muted)] capitalize w-20 shrink-0">capabilities</dt>
+                      <dd className="text-[color:var(--text-primary)]">{(manifest['capabilities'] as string[]).join(', ')}</dd>
                     </div>
                   )}
                 </dl>
@@ -363,12 +364,12 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
           {step === 3 && (
             <div className="py-4 space-y-4">
               <div className="text-center">
-                <div className="flex items-center justify-center w-14 h-14 rounded-full bg-[#00FFA7]/10 border border-[#00FFA7]/20 mx-auto mb-4">
-                  <CheckCircle size={28} className="text-[#00FFA7]" />
+                <div className="flex items-center justify-center w-14 h-14 rounded-full bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20 mx-auto mb-4">
+                  <CheckCircle size={28} className="text-[color:var(--evo-green)]" />
                 </div>
-                <h3 className="text-base font-semibold text-[#e6edf3] mb-1">{t('plugins.installedSuccessTitle')}</h3>
-                <p className="text-sm text-[#98A2B3]">
-                  {installedSlug && <code className="text-[#00FFA7]">{installedSlug}</code>} {t('plugins.installedDesc')}
+                <h3 className="text-base font-semibold text-[color:var(--text-primary)] mb-1">{t('plugins.installedSuccessTitle')}</h3>
+                <p className="text-sm text-[color:var(--text-muted)]">
+                  {installedSlug && <code className="text-[color:var(--evo-green)]">{installedSlug}</code>} {t('plugins.installedDesc')}
                 </p>
               </div>
 
@@ -396,11 +397,11 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#21262d]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[color:var(--border)]">
           {step < 3 && (
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+              className="px-4 py-2 text-sm text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
             >
               {t('common.cancel')}
             </button>
@@ -410,7 +411,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
             <button
               onClick={handlePreview}
               disabled={!canPreview}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loadingPreview ? <Loader2 size={14} className="animate-spin" /> : <Eye size={14} />}
               {t('plugins.preview')}
@@ -421,7 +422,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
             <>
               <button
                 onClick={() => setStep(1)}
-                className="px-4 py-2 text-sm text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+                className="px-4 py-2 text-sm text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
               >
                 {t('common.back')}
               </button>
@@ -439,7 +440,7 @@ export default function PluginInstallModal({ onClose, onInstalled }: Props) {
           {step === 3 && (
             <button
               onClick={() => { onInstalled(); onClose() }}
-              className="px-4 py-2 text-sm font-medium bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 transition-colors"
+              className="px-4 py-2 text-sm font-medium bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 transition-colors"
             >
               {t('common.close')}
             </button>

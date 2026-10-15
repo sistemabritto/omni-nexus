@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { lazy, Suspense, useEffect, useState, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -204,13 +205,13 @@ function StatCard({
   icon: LucideIcon
 }) {
   const deltaColor = {
-    up: 'text-[#00FFA7]',
+    up: 'text-[color:var(--evo-green)]',
     down: 'text-red-400',
-    neutral: 'text-[#98A2B3]',
+    neutral: 'text-[color:var(--text-muted)]',
   }[deltaType]
 
   const deltaBg = {
-    up: 'bg-[#00FFA7]/10',
+    up: 'bg-[color:var(--evo-green)]/10',
     down: 'bg-red-400/10',
     neutral: 'bg-[#667085]/10',
   }[deltaType]
@@ -222,13 +223,13 @@ function StatCard({
   }[deltaType]
 
   return (
-    <div className="group relative bg-[#161b22] border border-[#21262d] rounded-2xl p-5 transition-all duration-300 hover:border-[#00FFA7]/40 hover:shadow-[0_0_24px_rgba(0,255,167,0.06)]">
+    <div className="group relative bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-5 transition-all duration-300 hover:border-[color:var(--evo-green)]/40 hover:shadow-[0_0_24px_rgba(0,255,167,0.06)]">
       {/* Subtle top gradient accent */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00FFA7]/20 to-transparent rounded-t-2xl" />
 
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-          <Icon size={18} className="text-[#00FFA7]" />
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+          <Icon size={18} className="text-[color:var(--evo-green)]" />
         </div>
         {delta && (
           <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${deltaColor} ${deltaBg}`}>
@@ -238,8 +239,8 @@ function StatCard({
         )}
       </div>
 
-      <p className="text-3xl font-bold text-[#e6edf3] tracking-tight">{value}</p>
-      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
+      <p className="text-3xl font-bold text-[color:var(--text-primary)] tracking-tight">{value}</p>
+      <p className="text-sm text-[color:var(--text-muted)] mt-1">{label}</p>
     </div>
   )
 }
@@ -258,18 +259,18 @@ function ActiveAgentsBar({ agents, loading }: { agents: ActiveAgent[]; loading: 
 
   return (
     <div className="flex items-center gap-3 mb-8 flex-wrap">
-      <span className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mr-1">Active Agents</span>
+      <span className="text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mr-1">Active Agents</span>
       {agents.length === 0 ? (
-        <span className="text-xs text-[#98A2B3]/60 italic">No agents running</span>
+        <span className="text-xs text-[color:var(--text-muted)]/60 italic">No agents running</span>
       ) : (
         agents.map((agent, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[#161b22] border border-[#21262d] text-[#e6edf3]"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[color:var(--text-primary)]"
           >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FFA7] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FFA7]" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--evo-green)] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--evo-green)]" />
             </span>
             {agent.name}
           </span>
@@ -350,8 +351,8 @@ export default function Overview() {
     return (
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('overview.title')}</h1>
-          <p className="text-[#98A2B3] text-sm mt-1">{t('overview.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('overview.title')}</h1>
+          <p className="text-[color:var(--text-muted)] text-sm mt-1">{t('overview.subtitle')}</p>
         </div>
         <PageTabBar ariaLabel={t('overview.title')} active={activeTab} onSelect={setTab} extraClass="mb-6" tabs={visibleTabs.map((x) => ({ key: x.key, label: t(x.labelKey) }))} />
         <Suspense fallback={<CockpitTabSkeleton />}>
@@ -367,7 +368,7 @@ export default function Overview() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-red-400 text-lg mb-2">Failed to load overview</p>
-          <p className="text-[#98A2B3] text-sm">{error}</p>
+          <p className="text-[color:var(--text-muted)] text-sm">{error}</p>
         </div>
       </div>
     )
@@ -380,8 +381,8 @@ export default function Overview() {
     <div className="max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('overview.title')}</h1>
-        <p className="text-[#98A2B3] text-sm mt-1">{t('overview.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('overview.title')}</h1>
+        <p className="text-[color:var(--text-muted)] text-sm mt-1">{t('overview.subtitle')}</p>
       </div>
 
       {/* Os 5 domínios do cockpit numa página só — deep-link por ?tab= */}
@@ -420,13 +421,13 @@ export default function Overview() {
       {!loading && data?.crescimento && data.crescimento.ultimo_dia && (
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5 mb-6">
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
               <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#60A5FA]/10 border border-[#60A5FA]/20">
                 <TrendingUp size={14} className="text-[#60A5FA]" />
               </div>
               Crescimento
             </h2>
-            <span className="text-xs text-[#8b949e]">medido em {data.crescimento.ultimo_dia}</span>
+            <span className="text-xs text-[color:var(--text-muted)]">medido em {data.crescimento.ultimo_dia}</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -442,12 +443,12 @@ export default function Overview() {
               const v = data.crescimento!.variacao_7d?.[chave]
               return (
                 <div key={chave} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3">
-                  <div className="text-xl font-semibold tabular-nums text-[#e6edf3]">
+                  <div className="text-xl font-semibold tabular-nums text-[color:var(--text-primary)]">
                     {valor ?? '—'}
                   </div>
-                  <div className="text-xs text-[#8b949e] mt-0.5">{rotulo}</div>
+                  <div className="text-xs text-[color:var(--text-muted)] mt-0.5">{rotulo}</div>
                   {v && v.delta !== 0 && (
-                    <div className={`text-[11px] mt-1 tabular-nums ${v.delta > 0 ? 'text-[#00FFA7]' : 'text-red-400'}`}>
+                    <div className={`text-[11px] mt-1 tabular-nums ${v.delta > 0 ? 'text-[color:var(--evo-green)]' : 'text-red-400'}`}>
                       {v.delta > 0 ? '+' : ''}{v.delta} em 7d
                     </div>
                   )}
@@ -462,9 +463,9 @@ export default function Overview() {
           {data.crescimento.trafego_sem_origem_pct !== null && (
             <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3 mb-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-                <span className="text-xs text-[#8b949e]">Tráfego sem origem identificada</span>
+                <span className="text-xs text-[color:var(--text-muted)]">Tráfego sem origem identificada</span>
                 <span className={`text-sm font-semibold tabular-nums ${
-                  data.crescimento.trafego_sem_origem_pct > 50 ? 'text-amber-400' : 'text-[#00FFA7]'
+                  data.crescimento.trafego_sem_origem_pct > 50 ? 'text-amber-400' : 'text-[color:var(--evo-green)]'
                 }`}>
                   {data.crescimento.trafego_sem_origem_pct}%
                 </span>
@@ -472,7 +473,7 @@ export default function Overview() {
               <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    data.crescimento.trafego_sem_origem_pct > 50 ? 'bg-amber-400' : 'bg-[#00FFA7]'
+                    data.crescimento.trafego_sem_origem_pct > 50 ? 'bg-amber-400' : 'bg-[color:var(--evo-green)]'
                   }`}
                   style={{ width: `${Math.min(data.crescimento.trafego_sem_origem_pct, 100)}%` }}
                 />
@@ -486,8 +487,8 @@ export default function Overview() {
           {data.crescimento.taxa_clique_pct !== null && (
             <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3 mb-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-xs text-[#8b949e]">Visitas que clicaram num CTA</span>
-                <span className="text-sm font-semibold tabular-nums text-[#e6edf3]">
+                <span className="text-xs text-[color:var(--text-muted)]">Visitas que clicaram num CTA</span>
+                <span className="text-sm font-semibold tabular-nums text-[color:var(--text-primary)]">
                   {data.crescimento.taxa_clique_pct}%
                 </span>
               </div>
@@ -496,14 +497,14 @@ export default function Overview() {
 
           {data.crescimento.por_origem.length > 0 && (
             <div className="mb-4">
-              <div className="text-xs text-[#8b949e] mb-2">De onde vem o tráfego</div>
+              <div className="text-xs text-[color:var(--text-muted)] mb-2">De onde vem o tráfego</div>
               <div className="flex flex-wrap gap-2">
                 {data.crescimento.por_origem.map((o) => (
                   <span
                     key={o.origem}
-                    className="text-xs px-2 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[#e6edf3]"
+                    className="text-xs px-2 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[color:var(--text-primary)]"
                   >
-                    {o.origem} <span className="text-[#8b949e] tabular-nums">{o.valor}</span>
+                    {o.origem} <span className="text-[color:var(--text-muted)] tabular-nums">{o.valor}</span>
                   </span>
                 ))}
               </div>
@@ -514,12 +515,12 @@ export default function Overview() {
               der para separar os que trazem clique dos que não trazem. */}
           {data.crescimento.por_artigo.length > 0 && (
             <div>
-              <div className="text-xs text-[#8b949e] mb-2">Artigos que geraram clique</div>
+              <div className="text-xs text-[color:var(--text-muted)] mb-2">Artigos que geraram clique</div>
               <div className="space-y-1.5">
                 {data.crescimento.por_artigo.map((a) => (
                   <div key={a.artigo} className="flex items-baseline justify-between gap-3 text-xs">
-                    <span className="text-[#e6edf3] truncate">{a.artigo}</span>
-                    <span className="text-[#00FFA7] tabular-nums shrink-0">{a.valor}</span>
+                    <span className="text-[color:var(--text-primary)] truncate">{a.artigo}</span>
+                    <span className="text-[color:var(--evo-green)] tabular-nums shrink-0">{a.valor}</span>
                   </div>
                 ))}
               </div>
@@ -534,22 +535,22 @@ export default function Overview() {
       {!loading && data?.funil_conteudo && (
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5 mb-6">
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/20">
-                <FileText size={14} className="text-[#00FFA7]" />
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20">
+                <FileText size={14} className="text-[color:var(--evo-green)]" />
               </div>
               Esteira de conteúdo
             </h2>
-            <span className="text-xs text-[#8b949e]">ciclo de {data.funil_conteudo.ciclo}</span>
-            <span className="ml-auto text-sm tabular-nums text-[#e6edf3]">
-              <strong className="text-[#00FFA7]">{data.funil_conteudo.publicadas}</strong>
-              <span className="text-[#8b949e]"> / {data.funil_conteudo.meta} no ar</span>
+            <span className="text-xs text-[color:var(--text-muted)]">ciclo de {data.funil_conteudo.ciclo}</span>
+            <span className="ml-auto text-sm tabular-nums text-[color:var(--text-primary)]">
+              <strong className="text-[color:var(--evo-green)]">{data.funil_conteudo.publicadas}</strong>
+              <span className="text-[color:var(--text-muted)]"> / {data.funil_conteudo.meta} no ar</span>
             </span>
           </div>
 
           <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden mb-4">
             <div
-              className="h-full rounded-full bg-[#00FFA7] transition-all"
+              className="h-full rounded-full bg-[color:var(--evo-green)] transition-all"
               style={{ width: `${Math.min(data.funil_conteudo.no_ar_pct, 100)}%` }}
             />
           </div>
@@ -560,22 +561,22 @@ export default function Overview() {
                 <div className="text-xl font-semibold tabular-nums" style={{ color: etapa.cor }}>
                   {data.funil_conteudo!.fila[etapa.chave]}
                 </div>
-                <div className="text-xs text-[#8b949e] mt-0.5">{etapa.rotulo}</div>
+                <div className="text-xs text-[color:var(--text-muted)] mt-0.5">{etapa.rotulo}</div>
               </div>
             ))}
           </div>
 
           {data.funil_conteudo.proximas.length > 0 && (
             <div className="border-t border-white/[0.06] pt-3">
-              <div className="text-xs text-[#8b949e] mb-2">Próximas a sair</div>
+              <div className="text-xs text-[color:var(--text-muted)] mb-2">Próximas a sair</div>
               <ul className="space-y-1.5">
                 {data.funil_conteudo.proximas.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-baseline gap-2 text-sm">
-                    <span className="text-xs tabular-nums text-[#8b949e] shrink-0">{p.data_alvo}</span>
-                    <span className="text-[#e6edf3] [overflow-wrap:anywhere]">
+                    <span className="text-xs tabular-nums text-[color:var(--text-muted)] shrink-0">{p.data_alvo}</span>
+                    <span className="text-[color:var(--text-primary)] [overflow-wrap:anywhere]">
                       {p.titulo || p.keyword}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/[0.06] text-[#8b949e] shrink-0">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/[0.06] text-[color:var(--text-muted)] shrink-0">
                       {p.status}
                     </span>
                   </li>
@@ -585,7 +586,7 @@ export default function Overview() {
           )}
 
           {data.funil_conteudo.taxa_aproveitamento !== null && (
-            <div className="text-xs text-[#8b949e] mt-3">
+            <div className="text-xs text-[color:var(--text-muted)] mt-3">
               {Math.round(data.funil_conteudo.taxa_aproveitamento * 100)}% das pautas
               decididas viraram post — o resto foi descartado.
             </div>
@@ -596,7 +597,7 @@ export default function Overview() {
       {/* Precisa de atenção — health agregado (panorama 2026-07-17, item 19) */}
       {!loading && data?.needs_attention && data.needs_attention.total > 0 && (
         <div className="bg-red-500/[0.04] border border-red-500/20 rounded-2xl p-5 mb-6">
-          <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5 mb-4">
+          <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5 mb-4">
             <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20">
               <AlertTriangle size={14} className="text-red-400" />
             </div>
@@ -604,42 +605,42 @@ export default function Overview() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <div className="flex items-center gap-2 text-[#8b949e] mb-2">
+              <div className="flex items-center gap-2 text-[color:var(--text-muted)] mb-2">
                 <HeartCrack size={13} /> Heartbeats com falha ({data.needs_attention.heartbeat_failures.length})
               </div>
               {data.needs_attention.heartbeat_failures.length === 0 ? (
-                <div className="text-[#98A2B3] text-xs">Nenhum</div>
+                <div className="text-[color:var(--text-muted)] text-xs">Nenhum</div>
               ) : (
                 data.needs_attention.heartbeat_failures.slice(0, 4).map((h) => (
-                  <Link key={h.heartbeat_id} to="/heartbeats" className="block text-xs text-[#e6edf3] hover:text-red-300 truncate mb-1">
+                  <Link key={h.heartbeat_id} to="/heartbeats" className="block text-xs text-[color:var(--text-primary)] hover:text-red-300 truncate mb-1">
                     {h.heartbeat_id} — {h.error}
                   </Link>
                 ))
               )}
             </div>
             <div>
-              <div className="flex items-center gap-2 text-[#8b949e] mb-2">
+              <div className="flex items-center gap-2 text-[color:var(--text-muted)] mb-2">
                 <Lock size={13} /> Tickets travados ({data.needs_attention.stale_locked_tickets.length})
               </div>
               {data.needs_attention.stale_locked_tickets.length === 0 ? (
-                <div className="text-[#98A2B3] text-xs">Nenhum</div>
+                <div className="text-[color:var(--text-muted)] text-xs">Nenhum</div>
               ) : (
                 data.needs_attention.stale_locked_tickets.slice(0, 4).map((t) => (
-                  <Link key={t.id} to={`/tickets/${t.id}`} className="block text-xs text-[#e6edf3] hover:text-red-300 truncate mb-1">
+                  <Link key={t.id} to={`/tickets/${t.id}`} className="block text-xs text-[color:var(--text-primary)] hover:text-red-300 truncate mb-1">
                     {t.title} — {t.locked_by}
                   </Link>
                 ))
               )}
             </div>
             <div>
-              <div className="flex items-center gap-2 text-[#8b949e] mb-2">
+              <div className="flex items-center gap-2 text-[color:var(--text-muted)] mb-2">
                 <CheckCircle2 size={13} /> Aprovações pendentes há +24h ({data.needs_attention.aged_approvals.length})
               </div>
               {data.needs_attention.aged_approvals.length === 0 ? (
-                <div className="text-[#98A2B3] text-xs">Nenhuma</div>
+                <div className="text-[color:var(--text-muted)] text-xs">Nenhuma</div>
               ) : (
                 data.needs_attention.aged_approvals.slice(0, 4).map((a) => (
-                  <Link key={a.id} to="/approvals" className="block text-xs text-[#e6edf3] hover:text-red-300 truncate mb-1">
+                  <Link key={a.id} to="/approvals" className="block text-xs text-[color:var(--text-primary)] hover:text-red-300 truncate mb-1">
                     #{a.id} — {a.gate_type}
                   </Link>
                 ))
@@ -655,15 +656,15 @@ export default function Overview() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Recent Reports */}
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl p-6 transition-all duration-300 hover:border-[#21262d] hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-6 transition-all duration-300 hover:border-[color:var(--border)] hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-                <FileText size={14} className="text-[#00FFA7]" />
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+                <FileText size={14} className="text-[color:var(--evo-green)]" />
               </div>
               Recent Reports
             </h2>
-            <Link to="/workspace" className="text-xs font-medium text-[#98A2B3] hover:text-[#00FFA7] transition-colors flex items-center gap-1">
+            <Link to="/workspace" className="text-xs font-medium text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
@@ -684,11 +685,11 @@ export default function Overview() {
                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-all group"
                   >
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] shrink-0">
-                      <FileText size={14} className="text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors" />
+                      <FileText size={14} className="text-[color:var(--text-muted)] group-hover:text-[color:var(--text-primary)] transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-[#e6edf3] group-hover:text-white transition-colors truncate">{r.title}</p>
-                      <p className="text-xs text-[#98A2B3] mt-0.5">{relativeTime(r.date)}</p>
+                      <p className="text-sm text-[color:var(--text-primary)] group-hover:text-white transition-colors truncate">{r.title}</p>
+                      <p className="text-xs text-[color:var(--text-muted)] mt-0.5">{relativeTime(r.date)}</p>
                     </div>
                     <span
                       className="text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0"
@@ -706,21 +707,21 @@ export default function Overview() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-32">
-              <p className="text-[#98A2B3] text-sm">No recent reports</p>
+              <p className="text-[color:var(--text-muted)] text-sm">No recent reports</p>
             </div>
           )}
         </div>
 
         {/* Routines */}
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl p-6 transition-all duration-300 hover:border-[#21262d] hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-6 transition-all duration-300 hover:border-[color:var(--border)] hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-                <Clock size={14} className="text-[#00FFA7]" />
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+                <Clock size={14} className="text-[color:var(--evo-green)]" />
               </div>
               Routines
             </h2>
-            <Link to="/activity" className="text-xs font-medium text-[#98A2B3] hover:text-[#00FFA7] transition-colors flex items-center gap-1">
+            <Link to="/activity" className="text-xs font-medium text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
@@ -735,7 +736,7 @@ export default function Overview() {
             <div className="overflow-x-auto -mx-6 px-6">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
+                  <tr className="text-[color:var(--text-muted)] text-[11px] uppercase tracking-wider font-medium">
                     <th className="text-left pb-3 pr-4">Routine</th>
                     <th className="text-left pb-3 pr-4">Status</th>
                     <th className="text-right pb-3 pr-4">Runs</th>
@@ -746,14 +747,14 @@ export default function Overview() {
                   {routines.map((r, i) => (
                     <tr
                       key={i}
-                      className="border-t border-[#21262d]/60 hover:bg-white/[0.02] transition-colors"
+                      className="border-t border-[color:var(--border)]/60 hover:bg-white/[0.02] transition-colors"
                     >
-                      <td className="py-2.5 pr-4 text-[#e6edf3] text-[13px] font-medium">{r.name}</td>
+                      <td className="py-2.5 pr-4 text-[color:var(--text-primary)] text-[13px] font-medium">{r.name}</td>
                       <td className="py-2.5 pr-4">
                         <HealthBadge status={r.status} label={r.status} />
                       </td>
-                      <td className="py-2.5 pr-4 text-right text-[#D0D5DD] tabular-nums text-[13px]">{r.runs}</td>
-                      <td className="py-2.5 text-right text-[#98A2B3] text-[13px]">{relativeTime(r.last_run)}</td>
+                      <td className="py-2.5 pr-4 text-right text-[color:var(--text-secondary)] tabular-nums text-[13px]">{r.runs}</td>
+                      <td className="py-2.5 text-right text-[color:var(--text-muted)] text-[13px]">{relativeTime(r.last_run)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -761,7 +762,7 @@ export default function Overview() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-32">
-              <p className="text-[#98A2B3] text-sm">No routines data</p>
+              <p className="text-[color:var(--text-muted)] text-sm">No routines data</p>
             </div>
           )}
         </div>
@@ -772,7 +773,7 @@ export default function Overview() {
 
       {/* Quick Actions */}
       <div className="mb-4">
-        <h3 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-3">Quick Actions</h3>
+        <h3 className="text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-3">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon
@@ -780,14 +781,14 @@ export default function Overview() {
               <Link
                 key={action.label}
                 to={action.to}
-                className="group flex items-center gap-3 bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-3 transition-all duration-200 hover:border-[#00FFA7]/30 hover:bg-[#00FFA7]/[0.03]"
+                className="group flex items-center gap-3 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl px-4 py-3 transition-all duration-200 hover:border-[color:var(--evo-green)]/30 hover:bg-[color:var(--evo-green)]/[0.03]"
               >
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-[#00FFA7]/10 transition-colors">
-                  <Icon size={15} className="text-[#98A2B3] group-hover:text-[#00FFA7] transition-colors" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-[color:var(--evo-green)]/10 transition-colors">
+                  <Icon size={15} className="text-[color:var(--text-muted)] group-hover:text-[color:var(--evo-green)] transition-colors" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-[#e6edf3] group-hover:text-white truncate">{action.label}</p>
-                  <p className="text-[11px] text-[#98A2B3] truncate">{action.hint}</p>
+                  <p className="text-[13px] font-medium text-[color:var(--text-primary)] group-hover:text-white truncate">{action.label}</p>
+                  <p className="text-[11px] text-[color:var(--text-muted)] truncate">{action.hint}</p>
                 </div>
               </Link>
             )

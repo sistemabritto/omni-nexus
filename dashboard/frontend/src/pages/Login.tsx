@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
@@ -7,6 +8,7 @@ function NetworkCanvas() {
   const ref = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const canvas = ref.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -102,21 +104,22 @@ export default function Login() {
     }
   }
 
-  const inp = "w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20"
-  const lbl = "block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase"
+  const inp = "w-full px-4 py-3 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[color:var(--evo-green)]/60 focus:ring-1 focus:ring-[color:var(--evo-green)]/20"
+  const lbl = "block text-[11px] font-semibold text-[color:var(--text-muted)] mb-1.5 tracking-[0.08em] uppercase"
 
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 font-[Inter,-apple-system,sans-serif] relative">
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center px-4 font-[family-name:var(--sb-font-body)] relative">
       <NetworkCanvas />
 
       <div className="w-full max-w-[380px] relative z-10">
-        <div className="rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
 
           {/* Header */}
-          <div className="px-7 pt-7 pb-5 border-b border-[#152030]">
+          <div className="px-7 pt-7 pb-5 border-b border-[color:var(--border)]">
             <div className="flex flex-col items-center gap-3">
+              <h1 className="text-2xl font-semibold text-white">OmniNexus <span style={{color:'var(--evo-green)'}}>Live</span></h1>
               <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-8 w-auto" />
-              <p className="text-[11px] text-[#4a5a6e]">{t('login.subtitle')}</p>
+              <p className="text-[11px] text-[color:var(--text-muted)]">{t('login.subtitle')}</p>
             </div>
           </div>
 
@@ -143,8 +146,8 @@ export default function Login() {
               <button type="submit" disabled={submitting}
                 className={`w-full py-3 mt-1 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40 ${
                   submitting
-                    ? 'bg-[#00FFA7]/60 text-[#080c14]'
-                    : 'bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] active:bg-[#00cc88]'
+                    ? 'bg-[color:var(--evo-green)]/60 text-[color:var(--bg-primary)]'
+                    : 'bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] active:bg-[#00cc88]'
                 }`}>
                 {submitting ? t('login.signingIn') : t('login.submit')}
               </button>
@@ -154,7 +157,7 @@ export default function Login() {
 
         <p className="text-center mt-4 text-[10px] text-[#2d3d4f]">
           <a href="https://evolutionfoundation.com.br" target="_blank" rel="noopener noreferrer"
-            className="hover:text-[#4a5a6e] transition-colors">
+            className="hover:text-[color:var(--text-muted)] transition-colors">
             Evolution Foundation
           </a>
         </p>

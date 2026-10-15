@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../lib/api'
 import { ScrollText, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -73,20 +74,20 @@ export default function Audit() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-            <ScrollText size={20} className="text-[#00FFA7]" />
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+            <ScrollText size={20} className="text-[color:var(--evo-green)]" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#e6edf3]">{t('audit.title')}</h1>
-            <p className="text-sm text-[#98A2B3]">{total} entries</p>
+            <h1 className="text-xl font-bold text-[color:var(--text-primary)]">{t('audit.title')}</h1>
+            <p className="text-sm text-[color:var(--text-muted)]">{total} entries</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-[#161b22] rounded-xl border border-[#21262d] overflow-hidden">
+      <div className="bg-[color:var(--bg-card)] rounded-xl border border-[color:var(--border)] overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#21262d] text-[#98A2B3]">
+            <tr className="border-b border-[color:var(--border)] text-[color:var(--text-muted)]">
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">When</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">User</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Action</th>
@@ -98,21 +99,21 @@ export default function Audit() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-[#98A2B3]">Loading...</td>
+                <td colSpan={6} className="px-4 py-12 text-center text-[color:var(--text-muted)]">Loading...</td>
               </tr>
             ) : entries.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-[#98A2B3]">No audit entries</td>
+                <td colSpan={6} className="px-4 py-12 text-center text-[color:var(--text-muted)]">No audit entries</td>
               </tr>
             ) : (
               entries.map((e) => {
                 const style = getActionStyle(e.action)
                 return (
-                  <tr key={e.id} className="border-b border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-3 text-[#98A2B3] text-xs whitespace-nowrap" title={new Date(e.created_at).toLocaleString()}>
+                  <tr key={e.id} className="border-b border-[color:var(--border)]/50 hover:bg-white/[0.02] transition-colors">
+                    <td className="px-4 py-3 text-[color:var(--text-muted)] text-xs whitespace-nowrap" title={new Date(e.created_at).toLocaleString()}>
                       {timeAgo(e.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-[#e6edf3] font-medium">{e.username || '--'}</td>
+                    <td className="px-4 py-3 text-[color:var(--text-primary)] font-medium">{e.username || '--'}</td>
                     <td className="px-4 py-3">
                       <span
                         className="inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-full border"
@@ -121,9 +122,9 @@ export default function Audit() {
                         {e.action}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#98A2B3]">{e.resource || '--'}</td>
-                    <td className="px-4 py-3 text-[#98A2B3] max-w-xs truncate text-xs">{e.detail || '--'}</td>
-                    <td className="px-4 py-3 text-[#98A2B3] text-xs font-mono">{e.ip_address || '--'}</td>
+                    <td className="px-4 py-3 text-[color:var(--text-muted)]">{e.resource || '--'}</td>
+                    <td className="px-4 py-3 text-[color:var(--text-muted)] max-w-xs truncate text-xs">{e.detail || '--'}</td>
+                    <td className="px-4 py-3 text-[color:var(--text-muted)] text-xs font-mono">{e.ip_address || '--'}</td>
                   </tr>
                 )
               })
@@ -135,21 +136,21 @@ export default function Audit() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 text-sm">
-          <span className="text-[#98A2B3]">
+          <span className="text-[color:var(--text-muted)]">
             Page {page} of {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#21262d] text-[#e6edf3] hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[color:var(--border)] text-[color:var(--text-primary)] hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} /> Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#21262d] text-[#e6edf3] hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[color:var(--border)] text-[color:var(--text-primary)] hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               Next <ChevronRight size={16} />
             </button>

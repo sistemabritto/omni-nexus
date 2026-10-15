@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { NavLink, Outlet, useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Database } from 'lucide-react'
 import { useEffect } from 'react'
@@ -35,7 +36,7 @@ function ConnectionLayoutInner() {
   // page refresh that lands directly on /knowledge/connections/:id.
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-[#98A2B3] text-sm">
+      <div className="flex items-center justify-center py-16 text-[color:var(--text-muted)] text-sm">
         Loading connection…
       </div>
     )
@@ -44,13 +45,13 @@ function ConnectionLayoutInner() {
   if (!connection) {
     return (
       <div className="text-center py-16">
-        <p className="text-[#D0D5DD] font-medium mb-2">Connection not found</p>
-        <p className="text-[#98A2B3] text-sm mb-4">
+        <p className="text-[color:var(--text-secondary)] font-medium mb-2">Connection not found</p>
+        <p className="text-[color:var(--text-muted)] text-sm mb-4">
           The connection you&apos;re trying to open doesn&apos;t exist or was deleted.
         </p>
         <button
           onClick={() => navigate('/knowledge')}
-          className="text-sm text-[#00FFA7] hover:underline"
+          className="text-sm text-[color:var(--evo-green)] hover:underline"
         >
           ← Back to Connections
         </button>
@@ -60,7 +61,7 @@ function ConnectionLayoutInner() {
 
   const statusColor =
     connection.status === 'ready'
-      ? 'text-[#00FFA7] bg-[#00FFA7]/10'
+      ? 'text-[color:var(--evo-green)] bg-[color:var(--evo-green)]/10'
       : connection.status === 'error'
       ? 'text-red-400 bg-red-400/10'
       : 'text-yellow-400 bg-yellow-400/10'
@@ -71,25 +72,25 @@ function ConnectionLayoutInner() {
       <div className="mb-6">
         <Link
           to="/knowledge"
-          className="inline-flex items-center gap-1.5 text-xs text-[#98A2B3] hover:text-[#D0D5DD] mb-3 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] mb-3 transition-colors"
         >
           <ArrowLeft size={14} />
           All connections
         </Link>
         <div className="flex items-center gap-3 flex-wrap">
-          <Database size={20} className="text-[#00FFA7]" />
-          <h1 className="text-xl font-bold text-[#F9FAFB]">{connection.name}</h1>
+          <Database size={20} className="text-[color:var(--evo-green)]" />
+          <h1 className="text-xl font-bold text-[color:var(--text-primary)]">{connection.name}</h1>
           <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-semibold ${statusColor}`}>
             {connection.status}
           </span>
-          <span className="text-xs text-[#98A2B3] font-mono">
+          <span className="text-xs text-[color:var(--text-muted)] font-mono">
             {connection.host}:{connection.port ?? 5432} / {connection.database_name}
           </span>
         </div>
       </div>
 
       {/* Per-connection tabs */}
-      <div className="flex gap-1 mb-6 border-b border-[#344054] overflow-x-auto">
+      <div className="flex gap-1 mb-6 border-b border-[color:var(--border)] overflow-x-auto">
         {tabs.map((t) => (
           <NavLink
             key={t.label}
@@ -98,8 +99,8 @@ function ConnectionLayoutInner() {
             className={({ isActive }) =>
               `px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                 isActive
-                  ? 'text-[#00FFA7] border-[#00FFA7]'
-                  : 'text-[#98A2B3] border-transparent hover:text-[#D0D5DD]'
+                  ? 'text-[color:var(--evo-green)] border-[color:var(--evo-green)]'
+                  : 'text-[color:var(--text-muted)] border-transparent hover:text-[color:var(--text-secondary)]'
               }`
             }
           >
@@ -118,7 +119,7 @@ export default function ConnectionLayout() {
   const { hasPermission } = useAuth()
   if (!hasPermission('knowledge', 'view')) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#98A2B3] text-sm">
+      <div className="flex items-center justify-center h-64 text-[color:var(--text-muted)] text-sm">
         You don&apos;t have permission to view Knowledge.
       </div>
     )

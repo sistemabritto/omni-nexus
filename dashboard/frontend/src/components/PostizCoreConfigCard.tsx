@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { Video, CheckCircle2, AlertCircle, Loader2, Eye, EyeOff, RefreshCw } from 'lucide-react'
 import { api } from '../lib/api'
@@ -94,10 +95,10 @@ export default function PostizCoreConfigCard() {
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2.5 mb-3">
-        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-          <Video size={14} className="text-[#00FFA7]" />
+        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+          <Video size={14} className="text-[color:var(--evo-green)]" />
         </div>
-        <h2 className="text-base font-semibold text-[#e6edf3]">Postiz (produção de mídia social)</h2>
+        <h2 className="text-base font-semibold text-[color:var(--text-primary)]">Postiz (produção de mídia social)</h2>
         <span
           className="text-xs px-2 py-0.5 rounded-full border"
           style={{
@@ -110,9 +111,9 @@ export default function PostizCoreConfigCard() {
         </span>
       </div>
 
-      <div className="rounded-xl border border-[#21262d] bg-[#161b22] p-5">
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] p-5">
         {loading ? (
-          <div className="flex items-center gap-2 text-sm text-[#8b949e]">
+          <div className="flex items-center gap-2 text-sm text-[color:var(--text-muted)]">
             <Loader2 size={14} className="animate-spin" /> Carregando...
           </div>
         ) : (
@@ -120,20 +121,20 @@ export default function PostizCoreConfigCard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {FIELDS.map((field) => (
                 <div key={field.key}>
-                  <label className="block text-xs text-[#8b949e] mb-1">{field.label}</label>
+                  <label className="block text-xs text-[color:var(--text-muted)] mb-1">{field.label}</label>
                   <div className="relative">
                     <input
                       type={field.secret && !showSecret ? 'password' : 'text'}
                       value={values[field.key] ?? ''}
                       placeholder={field.placeholder}
                       onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
-                      className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/40"
+                      className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/40"
                     />
                     {field.secret && (
                       <button
                         type="button"
                         onClick={() => setShowSecret((s) => !s)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8b949e] hover:text-[#e6edf3]"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"
                       >
                         {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
@@ -143,24 +144,24 @@ export default function PostizCoreConfigCard() {
               ))}
 
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Modo de publicação padrão</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Modo de publicação padrão</label>
                 <select
                   value={defaultMode}
                   onChange={(e) => setDefaultMode(e.target.value as 'draft' | 'schedule')}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/40"
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/40"
                 >
                   <option value="draft">draft (nunca publica sozinho)</option>
                   <option value="schedule">schedule (agenda após aprovação)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Timezone (entrada do usuário)</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Timezone (entrada do usuário)</label>
                 <input
                   type="text"
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
                   placeholder="America/Bahia"
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/40"
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/40"
                 />
               </div>
             </div>
@@ -171,11 +172,11 @@ export default function PostizCoreConfigCard() {
               </div>
             )}
             {saveNote && !error && (
-              <div className="text-xs text-[#8b949e] mb-3">{saveNote}</div>
+              <div className="text-xs text-[color:var(--text-muted)] mb-3">{saveNote}</div>
             )}
             {testResult && (
               <div className="mb-3 text-xs">
-                <div className={`flex items-center gap-2 ${testResult.ok ? 'text-[#00FFA7]' : 'text-[#f85149]'}`}>
+                <div className={`flex items-center gap-2 ${testResult.ok ? 'text-[color:var(--evo-green)]' : 'text-[#f85149]'}`}>
                   {testResult.ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
                   {testResult.detail}
                 </div>
@@ -202,20 +203,20 @@ export default function PostizCoreConfigCard() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#00FFA7]/10 border border-[#00FFA7]/30 text-[#00FFA7] hover:bg-[#00FFA7]/15 disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/15 disabled:opacity-50"
               >
                 {saving ? 'Salvando...' : 'Salvar'}
               </button>
               <button
                 onClick={handleTest}
                 disabled={testing || !configured}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#161b22] border border-[#21262d] text-[#e6edf3] hover:border-[#8b949e]/40 disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[color:var(--text-primary)] hover:border-[color:var(--text-muted)]/40 disabled:opacity-50"
               >
                 {testing ? 'Testando...' : 'Testar conexão'}
               </button>
               <button
                 onClick={load}
-                className="ml-auto p-1.5 rounded-lg text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]"
+                className="ml-auto p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)]"
                 title="Recarregar"
               >
                 <RefreshCw size={14} />

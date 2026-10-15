@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -84,39 +85,39 @@ interface WelcomeProps {
 export default function Welcome({ onFirstTime, onRestore }: WelcomeProps) {
   const { t } = useTranslation()
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 font-[Inter,-apple-system,sans-serif] relative">
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center px-4 font-[family-name:var(--sb-font-body)] relative">
       <NetworkCanvas />
 
       <div className="w-full max-w-[480px] relative z-10">
-        <div className="rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
 
           {/* Header */}
-          <div className="px-7 pt-7 pb-5 border-b border-[#152030]">
+          <div className="px-7 pt-7 pb-5 border-b border-[color:var(--border)]">
             <div className="flex flex-col items-center gap-3">
               <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-8 w-auto" />
               <div className="text-center">
                 <h1 className="text-[16px] font-semibold text-[#e2e8f0]">{t('onboarding.welcome.title')}</h1>
-                <p className="text-[11px] text-[#4a5a6e] mt-1">{t('onboarding.welcome.subtitle')}</p>
+                <p className="text-[11px] text-[color:var(--text-muted)] mt-1">{t('onboarding.welcome.subtitle')}</p>
               </div>
             </div>
           </div>
 
           {/* Content */}
           <div className="px-7 py-6 space-y-3">
-            <p className="text-[12px] text-[#98A2B3] text-center mb-5">
+            <p className="text-[12px] text-[color:var(--text-muted)] text-center mb-5">
               {t('onboarding.welcome.chooseHowToStart')}
             </p>
 
             <button
               onClick={onFirstTime}
-              className="w-full py-3 px-4 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors"
+              className="w-full py-3 px-4 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors"
             >
               {t('onboarding.welcome.configureFromScratch')}
             </button>
 
             <button
               onClick={onRestore}
-              className="w-full py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+              className="w-full py-3 px-4 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
             >
               {t('onboarding.welcome.restoreBrainRepo')}
             </button>
@@ -129,7 +130,7 @@ export default function Welcome({ onFirstTime, onRestore }: WelcomeProps) {
 
         <p className="text-center mt-4 text-[10px] text-[#2d3d4f]">
           <a href="https://evolutionfoundation.com.br" target="_blank" rel="noopener noreferrer"
-            className="hover:text-[#4a5a6e] transition-colors">
+            className="hover:text-[color:var(--text-muted)] transition-colors">
             Evolution Foundation
           </a>
         </p>

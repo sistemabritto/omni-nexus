@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import {
   Video, Plus, RefreshCw, Play, X, CheckCircle2, XCircle, AlertCircle,
@@ -198,16 +199,16 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
   }
 
   return (
-    <div className={embedded ? '' : 'p-6 max-w-[1400px] mx-auto'}>
-      <div className={`flex items-center justify-between ${embedded ? 'mb-4' : 'mb-6'}`}>
+    <div className={embedded ? '' : 'max-w-[1400px] mx-auto'}>
+      <div className={`omn-responsive-toolbar flex items-center justify-between ${embedded ? 'mb-4' : 'mb-6'}`}>
         {!embedded && (
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-              <Video size={18} className="text-[#00FFA7]" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+              <Video size={18} className="text-[color:var(--evo-green)]" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-[#e6edf3]">Mídias</h1>
-              <p className="text-xs text-[#8b949e]">Produção de vídeo social — briefing → HyperFrames → validação → Postiz</p>
+              <h1 className="text-lg font-semibold text-[color:var(--text-primary)]">Mídias</h1>
+              <p className="text-xs text-[color:var(--text-muted)]">Produção de vídeo social — briefing → HyperFrames → validação → Postiz</p>
             </div>
           </div>
         )}
@@ -215,19 +216,19 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-1.5 text-sm text-[#e6edf3]"
+            className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-1.5 text-sm text-[color:var(--text-primary)]"
           >
             <option value="">Todos os status</option>
             {Object.keys(STATUS_COLOR).map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
-          <button onClick={load} className="p-2 rounded-lg text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]">
+          <button onClick={load} className="p-2 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)]">
             <RefreshCw size={16} />
           </button>
           <button
             onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#00FFA7]/10 border border-[#00FFA7]/30 text-[#00FFA7] hover:bg-[#00FFA7]/15"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/15"
           >
             <Plus size={14} /> Criar Mídia
           </button>
@@ -240,10 +241,10 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
         </div>
       )}
 
-      <div className="rounded-xl border border-[#21262d] bg-[#161b22] overflow-hidden">
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#21262d] text-[#8b949e] text-xs uppercase tracking-wide">
+            <tr className="border-b border-[color:var(--border)] text-[color:var(--text-muted)] text-xs uppercase tracking-wide">
               <th className="text-left px-4 py-2.5 font-medium">Título</th>
               <th className="text-left px-4 py-2.5 font-medium">Plataforma</th>
               <th className="text-left px-4 py-2.5 font-medium">Status</th>
@@ -256,33 +257,33 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#8b949e]">
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[color:var(--text-muted)]">
                 <Loader2 size={16} className="animate-spin inline mr-2" /> Carregando...
               </td></tr>
             ) : jobs.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#8b949e]">Nenhuma mídia ainda.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[color:var(--text-muted)]">Nenhuma mídia ainda.</td></tr>
             ) : jobs.map((job) => (
               <tr
                 key={job.id}
-                className="border-b border-[#21262d]/60 hover:bg-[#0d1117]/60 cursor-pointer"
+                className="border-b border-[color:var(--border)]/60 hover:bg-[color:var(--bg-primary)]/60 cursor-pointer"
                 onClick={() => openDetail(job)}
               >
-                <td className="px-4 py-2.5 text-[#e6edf3]">
+                <td className="px-4 py-2.5 text-[color:var(--text-primary)]">
                   {job.title}
                   {job.last_error && (
                     <div className="text-[11px] text-[#f85149] truncate max-w-[280px]">{job.last_error}</div>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-[#8b949e]">{job.platform}</td>
+                <td className="px-4 py-2.5 text-[color:var(--text-muted)]">{job.platform}</td>
                 <td className="px-4 py-2.5"><StatusBadge status={job.status} /></td>
-                <td className="px-4 py-2.5 text-[#8b949e]">
+                <td className="px-4 py-2.5 text-[color:var(--text-muted)]">
                   {job.job_type === 'cortes_virais' && job.result?.cortes
                     ? `${job.result.cortes.length} corte(s)`
                     : `${job.render_duration_seconds ?? job.duration_seconds}s`}
                 </td>
-                <td className="px-4 py-2.5 text-[#8b949e]">{fmtBytes(job.render_size_bytes)}</td>
-                <td className="px-4 py-2.5 text-[#8b949e]">{job.attempt_count}</td>
-                <td className="px-4 py-2.5 text-[#8b949e] text-xs">
+                <td className="px-4 py-2.5 text-[color:var(--text-muted)]">{fmtBytes(job.render_size_bytes)}</td>
+                <td className="px-4 py-2.5 text-[color:var(--text-muted)]">{job.attempt_count}</td>
+                <td className="px-4 py-2.5 text-[color:var(--text-muted)] text-xs">
                   {job.postiz_post_id ? `post: ${job.postiz_post_id.slice(0, 10)}…` : '—'}
                 </td>
                 <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
@@ -292,7 +293,7 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                         disabled={busy}
                         onClick={() => action(job, 'run')}
                         title="Iniciar"
-                        className="p-1.5 rounded-lg text-[#00FFA7] hover:bg-[#00FFA7]/10"
+                        className="p-1.5 rounded-lg text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/10"
                       ><Play size={14} /></button>
                     )}
                     {!['published', 'failed', 'cancelled'].includes(job.status) && (
@@ -315,90 +316,90 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
       {createOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setCreateOpen(false)}>
           <div
-            className="bg-[#161b22] border border-[#21262d] rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto"
+            className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-[#e6edf3]">Nova Mídia</h2>
-              <button onClick={() => setCreateOpen(false)} className="text-[#8b949e] hover:text-[#e6edf3]"><X size={18} /></button>
+              <h2 className="text-base font-semibold text-[color:var(--text-primary)]">Nova Mídia</h2>
+              <button onClick={() => setCreateOpen(false)} className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"><X size={18} /></button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label className="block text-xs text-[#8b949e] mb-1">Título *</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Título *</label>
                 <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs text-[#8b949e] mb-1">Briefing</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Briefing</label>
                 <textarea value={form.brief} onChange={(e) => setForm((f) => ({ ...f, brief: e.target.value }))} rows={3}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Plataforma</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Plataforma</label>
                 <select value={form.platform} onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value as any }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]">
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]">
                   {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Formato</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Formato</label>
                 <select value={form.format} onChange={(e) => setForm((f) => ({ ...f, format: e.target.value as any }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]">
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]">
                   {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Largura (px)</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Largura (px)</label>
                 <input type="number" value={form.width} onChange={(e) => setForm((f) => ({ ...f, width: Number(e.target.value) }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Altura (px)</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Altura (px)</label>
                 <input type="number" value={form.height} onChange={(e) => setForm((f) => ({ ...f, height: Number(e.target.value) }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">FPS</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">FPS</label>
                 <select value={form.fps} onChange={(e) => setForm((f) => ({ ...f, fps: Number(e.target.value) }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]">
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]">
                   {[24, 30, 60].map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Duração (s)</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Duração (s)</label>
                 <input type="number" value={form.duration_seconds} onChange={(e) => setForm((f) => ({ ...f, duration_seconds: Number(e.target.value) }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs text-[#8b949e] mb-1">Legenda sugerida</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Legenda sugerida</label>
                 <textarea value={form.caption} onChange={(e) => setForm((f) => ({ ...f, caption: e.target.value }))} rows={2}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Modo de publicação</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Modo de publicação</label>
                 <select value={form.publication_mode} onChange={(e) => setForm((f) => ({ ...f, publication_mode: e.target.value as any }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]">
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]">
                   <option value="draft">draft</option>
                   <option value="schedule">schedule</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Data desejada ({form.timezone})</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Data desejada ({form.timezone})</label>
                 <input type="datetime-local" value={form.scheduled_at} onChange={(e) => setForm((f) => ({ ...f, scheduled_at: e.target.value }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
               <div>
-                <label className="block text-xs text-[#8b949e] mb-1">Project ID (opcional)</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Project ID (opcional)</label>
                 <input value={form.project_id} onChange={(e) => setForm((f) => ({ ...f, project_id: e.target.value }))}
-                  className="w-full bg-[#0d1117] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3]" />
+                  className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)]" />
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-5">
-              <button onClick={() => setCreateOpen(false)} className="px-3 py-1.5 rounded-lg text-sm text-[#8b949e] hover:bg-[#21262d]">Cancelar</button>
+              <button onClick={() => setCreateOpen(false)} className="px-3 py-1.5 rounded-lg text-sm text-[color:var(--text-muted)] hover:bg-[color:var(--border)]">Cancelar</button>
               <button
                 disabled={creating || !form.title}
                 onClick={handleCreate}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#00FFA7]/10 border border-[#00FFA7]/30 text-[#00FFA7] hover:bg-[#00FFA7]/15 disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/15 disabled:opacity-50"
               >
                 {creating ? 'Criando...' : 'Criar e enfileirar'}
               </button>
@@ -410,10 +411,10 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
       {/* Detail drawer */}
       {selected && (
         <div className="fixed inset-0 bg-black/60 flex justify-end z-50" onClick={() => setSelected(null)}>
-          <div className="bg-[#161b22] border-l border-[#21262d] w-full max-w-xl h-full overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[color:var(--bg-card)] border-l border-[color:var(--border)] w-full max-w-xl h-full overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-[#e6edf3]">{selected.title}</h2>
-              <button onClick={() => setSelected(null)} className="text-[#8b949e] hover:text-[#e6edf3]"><X size={18} /></button>
+              <h2 className="text-base font-semibold text-[color:var(--text-primary)]">{selected.title}</h2>
+              <button onClick={() => setSelected(null)} className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"><X size={18} /></button>
             </div>
 
             <div className="flex items-center gap-2 mb-4">
@@ -425,16 +426,16 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                   result.cortes[i].largura/altura — todos iguais entre si,
                   então basta o primeiro. */}
               {selected.job_type === 'cortes_virais' && selected.result?.cortes?.[0] ? (
-                <span className="text-xs text-[#8b949e]">
+                <span className="text-xs text-[color:var(--text-muted)]">
                   {selected.platform} · vertical · {selected.result.cortes[0].largura}x{selected.result.cortes[0].altura}
                 </span>
               ) : (
-                <span className="text-xs text-[#8b949e]">{selected.platform} · {selected.format} · {selected.width}x{selected.height} · {selected.fps}fps</span>
+                <span className="text-xs text-[color:var(--text-muted)]">{selected.platform} · {selected.format} · {selected.width}x{selected.height} · {selected.fps}fps</span>
               )}
             </div>
 
             {selected.render_path && ['ready_for_review', 'approved', 'uploading', 'creating_draft', 'draft_created', 'scheduling', 'scheduled', 'published'].includes(selected.status) && (
-              <div className="mb-4 rounded-lg overflow-hidden border border-[#21262d] bg-black">
+              <div className="mb-4 rounded-lg overflow-hidden border border-[color:var(--border)] bg-black">
                 <video
                   key={selected.id}
                   controls
@@ -452,11 +453,11 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
             {selected.job_type === 'cortes_virais' && selected.result?.cortes && selected.result.cortes.length > 0 && (
               <div className="mb-4 space-y-3">
                 {selected.result.cortes.map((corte, i) => (
-                  <div key={i} className="rounded-lg overflow-hidden border border-[#21262d] bg-black">
-                    <div className="px-3 py-2 bg-[#0d1117] text-xs text-[#e6edf3] flex items-center justify-between">
+                  <div key={i} className="rounded-lg overflow-hidden border border-[color:var(--border)] bg-black">
+                    <div className="px-3 py-2 bg-[color:var(--bg-primary)] text-xs text-[color:var(--text-primary)] flex items-center justify-between">
                       <span className="font-medium">{corte.titulo || `Corte ${i + 1}`}</span>
                       <div className="flex items-center gap-2">
-                        {corte.duracao_s != null && <span className="text-[#8b949e]">{Math.round(corte.duracao_s)}s</span>}
+                        {corte.duracao_s != null && <span className="text-[color:var(--text-muted)]">{Math.round(corte.duracao_s)}s</span>}
                         {corte.ticket_id && (
                           <a href={`/tickets/${corte.ticket_id}`} className="text-[#58a6ff] hover:underline">
                             aprovar →
@@ -473,10 +474,10 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                         <Film size={24} />
                       </video>
                     ) : (
-                      <div className="px-3 py-4 text-xs text-[#8b949e]">Share indisponível pra este corte.</div>
+                      <div className="px-3 py-4 text-xs text-[color:var(--text-muted)]">Share indisponível pra este corte.</div>
                     )}
                     {corte.share_url && (
-                      <div className="px-3 py-2 flex items-center gap-2 border-t border-[#21262d]">
+                      <div className="px-3 py-2 flex items-center gap-2 border-t border-[color:var(--border)]">
                         <a
                           href={corte.share_url}
                           target="_blank"
@@ -488,13 +489,13 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                         <button
                           onClick={() => copiarLink(corte.share_url!)}
                           title="Copiar link"
-                          className="p-1 rounded text-[#8b949e] hover:text-[#e6edf3] hover:bg-white/5 flex-shrink-0"
+                          className="p-1 rounded text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-white/5 flex-shrink-0"
                         >
-                          {copiedUrl === corte.share_url ? <Check size={13} className="text-[#00FFA7]" /> : <Copy size={13} />}
+                          {copiedUrl === corte.share_url ? <Check size={13} className="text-[color:var(--evo-green)]" /> : <Copy size={13} />}
                         </button>
                       </div>
                     )}
-                    {corte.motivo && <div className="px-3 py-2 text-xs text-[#8b949e] border-t border-[#21262d]">{corte.motivo}</div>}
+                    {corte.motivo && <div className="px-3 py-2 text-xs text-[color:var(--text-muted)] border-t border-[color:var(--border)]">{corte.motivo}</div>}
                   </div>
                 ))}
               </div>
@@ -505,7 +506,7 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                 em vez de nada aparecer no painel. */}
             {(selected.job_type === 'corte_editorial' || selected.job_type === 'resumo_tematico')
               && selected.result?.pagina_revisao && (
-              <div className="mb-4 rounded-lg border border-[#21262d] bg-[#0d1117] px-3 py-3 text-xs">
+              <div className="mb-4 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-primary)] px-3 py-3 text-xs">
                 <a
                   href={selected.result.share_url || '#'}
                   target="_blank"
@@ -528,20 +529,20 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-[#8b949e] mb-4">
-              <div>Tentativas: <span className="text-[#e6edf3]">{selected.attempt_count}</span></div>
-              <div>Checksum: <span className="text-[#e6edf3]">{selected.render_sha256 ? selected.render_sha256.slice(0, 12) + '…' : '—'}</span></div>
-              <div>Postiz media: <span className="text-[#e6edf3]">{selected.postiz_media_id || '—'}</span></div>
-              <div>Postiz post: <span className="text-[#e6edf3]">{selected.postiz_post_id || '—'}</span></div>
-              <div>Criado: <span className="text-[#e6edf3]">{selected.created_at}</span></div>
-              <div>Atualizado: <span className="text-[#e6edf3]">{selected.updated_at}</span></div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-[color:var(--text-muted)] mb-4">
+              <div>Tentativas: <span className="text-[color:var(--text-primary)]">{selected.attempt_count}</span></div>
+              <div>Checksum: <span className="text-[color:var(--text-primary)]">{selected.render_sha256 ? selected.render_sha256.slice(0, 12) + '…' : '—'}</span></div>
+              <div>Postiz media: <span className="text-[color:var(--text-primary)]">{selected.postiz_media_id || '—'}</span></div>
+              <div>Postiz post: <span className="text-[color:var(--text-primary)]">{selected.postiz_post_id || '—'}</span></div>
+              <div>Criado: <span className="text-[color:var(--text-primary)]">{selected.created_at}</span></div>
+              <div>Atualizado: <span className="text-[color:var(--text-primary)]">{selected.updated_at}</span></div>
             </div>
 
             <div className="flex flex-wrap gap-2 mb-5">
               {selected.status === 'ready_for_review' && (
                 <>
                   <button disabled={busy} onClick={() => action(selected, 'approve')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#00FFA7]/10 border border-[#00FFA7]/30 text-[#00FFA7] hover:bg-[#00FFA7]/15">
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/15">
                     <CheckCircle2 size={14} /> Aprovar
                   </button>
                   <div className="flex items-center gap-1.5">
@@ -549,7 +550,7 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Motivo da rejeição"
-                      className="bg-[#0d1117] border border-[#21262d] rounded-lg px-2 py-1.5 text-xs text-[#e6edf3] w-40"
+                      className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-2 py-1.5 text-xs text-[color:var(--text-primary)] w-40"
                     />
                     <button
                       disabled={busy || !rejectReason.trim()}
@@ -575,32 +576,32 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
               )}
               {['queued', 'rejected', 'retryable_failure'].includes(selected.status) && (
                 <button disabled={busy} onClick={() => action(selected, 'run')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#00FFA7]/10 border border-[#00FFA7]/30 text-[#00FFA7] hover:bg-[#00FFA7]/15">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/15">
                   <Play size={14} /> {selected.status === 'rejected' ? 'Recriar' : 'Iniciar'}
                 </button>
               )}
               {!['published', 'failed', 'cancelled'].includes(selected.status) && (
                 <button disabled={busy} onClick={() => action(selected, 'cancel')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#161b22] border border-[#21262d] text-[#8b949e] hover:text-[#f85149] hover:border-[#f85149]/30">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[#f85149] hover:border-[#f85149]/30">
                   <X size={14} /> Cancelar
                 </button>
               )}
             </div>
 
             <div className="flex items-center gap-2 mb-2">
-              <FileText size={14} className="text-[#8b949e]" />
-              <h3 className="text-sm font-medium text-[#e6edf3]">Logs</h3>
-              <button onClick={refreshSelected} className="ml-auto p-1 rounded text-[#8b949e] hover:text-[#e6edf3]"><RefreshCw size={13} /></button>
+              <FileText size={14} className="text-[color:var(--text-muted)]" />
+              <h3 className="text-sm font-medium text-[color:var(--text-primary)]">Logs</h3>
+              <button onClick={refreshSelected} className="ml-auto p-1 rounded text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"><RefreshCw size={13} /></button>
             </div>
             {logs?.logs && Object.keys(logs.logs).length > 0 ? (
               Object.entries(logs.logs).map(([name, content]) => (
-                <details key={name} className="mb-2 rounded-lg border border-[#21262d] bg-[#0d1117]">
-                  <summary className="px-3 py-2 text-xs text-[#8b949e] cursor-pointer">{name}</summary>
-                  <pre className="px-3 pb-3 text-[11px] text-[#8b949e] whitespace-pre-wrap max-h-64 overflow-y-auto">{content}</pre>
+                <details key={name} className="mb-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-primary)]">
+                  <summary className="px-3 py-2 text-xs text-[color:var(--text-muted)] cursor-pointer">{name}</summary>
+                  <pre className="px-3 pb-3 text-[11px] text-[color:var(--text-muted)] whitespace-pre-wrap max-h-64 overflow-y-auto">{content}</pre>
                 </details>
               ))
             ) : (
-              <div className="text-xs text-[#8b949e] flex items-center gap-1.5"><Clock size={12} /> Sem logs ainda.</div>
+              <div className="text-xs text-[color:var(--text-muted)] flex items-center gap-1.5"><Clock size={12} /> Sem logs ainda.</div>
             )}
           </div>
         </div>

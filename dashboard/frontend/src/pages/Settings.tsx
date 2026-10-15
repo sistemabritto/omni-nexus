@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Settings as SettingsIcon, Save } from 'lucide-react'
@@ -10,8 +11,8 @@ import BackupsPage from './Backups'
 import DocsPage from './Docs'
 
 // ── Input / label class strings (same as Providers.tsx) ────────────────────
-const inp = 'w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20'
-const lbl = 'block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase'
+const inp = 'w-full px-4 py-3 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[color:var(--evo-green)]/60 focus:ring-1 focus:ring-[color:var(--evo-green)]/20'
+const lbl = 'block text-[11px] font-semibold text-[color:var(--text-muted)] mb-1.5 tracking-[0.08em] uppercase'
 
 // ── Toast notification ──────────────────────────────────────────────────────
 type ToastType = 'success' | 'error' | 'info'
@@ -39,10 +40,10 @@ function ToastStack({ toasts }: { toasts: Toast[] }) {
           key={t.id}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg border transition-all ${
             t.type === 'success'
-              ? 'bg-[#0b1018] border-[#00FFA7]/30 text-[#00FFA7]'
+              ? 'bg-[color:var(--bg-card)] border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)]'
               : t.type === 'error'
-              ? 'bg-[#0b1018] border-red-500/30 text-red-400'
-              : 'bg-[#0b1018] border-[#21262d] text-[#98A2B3]'
+              ? 'bg-[color:var(--bg-card)] border-red-500/30 text-red-400'
+              : 'bg-[color:var(--bg-card)] border-[color:var(--border)] text-[color:var(--text-muted)]'
           }`}
         >
           <span>{t.message}</span>
@@ -218,7 +219,7 @@ function WorkspaceTab({ showToast }: { showToast: (msg: string, type?: ToastType
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#00FFA7] text-[#080c14] font-semibold text-sm hover:bg-[#00e69a] transition-colors disabled:opacity-40"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold text-sm hover:bg-[#00e69a] transition-colors disabled:opacity-40"
         >
           <Save size={14} />
           {saving ? t('common.saving') : t('settings.saveWorkspace')}
@@ -272,15 +273,15 @@ export default function Settings() {
   const { toasts, show: showToast } = useToast()
 
   return (
-    <div className={`${activeTab === 'docs' ? '' : 'max-w-[1200px] mx-auto'} font-[Inter,-apple-system,sans-serif] ${activeTab === 'docs' ? 'h-full min-h-0' : ''}`}>
+    <div className={`${activeTab === 'docs' ? '' : 'max-w-[1200px] mx-auto'} font-[family-name:var(--sb-font-body)] ${activeTab === 'docs' ? 'h-full min-h-0' : ''}`}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d]">
-          <SettingsIcon size={20} className="text-[#00FFA7]" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)]">
+          <SettingsIcon size={20} className="text-[color:var(--evo-green)]" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">{t('settings.title')}</h1>
-          <p className="text-[#98A2B3] text-sm mt-0.5">{t('settings.headerSubtitle')}</p>
+          <p className="text-[color:var(--text-muted)] text-sm mt-0.5">{t('settings.headerSubtitle')}</p>
         </div>
       </div>
 

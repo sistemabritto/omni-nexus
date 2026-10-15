@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, CheckCircle, XCircle, RefreshCw, Database } from 'lucide-react'
@@ -167,31 +168,31 @@ export default function Wizard({ onClose, onCreated }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#0C111D] border border-[#344054] rounded-xl w-full max-w-lg shadow-2xl">
+      <div className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-xl w-full max-w-lg shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#344054]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
           <div className="flex items-center gap-2">
-            <Database size={16} className="text-[#00FFA7]" />
-            <h2 className="text-sm font-semibold text-[#F9FAFB]">{t('knowledge.newConnection')}</h2>
+            <Database size={16} className="text-[color:var(--evo-green)]" />
+            <h2 className="text-sm font-semibold text-[color:var(--text-primary)]">{t('knowledge.newConnection')}</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors">
             <X size={16} />
           </button>
         </div>
 
         {/* Step indicators */}
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-[#344054]">
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-[color:var(--border)]">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                step === s ? 'bg-[#00FFA7] text-[#0C111D]' :
-                step > s ? 'bg-[#00FFA7]/20 text-[#00FFA7]' :
-                'bg-white/5 text-[#98A2B3]'
+                step === s ? 'bg-[color:var(--evo-green)] text-[color:var(--bg-primary)]' :
+                step > s ? 'bg-[color:var(--evo-green)]/20 text-[color:var(--evo-green)]' :
+                'bg-white/5 text-[color:var(--text-muted)]'
               }`}>{s}</div>
-              {s < 3 && <div className={`h-px w-8 ${step > s ? 'bg-[#00FFA7]/40' : 'bg-[#344054]'}`} />}
+              {s < 3 && <div className={`h-px w-8 ${step > s ? 'bg-[color:var(--evo-green)]/40' : 'bg-[color:var(--border)]'}`} />}
             </div>
           ))}
-          <span className="text-xs text-[#98A2B3] ml-2">
+          <span className="text-xs text-[color:var(--text-muted)] ml-2">
             {step === 1 ? 'Credentials' : step === 2 ? 'Configuring...' : 'Done'}
           </span>
         </div>
@@ -202,31 +203,31 @@ export default function Wizard({ onClose, onCreated }: Props) {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs text-[#98A2B3] mb-1">Connection Name *</label>
+                  <label className="block text-xs text-[color:var(--text-muted)] mb-1">Connection Name *</label>
                   <input
                     type="text"
                     placeholder="e.g. Academy - Supabase"
                     value={form.name}
                     onChange={(e) => set('name', e.target.value)}
-                    className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                    className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-[#98A2B3] mb-1">Slug *</label>
+                  <label className="block text-xs text-[color:var(--text-muted)] mb-1">Slug *</label>
                   <input
                     type="text"
                     placeholder="academy-supabase"
                     value={form.slug}
                     onChange={(e) => set('slug', e.target.value)}
-                    className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none font-mono"
+                    className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-[#98A2B3] mb-1">SSL Mode</label>
+                  <label className="block text-xs text-[color:var(--text-muted)] mb-1">SSL Mode</label>
                   <select
                     value={form.ssl_mode}
                     onChange={(e) => set('ssl_mode', e.target.value)}
-                    className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#D0D5DD] focus:border-[#00FFA7] focus:outline-none"
+                    className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-secondary)] focus:border-[color:var(--evo-green)] focus:outline-none"
                   >
                     <option value="disable">disable</option>
                     <option value="require">require</option>
@@ -239,9 +240,9 @@ export default function Wizard({ onClose, onCreated }: Props) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => set('useConnectionString', !form.useConnectionString)}
-                  className="flex items-center gap-2 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+                  className="flex items-center gap-2 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
                 >
-                  <div className={`w-8 h-4 rounded-full transition-colors relative ${form.useConnectionString ? 'bg-[#00FFA7]' : 'bg-[#344054]'}`}>
+                  <div className={`w-8 h-4 rounded-full transition-colors relative ${form.useConnectionString ? 'bg-[color:var(--evo-green)]' : 'bg-[color:var(--border)]'}`}>
                     <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${form.useConnectionString ? 'translate-x-4' : 'translate-x-0.5'}`} />
                   </div>
                   Use connection string
@@ -250,80 +251,80 @@ export default function Wizard({ onClose, onCreated }: Props) {
 
               {form.useConnectionString ? (
                 <div>
-                  <label className="block text-xs text-[#98A2B3] mb-1">Connection String *</label>
+                  <label className="block text-xs text-[color:var(--text-muted)] mb-1">Connection String *</label>
                   <input
                     type="password"
                     placeholder="postgresql://user:password@host:5432/database"
                     value={form.connection_string}
                     onChange={(e) => set('connection_string', e.target.value)}
-                    className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none font-mono"
+                    className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none font-mono"
                   />
-                  <p className="mt-2 text-[11px] text-[#98A2B3] leading-relaxed">
+                  <p className="mt-2 text-[11px] text-[color:var(--text-muted)] leading-relaxed">
                     Using <strong>Supabase / Neon / Railway</strong>? Use the <em>direct</em>{' '}
-                    connection string on port <code className="text-[#D0D5DD]">5432</code>, not the
-                    transaction pooler on <code className="text-[#D0D5DD]">6543</code>. Transaction
+                    connection string on port <code className="text-[color:var(--text-secondary)]">5432</code>, not the
+                    transaction pooler on <code className="text-[color:var(--text-secondary)]">6543</code>. Transaction
                     pooling (PgBouncer) breaks Alembic migrations,{' '}
-                    <code className="text-[#D0D5DD]">CREATE INDEX … USING hnsw</code>, and
+                    <code className="text-[color:var(--text-secondary)]">CREATE INDEX … USING hnsw</code>, and
                     SQLAlchemy prepared statements. Session pooler works if you need pooling.
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-[#98A2B3] mb-1">Host *</label>
+                    <label className="block text-xs text-[color:var(--text-muted)] mb-1">Host *</label>
                     <input
                       type="text"
                       placeholder="db.example.com"
                       value={form.host}
                       onChange={(e) => set('host', e.target.value)}
-                      className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#98A2B3] mb-1">Port</label>
+                    <label className="block text-xs text-[color:var(--text-muted)] mb-1">Port</label>
                     <input
                       type="number"
                       placeholder="5432"
                       value={form.port}
                       onChange={(e) => set('port', e.target.value)}
-                      className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#98A2B3] mb-1">Username *</label>
+                    <label className="block text-xs text-[color:var(--text-muted)] mb-1">Username *</label>
                     <input
                       type="text"
                       placeholder="postgres"
                       value={form.username}
                       onChange={(e) => set('username', e.target.value)}
-                      className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#98A2B3] mb-1">Password</label>
+                    <label className="block text-xs text-[color:var(--text-muted)] mb-1">Password</label>
                     <input
                       type="password"
                       placeholder="••••••••"
                       value={form.password}
                       onChange={(e) => set('password', e.target.value)}
-                      className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs text-[#98A2B3] mb-1">Database Name</label>
+                    <label className="block text-xs text-[color:var(--text-muted)] mb-1">Database Name</label>
                     <input
                       type="text"
                       placeholder="mydb"
                       value={form.database_name}
                       onChange={(e) => set('database_name', e.target.value)}
-                      className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                   </div>
                 </div>
               )}
 
-              <div className="bg-[#182230] border border-[#344054] rounded-lg px-4 py-3 text-xs text-[#98A2B3]">
-                <strong className="text-[#D0D5DD]">Prerequisites:</strong> Postgres ≥ 14 with pgvector ≥ 0.5 installed.
+              <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-4 py-3 text-xs text-[color:var(--text-muted)]">
+                <strong className="text-[color:var(--text-secondary)]">Prerequisites:</strong> Postgres ≥ 14 with pgvector ≥ 0.5 installed.
                 EvoNexus does not provision Postgres — bring your own.
               </div>
 
@@ -334,13 +335,13 @@ export default function Wizard({ onClose, onCreated }: Props) {
               )}
 
               <div className="flex gap-3 pt-2">
-                <button onClick={onClose} className="flex-1 px-4 py-2 bg-white/5 text-[#D0D5DD] rounded-lg text-sm font-medium hover:bg-white/10 transition-colors">
+                <button onClick={onClose} className="flex-1 px-4 py-2 bg-white/5 text-[color:var(--text-secondary)] rounded-lg text-sm font-medium hover:bg-white/10 transition-colors">
                   Cancel
                 </button>
                 <button
                   onClick={handleConfigure}
                   disabled={configuring}
-                  className="flex-1 px-4 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg text-sm font-semibold hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg text-sm font-semibold hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
                 >
                   Connect & Configure
                 </button>
@@ -351,18 +352,18 @@ export default function Wizard({ onClose, onCreated }: Props) {
           {/* Step 2: Configuring */}
           {step === 2 && (
             <div className="space-y-4">
-              <p className="text-sm text-[#98A2B3]">Setting up your connection...</p>
+              <p className="text-sm text-[color:var(--text-muted)]">Setting up your connection...</p>
               <div className="space-y-3">
                 {phases.map((phase, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="shrink-0">
                       {phase.status === 'pending' && <div className="w-4 h-4 rounded-full bg-white/10" />}
-                      {phase.status === 'running' && <RefreshCw size={16} className="text-[#00FFA7] animate-spin" />}
-                      {phase.status === 'done' && <CheckCircle size={16} className="text-[#00FFA7]" />}
+                      {phase.status === 'running' && <RefreshCw size={16} className="text-[color:var(--evo-green)] animate-spin" />}
+                      {phase.status === 'done' && <CheckCircle size={16} className="text-[color:var(--evo-green)]" />}
                       {phase.status === 'error' && <XCircle size={16} className="text-red-400" />}
                     </div>
                     <div className="flex-1">
-                      <p className={`text-sm ${phase.status === 'error' ? 'text-red-400' : phase.status === 'done' ? 'text-[#D0D5DD]' : 'text-[#98A2B3]'}`}>
+                      <p className={`text-sm ${phase.status === 'error' ? 'text-red-400' : phase.status === 'done' ? 'text-[color:var(--text-secondary)]' : 'text-[color:var(--text-muted)]'}`}>
                         {phase.label}
                       </p>
                       {phase.error && (
@@ -379,7 +380,7 @@ export default function Wizard({ onClose, onCreated }: Props) {
                     {configError}
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => { setStep(1); setPhases(defaultPhases.map((p) => ({ ...p }))) }} className="flex-1 px-4 py-2 bg-white/5 text-[#D0D5DD] rounded-lg text-sm font-medium hover:bg-white/10 transition-colors">
+                    <button onClick={() => { setStep(1); setPhases(defaultPhases.map((p) => ({ ...p }))) }} className="flex-1 px-4 py-2 bg-white/5 text-[color:var(--text-secondary)] rounded-lg text-sm font-medium hover:bg-white/10 transition-colors">
                       Back
                     </button>
                   </div>
@@ -392,24 +393,24 @@ export default function Wizard({ onClose, onCreated }: Props) {
           {step === 3 && (
             <div className="space-y-4">
               <div className="text-center py-4">
-                <div className="w-14 h-14 rounded-2xl bg-[#00FFA7]/10 flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle size={28} className="text-[#00FFA7]" />
+                <div className="w-14 h-14 rounded-2xl bg-[color:var(--evo-green)]/10 flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle size={28} className="text-[color:var(--evo-green)]" />
                 </div>
-                <p className="text-[#F9FAFB] font-semibold mb-1">Connection ready!</p>
-                <p className="text-[#98A2B3] text-sm">
+                <p className="text-[color:var(--text-primary)] font-semibold mb-1">Connection ready!</p>
+                <p className="text-[color:var(--text-muted)] text-sm">
                   Schema migrated. You can now create spaces and upload documents.
                 </p>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => onCreated()}
-                  className="flex-1 px-4 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg text-sm font-semibold hover:bg-[#00FFA7]/90 transition-colors"
+                  className="flex-1 px-4 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg text-sm font-semibold hover:bg-[color:var(--evo-green)]/90 transition-colors"
                 >
                   Done
                 </button>
               </div>
               {createdId && (
-                <p className="text-center text-xs text-[#98A2B3]">
+                <p className="text-center text-xs text-[color:var(--text-muted)]">
                   Connection ID: <span className="font-mono">{createdId}</span>
                 </p>
               )}

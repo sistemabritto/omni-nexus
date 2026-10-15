@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState } from 'react'
 import { FolderKanban, X } from 'lucide-react'
 import { api } from '../lib/api'
@@ -18,7 +19,7 @@ interface MissionOption {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-3.5">
-      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[#98A2B3] mb-1.5">
+      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[color:var(--text-muted)] mb-1.5">
         {label}
       </label>
       {children}
@@ -27,7 +28,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputClass =
-  'w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors'
+  'w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors'
 
 function slugify(value: string): string {
   return value
@@ -139,18 +140,18 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
         aria-modal="true"
         aria-labelledby="create-project-title"
         onClick={(e) => e.stopPropagation()}
-        className="dialog-enter bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-lg shadow-2xl"
+        className="dialog-enter bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-lg shadow-2xl"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/25 flex items-center justify-center shrink-0">
-              <FolderKanban size={15} className="text-[#00FFA7]" />
+            <div className="w-8 h-8 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/25 flex items-center justify-center shrink-0">
+              <FolderKanban size={15} className="text-[color:var(--evo-green)]" />
             </div>
             <h3 id="create-project-title" className="font-display text-[15px] font-semibold text-white tracking-tight">
               Novo projeto
             </h3>
           </div>
-          <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[color:var(--text-muted)] hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -197,7 +198,7 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
               placeholder="workspace/development/features/evo-ai"
               className={inputClass}
             />
-            <p className="text-[10px] text-[#98A2B3] mt-1.5">
+            <p className="text-[10px] text-[color:var(--text-muted)] mt-1.5">
               Se preenchido, essa pasta é indexada no MemPalace como uma Room
               (a Missão vira a Wing) pra busca semântica.
             </p>
@@ -215,7 +216,7 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
                   />
                   <button
                     onClick={() => { setCreatingMission(false); setNewMissionTitle('') }}
-                    className="px-3 text-xs text-[#98A2B3] hover:text-white transition-colors shrink-0"
+                    className="px-3 text-xs text-[color:var(--text-muted)] hover:text-white transition-colors shrink-0"
                   >
                     Cancelar
                   </button>
@@ -235,14 +236,14 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
                   </select>
                   <button
                     onClick={() => setCreatingMission(true)}
-                    className="px-3 text-xs text-[#00FFA7] hover:underline shrink-0 whitespace-nowrap"
+                    className="px-3 text-xs text-[color:var(--evo-green)] hover:underline shrink-0 whitespace-nowrap"
                   >
                     + Nova
                   </button>
                 </div>
               )}
               {missions.length === 0 && !missionsLoading && !creatingMission && (
-                <p className="text-[10px] text-[#98A2B3] mt-1.5">
+                <p className="text-[10px] text-[color:var(--text-muted)] mt-1.5">
                   Nenhuma Missão ainda — pode criar o projeto sem uma, ou clicar em "+ Nova".
                 </p>
               )}
@@ -257,14 +258,14 @@ export default function CreateProjectModal({ onClose, onCreated, defaultMissionI
           </Field>
         </div>
 
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[#21262d]">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white transition-colors">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[color:var(--border)]">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-[color:var(--text-muted)] hover:text-white transition-colors">
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 text-sm bg-[#00FFA7] text-black font-semibold rounded-lg hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-[color:var(--evo-green)] text-black font-semibold rounded-lg hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
           >
             {submitting ? 'Criando...' : 'Criar'}
           </button>

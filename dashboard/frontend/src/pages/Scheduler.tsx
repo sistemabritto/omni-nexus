@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useRef } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
@@ -177,7 +178,7 @@ export default function Scheduler() {
     return (
       <div>
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#e6edf3]">{t('scheduler.title')}</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('scheduler.title')}</h1>
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
@@ -192,12 +193,12 @@ export default function Scheduler() {
           linha, e sem quebrar eles espremiam o texto até virar duas letras. */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-            <Clock size={20} className="text-[#00FFA7]" />
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+            <Clock size={20} className="text-[color:var(--evo-green)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e6edf3]">{t('scheduler.title')}</h1>
-            <p className="text-[#98A2B3] mt-0.5 text-sm">Background services and scheduled routines</p>
+            <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('scheduler.title')}</h1>
+            <p className="text-[color:var(--text-muted)] mt-0.5 text-sm">Background services and scheduled routines</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -207,7 +208,7 @@ export default function Scheduler() {
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
               restarting
                 ? 'border-[#F59E0B]/30 bg-[#F59E0B]/10 text-[#F59E0B]'
-                : 'border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#F59E0B] hover:border-[#F59E0B]/30'
+                : 'border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[#F59E0B] hover:border-[#F59E0B]/30'
             }`}
           >
             <RotateCcw size={16} className={restarting ? 'animate-spin' : ''} />
@@ -215,7 +216,7 @@ export default function Scheduler() {
           </button>
           <button
             onClick={() => { setLoading(true); fetchData() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors"
           >
             <RefreshCw size={16} /> Refresh
           </button>
@@ -230,34 +231,34 @@ export default function Scheduler() {
         if (sectionServices.length === 0) return null
         return (
           <div key={section}>
-            <h2 className="text-base font-semibold text-[#e6edf3] mb-3">
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)] mb-3">
               {section === 'service' ? 'Background Services' : 'Channels'}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
               {sectionServices.map((svc) => (
-                <div key={svc.name} className="bg-[#161b22] border border-[#21262d] rounded-xl p-5 hover:border-[#00FFA7]/30 transition-all">
+                <div key={svc.name} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5 hover:border-[color:var(--evo-green)]/30 transition-all">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
                       <StatusDot status={svc.running ? 'ok' : 'error'} />
-                      <h3 className="font-semibold text-[#e6edf3] text-sm">{svc.name}</h3>
+                      <h3 className="font-semibold text-[color:var(--text-primary)] text-sm">{svc.name}</h3>
                     </div>
                     <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full ${
                       svc.running
-                        ? 'bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20'
+                        ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20'
                         : 'bg-red-500/10 text-red-400 border border-red-500/20'
                     }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${svc.running ? 'bg-[#00FFA7] animate-pulse' : 'bg-red-400'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${svc.running ? 'bg-[color:var(--evo-green)] animate-pulse' : 'bg-red-400'}`} />
                       {svc.running ? 'Running' : 'Stopped'}
                     </span>
                   </div>
-                  <p className="text-xs text-[#98A2B3] mb-4">{svc.description}</p>
+                  <p className="text-xs text-[color:var(--text-muted)] mb-4">{svc.description}</p>
                   <div className="flex items-center justify-between gap-2">
-                    <code className="text-[11px] text-[#e6edf3] bg-[#0d1117] border border-[#21262d] px-2 py-1 rounded font-mono truncate">{svc.command}</code>
+                    <code className="text-[11px] text-[color:var(--text-primary)] bg-[color:var(--bg-primary)] border border-[color:var(--border)] px-2 py-1 rounded font-mono truncate">{svc.command}</code>
                     <div className="flex items-center gap-2 shrink-0">
                       {svc.running && svc.id !== 'dashboard' && (
                         <button
                           onClick={() => openTerminal(svc.id)}
-                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-primary)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors"
                         >
                           <Terminal size={12} /> Logs
                         </button>
@@ -269,7 +270,7 @@ export default function Scheduler() {
                           className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
                             svc.running
                               ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20'
-                              : 'bg-[#00FFA7]/10 text-[#00FFA7] hover:bg-[#00FFA7]/20 border-[#00FFA7]/20'
+                              : 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 border-[color:var(--evo-green)]/20'
                           } ${actionLoading === svc.id ? 'opacity-50' : ''}`}
                         >
                           {actionLoading === svc.id ? (
@@ -293,26 +294,26 @@ export default function Scheduler() {
       {/* Terminal Viewer */}
       {terminalService && (
         <div className="mb-10">
-          <div className="bg-[#0d1117] border border-[#21262d] rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 bg-black/30 border-b border-[#21262d]">
+          <div className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 bg-black/30 border-b border-[color:var(--border)]">
               <div className="flex items-center gap-2">
-                <Terminal size={14} className="text-[#00FFA7]" />
-                <span className="text-sm font-medium text-[#e6edf3]">
+                <Terminal size={14} className="text-[color:var(--evo-green)]" />
+                <span className="text-sm font-medium text-[color:var(--text-primary)]">
                   {services.find(s => s.id === terminalService)?.name || terminalService} — Logs
                 </span>
-                {terminalLoading && <RefreshCw size={12} className="text-[#98A2B3] animate-spin" />}
+                {terminalLoading && <RefreshCw size={12} className="text-[color:var(--text-muted)] animate-spin" />}
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => fetchLogs(terminalService)}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"
                   title="Refresh"
                 >
                   <RefreshCw size={14} />
                 </button>
                 <button
                   onClick={closeTerminal}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-red-400 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-red-400 transition-colors"
                   title="Close"
                 >
                   <X size={14} />
@@ -321,7 +322,7 @@ export default function Scheduler() {
             </div>
             <div
               ref={terminalRef}
-              className="p-4 font-mono text-xs leading-5 text-[#e6edf3] overflow-y-auto"
+              className="p-4 font-mono text-xs leading-5 text-[color:var(--text-primary)] overflow-y-auto"
               style={{ maxHeight: '400px', minHeight: '200px' }}
             >
               {terminalLines.length > 0 ? (
@@ -331,10 +332,10 @@ export default function Scheduler() {
                   </div>
                 ))
               ) : (
-                <div className="text-[#98A2B3] italic">No output yet. Waiting for logs...</div>
+                <div className="text-[color:var(--text-muted)] italic">No output yet. Waiting for logs...</div>
               )}
             </div>
-            <div className="px-4 py-2 bg-black/20 border-t border-[#21262d] text-[10px] text-[#98A2B3]">
+            <div className="px-4 py-2 bg-black/20 border-t border-[color:var(--border)] text-[10px] text-[color:var(--text-muted)]">
               Auto-refresh every 3s — Showing last 100 lines
             </div>
           </div>
@@ -346,16 +347,16 @@ export default function Scheduler() {
           outro caminho e mostrando outras colunas — duas telas para a mesma
           pergunta, cada uma com metade da resposta e nenhuma com a próxima
           execução. Aqui fica o resumo e o link; o detalhe é de uma página só. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#161b22] border border-[#21262d] rounded-xl p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 shrink-0 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15 flex items-center justify-center">
-            <Clock size={16} className="text-[#00FFA7]" />
+          <div className="w-9 h-9 shrink-0 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15 flex items-center justify-center">
+            <Clock size={16} className="text-[color:var(--evo-green)]" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-[#e6edf3]">
+            <p className="text-sm font-medium text-[color:var(--text-primary)]">
               {tasks.length} rotinas agendadas
             </p>
-            <p className="text-xs text-[#98A2B3]">
+            <p className="text-xs text-[color:var(--text-muted)]">
               {tasks.filter(t => t.engine === 'modelo').length} chamam modelo
               {' · '}
               {tasks.filter(t => t.engine === 'python').length} são Python puro
@@ -364,7 +365,7 @@ export default function Scheduler() {
         </div>
         <a
           href="/routines"
-          className="text-xs px-3 py-2 rounded-lg border border-[#21262d] bg-[#0d1117] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors whitespace-nowrap"
+          className="text-xs px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-primary)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors whitespace-nowrap"
         >
           Ver rotinas
         </a>

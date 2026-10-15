@@ -1,0 +1,482 @@
+[
+  {
+    "file": "dashboard/frontend/src/App.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/components/AgentChat.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/AgentTerminal.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/ChatSessionList.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/CockpitReference.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/CompanyListModal.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/CompanyManagerModal.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/CreateProjectModal.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/CreateTicketModal.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/HealthBadge.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/HubBackLink.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/IntegrationDrawer.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/IntegrationField.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/MetricCard.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/NotificationBell.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/OracleWelcomeBanner.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/PageStates.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/PageTabBar.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/PluginCard.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/components/PluginInstallModal.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/PluginUninstall.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/PluginWidgetsGrid.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/PostizCoreConfigCard.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/SecurityScanSection.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/Sidebar.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/components/StatusDot.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/TerminalHudPanel.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/ThreadsSidebar.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/components/UpdatePreviewModal.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Activity.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/AgentDetail.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Agents.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Approvals.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Audit.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Backups.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Costs.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Docs.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Heartbeats.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Integrations.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Intelligence.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Kanban.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/ApiKeys.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Browse.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/ConnectionLayout.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/ConnectionSwitcher.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Connections/Detail.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Connections/List.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Connections/Wizard.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/KnowledgeLayout.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Search.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Settings.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Spaces.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Units.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Knowledge/Upload.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Login.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Materiais.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/McpServers.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Media.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/MemPalace.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Memory.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Missions.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Orchestration.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Overview.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Pautas.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/PluginDetail.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/PluginPageHost.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Plugins.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Providers.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Reports.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Roles.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Routines.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Scheduler.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Settings.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Setup.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/SkillDetail.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Skills.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Systems.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Tasks.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Templates.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/TicketDetail.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Topics.tsx",
+    "classification": "intentional-ui-change",
+    "normalizedEqual": false
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Triggers.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/Users.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/OnboardingHeader.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/OnboardingRouter.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/StepBrainChoose.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/StepBrainConnect.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/StepBrainRepo.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/StepConfirm.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/StepProvider.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/Welcome.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/restore/RestoreConfirm.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/restore/RestoreExecute.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/restore/RestoreSelectRepo.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/onboarding/restore/RestoreSelectSnapshot.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  },
+  {
+    "file": "dashboard/frontend/src/pages/settings/BrainRepo.tsx",
+    "classification": "mechanical-tokens-only",
+    "normalizedEqual": true
+  }
+]

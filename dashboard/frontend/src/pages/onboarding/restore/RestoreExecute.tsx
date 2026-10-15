@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -138,24 +139,24 @@ export default function RestoreExecute({ snapshot, onComplete, onRetry }: Restor
   }, [snapshot, onComplete, t])
 
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 font-[Inter,-apple-system,sans-serif]">
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center px-4 font-[family-name:var(--sb-font-body)]">
       <div className="w-full max-w-[480px] relative z-10">
-        <div className="rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
-          <div className="px-7 pt-7 pb-5 border-b border-[#152030]">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
+          <div className="px-7 pt-7 pb-5 border-b border-[color:var(--border)]">
             <h2 className="text-[16px] font-semibold text-[#e2e8f0]">
               {done ? t('restore.execute.titleDone') : failed ? t('restore.execute.titleFailed') : t('restore.execute.titleRunning')}
             </h2>
-            <p className="text-[11px] text-[#4a5a6e] mt-1">{snapshot.label}</p>
+            <p className="text-[11px] text-[color:var(--text-muted)] mt-1">{snapshot.label}</p>
           </div>
 
           <div className="px-7 py-6 space-y-4">
             {/* Progress bar */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] text-[#98A2B3]">{statusMessage}</span>
-                <span className="text-[11px] text-[#98A2B3]">{progress}%</span>
+                <span className="text-[11px] text-[color:var(--text-muted)]">{statusMessage}</span>
+                <span className="text-[11px] text-[color:var(--text-muted)]">{progress}%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-[#152030] overflow-hidden">
+              <div className="h-1.5 rounded-full bg-[color:var(--border)] overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{
@@ -171,16 +172,16 @@ export default function RestoreExecute({ snapshot, onComplete, onRetry }: Restor
               <div className="space-y-1.5 max-h-52 overflow-y-auto">
                 {steps.map((s) => (
                   <div key={s.id} className="flex items-center gap-2.5 py-1.5">
-                    {s.status === 'done' && <CheckCircle size={14} className="text-[#00FFA7] flex-shrink-0" />}
+                    {s.status === 'done' && <CheckCircle size={14} className="text-[color:var(--evo-green)] flex-shrink-0" />}
                     {s.status === 'error' && <XCircle size={14} className="text-[#f87171] flex-shrink-0" />}
-                    {s.status === 'running' && <Loader2 size={14} className="text-[#98A2B3] animate-spin flex-shrink-0" />}
+                    {s.status === 'running' && <Loader2 size={14} className="text-[color:var(--text-muted)] animate-spin flex-shrink-0" />}
                     {s.status === 'pending' && <div className="w-3.5 h-3.5 rounded-full border border-[#2d3d4f] flex-shrink-0" />}
                     <div className="min-w-0">
                       <p className={`text-[12px] ${s.status === 'error' ? 'text-[#f87171]' : s.status === 'done' ? 'text-[#e2e8f0]' : 'text-[#8a9ab0]'}`}>
                         {s.label}
                       </p>
                       {s.message && (
-                        <p className="text-[10px] text-[#98A2B3] truncate">{s.message}</p>
+                        <p className="text-[10px] text-[color:var(--text-muted)] truncate">{s.message}</p>
                       )}
                     </div>
                   </div>
@@ -190,14 +191,14 @@ export default function RestoreExecute({ snapshot, onComplete, onRetry }: Restor
 
             {!steps.length && !failed && !done && (
               <div className="flex items-center justify-center py-4">
-                <Loader2 size={20} className="text-[#98A2B3] animate-spin" />
+                <Loader2 size={20} className="text-[color:var(--text-muted)] animate-spin" />
               </div>
             )}
 
             {/* Done message */}
             {done && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-[#0a1a12] border border-[#00FFA7]/20">
-                <CheckCircle size={16} className="text-[#00FFA7]" />
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-[#0a1a12] border border-[color:var(--evo-green)]/20">
+                <CheckCircle size={16} className="text-[color:var(--evo-green)]" />
                 <p className="text-[12px] text-[#4a9a6a]">{t('restore.execute.redirecting')}</p>
               </div>
             )}
@@ -206,7 +207,7 @@ export default function RestoreExecute({ snapshot, onComplete, onRetry }: Restor
             {failed && (
               <button
                 onClick={onRetry}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 <RefreshCw size={14} />
                 {t('restore.execute.tryAgain')}

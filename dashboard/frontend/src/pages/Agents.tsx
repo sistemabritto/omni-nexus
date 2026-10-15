@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -358,12 +359,12 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
   if (locked) {
     return (
       <div
-        className="group relative block rounded-xl border border-[#21262d] bg-[#161b22] p-3.5 opacity-50 grayscale cursor-not-allowed"
+        className="group relative block rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] p-3.5 opacity-50 grayscale cursor-not-allowed"
         title="Sem acesso"
       >
         {/* Lock overlay */}
-        <div className="absolute top-2.5 right-2.5 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-[#0d1117] border border-[#21262d]">
-          <Lock size={12} className="text-[#98A2B3]" />
+        <div className="absolute top-2.5 right-2.5 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-[color:var(--bg-primary)] border border-[color:var(--border)]">
+          <Lock size={12} className="text-[color:var(--text-muted)]" />
         </div>
 
         {/* Top row: avatar + status */}
@@ -376,7 +377,7 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
 
         {/* Name + domain label */}
         <div className="relative mb-1.5">
-          <h3 className="text-[13px] font-semibold text-[#e6edf3]">
+          <h3 className="text-[13px] font-semibold text-[color:var(--text-primary)]">
             {formatAgentName(agent.name)}
           </h3>
           <div className="mt-1 flex items-center gap-2">
@@ -387,16 +388,16 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
         </div>
 
         {/* Description */}
-        <p className="relative mb-3 text-[11px] leading-relaxed text-[#98A2B3] line-clamp-2">
+        <p className="relative mb-3 text-[11px] leading-relaxed text-[color:var(--text-muted)] line-clamp-2">
           {agent.description || 'No description available.'}
         </p>
 
         {/* Bottom row */}
         <div className="relative flex items-center justify-between">
-          <span className="text-[10px] text-[#98A2B3]">Sem acesso</span>
-          <div className="flex items-center gap-1 rounded-full bg-[#0d1117] px-2 py-0.5 border border-[#21262d]">
-            <Brain size={10} className="text-[#98A2B3]" />
-            <span className="text-[10px] font-medium text-[#8b949e]">{agent.memory_count}</span>
+          <span className="text-[10px] text-[color:var(--text-muted)]">Sem acesso</span>
+          <div className="flex items-center gap-1 rounded-full bg-[color:var(--bg-primary)] px-2 py-0.5 border border-[color:var(--border)]">
+            <Brain size={10} className="text-[color:var(--text-muted)]" />
+            <span className="text-[10px] font-medium text-[color:var(--text-muted)]">{agent.memory_count}</span>
           </div>
         </div>
       </div>
@@ -406,7 +407,7 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
   return (
     <Link
       to={`/agents/${agent.name}`}
-      className="group relative block rounded-xl border border-[#21262d] bg-[#161b22] p-3.5 transition-all duration-300 hover:border-transparent"
+      className="group relative block rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] p-3.5 transition-all duration-300 hover:border-transparent"
       style={{
         ['--agent-color' as string]: meta.color,
         ['--agent-glow' as string]: meta.glowColor,
@@ -431,10 +432,10 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
         <div className="flex items-center gap-2">
           {hudStatus && <HudSemaphore status={hudStatus} />}
           {isRunning && (
-            <span className="flex items-center gap-1 rounded-full bg-[#00FFA7]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#00FFA7] border border-[#00FFA7]/20">
+            <span className="flex items-center gap-1 rounded-full bg-[color:var(--evo-green)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00FFA7] opacity-75" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00FFA7]" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--evo-green)] opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--evo-green)]" />
               </span>
               Running
             </span>
@@ -451,7 +452,7 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
 
       {/* Name + domain label */}
       <div className="relative mb-1.5">
-        <h3 className="text-[13px] font-semibold text-[#e6edf3] transition-colors duration-200 group-hover:text-white">
+        <h3 className="text-[13px] font-semibold text-[color:var(--text-primary)] transition-colors duration-200 group-hover:text-white">
           {formatAgentName(agent.name)}
         </h3>
         <div className="mt-1 flex items-center gap-2">
@@ -479,23 +480,23 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
       </div>
 
       {/* Description */}
-      <p className="relative mb-3 text-[11px] leading-relaxed text-[#98A2B3] line-clamp-2">
+      <p className="relative mb-3 text-[11px] leading-relaxed text-[color:var(--text-muted)] line-clamp-2">
         {agent.description || 'No description available.'}
       </p>
 
       {/* Bottom row: command badge + memory badge */}
       <div className="relative flex items-center justify-between">
         {meta.command ? (
-          <code className="rounded-md bg-[#0d1117] px-1.5 py-0.5 font-mono text-[10px] text-[#8b949e] border border-[#21262d]">
+          <code className="rounded-md bg-[color:var(--bg-primary)] px-1.5 py-0.5 font-mono text-[10px] text-[color:var(--text-muted)] border border-[color:var(--border)]">
             {meta.command}
           </code>
         ) : (
           <span />
         )}
 
-        <div className="flex items-center gap-1 rounded-full bg-[#0d1117] px-2 py-0.5 border border-[#21262d]">
-          <Brain size={10} className="text-[#98A2B3]" />
-          <span className="text-[10px] font-medium text-[#8b949e]">
+        <div className="flex items-center gap-1 rounded-full bg-[color:var(--bg-primary)] px-2 py-0.5 border border-[color:var(--border)]">
+          <Brain size={10} className="text-[color:var(--text-muted)]" />
+          <span className="text-[10px] font-medium text-[color:var(--text-muted)]">
             {agent.memory_count}
           </span>
         </div>
@@ -506,20 +507,20 @@ function AgentCard({ agent, isRunning, hudStatus }: { agent: Agent; isRunning: b
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-[#21262d] bg-[#161b22] p-5">
+    <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] p-5">
       <div className="flex items-start justify-between mb-4">
-        <div className="h-10 w-10 rounded-lg bg-[#21262d] animate-pulse" />
-        <div className="h-2 w-2 rounded-full bg-[#21262d] animate-pulse" />
+        <div className="h-10 w-10 rounded-lg bg-[color:var(--border)] animate-pulse" />
+        <div className="h-2 w-2 rounded-full bg-[color:var(--border)] animate-pulse" />
       </div>
-      <div className="h-4 w-32 rounded bg-[#21262d] animate-pulse mb-2" />
-      <div className="h-3 w-16 rounded bg-[#21262d] animate-pulse mb-3" />
+      <div className="h-4 w-32 rounded bg-[color:var(--border)] animate-pulse mb-2" />
+      <div className="h-3 w-16 rounded bg-[color:var(--border)] animate-pulse mb-3" />
       <div className="space-y-1.5 mb-4">
-        <div className="h-3 w-full rounded bg-[#21262d] animate-pulse" />
-        <div className="h-3 w-2/3 rounded bg-[#21262d] animate-pulse" />
+        <div className="h-3 w-full rounded bg-[color:var(--border)] animate-pulse" />
+        <div className="h-3 w-2/3 rounded bg-[color:var(--border)] animate-pulse" />
       </div>
       <div className="flex items-center justify-between">
-        <div className="h-6 w-16 rounded-md bg-[#21262d] animate-pulse" />
-        <div className="h-6 w-12 rounded-full bg-[#21262d] animate-pulse" />
+        <div className="h-6 w-16 rounded-md bg-[color:var(--border)] animate-pulse" />
+        <div className="h-6 w-12 rounded-full bg-[color:var(--border)] animate-pulse" />
       </div>
     </div>
   )
@@ -529,16 +530,16 @@ function OracleHeroCard({ agent, isRunning }: { agent: Agent; isRunning: boolean
   if (agent.locked) {
     return (
       <div
-        className="group relative block overflow-hidden rounded-2xl border border-[#21262d] bg-[#11110c] opacity-50 grayscale cursor-not-allowed"
+        className="group relative block overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[#11110c] opacity-50 grayscale cursor-not-allowed"
         title="Sem acesso"
       >
         <div className="relative flex items-center gap-5 px-6 py-5">
           <AgentAvatar name={agent.name} size={56} />
           <div className="flex-1 min-w-0">
-            <h2 className="text-[22px] font-bold text-[#F9FAFB] leading-tight mb-0.5">Oracle</h2>
-            <p className="text-[12.5px] text-[#8b949e] leading-snug">Sem acesso</p>
+            <h2 className="text-[22px] font-bold text-[color:var(--text-primary)] leading-tight mb-0.5">Oracle</h2>
+            <p className="text-[12.5px] text-[color:var(--text-muted)] leading-snug">Sem acesso</p>
           </div>
-          <Lock size={16} className="flex-shrink-0 text-[#98A2B3]" />
+          <Lock size={16} className="flex-shrink-0 text-[color:var(--text-muted)]" />
         </div>
       </div>
     )
@@ -571,20 +572,20 @@ function OracleHeroCard({ agent, isRunning }: { agent: Agent; isRunning: boolean
               Start Here
             </span>
             {isRunning && (
-              <span className="flex items-center gap-1 rounded-full bg-[#00FFA7]/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#00FFA7] border border-[#00FFA7]/20">
+              <span className="flex items-center gap-1 rounded-full bg-[color:var(--evo-green)]/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00FFA7] opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00FFA7]" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--evo-green)] opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--evo-green)]" />
                 </span>
                 Running
               </span>
             )}
             <code className="ml-auto sm:ml-0 font-mono text-[11px] text-[#F59E0B]/80">/oracle</code>
           </div>
-          <h2 className="text-[22px] font-bold text-[#F9FAFB] leading-tight mb-0.5 group-hover:text-white transition-colors">
+          <h2 className="text-[22px] font-bold text-[color:var(--text-primary)] leading-tight mb-0.5 group-hover:text-white transition-colors">
             Oracle
           </h2>
-          <p className="text-[12.5px] text-[#8b949e] leading-snug">
+          <p className="text-[12.5px] text-[color:var(--text-muted)] leading-snug">
             Your entry point to EvoNexus. Interviews you, maps workspace capabilities to your pain points, and delivers a phased implementation plan.
           </p>
         </div>
@@ -650,29 +651,29 @@ function SectionHeader({
   collapsedHint?: string
 }) {
   return (
-    <div className="mb-3 flex items-end justify-between border-b border-[#21262d] pb-2">
+    <div className="mb-3 flex items-end justify-between border-b border-[color:var(--border)] pb-2">
       <div className="flex items-baseline gap-3">
         {onToggle ? (
           <button
             type="button"
             onClick={onToggle}
             title={collapsed ? (collapsedHint || 'Expandir') : 'Recolher'}
-            className="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-left transition-colors hover:bg-[#0d1117]"
+            className="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-left transition-colors hover:bg-[color:var(--bg-primary)]"
           >
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#e6edf3]" style={{ color }}>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--text-primary)]" style={{ color }}>
               {label}
             </h2>
             <ChevronDown
               size={14}
-              className={`text-[#8b949e] transition-transform ${collapsed ? '-rotate-90' : ''}`}
+              className={`text-[color:var(--text-muted)] transition-transform ${collapsed ? '-rotate-90' : ''}`}
             />
           </button>
         ) : (
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#e6edf3]" style={{ color }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--text-primary)]" style={{ color }}>
             {label}
           </h2>
         )}
-        <span className="rounded-full bg-[#0d1117] px-2 py-0.5 text-[11px] font-medium text-[#8b949e] border border-[#21262d]">
+        <span className="rounded-full bg-[color:var(--bg-primary)] px-2 py-0.5 text-[11px] font-medium text-[color:var(--text-muted)] border border-[color:var(--border)]">
           {count}
         </span>
         {collapsed && collapsedHint && (
@@ -680,7 +681,7 @@ function SectionHeader({
         )}
       </div>
       {!collapsed && description && (
-        <p className="hidden md:block text-[11px] text-[#98A2B3]">{description}</p>
+        <p className="hidden md:block text-[11px] text-[color:var(--text-muted)]">{description}</p>
       )}
     </div>
   )
@@ -689,9 +690,9 @@ function SectionHeader({
 function SubSectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="mb-2 mt-4 flex items-center gap-2">
-      <h3 className="text-[11px] font-medium uppercase tracking-wider text-[#98A2B3]">{label}</h3>
+      <h3 className="text-[11px] font-medium uppercase tracking-wider text-[color:var(--text-muted)]">{label}</h3>
       <span className="text-[11px] text-[#3F3F46]">·</span>
-      <span className="text-[11px] text-[#98A2B3]">{count}</span>
+      <span className="text-[11px] text-[color:var(--text-muted)]">{count}</span>
     </div>
   )
 }
@@ -883,12 +884,12 @@ export default function Agents() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#e6edf3]">{t('agents.title')}</h1>
-        <p className="text-[#98A2B3] mt-1">{t('agents.headerSubtitle')}</p>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('agents.title')}</h1>
+        <p className="text-[color:var(--text-muted)] mt-1">{t('agents.subtitle')}</p>
 
         {/* Stats bar */}
         {!loading && agents.length > 0 && (
-          <div className="mt-4 flex items-center gap-6 text-sm">
+          <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-6 text-sm">
             {/* Superadmin-facing summary: exactly how many + which agents
                 have a live opencode terminal session mid-turn right now
                 (see hudByAgent above — sourced from the same semaphore
@@ -904,10 +905,10 @@ export default function Agents() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#eab308] opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-[#eab308]" style={{ boxShadow: '0 0 6px rgba(234,179,8,0.6)' }} />
                 </span>
-                <span className="text-[#8b949e]">
-                  <span className="font-medium text-[#e6edf3]">{workingAgentNames.length}</span>{' '}
+                <span className="text-[color:var(--text-muted)]">
+                  <span className="font-medium text-[color:var(--text-primary)]">{workingAgentNames.length}</span>{' '}
                   trabalhando agora:{' '}
-                  <span className="text-[#e6edf3]">{workingAgentNames.map(formatAgentName).join(', ')}</span>
+                  <span className="text-[color:var(--text-primary)]">{workingAgentNames.map(formatAgentName).join(', ')}</span>
                 </span>
               </div>
             )}
@@ -916,33 +917,33 @@ export default function Agents() {
                 className="inline-block h-2 w-2 rounded-full bg-[#22C55E]"
                 style={{ boxShadow: '0 0 6px rgba(34,197,94,0.5)' }}
               />
-              <span className="text-[#8b949e]">
-                <span className="font-medium text-[#e6edf3]">{activeCount}</span> active
+              <span className="text-[color:var(--text-muted)]">
+                <span className="font-medium text-[color:var(--text-primary)]">{activeCount}</span> active
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Brain size={14} className="text-[#98A2B3]" />
-              <span className="text-[#8b949e]">
-                <span className="font-medium text-[#e6edf3]">{totalMemories}</span> total memories
+              <Brain size={14} className="text-[color:var(--text-muted)]" />
+              <span className="text-[color:var(--text-muted)]">
+                <span className="font-medium text-[color:var(--text-primary)]">{totalMemories}</span> total memories
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Building2 size={14} className="text-[#00FFA7]" />
-              <span className="text-[#8b949e]">
-                <span className="font-medium text-[#e6edf3]">{counts.business}</span> business
+              <Building2 size={14} className="text-[color:var(--evo-green)]" />
+              <span className="text-[color:var(--text-muted)]">
+                <span className="font-medium text-[color:var(--text-primary)]">{counts.business}</span> business
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Code2 size={14} className="text-[#818CF8]" />
-              <span className="text-[#8b949e]">
-                <span className="font-medium text-[#e6edf3]">{counts.engineering}</span> engineering
+              <span className="text-[color:var(--text-muted)]">
+                <span className="font-medium text-[color:var(--text-primary)]">{counts.engineering}</span> engineering
               </span>
             </div>
             {counts.custom > 0 && (
               <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-[#C084FC]" />
-                <span className="text-[#8b949e]">
-                  <span className="font-medium text-[#e6edf3]">{counts.custom}</span> custom
+                <span className="text-[color:var(--text-muted)]">
+                  <span className="font-medium text-[color:var(--text-primary)]">{counts.custom}</span> custom
                 </span>
               </div>
             )}
@@ -954,8 +955,8 @@ export default function Agents() {
       {!loading && recentNames.length > 0 && filter === 'all' && !query && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <History size={13} className="text-[#98A2B3]" />
-            <h2 className="text-[11px] font-medium uppercase tracking-wider text-[#98A2B3]">Recent</h2>
+            <History size={13} className="text-[color:var(--text-muted)]" />
+            <h2 className="text-[11px] font-medium uppercase tracking-wider text-[color:var(--text-muted)]">Recent</h2>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {recentNames
@@ -967,19 +968,19 @@ export default function Agents() {
                   <Link
                     key={name}
                     to={`/agents/${name}`}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] hover:border-[#30363d] hover:bg-[#1c2333] transition-all flex-shrink-0 group"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] hover:border-[#30363d] hover:bg-[#1c2333] transition-all flex-shrink-0 group"
                   >
                     <div className="relative flex-shrink-0">
                       <AgentAvatar name={name} size={28} />
                       {running && (
                         <span
-                          className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#161b22]"
+                          className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[color:var(--bg-card)]"
                           style={{ backgroundColor: '#22C55E', boxShadow: '0 0 6px rgba(34,197,94,0.5)' }}
                         />
                       )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[12px] font-medium text-[#e6edf3] group-hover:text-white truncate">
+                      <span className="text-[12px] font-medium text-[color:var(--text-primary)] group-hover:text-white truncate">
                         {name.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')}
                       </span>
                       <span className="text-[10px] font-mono" style={{ color: meta.color }}>
@@ -1007,13 +1008,13 @@ export default function Agents() {
                   onClick={() => setFilter(f.value)}
                   className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all ${
                     active
-                      ? 'border-[#00FFA7]/40 bg-[#00FFA7]/10 text-[#00FFA7]'
-                      : 'border-[#21262d] bg-[#161b22] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3]'
+                      ? 'border-[color:var(--evo-green)]/40 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]'
+                      : 'border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:border-[#30363d] hover:text-[color:var(--text-primary)]'
                   }`}
                 >
                   <FIcon size={12} />
                   {f.label}
-                  <span className="rounded-full bg-[#0d1117] px-1.5 py-0.5 text-[10px] text-[#98A2B3] border border-[#21262d]">
+                  <span className="rounded-full bg-[color:var(--bg-primary)] px-1.5 py-0.5 text-[10px] text-[color:var(--text-muted)] border border-[color:var(--border)]">
                     {c}
                   </span>
                 </button>
@@ -1024,14 +1025,14 @@ export default function Agents() {
           <div className="relative sm:w-64">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]"
             />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search agents..."
-              className="w-full rounded-full border border-[#21262d] bg-[#161b22] py-1.5 pl-9 pr-3 text-[12px] text-[#e6edf3] placeholder:text-[#98A2B3] focus:border-[#00FFA7]/40 focus:outline-none"
+              className="w-full rounded-full border border-[color:var(--border)] bg-[color:var(--bg-card)] py-1.5 pl-9 pr-3 text-[12px] text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] focus:border-[color:var(--evo-green)]/40 focus:outline-none"
             />
           </div>
         </div>
@@ -1045,17 +1046,17 @@ export default function Agents() {
         </div>
       ) : agents.length === 0 ? (
         <div className="text-center py-16">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--bg-card)] border border-[color:var(--border)]">
             <Bot size={32} className="text-[#3F3F46]" />
           </div>
-          <p className="text-[#98A2B3] text-lg">No agents found</p>
+          <p className="text-[color:var(--text-muted)] text-lg">No agents found</p>
           <p className="text-[#3F3F46] text-sm mt-1">
             Add agent files to .claude/agents/ to get started
           </p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-[#98A2B3] text-sm">No agents match your filters.</p>
+          <p className="text-[color:var(--text-muted)] text-sm">No agents match your filters.</p>
         </div>
       ) : (
         <div className="space-y-10">

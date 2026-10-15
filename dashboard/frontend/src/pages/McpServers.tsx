@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 /**
  * McpServers.tsx — Wave 2.3 UI
  *
@@ -65,7 +66,7 @@ function ServerCard({ server }: { server: McpServer }) {
   const resumo = remoto ? server.url : `${server.command ?? '—'} ${argsStr}`.trim()
 
   return (
-    <div className="border border-[#21262d] rounded-xl bg-[#0d1117] overflow-hidden">
+    <div className="border border-[color:var(--border)] rounded-xl bg-[color:var(--bg-primary)] overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors text-left"
@@ -74,23 +75,23 @@ function ServerCard({ server }: { server: McpServer }) {
           <div
             className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
               server.source === 'plugin'
-                ? 'bg-[#00FFA7]/10 text-[#00FFA7]'
-                : 'bg-[#21262d] text-[#98A2B3]'
+                ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]'
+                : 'bg-[color:var(--border)] text-[color:var(--text-muted)]'
             }`}
           >
             {server.source === 'plugin' ? <Package size={14} /> : remoto ? <Globe size={14} /> : <Terminal size={14} />}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-[#e6edf3] font-mono truncate">
+              <span className="text-sm font-medium text-[color:var(--text-primary)] font-mono truncate">
                 {server.name}
               </span>
-              <span className="shrink-0 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#21262d] text-[#98A2B3]">
+              <span className="shrink-0 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[color:var(--border)] text-[color:var(--text-muted)]">
                 {server.transport}
               </span>
               <span
                 title={SCOPE_LABEL[server.scope]}
-                className="shrink-0 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#21262d] text-[#98A2B3]"
+                className="shrink-0 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[color:var(--border)] text-[color:var(--text-muted)]"
               >
                 {server.scope}
               </span>
@@ -98,49 +99,49 @@ function ServerCard({ server }: { server: McpServer }) {
                 <Link
                   to={`/plugins/${server.source_plugin}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="shrink-0 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 hover:bg-[#00FFA7]/20"
+                  className="shrink-0 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20 hover:bg-[color:var(--evo-green)]/20"
                 >
                   {server.source_plugin}
                 </Link>
               )}
             </div>
-            <p className="text-xs text-[#98A2B3] font-mono truncate mt-0.5">{resumo}</p>
+            <p className="text-xs text-[color:var(--text-muted)] font-mono truncate mt-0.5">{resumo}</p>
           </div>
         </div>
-        <div className="shrink-0 text-[#98A2B3]">
+        <div className="shrink-0 text-[color:var(--text-muted)]">
           {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
       </button>
 
       {open && (
-        <div className="border-t border-[#21262d] px-4 py-3 space-y-3 bg-black/20">
+        <div className="border-t border-[color:var(--border)] px-4 py-3 space-y-3 bg-black/20">
           {remoto ? (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-1">Endpoint</p>
-              <code className="block text-xs text-[#D0D5DD] font-mono bg-[#161b22] px-2 py-1.5 rounded border border-[#21262d] break-all">
+              <p className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] mb-1">Endpoint</p>
+              <code className="block text-xs text-[color:var(--text-secondary)] font-mono bg-[color:var(--bg-card)] px-2 py-1.5 rounded border border-[color:var(--border)] break-all">
                 {server.url ?? '(none)'}
               </code>
             </div>
           ) : (
             <>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-1">Command</p>
-                <code className="block text-xs text-[#D0D5DD] font-mono bg-[#161b22] px-2 py-1.5 rounded border border-[#21262d]">
+                <p className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] mb-1">Command</p>
+                <code className="block text-xs text-[color:var(--text-secondary)] font-mono bg-[color:var(--bg-card)] px-2 py-1.5 rounded border border-[color:var(--border)]">
                   {server.command ?? '(none)'}
                 </code>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-1">
+                <p className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] mb-1">
                   Args ({server.args.length})
                 </p>
                 {server.args.length === 0 ? (
-                  <p className="text-xs text-[#98A2B3] italic">none</p>
+                  <p className="text-xs text-[color:var(--text-muted)] italic">none</p>
                 ) : (
                   <ul className="space-y-1">
                     {server.args.map((a, i) => (
                       <li
                         key={i}
-                        className="text-xs text-[#D0D5DD] font-mono bg-[#161b22] px-2 py-1 rounded border border-[#21262d] break-all"
+                        className="text-xs text-[color:var(--text-secondary)] font-mono bg-[color:var(--bg-card)] px-2 py-1 rounded border border-[color:var(--border)] break-all"
                       >
                         {a}
                       </li>
@@ -151,20 +152,20 @@ function ServerCard({ server }: { server: McpServer }) {
             </>
           )}
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-1">
+            <p className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] mb-1">
               Environment ({envKeys.length})
             </p>
             {envKeys.length === 0 ? (
-              <p className="text-xs text-[#98A2B3] italic">none</p>
+              <p className="text-xs text-[color:var(--text-muted)] italic">none</p>
             ) : (
               <ul className="space-y-1">
                 {envKeys.map((k) => (
                   <li
                     key={k}
-                    className="text-xs text-[#D0D5DD] font-mono bg-[#161b22] px-2 py-1 rounded border border-[#21262d] break-all"
+                    className="text-xs text-[color:var(--text-secondary)] font-mono bg-[color:var(--bg-card)] px-2 py-1 rounded border border-[color:var(--border)] break-all"
                   >
-                    <span className="text-[#00FFA7]">{k}</span>
-                    <span className="text-[#98A2B3]">=</span>
+                    <span className="text-[color:var(--evo-green)]">{k}</span>
+                    <span className="text-[color:var(--text-muted)]">=</span>
                     <span>{'•'.repeat(Math.min(8, server.env[k].length || 1))}</span>
                   </li>
                 ))}
@@ -230,18 +231,18 @@ export default function McpServers() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-[#e6edf3] flex items-center gap-2">
-            <Terminal size={22} className="text-[#00FFA7]" />
+          <h1 className="text-2xl font-semibold text-[color:var(--text-primary)] flex items-center gap-2">
+            <Terminal size={22} className="text-[color:var(--evo-green)]" />
             {t('nav.mcpServers', 'MCP Servers')}
           </h1>
-          <p className="text-sm text-[#98A2B3] mt-1">
+          <p className="text-sm text-[color:var(--text-muted)] mt-1">
             {t('mcpServers.subtitle', 'MCP servers configured for this workspace — from .mcp.json (project) and ~/.claude.json (user).')}
           </p>
         </div>
         <button
           onClick={fetchServers}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#21262d] text-[#D0D5DD] rounded-lg hover:bg-[#2a3139] disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[color:var(--border)] text-[color:var(--text-secondary)] rounded-lg hover:bg-[#2a3139] disabled:opacity-50 transition-colors"
         >
           <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
           {t('common.refresh', 'Refresh')}
@@ -250,7 +251,7 @@ export default function McpServers() {
 
       {/* Loading */}
       {loading && !data && (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-[#98A2B3]">
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-[color:var(--text-muted)]">
           <Loader2 size={16} className="animate-spin" />
           {t('common.loading', 'Loading…')}
         </div>
@@ -266,24 +267,24 @@ export default function McpServers() {
 
       {/* Config sources — both scopes, each with its own count */}
       {data && sources.length > 0 && (
-        <div className="mb-6 border border-[#21262d] rounded-xl bg-[#0d1117] divide-y divide-[#21262d]">
+        <div className="mb-6 border border-[color:var(--border)] rounded-xl bg-[color:var(--bg-primary)] divide-y divide-[color:var(--border)]">
           {sources.map((s) => (
             <div key={s.path} className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-1">
+                <p className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] mb-1">
                   {s.scope === 'project'
                     ? t('mcpServers.scopeProject', 'Project — versioned with the repo')
                     : t('mcpServers.scopeUser', 'User — per machine')}
                 </p>
-                <code className="text-xs text-[#D0D5DD] font-mono break-all">{s.path}</code>
+                <code className="text-xs text-[color:var(--text-secondary)] font-mono break-all">{s.path}</code>
               </div>
               <div className="shrink-0 flex items-center gap-2">
-                <span className="text-xs text-[#98A2B3] tabular-nums">
+                <span className="text-xs text-[color:var(--text-muted)] tabular-nums">
                   {s.exists ? `${s.count}` : t('mcpServers.missing', 'absent')}
                 </span>
                 <button
                   onClick={() => copyPath(s.path)}
-                  className="flex items-center gap-1 px-2 py-1 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
                 >
                   <Copy size={11} />
                   {copiedPath === s.path ? t('common.copied', 'Copied') : t('common.copy', 'Copy')}
@@ -291,7 +292,7 @@ export default function McpServers() {
               </div>
             </div>
           ))}
-          <p className="text-[11px] text-[#98A2B3] px-4 py-2 flex items-center gap-1">
+          <p className="text-[11px] text-[color:var(--text-muted)] px-4 py-2 flex items-center gap-1">
             <ExternalLink size={10} />
             {t('mcpServers.restartHint', 'Restart Claude Code CLI after any change.')}
           </p>
@@ -300,7 +301,7 @@ export default function McpServers() {
 
       {/* Empty — nothing configured in either scope */}
       {data && servers.length === 0 && !loading && (
-        <div className="text-center py-16 text-sm text-[#98A2B3]">
+        <div className="text-center py-16 text-sm text-[color:var(--text-muted)]">
           <p>{t('mcpServers.empty', 'No MCP servers configured for this workspace yet.')}</p>
         </div>
       )}
@@ -309,14 +310,14 @@ export default function McpServers() {
       {Object.keys(pluginGroups).length > 0 && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-medium text-[#D0D5DD]">
+            <h2 className="text-sm font-medium text-[color:var(--text-secondary)]">
               {t('mcpServers.fromPlugins', 'From plugins')}
             </h2>
-            <span className="text-xs text-[#98A2B3]">({pluginServers.length})</span>
+            <span className="text-xs text-[color:var(--text-muted)]">({pluginServers.length})</span>
           </div>
           {Object.entries(pluginGroups).map(([pluginSlug, items]) => (
             <div key={pluginSlug} className="mb-4">
-              <p className="text-[10px] uppercase tracking-wider text-[#98A2B3] mb-2 font-medium">
+              <p className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] mb-2 font-medium">
                 {pluginSlug}
               </p>
               <div className="space-y-2">
@@ -333,10 +334,10 @@ export default function McpServers() {
       {nativeServers.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-medium text-[#D0D5DD]">
+            <h2 className="text-sm font-medium text-[color:var(--text-secondary)]">
               {t('mcpServers.native', 'Native / manual')}
             </h2>
-            <span className="text-xs text-[#98A2B3]">({nativeServers.length})</span>
+            <span className="text-xs text-[color:var(--text-muted)]">({nativeServers.length})</span>
           </div>
           <div className="space-y-2">
             {nativeServers.map((s) => (

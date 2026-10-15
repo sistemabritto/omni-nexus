@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, Minus, Ticket as TicketIcon, X } from 'lucide-react'
 import { api } from '../lib/api'
@@ -33,7 +34,7 @@ const PRIORITY_OPTIONS: Array<{ value: TicketPriority; label: string; icon: Reac
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-3.5">
-      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[#98A2B3] mb-1.5">
+      <label className="block text-[11px] font-ticket-mono uppercase tracking-wider text-[color:var(--text-muted)] mb-1.5">
         {label}
       </label>
       {children}
@@ -42,7 +43,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputClass =
-  'w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors'
+  'w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors'
 
 interface CreateTicketModalProps {
   onClose: () => void
@@ -118,18 +119,18 @@ export default function CreateTicketModal({ onClose, onCreated, defaultAssigneeA
         aria-modal="true"
         aria-labelledby="create-ticket-title"
         onClick={(e) => e.stopPropagation()}
-        className="dialog-enter bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-lg shadow-2xl"
+        className="dialog-enter bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-lg shadow-2xl"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/25 flex items-center justify-center shrink-0">
-              <TicketIcon size={15} className="text-[#00FFA7]" />
+            <div className="w-8 h-8 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/25 flex items-center justify-center shrink-0">
+              <TicketIcon size={15} className="text-[color:var(--evo-green)]" />
             </div>
             <h3 id="create-ticket-title" className="font-display text-[15px] font-semibold text-white tracking-tight">
               Novo ticket
             </h3>
           </div>
-          <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[color:var(--text-muted)] hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -203,13 +204,13 @@ export default function CreateTicketModal({ onClose, onCreated, defaultAssigneeA
           </Field>
 
           <div className="flex justify-end gap-2 mt-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white transition-colors">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-[color:var(--text-muted)] hover:text-white transition-colors">
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="px-4 py-2 text-sm bg-[#00FFA7] text-black font-semibold rounded-lg hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm bg-[color:var(--evo-green)] text-black font-semibold rounded-lg hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
             >
               {submitting ? 'Criando...' : 'Criar ticket'}
             </button>

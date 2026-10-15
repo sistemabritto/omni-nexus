@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useTranslation } from 'react-i18next'
 
 type StepKey = 'step1of3' | 'step2of3' | 'step2aOf3' | 'step2bOf3' | 'step3of3'
@@ -20,13 +21,13 @@ interface OnboardingHeaderProps {
 export default function OnboardingHeader({ step, filled }: OnboardingHeaderProps) {
   const { t } = useTranslation()
   const dot = (active: boolean) => (
-    <span className={`h-1.5 w-8 rounded-full ${active ? 'bg-[#00FFA7]' : 'bg-[#152030]'}`} />
+    <span className={`h-1.5 w-8 rounded-full ${active ? 'bg-[color:var(--evo-green)]' : 'bg-[color:var(--border)]'}`} />
   )
   return (
     <div className="flex flex-col items-center gap-4 mb-6">
       <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-7 w-auto opacity-90" />
       <div className="flex items-center gap-2">
-        <span className="text-[11px] text-[#98A2B3] uppercase tracking-[0.08em]">
+        <span className="text-[11px] text-[color:var(--text-muted)] uppercase tracking-[0.08em]">
           {t(`onboarding.stepIndicator.${step}`)}
         </span>
         <div className="flex gap-1.5">

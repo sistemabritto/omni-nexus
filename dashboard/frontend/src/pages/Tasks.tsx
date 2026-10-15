@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
@@ -25,9 +26,9 @@ interface Task {
 const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
   pending: { bg: 'bg-yellow-500/10 border-yellow-500/20', text: 'text-yellow-400', dot: 'bg-yellow-400' },
   running: { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400', dot: 'bg-blue-400 animate-pulse' },
-  completed: { bg: 'bg-[#00FFA7]/10 border-[#00FFA7]/20', text: 'text-[#00FFA7]', dot: 'bg-[#00FFA7]' },
+  completed: { bg: 'bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]/20', text: 'text-[color:var(--evo-green)]', dot: 'bg-[color:var(--evo-green)]' },
   failed: { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400', dot: 'bg-red-400' },
-  cancelled: { bg: 'bg-[#667085]/10 border-[#667085]/20', text: 'text-[#98A2B3]', dot: 'bg-[#667085]' },
+  cancelled: { bg: 'bg-[#667085]/10 border-[#667085]/20', text: 'text-[color:var(--text-muted)]', dot: 'bg-[#667085]' },
 }
 
 const TYPE_STYLES: Record<string, string> = {
@@ -184,7 +185,7 @@ export default function Tasks() {
     return (
       <div>
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#e6edf3]">{t('tasks.title')}</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('tasks.title')}</h1>
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
@@ -196,26 +197,26 @@ export default function Tasks() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="omn-responsive-toolbar flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-            <CalendarClock size={20} className="text-[#00FFA7]" />
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+            <CalendarClock size={20} className="text-[color:var(--evo-green)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e6edf3]">{t('tasks.title')}</h1>
-            <p className="text-[#98A2B3] mt-0.5 text-sm">One-off scheduled actions</p>
+            <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('tasks.title')}</h1>
+            <p className="text-[color:var(--text-muted)] mt-0.5 text-sm">One-off scheduled actions</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setLoading(true); fetchTasks() }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 transition-colors"
           >
             <RefreshCw size={16} />
           </button>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/20 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors font-medium text-sm"
           >
             <Plus size={16} /> New Task
           </button>
@@ -223,37 +224,37 @@ export default function Tasks() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         {filters.map((f) => (
           <button
             key={f.value}
             onClick={() => { setFilter(f.value); setLoading(true) }}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               filter === f.value
-                ? 'bg-[#00FFA7]/10 border-[#00FFA7]/20 text-[#00FFA7]'
-                : 'bg-[#161b22] border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054]'
+                ? 'bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)]'
+                : 'bg-[color:var(--bg-card)] border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--border)]'
             }`}
           >
             {f.label}
           </button>
         ))}
-        <span className="text-[11px] text-[#98A2B3] ml-2">{total} tasks</span>
+        <span className="text-[11px] text-[color:var(--text-muted)] ml-2">{total} tasks</span>
       </div>
 
       {/* Table */}
       {tasks.length === 0 ? (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-12 text-center">
-          <CalendarClock size={32} className="text-[#98A2B3] mx-auto mb-3" />
-          <p className="text-[#98A2B3] text-sm">No scheduled tasks yet</p>
-          <button onClick={openCreate} className="mt-3 text-[#00FFA7] text-sm hover:underline">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-12 text-center">
+          <CalendarClock size={32} className="text-[color:var(--text-muted)] mx-auto mb-3" />
+          <p className="text-[color:var(--text-muted)] text-sm">No scheduled tasks yet</p>
+          <button onClick={openCreate} className="mt-3 text-[color:var(--evo-green)] text-sm hover:underline">
             Create your first task
           </button>
         </div>
       ) : (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[color:var(--text-muted)] text-xs uppercase tracking-wider bg-[color:var(--bg-primary)]/50 border-b border-[color:var(--border)]">
                 <th className="text-left p-4 font-medium">Task</th>
                 <th className="text-left p-4 font-medium">Type</th>
                 <th className="text-left p-4 font-medium">Agent</th>
@@ -266,11 +267,11 @@ export default function Tasks() {
               {tasks.map((task) => {
                 const st = STATUS_STYLES[task.status] || STATUS_STYLES.pending
                 return (
-                  <tr key={task.id} className="border-t border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
+                  <tr key={task.id} className="border-t border-[color:var(--border)]/50 hover:bg-white/[0.02] transition-colors">
                     <td className="p-4">
-                      <div className="text-[#e6edf3] font-medium">{task.name}</div>
+                      <div className="text-[color:var(--text-primary)] font-medium">{task.name}</div>
                       {task.description && (
-                        <div className="text-[#98A2B3] text-xs mt-0.5 truncate max-w-[300px]">{task.description}</div>
+                        <div className="text-[color:var(--text-muted)] text-xs mt-0.5 truncate max-w-[300px]">{task.description}</div>
                       )}
                     </td>
                     <td className="p-4">
@@ -280,14 +281,14 @@ export default function Tasks() {
                     </td>
                     <td className="p-4">
                       {task.agent ? (
-                        <span className="inline-flex text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#00FFA7]/8 border border-[#00FFA7]/20 text-[#00FFA7]">
+                        <span className="inline-flex text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)]">
                           {AGENT_LABELS[task.agent] || `@${task.agent}`}
                         </span>
                       ) : (
-                        <span className="text-[#98A2B3]">--</span>
+                        <span className="text-[color:var(--text-muted)]">--</span>
                       )}
                     </td>
-                    <td className="p-4 text-[#e6edf3] text-xs font-mono">{formatDate(task.scheduled_at)}</td>
+                    <td className="p-4 text-[color:var(--text-primary)] text-xs font-mono">{formatDate(task.scheduled_at)}</td>
                     <td className="p-4">
                       <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${st.bg} ${st.text}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
@@ -298,34 +299,34 @@ export default function Tasks() {
                       <div className="flex items-center gap-1 justify-end">
                         {task.status === 'pending' && (
                           <>
-                            <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[#00FFA7]/10 text-[#98A2B3] hover:text-[#00FFA7] transition-colors" title="Run Now">
+                            <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[color:var(--evo-green)]/10 text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors" title="Run Now">
                               <Play size={14} />
                             </button>
-                            <button onClick={() => openEdit(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Edit">
+                            <button onClick={() => openEdit(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors" title="Edit">
                               <Pencil size={14} />
                             </button>
-                            <button onClick={() => handleCancel(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Cancel">
+                            <button onClick={() => handleCancel(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[color:var(--text-muted)] hover:text-red-400 transition-colors" title="Cancel">
                               <X size={14} />
                             </button>
                           </>
                         )}
                         {(task.status === 'completed' || task.status === 'failed') && (
                           <>
-                            <button onClick={() => setViewTask(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="View Result">
+                            <button onClick={() => setViewTask(task)} className="p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors" title="View Result">
                               <Eye size={14} />
                             </button>
-                            <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Delete">
+                            <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[color:var(--text-muted)] hover:text-red-400 transition-colors" title="Delete">
                               <Trash2 size={14} />
                             </button>
                           </>
                         )}
                         {task.status === 'failed' && (
-                          <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[#00FFA7]/10 text-[#98A2B3] hover:text-[#00FFA7] transition-colors" title="Retry">
+                          <button onClick={() => handleRunNow(task.id)} className="p-1.5 rounded-lg hover:bg-[color:var(--evo-green)]/10 text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors" title="Retry">
                             <RefreshCw size={14} />
                           </button>
                         )}
                         {task.status === 'cancelled' && (
-                          <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[color:var(--text-muted)] hover:text-red-400 transition-colors" title="Delete">
                             <Trash2 size={14} />
                           </button>
                         )}
@@ -342,46 +343,46 @@ export default function Tasks() {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
-              <h2 className="text-lg font-semibold text-[#e6edf3]">
+          <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
+              <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">
                 {editingTask ? 'Edit Task' : 'New Scheduled Task'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]">
+              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]">
                 <X size={18} />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Name *</label>
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Name *</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="e.g. Post LinkedIn about Summit"
-                  className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)]/50 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Description</label>
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Description</label>
                 <input
                   type="text"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Optional context"
-                  className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)]/50 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Type *</label>
+                  <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Type *</label>
                   <select
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none"
+                    className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)]/50 focus:outline-none"
                   >
                     <option value="skill">Skill</option>
                     <option value="prompt">Prompt</option>
@@ -389,11 +390,11 @@ export default function Tasks() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Agent</label>
+                  <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Agent</label>
                   <select
                     value={form.agent}
                     onChange={(e) => setForm({ ...form, agent: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none"
+                    className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)]/50 focus:outline-none"
                   >
                     {AGENTS.map((a) => (
                       <option key={a} value={a}>{AGENT_LABELS[a] || a}</option>
@@ -403,7 +404,7 @@ export default function Tasks() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">
                   {form.type === 'skill' ? 'Skill name + args' : form.type === 'prompt' ? 'Prompt text' : 'Script path (relative to ADWs/routines/)'} *
                 </label>
                 <textarea
@@ -415,32 +416,32 @@ export default function Tasks() {
                         : 'custom/my_script.py'
                   }
                   rows={3}
-                  className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none font-mono resize-none"
+                  className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)]/50 focus:outline-none font-mono resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Scheduled At *</label>
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Scheduled At *</label>
                 <input
                   type="datetime-local"
                   value={form.scheduled_at}
                   onChange={(e) => setForm({ ...form, scheduled_at: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)]/50 focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#21262d]">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[color:var(--border)]">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg border border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-colors text-sm"
+                className="px-4 py-2 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--border)] transition-colors text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !form.name || !form.payload || !form.scheduled_at}
-                className="px-4 py-2 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/20 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Saving...' : editingTask ? 'Update' : 'Schedule'}
               </button>
@@ -452,32 +453,32 @@ export default function Tasks() {
       {/* View Result Modal */}
       {viewTask && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setViewTask(null)}>
-          <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
+          <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
               <div>
-                <h2 className="text-lg font-semibold text-[#e6edf3]">{viewTask.name}</h2>
-                <p className="text-xs text-[#98A2B3] mt-0.5">
+                <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">{viewTask.name}</h2>
+                <p className="text-xs text-[color:var(--text-muted)] mt-0.5">
                   {viewTask.status === 'completed' ? 'Completed' : 'Failed'} at {formatDate(viewTask.completed_at)}
                   {viewTask.started_at && viewTask.completed_at && (
                     <> — {Math.round((new Date(viewTask.completed_at).getTime() - new Date(viewTask.started_at).getTime()) / 1000)}s</>
                   )}
                 </p>
               </div>
-              <button onClick={() => setViewTask(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]">
+              <button onClick={() => setViewTask(null)} className="p-1 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]">
                 <X size={18} />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1">Payload</label>
-                <pre className="text-xs text-[#e6edf3] bg-[#0d1117] border border-[#21262d] rounded-lg p-3 whitespace-pre-wrap font-mono">{viewTask.payload}</pre>
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1">Payload</label>
+                <pre className="text-xs text-[color:var(--text-primary)] bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg p-3 whitespace-pre-wrap font-mono">{viewTask.payload}</pre>
               </div>
 
               {viewTask.result_summary && (
                 <div>
-                  <label className="block text-xs font-medium text-[#00FFA7] mb-1">Result</label>
-                  <pre className="text-xs text-[#e6edf3] bg-[#0d1117] border border-[#21262d] rounded-lg p-3 whitespace-pre-wrap font-mono max-h-64 overflow-y-auto">{viewTask.result_summary}</pre>
+                  <label className="block text-xs font-medium text-[color:var(--evo-green)] mb-1">Result</label>
+                  <pre className="text-xs text-[color:var(--text-primary)] bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg p-3 whitespace-pre-wrap font-mono max-h-64 overflow-y-auto">{viewTask.result_summary}</pre>
                 </div>
               )}
 

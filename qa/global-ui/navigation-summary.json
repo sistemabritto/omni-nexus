@@ -1,0 +1,26 @@
+[
+  {
+    "width": 375,
+    "menuNavigation": true,
+    "companySwitch": true,
+    "companyStored": "2",
+    "administrationAccessible": true,
+    "legacyQueryPreserved": true,
+    "mobileDrawerAccessible": true
+  },
+  {
+    "width": 1440,
+    "menuNavigation": true,
+    "companySwitch": true,
+    "companyStored": "2",
+    "administrationAccessible": true,
+    "legacyQueryPreserved": true,
+    "mobileDrawerAccessible": false
+  },
+  {
+    "anonymousProtectedRouteShowsLogin": true
+  },
+  {
+    "viewerAdministrationFiltered": true
+  }
+]

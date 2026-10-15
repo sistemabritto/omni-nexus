@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { DollarSign, Zap, Activity, Calculator, Image, Target, type LucideIcon } from 'lucide-react'
 import HubBackLink from '../components/HubBackLink'
@@ -94,19 +95,19 @@ function StatCard({
   icon: LucideIcon
 }) {
   return (
-    <div className="group relative bg-[#161b22] border border-[#21262d] rounded-2xl p-5 transition-all duration-300 hover:border-[#00FFA7]/40 hover:shadow-[0_0_24px_rgba(0,255,167,0.06)]">
+    <div className="group relative bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-5 transition-all duration-300 hover:border-[color:var(--evo-green)]/40 hover:shadow-[0_0_24px_rgba(0,255,167,0.06)]">
       {/* Subtle top gradient accent */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00FFA7]/20 to-transparent rounded-t-2xl" />
 
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-          <Icon size={18} className="text-[#00FFA7]" />
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+          <Icon size={18} className="text-[color:var(--evo-green)]" />
         </div>
       </div>
 
-      <p className="text-3xl font-bold text-[#e6edf3] tracking-tight">{value}</p>
-      <p className="text-sm text-[#98A2B3] mt-1">{label}</p>
-      {subtitle && <p className="text-xs text-[#98A2B3]/60 mt-0.5">{subtitle}</p>}
+      <p className="text-3xl font-bold text-[color:var(--text-primary)] tracking-tight">{value}</p>
+      <p className="text-sm text-[color:var(--text-muted)] mt-1">{label}</p>
+      {subtitle && <p className="text-xs text-[color:var(--text-muted)]/60 mt-0.5">{subtitle}</p>}
     </div>
   )
 }
@@ -114,12 +115,12 @@ function StatCard({
 // --- Skeleton ---
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-[#21262d] bg-[#161b22] p-5">
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg-card)] p-5">
       <div className="flex items-start justify-between mb-3">
-        <div className="h-9 w-9 rounded-xl bg-[#21262d] animate-pulse" />
+        <div className="h-9 w-9 rounded-xl bg-[color:var(--border)] animate-pulse" />
       </div>
-      <div className="h-8 w-24 rounded bg-[#21262d] animate-pulse mb-2" />
-      <div className="h-4 w-20 rounded bg-[#21262d] animate-pulse" />
+      <div className="h-8 w-24 rounded bg-[color:var(--border)] animate-pulse mb-2" />
+      <div className="h-4 w-20 rounded bg-[color:var(--border)] animate-pulse" />
     </div>
   )
 }
@@ -212,8 +213,8 @@ export default function Costs() {
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-8">
           <HubBackLink />
-          <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('costs.title')}</h1>
-          <p className="text-[#98A2B3] text-sm mt-1">AI usage cost analysis</p>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('costs.title')}</h1>
+          <p className="text-[color:var(--text-muted)] text-sm mt-1">AI usage cost analysis</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <SkeletonCard />
@@ -233,10 +234,10 @@ export default function Costs() {
     return (
       <div className="text-center py-16">
         <HubBackLink />
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--bg-card)] border border-[color:var(--border)]">
           <DollarSign size={32} className="text-[#3F3F46]" />
         </div>
-        <p className="text-[#98A2B3] text-lg">No cost data available</p>
+        <p className="text-[color:var(--text-muted)] text-lg">No cost data available</p>
         <p className="text-[#3F3F46] text-sm mt-1">Cost data will appear after routines run</p>
       </div>
     )
@@ -252,8 +253,8 @@ export default function Costs() {
       {/* Header */}
       <div className="mb-8">
         <HubBackLink />
-        <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('costs.title')}</h1>
-        <p className="text-[#98A2B3] text-sm mt-1">AI usage cost analysis</p>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('costs.title')}</h1>
+        <p className="text-[color:var(--text-muted)] text-sm mt-1">AI usage cost analysis</p>
       </div>
 
       {/* KPI Cards */}
@@ -287,10 +288,10 @@ export default function Costs() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Line Chart: Cost per day */}
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
-          <h2 className="text-base font-semibold text-[#e6edf3] mb-4 flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-              <Activity size={14} className="text-[#00FFA7]" />
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+          <h2 className="text-base font-semibold text-[color:var(--text-primary)] mb-4 flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+              <Activity size={14} className="text-[color:var(--evo-green)]" />
             </div>
             Cost per Day
           </h2>
@@ -309,10 +310,10 @@ export default function Costs() {
         </div>
 
         {/* Pie Chart: Cost per agent */}
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
-          <h2 className="text-base font-semibold text-[#e6edf3] mb-4 flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-              <DollarSign size={14} className="text-[#00FFA7]" />
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+          <h2 className="text-base font-semibold text-[color:var(--text-primary)] mb-4 flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+              <DollarSign size={14} className="text-[color:var(--evo-green)]" />
             </div>
             Cost per Agent
           </h2>
@@ -343,11 +344,11 @@ export default function Costs() {
       </div>
 
       {/* Per Routine Table */}
-      <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
-        <div className="p-5 border-b border-[#21262d]">
-          <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-              <Calculator size={14} className="text-[#00FFA7]" />
+      <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+        <div className="p-5 border-b border-[color:var(--border)]">
+          <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+              <Calculator size={14} className="text-[color:var(--evo-green)]" />
             </div>
             Per Routine Breakdown
           </h2>
@@ -355,7 +356,7 @@ export default function Costs() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
+              <tr className="text-[color:var(--text-muted)] text-[11px] uppercase tracking-wider font-medium">
                 <th className="text-left p-4 pb-3">Routine</th>
                 <th className="text-right p-4 pb-3">Runs</th>
                 <th className="text-right p-4 pb-3">Total Cost</th>
@@ -366,14 +367,14 @@ export default function Costs() {
               {(data.by_routine || []).map((r, i) => (
                 <tr
                   key={i}
-                  className="border-t border-[#21262d]/60 hover:bg-white/[0.02] transition-colors group"
+                  className="border-t border-[color:var(--border)]/60 hover:bg-white/[0.02] transition-colors group"
                 >
-                  <td className="p-4 text-[#e6edf3] text-[13px] font-medium group-hover:text-white transition-colors">{r.name}</td>
-                  <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">{Number(r.runs || 0)}</td>
-                  <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">
-                    <span className="text-[#e6edf3]">${Number(r.total_cost || 0).toFixed(4)}</span>
+                  <td className="p-4 text-[color:var(--text-primary)] text-[13px] font-medium group-hover:text-white transition-colors">{r.name}</td>
+                  <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">{Number(r.runs || 0)}</td>
+                  <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">
+                    <span className="text-[color:var(--text-primary)]">${Number(r.total_cost || 0).toFixed(4)}</span>
                   </td>
-                  <td className="p-4 text-right text-[#98A2B3] tabular-nums text-[13px]">${Number(r.avg_cost || 0).toFixed(4)}</td>
+                  <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">${Number(r.avg_cost || 0).toFixed(4)}</td>
                 </tr>
               ))}
             </tbody>
@@ -382,22 +383,22 @@ export default function Costs() {
       </div>
 
       {/* Per Heartbeat Table */}
-      <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden mt-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
-        <div className="p-5 border-b border-[#21262d]">
-          <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-              <Activity size={14} className="text-[#00FFA7]" />
+      <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden mt-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+        <div className="p-5 border-b border-[color:var(--border)]">
+          <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+              <Activity size={14} className="text-[color:var(--evo-green)]" />
             </div>
             Per Heartbeat Breakdown
           </h2>
         </div>
         {(data.by_heartbeat || []).length === 0 ? (
-          <div className="p-8 text-center text-[#98A2B3] text-sm">No heartbeat runs yet</div>
+          <div className="p-8 text-center text-[color:var(--text-muted)] text-sm">No heartbeat runs yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
+                <tr className="text-[color:var(--text-muted)] text-[11px] uppercase tracking-wider font-medium">
                   <th className="text-left p-4 pb-3">Heartbeat</th>
                   <th className="text-left p-4 pb-3">Agent</th>
                   <th className="text-right p-4 pb-3">Runs</th>
@@ -409,15 +410,15 @@ export default function Costs() {
                 {(data.by_heartbeat || []).map((h, i) => (
                   <tr
                     key={i}
-                    className="border-t border-[#21262d]/60 hover:bg-white/[0.02] transition-colors group"
+                    className="border-t border-[color:var(--border)]/60 hover:bg-white/[0.02] transition-colors group"
                   >
-                    <td className="p-4 text-[#e6edf3] text-[13px] font-medium group-hover:text-white transition-colors">{h.name}</td>
-                    <td className="p-4 text-[#8b949e] text-[13px]">{h.agent}</td>
-                    <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">{Number(h.runs || 0)}</td>
-                    <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">
-                      <span className="text-[#e6edf3]">${Number(h.total_cost || 0).toFixed(4)}</span>
+                    <td className="p-4 text-[color:var(--text-primary)] text-[13px] font-medium group-hover:text-white transition-colors">{h.name}</td>
+                    <td className="p-4 text-[color:var(--text-muted)] text-[13px]">{h.agent}</td>
+                    <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">{Number(h.runs || 0)}</td>
+                    <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">
+                      <span className="text-[color:var(--text-primary)]">${Number(h.total_cost || 0).toFixed(4)}</span>
                     </td>
-                    <td className="p-4 text-right text-[#98A2B3] tabular-nums text-[13px]">${Number(h.avg_cost || 0).toFixed(4)}</td>
+                    <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">${Number(h.avg_cost || 0).toFixed(4)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -428,31 +429,31 @@ export default function Costs() {
 
       {/* Gasto por Missão/Projeto — estimativa (panorama 2026-07-17, item 2) */}
       {(data.by_mission.length > 0 || data.by_project.length > 0 || data.unallocated_cost > 0) && (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden mt-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
-          <div className="p-5 border-b border-[#21262d]">
-            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-                <Target size={14} className="text-[#00FFA7]" />
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden mt-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+          <div className="p-5 border-b border-[color:var(--border)]">
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+                <Target size={14} className="text-[color:var(--evo-green)]" />
               </div>
               Gasto por Missão / Projeto (estimado)
             </h2>
             {data.methodology && (
-              <p className="text-xs text-[#98A2B3] mt-2">{data.methodology}</p>
+              <p className="text-xs text-[color:var(--text-muted)] mt-2">{data.methodology}</p>
             )}
           </div>
-          <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#21262d]/60">
+          <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[color:var(--border)]/60">
             <div>
-              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[#98A2B3] font-medium">Por Missão</div>
+              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[color:var(--text-muted)] font-medium">Por Missão</div>
               {data.by_mission.length === 0 ? (
-                <div className="px-4 pb-4 text-sm text-[#98A2B3]">Sem dados suficientes ainda.</div>
+                <div className="px-4 pb-4 text-sm text-[color:var(--text-muted)]">Sem dados suficientes ainda.</div>
               ) : (
                 <table className="w-full text-sm">
                   <tbody>
                     {data.by_mission.map((m) => (
-                      <tr key={m.mission_id} className="border-t border-[#21262d]/60">
-                        <td className="p-3 text-[#e6edf3] text-[13px]">{m.title}</td>
-                        <td className="p-3 text-right text-[#8b949e] tabular-nums text-[13px]">{m.ticket_count} ticket(s)</td>
-                        <td className="p-3 text-right text-[#e6edf3] tabular-nums text-[13px] font-medium">
+                      <tr key={m.mission_id} className="border-t border-[color:var(--border)]/60">
+                        <td className="p-3 text-[color:var(--text-primary)] text-[13px]">{m.title}</td>
+                        <td className="p-3 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">{m.ticket_count} ticket(s)</td>
+                        <td className="p-3 text-right text-[color:var(--text-primary)] tabular-nums text-[13px] font-medium">
                           ~${m.estimated_cost.toFixed(4)}
                         </td>
                       </tr>
@@ -462,17 +463,17 @@ export default function Costs() {
               )}
             </div>
             <div>
-              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[#98A2B3] font-medium">Por Projeto</div>
+              <div className="px-4 py-2 text-[11px] uppercase tracking-wider text-[color:var(--text-muted)] font-medium">Por Projeto</div>
               {data.by_project.length === 0 ? (
-                <div className="px-4 pb-4 text-sm text-[#98A2B3]">Sem dados suficientes ainda.</div>
+                <div className="px-4 pb-4 text-sm text-[color:var(--text-muted)]">Sem dados suficientes ainda.</div>
               ) : (
                 <table className="w-full text-sm">
                   <tbody>
                     {data.by_project.map((p) => (
-                      <tr key={p.project_id} className="border-t border-[#21262d]/60">
-                        <td className="p-3 text-[#e6edf3] text-[13px]">{p.title}</td>
-                        <td className="p-3 text-right text-[#8b949e] tabular-nums text-[13px]">{p.ticket_count} ticket(s)</td>
-                        <td className="p-3 text-right text-[#e6edf3] tabular-nums text-[13px] font-medium">
+                      <tr key={p.project_id} className="border-t border-[color:var(--border)]/60">
+                        <td className="p-3 text-[color:var(--text-primary)] text-[13px]">{p.title}</td>
+                        <td className="p-3 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">{p.ticket_count} ticket(s)</td>
+                        <td className="p-3 text-right text-[color:var(--text-primary)] tabular-nums text-[13px] font-medium">
                           ~${p.estimated_cost.toFixed(4)}
                         </td>
                       </tr>
@@ -483,7 +484,7 @@ export default function Costs() {
             </div>
           </div>
           {data.unallocated_cost > 0 && (
-            <div className="px-4 py-3 border-t border-[#21262d]/60 text-xs text-[#98A2B3]">
+            <div className="px-4 py-3 border-t border-[color:var(--border)]/60 text-xs text-[color:var(--text-muted)]">
               ${data.unallocated_cost.toFixed(4)} não alocados (custo de agente sem ticket correspondente vinculado a uma Missão/Projeto).
             </div>
           )}
@@ -492,28 +493,28 @@ export default function Costs() {
 
       {/* Image Generation Costs */}
       {imageCosts && imageCosts.entries.length > 0 && (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden mt-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
-          <div className="p-5 border-b border-[#21262d] flex items-center justify-between">
-            <h2 className="text-base font-semibold text-[#e6edf3] flex items-center gap-2.5">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden mt-6 transition-all duration-300 hover:shadow-[0_0_32px_rgba(0,255,167,0.04)]">
+          <div className="p-5 border-b border-[color:var(--border)] flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[color:var(--text-primary)] flex items-center gap-2.5">
               <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#F472B6]/10 border border-[#F472B6]/20">
                 <Image size={14} className="text-[#F472B6]" />
               </div>
               Image Generation
             </h2>
-            <div className="flex items-center gap-4 text-[11px] text-[#98A2B3]">
+            <div className="flex items-center gap-4 text-[11px] text-[color:var(--text-muted)]">
               <span>{imageCosts.totals.count} images</span>
               <span>{imageCosts.totals.total_tokens.toLocaleString()} tokens</span>
               <span>{formatBytes(imageCosts.totals.total_bytes)}</span>
               <span>{imageCosts.totals.total_seconds}s total</span>
               {imageCosts.totals.total_cost_usd !== undefined && (
-                <span className="text-[#00FFA7] font-medium">${imageCosts.totals.total_cost_usd.toFixed(2)}</span>
+                <span className="text-[color:var(--evo-green)] font-medium">${imageCosts.totals.total_cost_usd.toFixed(2)}</span>
               )}
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[#98A2B3] text-[11px] uppercase tracking-wider font-medium">
+                <tr className="text-[color:var(--text-muted)] text-[11px] uppercase tracking-wider font-medium">
                   <th className="text-left p-4 pb-3">Model</th>
                   <th className="text-left p-4 pb-3">Provider</th>
                   <th className="text-left p-4 pb-3">Output</th>
@@ -526,23 +527,23 @@ export default function Costs() {
               </thead>
               <tbody>
                 {[...imageCosts.entries].reverse().map((e, i) => (
-                  <tr key={i} className="border-t border-[#21262d]/60 hover:bg-white/[0.02] transition-colors group">
+                  <tr key={i} className="border-t border-[color:var(--border)]/60 hover:bg-white/[0.02] transition-colors group">
                     <td className="p-4">
                       <code className="text-[11px] text-[#F472B6] font-mono bg-[#F472B6]/8 px-2 py-0.5 rounded border border-[#F472B6]/15">
                         {e.model.split('/').pop()}
                       </code>
                     </td>
-                    <td className="p-4 text-[#8b949e] text-[13px]">{e.provider} <span className="text-[#98A2B3]">({e.mode})</span></td>
-                    <td className="p-4 text-[#e6edf3] text-[13px] font-medium group-hover:text-white truncate max-w-[200px]" title={e.output_file}>
+                    <td className="p-4 text-[color:var(--text-muted)] text-[13px]">{e.provider} <span className="text-[color:var(--text-muted)]">({e.mode})</span></td>
+                    <td className="p-4 text-[color:var(--text-primary)] text-[13px] font-medium group-hover:text-white truncate max-w-[200px]" title={e.output_file}>
                       {e.output_file.split('/').pop()}
                     </td>
-                    <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">{e.token_usage.total_tokens.toLocaleString()}</td>
-                    <td className="p-4 text-right text-[#8b949e] tabular-nums text-[13px]">{formatBytes(e.size_bytes)}</td>
-                    <td className="p-4 text-right text-[#98A2B3] tabular-nums text-[13px]">{e.elapsed_seconds.toFixed(1)}s</td>
-                    <td className="p-4 text-right tabular-nums text-[13px] text-[#00FFA7]">
+                    <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">{e.token_usage.total_tokens.toLocaleString()}</td>
+                    <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">{formatBytes(e.size_bytes)}</td>
+                    <td className="p-4 text-right text-[color:var(--text-muted)] tabular-nums text-[13px]">{e.elapsed_seconds.toFixed(1)}s</td>
+                    <td className="p-4 text-right tabular-nums text-[13px] text-[color:var(--evo-green)]">
                       {e.estimated_cost_usd !== undefined ? `$${e.estimated_cost_usd.toFixed(4)}` : '—'}
                     </td>
-                    <td className="p-4 text-right text-[#98A2B3] text-[13px] whitespace-nowrap">{relativeTime(e.timestamp)}</td>
+                    <td className="p-4 text-right text-[color:var(--text-muted)] text-[13px] whitespace-nowrap">{relativeTime(e.timestamp)}</td>
                   </tr>
                 ))}
               </tbody>

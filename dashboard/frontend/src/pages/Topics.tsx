@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
@@ -39,11 +40,11 @@ interface TicketItem {
 
 const STATUS_STYLES: Record<TicketStatus, string> = {
   open: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  in_progress: 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/20',
+  in_progress: 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border-[color:var(--evo-green)]/20',
   blocked: 'bg-red-500/10 text-red-400 border-red-500/20',
   review: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   resolved: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  closed: 'bg-[#21262d] text-[#98A2B3] border-[#21262d]',
+  closed: 'bg-[color:var(--border)] text-[color:var(--text-muted)] border-[color:var(--border)]',
   archived: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
 }
 
@@ -61,7 +62,7 @@ const PRIORITY_STYLES: Record<TicketPriority, string> = {
   urgent: 'bg-red-500/10 text-red-400 border-red-500/20',
   high: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   medium: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  low: 'bg-[#21262d] text-[#98A2B3] border-[#344054]',
+  low: 'bg-[color:var(--border)] text-[color:var(--text-muted)] border-[color:var(--border)]',
 }
 
 const PRIORITY_ICON: Record<TicketPriority, React.ReactNode> = {
@@ -118,17 +119,17 @@ interface TicketRowProps {
 function TicketRow({ ticket, selected, onSelect, onClick }: TicketRowProps) {
   return (
     <div
-      className={`grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-3 items-center border-b border-[#21262d]/50 last:border-0 hover:bg-white/5 transition-colors cursor-pointer ${
-        selected ? 'bg-[#00FFA7]/[0.03]' : ''
+      className={`grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-3 items-center border-b border-[color:var(--border)]/50 last:border-0 hover:bg-white/5 transition-colors cursor-pointer ${
+        selected ? 'bg-[color:var(--evo-green)]/[0.03]' : ''
       }`}
       onClick={onClick}
     >
       <button
         onClick={e => { e.stopPropagation(); onSelect() }}
-        className="text-[#98A2B3] hover:text-[#00FFA7]"
+        className="text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)]"
       >
         {selected
-          ? <CheckSquare size={14} className="text-[#00FFA7]" />
+          ? <CheckSquare size={14} className="text-[color:var(--evo-green)]" />
           : <Square size={14} />}
       </button>
 
@@ -137,9 +138,9 @@ function TicketRow({ ticket, selected, onSelect, onClick }: TicketRowProps) {
           {ticket.is_thread && (
             ticket.assignee_agent
               ? <AgentIcon agent={ticket.assignee_agent} size={18} />
-              : <MessageSquare size={12} className="text-[#00FFA7] shrink-0" aria-label="Thread" />
+              : <MessageSquare size={12} className="text-[color:var(--evo-green)] shrink-0" aria-label="Thread" />
           )}
-          <span className="text-sm font-medium text-[#e6edf3] truncate">{ticket.title}</span>
+          <span className="text-sm font-medium text-[color:var(--text-primary)] truncate">{ticket.title}</span>
           {ticket.locked_at && (
             <span aria-label={`Locked by ${ticket.locked_by}`}>
               <Lock size={12} className="text-orange-400 shrink-0" />
@@ -147,18 +148,18 @@ function TicketRow({ ticket, selected, onSelect, onClick }: TicketRowProps) {
           )}
         </div>
         {ticket.description && (
-          <p className="text-xs text-[#98A2B3] truncate mt-0.5">{ticket.description}</p>
+          <p className="text-xs text-[color:var(--text-muted)] truncate mt-0.5">{ticket.description}</p>
         )}
       </div>
 
       <StatusBadge status={ticket.status} />
       <PriorityBadge priority={ticket.priority} />
 
-      <span className="text-xs text-[#98A2B3] max-w-[100px] truncate font-mono">
+      <span className="text-xs text-[color:var(--text-muted)] max-w-[100px] truncate font-mono">
         {ticket.assignee_agent ? `@${ticket.assignee_agent}` : '—'}
       </span>
 
-      <span className="text-xs text-[#98A2B3] whitespace-nowrap">
+      <span className="text-xs text-[color:var(--text-muted)] whitespace-nowrap">
         {formatDate(ticket.updated_at)}
       </span>
     </div>
@@ -219,21 +220,21 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
+      <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
           <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-            <Ticket size={16} className="text-[#00FFA7]" /> New Task
+            <Ticket size={16} className="text-[color:var(--evo-green)]" /> New Task
           </h2>
-          <button onClick={onClose} className="text-[#98A2B3] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[color:var(--text-muted)] hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-3">
           <div>
-            <label className="block text-xs text-[#98A2B3] mb-1">Title *</label>
+            <label className="block text-xs text-[color:var(--text-muted)] mb-1">Title *</label>
             <input
-              className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+              className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
               placeholder="Describe the issue or topic..."
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
@@ -243,9 +244,9 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           </div>
 
           <div>
-            <label className="block text-xs text-[#98A2B3] mb-1">Description</label>
+            <label className="block text-xs text-[color:var(--text-muted)] mb-1">Description</label>
             <textarea
-              className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 resize-none transition-colors"
+              className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 resize-none transition-colors"
               placeholder="Optional details..."
               rows={3}
               value={form.description}
@@ -255,9 +256,9 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-[#98A2B3] mb-1">Priority</label>
+              <label className="block text-xs text-[color:var(--text-muted)] mb-1">Priority</label>
               <select
-                className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+                className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
                 value={form.priority}
                 onChange={e => setForm(f => ({ ...f, priority: e.target.value as TicketPriority }))}
               >
@@ -266,9 +267,9 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
             </div>
 
             <div className="relative">
-              <label className="block text-xs text-[#98A2B3] mb-1">Assign to agent</label>
+              <label className="block text-xs text-[color:var(--text-muted)] mb-1">Assign to agent</label>
               <input
-                className="w-full bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+                className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
                 placeholder="Search agent..."
                 value={form.assignee_agent || agentSearch}
                 onChange={e => {
@@ -280,7 +281,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
                 onBlur={() => setTimeout(() => setAgentOpen(false), 150)}
               />
               {agentOpen && filteredAgents.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full max-h-72 overflow-y-auto bg-[#161b22] border border-[#21262d] rounded-lg shadow-xl">
+                <div className="absolute z-10 mt-1 w-full max-h-72 overflow-y-auto bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg shadow-xl">
                   {filteredAgents.map(slug => (
                     <button
                       type="button"
@@ -291,7 +292,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
                         setAgentSearch('')
                         setAgentOpen(false)
                       }}
-                      className="w-full text-left px-3 py-1.5 text-sm font-mono text-[#e6edf3] hover:bg-white/5 transition-colors"
+                      className="w-full text-left px-3 py-1.5 text-sm font-mono text-[color:var(--text-primary)] hover:bg-white/5 transition-colors"
                     >
                       @{slug}
                     </button>
@@ -306,13 +307,13 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           )}
 
           <div className="flex items-center justify-end gap-2 pt-1">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[#98A2B3] hover:text-white rounded-lg hover:bg-white/5 transition-colors">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[color:var(--text-muted)] hover:text-white rounded-lg hover:bg-white/5 transition-colors">
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving || !form.title.trim()}
-              className="px-4 py-2 text-sm font-semibold bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-semibold bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? 'Creating...' : 'Create'}
             </button>
@@ -471,23 +472,23 @@ export default function Topics() {
   const issueRows = tickets.filter(t => !t.is_thread)
 
   return (
-    <div className="min-h-screen bg-[#0C111D]">
+    <div className="min-h-screen bg-[color:var(--bg-primary)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="omn-responsive-toolbar flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-            <Ticket size={20} className="text-[#00FFA7]" />
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+            <Ticket size={20} className="text-[color:var(--evo-green)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e6edf3]">{t('issues.title')}</h1>
-            <p className="text-sm text-[#98A2B3]">{total} ticket{total !== 1 ? 's' : ''} · work queue</p>
+            <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('issues.title')}</h1>
+            <p className="text-sm text-[color:var(--text-muted)]">{total} ticket{total !== 1 ? 's' : ''} · work queue</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs text-[#98A2B3] hover:text-white border border-[#21262d] bg-[#161b22] rounded-lg hover:border-[#344054] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs text-[color:var(--text-muted)] hover:text-white border border-[color:var(--border)] bg-[color:var(--bg-card)] rounded-lg hover:border-[color:var(--border)] transition-colors"
           >
             <Download size={13} /> Export CSV
           </button>
@@ -495,25 +496,25 @@ export default function Topics() {
             onClick={() => setShowFilters(f => !f)}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs border rounded-lg transition-colors ${
               hasFilters
-                ? 'text-[#00FFA7] border-[#00FFA7]/30 bg-[#00FFA7]/5'
-                : 'text-[#98A2B3] hover:text-white border-[#21262d] bg-[#161b22] hover:border-[#344054]'
+                ? 'text-[color:var(--evo-green)] border-[color:var(--evo-green)]/30 bg-[color:var(--evo-green)]/5'
+                : 'text-[color:var(--text-muted)] hover:text-white border-[color:var(--border)] bg-[color:var(--bg-card)] hover:border-[color:var(--border)]'
             }`}
           >
             <Filter size={13} />
             Filters
-            {hasFilters && <span className="bg-[#00FFA7]/20 text-[#00FFA7] text-[10px] px-1.5 rounded-full">
+            {hasFilters && <span className="bg-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] text-[10px] px-1.5 rounded-full">
               {[selectedStatuses.length, selectedPriorities.length, selectedAssignee ? 1 : 0, q ? 1 : 0].reduce((a, b) => a + b, 0)}
             </span>}
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#00FFA7] text-black rounded-lg hover:bg-[#00FFA7]/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[color:var(--evo-green)] text-black rounded-lg hover:bg-[color:var(--evo-green)]/90 transition-colors"
           >
             <Plus size={13} /> New Task
           </button>
           <button
             onClick={fetchTickets}
-            className="flex items-center gap-2 px-3 py-2 text-xs border border-[#21262d] bg-[#161b22] text-[#98A2B3] hover:text-[#00FFA7] hover:border-[#00FFA7]/30 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs border border-[color:var(--border)] bg-[color:var(--bg-card)] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:border-[color:var(--evo-green)]/30 rounded-lg transition-colors"
             title="Refresh"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -525,15 +526,15 @@ export default function Topics() {
       {/* Search bar */}
       <div className="mb-4">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
           <input
-            className="w-full bg-[#161b22] border border-[#21262d] rounded-lg pl-9 pr-4 py-2 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+            className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg pl-9 pr-4 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
             placeholder="Search tickets by title, description or comments..."
             value={q}
             onChange={e => { setQ(e.target.value); setOffset(0) }}
           />
           {q && (
-            <button onClick={() => { setQ(''); setOffset(0) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-white">
+            <button onClick={() => { setQ(''); setOffset(0) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)] hover:text-white">
               <X size={14} />
             </button>
           )}
@@ -542,16 +543,16 @@ export default function Topics() {
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="mb-4 p-4 bg-[#161b22] border border-[#21262d] rounded-xl space-y-3">
+        <div className="mb-4 p-4 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl space-y-3">
           <div>
-            <p className="text-xs font-medium text-[#e6edf3] mb-2">Status</p>
+            <p className="text-xs font-medium text-[color:var(--text-primary)] mb-2">Status</p>
             <div className="flex flex-wrap gap-2">
               {ALL_STATUSES.map(s => (
                 <button
                   key={s}
                   onClick={() => toggleStatus(s)}
                   className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full border transition-colors ${
-                    selectedStatuses.includes(s) ? STATUS_STYLES[s] : 'text-[#98A2B3] border-[#21262d] hover:border-[#344054]'
+                    selectedStatuses.includes(s) ? STATUS_STYLES[s] : 'text-[color:var(--text-muted)] border-[color:var(--border)] hover:border-[color:var(--border)]'
                   }`}
                 >
                   {STATUS_ICON[s]}
@@ -562,14 +563,14 @@ export default function Topics() {
           </div>
 
           <div>
-            <p className="text-xs font-medium text-[#e6edf3] mb-2">Priority</p>
+            <p className="text-xs font-medium text-[color:var(--text-primary)] mb-2">Priority</p>
             <div className="flex flex-wrap gap-2">
               {ALL_PRIORITIES.map(p => (
                 <button
                   key={p}
                   onClick={() => togglePriority(p)}
                   className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full border transition-colors ${
-                    selectedPriorities.includes(p) ? PRIORITY_STYLES[p] : 'text-[#98A2B3] border-[#21262d] hover:border-[#344054]'
+                    selectedPriorities.includes(p) ? PRIORITY_STYLES[p] : 'text-[color:var(--text-muted)] border-[color:var(--border)] hover:border-[color:var(--border)]'
                   }`}
                 >
                   {PRIORITY_ICON[p]}
@@ -580,9 +581,9 @@ export default function Topics() {
           </div>
 
           <div>
-            <p className="text-xs font-medium text-[#e6edf3] mb-2">Assignee</p>
+            <p className="text-xs font-medium text-[color:var(--text-primary)] mb-2">Assignee</p>
             <input
-              className="bg-[#0C111D] border border-[#21262d] rounded-lg px-3 py-1.5 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-colors"
+              className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-1.5 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-colors"
               placeholder="Agent slug (e.g. zara-cs)"
               value={selectedAssignee}
               onChange={e => { setSelectedAssignee(e.target.value); setOffset(0) }}
@@ -590,7 +591,7 @@ export default function Topics() {
           </div>
 
           {hasFilters && (
-            <button onClick={clearFilters} className="text-xs text-[#98A2B3] hover:text-red-400 transition-colors">
+            <button onClick={clearFilters} className="text-xs text-[color:var(--text-muted)] hover:text-red-400 transition-colors">
               Clear all filters
             </button>
           )}
@@ -599,11 +600,11 @@ export default function Topics() {
 
       {/* Bulk actions bar */}
       {selected.size > 0 && (
-        <div className="mb-4 flex items-center gap-3 px-4 py-2.5 bg-[#00FFA7]/5 border border-[#00FFA7]/20 rounded-xl">
-          <span className="text-xs text-[#00FFA7] font-medium">{selected.size} selected</span>
+        <div className="mb-4 flex items-center gap-3 px-4 py-2.5 bg-[color:var(--evo-green)]/5 border border-[color:var(--evo-green)]/20 rounded-xl">
+          <span className="text-xs text-[color:var(--evo-green)] font-medium">{selected.size} selected</span>
           <button
             onClick={handleBulkClose}
-            className="text-xs text-[#e6edf3] bg-[#161b22] border border-[#21262d] hover:border-[#344054] px-3 py-1.5 rounded-lg transition-colors"
+            className="text-xs text-[color:var(--text-primary)] bg-[color:var(--bg-card)] border border-[color:var(--border)] hover:border-[color:var(--border)] px-3 py-1.5 rounded-lg transition-colors"
           >
             Close selected
           </button>
@@ -615,7 +616,7 @@ export default function Topics() {
           </button>
           <button
             onClick={() => setSelected(new Set())}
-            className="ml-auto text-xs text-[#98A2B3] hover:text-white"
+            className="ml-auto text-xs text-[color:var(--text-muted)] hover:text-white"
           >
             <X size={14} />
           </button>
@@ -630,12 +631,12 @@ export default function Topics() {
       )}
 
       {/* Table */}
-      <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
+      <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-[#21262d] text-[11px] font-medium uppercase tracking-wider text-[#98A2B3]">
+        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-[color:var(--border)] text-[11px] font-medium uppercase tracking-wider text-[color:var(--text-muted)]">
           <button onClick={toggleSelectAll} className="flex items-center">
             {selected.size === tickets.length && tickets.length > 0
-              ? <CheckSquare size={14} className="text-[#00FFA7]" />
+              ? <CheckSquare size={14} className="text-[color:var(--evo-green)]" />
               : <Square size={14} />}
           </button>
           <span>Title</span>
@@ -646,28 +647,28 @@ export default function Topics() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-[#98A2B3] text-sm">
+          <div className="flex items-center justify-center py-16 text-[color:var(--text-muted)] text-sm">
             <RefreshCw size={16} className="animate-spin mr-2" /> Loading...
           </div>
         ) : tickets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-[#98A2B3]">
+          <div className="flex flex-col items-center justify-center py-16 text-[color:var(--text-muted)]">
             <Ticket size={32} className="mb-3 opacity-30" />
             <p className="text-sm font-medium">No tickets found</p>
             {hasFilters
-              ? <p className="text-xs mt-1 text-[#98A2B3]">Try clearing the filters</p>
-              : <button onClick={() => setShowCreate(true)} className="mt-3 text-xs text-[#00FFA7] hover:underline">Create your first ticket</button>
+              ? <p className="text-xs mt-1 text-[color:var(--text-muted)]">Try clearing the filters</p>
+              : <button onClick={() => setShowCreate(true)} className="mt-3 text-xs text-[color:var(--evo-green)] hover:underline">Create your first ticket</button>
             }
           </div>
         ) : (
           <>
             {threadRows.length > 0 && (
               <>
-                <div className="px-4 py-2 bg-[#0C111D]/60 border-b border-[#21262d]/50 flex items-center gap-2">
-                  <MessageSquare size={12} className="text-[#00FFA7]" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3]">
+                <div className="px-4 py-2 bg-[color:var(--bg-primary)]/60 border-b border-[color:var(--border)]/50 flex items-center gap-2">
+                  <MessageSquare size={12} className="text-[color:var(--evo-green)]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">
                     Threads
                     {counts !== null && (
-                      <span className="ml-1.5 text-[#00FFA7]/70">({counts.threads})</span>
+                      <span className="ml-1.5 text-[color:var(--evo-green)]/70">({counts.threads})</span>
                     )}
                   </span>
                 </div>
@@ -684,12 +685,12 @@ export default function Topics() {
             )}
             {issueRows.length > 0 && (
               <>
-                <div className="px-4 py-2 bg-[#0C111D]/60 border-b border-[#21262d]/50 flex items-center gap-2">
-                  <Ticket size={12} className="text-[#98A2B3]" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3]">
+                <div className="px-4 py-2 bg-[color:var(--bg-primary)]/60 border-b border-[color:var(--border)]/50 flex items-center gap-2">
+                  <Ticket size={12} className="text-[color:var(--text-muted)]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">
                     Issues
                     {counts !== null && (
-                      <span className="ml-1.5 text-[#98A2B3]/70">({counts.issues})</span>
+                      <span className="ml-1.5 text-[color:var(--text-muted)]/70">({counts.issues})</span>
                     )}
                   </span>
                 </div>
@@ -710,20 +711,20 @@ export default function Topics() {
 
       {/* Pagination */}
       {total > PAGE_SIZE && (
-        <div className="flex items-center justify-between mt-4 text-xs text-[#98A2B3]">
+        <div className="flex items-center justify-between mt-4 text-xs text-[color:var(--text-muted)]">
           <span>Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} of {total}</span>
           <div className="flex items-center gap-2">
             <button
               disabled={offset === 0}
               onClick={() => setOffset(o => Math.max(0, o - PAGE_SIZE))}
-              className="px-3 py-1.5 border border-[#21262d] bg-[#161b22] rounded-lg hover:border-[#344054] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1.5 border border-[color:var(--border)] bg-[color:var(--bg-card)] rounded-lg hover:border-[color:var(--border)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
             <button
               disabled={offset + PAGE_SIZE >= total}
               onClick={() => setOffset(o => o + PAGE_SIZE)}
-              className="px-3 py-1.5 border border-[#21262d] bg-[#161b22] rounded-lg hover:border-[#344054] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1.5 border border-[color:var(--border)] bg-[color:var(--bg-card)] rounded-lg hover:border-[color:var(--border)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>

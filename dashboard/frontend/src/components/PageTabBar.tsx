@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useRef } from 'react'
 
 // Barra de abas padrão do dashboard (ui-ux-pro-max: consistent interaction
@@ -50,7 +51,7 @@ export default function PageTabBar<K extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={`flex gap-1 border-b border-[#21262d] overflow-x-auto ${extraClass}`}
+      className={`flex gap-1 border-b border-[color:var(--border)] overflow-x-auto ${extraClass}`}
     >
       {tabs.map((tab, i) => (
         <button
@@ -65,12 +66,12 @@ export default function PageTabBar<K extends string>({
           onClick={() => onSelect(tab.key)}
           onKeyDown={(e) => onKeyDown(e, i)}
           className={`px-4 font-medium whitespace-nowrap transition-colors border-b-2 -mb-px cursor-pointer
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/50 rounded-t-md
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/50 rounded-t-md
             ${slim ? 'py-1.5 text-[13px]' : 'py-2.5 text-sm'}
             ${
               active === tab.key
-                ? 'text-[#00FFA7] border-[#00FFA7]'
-                : 'text-[#98A2B3] border-transparent hover:text-[#e6edf3] hover:border-[#21262d]'
+                ? 'text-[color:var(--evo-green)] border-[color:var(--evo-green)]'
+                : 'text-[color:var(--text-muted)] border-transparent hover:text-[color:var(--text-primary)] hover:border-[color:var(--border)]'
             }`}
         >
           {tab.label}

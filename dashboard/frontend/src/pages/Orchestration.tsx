@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useEffect, useCallback } from 'react'
 import {
   RefreshCw, XCircle, CheckCircle2, AlertTriangle, Clock, Play, Pause,
@@ -106,7 +107,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function StageBadge({ stage }: { stage: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#98A2B3] bg-white/5">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[color:var(--text-muted)] bg-white/5">
       {STAGE_LABELS[stage] || stage}
     </span>
   )
@@ -116,7 +117,7 @@ function AgentBadge({ agent }: { agent: string }) {
   const a = AGENT_LABELS[agent] || { label: agent, icon: Zap }
   const Icon = a.icon
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#D0D5DD] bg-white/5">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[color:var(--text-secondary)] bg-white/5">
       <Icon size={10} />
       {a.label}
     </span>
@@ -124,11 +125,11 @@ function AgentBadge({ agent }: { agent: string }) {
 }
 
 function RelativeTime({ dateStr }: { dateStr: string | null }) {
-  if (!dateStr) return <span className="text-[#98A2B3] text-xs">—</span>
+  if (!dateStr) return <span className="text-[color:var(--text-muted)] text-xs">—</span>
   try {
-    return <span className="text-[#98A2B3] text-xs" title={dateStr}>{tempoRelativo(dateStr)}</span>
+    return <span className="text-[color:var(--text-muted)] text-xs" title={dateStr}>{tempoRelativo(dateStr)}</span>
   } catch {
-    return <span className="text-[#98A2B3] text-xs">{dateStr}</span>
+    return <span className="text-[color:var(--text-muted)] text-xs">{dateStr}</span>
   }
 }
 
@@ -212,7 +213,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
   if (loading && jobs.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#00FFA7]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[color:var(--evo-green)]" />
       </div>
     )
   }
@@ -222,7 +223,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
       <div className="p-6 text-center text-red-400">
         <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
         <p>{error}</p>
-        <button onClick={fetchJobs} className="mt-4 px-4 py-2 bg-[#00FFA7]/10 text-[#00FFA7] rounded hover:bg-[#00FFA7]/20">
+        <button onClick={fetchJobs} className="mt-4 px-4 py-2 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] rounded hover:bg-[color:var(--evo-green)]/20">
           Tentar novamente
         </button>
       </div>
@@ -234,7 +235,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
       {/* Header — versão compacta quando embutido no cockpit */}
       {embedded ? (
         <div className="flex items-center justify-end">
-          <button onClick={fetchJobs} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-medium text-[#D0D5DD] border border-[#344054]">
+          <button onClick={fetchJobs} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-medium text-[color:var(--text-secondary)] border border-[color:var(--border)]">
             <RefreshCw className="h-3.5 w-3.5" />
             Atualizar
           </button>
@@ -243,9 +244,9 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Orquestração</h1>
-            <p className="text-[#98A2B3] mt-1">Acompanhe jobs multi-agente disparados via Telegram/Chat</p>
+            <p className="text-[color:var(--text-muted)] mt-1">Acompanhe jobs multi-agente disparados via Telegram/Chat</p>
           </div>
-          <button onClick={fetchJobs} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-[#D0D5DD] border border-[#344054]">
+          <button onClick={fetchJobs} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-[color:var(--text-secondary)] border border-[color:var(--border)]">
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
@@ -253,21 +254,21 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 bg-[#131a2a] border border-[#344054] rounded-lg p-4">
+      <div className="flex flex-wrap gap-3 bg-[#131a2a] border border-[color:var(--border)] rounded-lg p-4">
         <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#98A2B3]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[color:var(--text-muted)]" />
           <input
             type="text"
             placeholder="Buscar por ID ou prompt..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#0C111D] border border-[#344054] rounded-lg text-white placeholder-[#667085] focus:outline-none focus:border-[#00FFA7] focus:ring-1 focus:ring-[#00FFA7]"
+            className="w-full pl-10 pr-4 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-white placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)] focus:ring-1 focus:ring-[color:var(--evo-green)]"
           />
         </div>
         <select
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          className="px-3 py-2 bg-[#0C111D] border border-[#344054] rounded-lg text-white text-sm focus:outline-none focus:border-[#00FFA7]"
+          className="px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-white text-sm focus:outline-none focus:border-[color:var(--evo-green)]"
         >
           <option value="all">Todos os status</option>
           <option value="pending">Aguardando</option>
@@ -279,7 +280,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
         <select
           value={filterAgent}
           onChange={e => setFilterAgent(e.target.value)}
-          className="px-3 py-2 bg-[#0C111D] border border-[#344054] rounded-lg text-white text-sm focus:outline-none focus:border-[#00FFA7]"
+          className="px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-white text-sm focus:outline-none focus:border-[color:var(--evo-green)]"
         >
           <option value="all">Todos os agentes</option>
           {agents.map(a => <option key={a} value={a}>{AGENT_LABELS[a]?.label || a}</option>)}
@@ -287,34 +288,34 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
       </div>
 
       {/* Jobs List */}
-      <div className="bg-[#131a2a] border border-[#344054] rounded-lg overflow-hidden">
+      <div className="bg-[#131a2a] border border-[color:var(--border)] rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#344054] bg-[#0C111D]/50">
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">ID</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Agente</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Prompt</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Etapa</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Status</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Iniciado</th>
-                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold">Concluído</th>
-                <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-[#98A2B3] font-semibold pr-4">Ações</th>
+              <tr className="border-b border-[color:var(--border)] bg-[color:var(--bg-primary)]/50">
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">ID</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">Agente</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">Prompt</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">Etapa</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">Status</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">Iniciado</th>
+                <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">Concluído</th>
+                <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold pr-4">Ações</th>
               </tr>
             </thead>
             <tbody>
               {filteredJobs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-[#98A2B3]">
+                  <td colSpan={8} className="px-4 py-12 text-center text-[color:var(--text-muted)]">
                     {jobs.length === 0 ? 'Nenhum job ainda. Use /ops no Telegram para criar um.' : 'Nenhum job corresponde aos filtros.'}
                   </td>
                 </tr>
               ) : (
                 filteredJobs.map(job => (
-                  <tr key={job.id} className="border-b border-[#344054]/50 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => handleToggleExpand(job.id)}>
+                  <tr key={job.id} className="border-b border-[color:var(--border)]/50 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => handleToggleExpand(job.id)}>
                     <td className="px-4 py-3 font-mono text-xs text-[#888]">{job.id.slice(0, 12)}…</td>
                     <td className="px-4 py-3"><AgentBadge agent={job.agent} /></td>
-                    <td className="px-4 py-3 max-w-[300px] truncate text-[#D0D5DD]" title={job.prompt}>{job.prompt}</td>
+                    <td className="px-4 py-3 max-w-[300px] truncate text-[color:var(--text-secondary)]" title={job.prompt}>{job.prompt}</td>
                     <td className="px-4 py-3"><StageBadge stage={job.stage} /></td>
                     <td className="px-4 py-3"><StatusBadge status={job.status} /></td>
                     <td className="px-4 py-3"><RelativeTime dateStr={job.started_at} /></td>
@@ -332,7 +333,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
                           </button>
                         )}
                         {(job.status === 'success' || job.status === 'failed') && (
-                          <button onClick={e => { e.stopPropagation(); handleToggleExpand(job.id) }} className="p-1.5 text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/10 rounded" title={expandedJob === job.id ? 'Recolher' : 'Expandir'}>
+                          <button onClick={e => { e.stopPropagation(); handleToggleExpand(job.id) }} className="p-1.5 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/10 rounded" title={expandedJob === job.id ? 'Recolher' : 'Expandir'}>
                             {expandedJob === job.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </button>
                         )}
@@ -347,14 +348,14 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
 
         {/* Expanded Logs */}
         {expandedJob && logs[expandedJob] && (
-          <div className="border-t border-[#344054] bg-[#0C111D]/50 p-4">
+          <div className="border-t border-[color:var(--border)] bg-[color:var(--bg-primary)]/50 p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-[#D0D5DD] font-mono">Logs — {expandedJob.slice(0, 12)}…</span>
-              <button onClick={() => setExpandedJob(null)} className="p-1 text-[#98A2B3] hover:text-[#D0D5DD]">
+              <span className="text-sm font-medium text-[color:var(--text-secondary)] font-mono">Logs — {expandedJob.slice(0, 12)}…</span>
+              <button onClick={() => setExpandedJob(null)} className="p-1 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)]">
                 <XCircle className="h-4 w-4" />
               </button>
             </div>
-            <pre className="bg-[#080c14] border border-[#344054] rounded p-3 max-h-96 overflow-auto text-xs text-[#888] font-mono whitespace-pre-wrap">
+            <pre className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded p-3 max-h-96 overflow-auto text-xs text-[#888] font-mono whitespace-pre-wrap">
               {logs[expandedJob] || 'Sem logs disponíveis'}
             </pre>
           </div>
@@ -363,7 +364,7 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatCard label="Total" value={jobs.length} icon={FileText} color="text-[#98A2B3]" />
+        <StatCard label="Total" value={jobs.length} icon={FileText} color="text-[color:var(--text-muted)]" />
         <StatCard label="Executando" value={jobs.filter(j => j.status === 'running').length} icon={Play} color="text-blue-400" />
         <StatCard label="Sucesso" value={jobs.filter(j => j.status === 'success').length} icon={CheckCircle2} color="text-green-400" />
         <StatCard label="Falha" value={jobs.filter(j => j.status === 'failed').length} icon={AlertTriangle} color="text-red-400" />
@@ -375,10 +376,10 @@ export default function OrchestrationPage({ embedded = false }: { embedded?: boo
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: React.ComponentType<{ size?: number }>; color: string }) {
   return (
-    <div className="bg-[#131a2a] border border-[#344054] rounded-lg p-4">
+    <div className="bg-[#131a2a] border border-[color:var(--border)] rounded-lg p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-[#98A2B3]">{label}</p>
+          <p className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)]">{label}</p>
           <p className="text-2xl font-bold text-white mt-1">{value}</p>
         </div>
         <div className={`${color} bg-current/10 p-3 rounded-lg`}>

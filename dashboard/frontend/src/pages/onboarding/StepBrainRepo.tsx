@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { GitBranch, History, RefreshCw, Shield } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import OnboardingHeader from './OnboardingHeader'
@@ -16,19 +17,19 @@ export default function StepBrainRepo({ onYes, onNo, onBack }: StepBrainRepoProp
     { icon: Shield, label: t('onboarding.brainRepo.benefits.privacyLabel'), desc: t('onboarding.brainRepo.benefits.privacyDesc') },
   ]
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 font-[Inter,-apple-system,sans-serif]">
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center px-4 font-[family-name:var(--sb-font-body)]">
       <div className="w-full max-w-[480px] relative z-10">
         <OnboardingHeader step="step2of3" filled={2} />
 
-        <div className="rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
-          <div className="px-7 pt-7 pb-5 border-b border-[#152030]">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
+          <div className="px-7 pt-7 pb-5 border-b border-[color:var(--border)]">
             <div className="flex items-center gap-3 mb-2">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#00FFA7]/10 border border-[#00FFA7]/20">
-                <GitBranch size={18} className="text-[#00FFA7]" />
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20">
+                <GitBranch size={18} className="text-[color:var(--evo-green)]" />
               </div>
               <h2 className="text-[16px] font-semibold text-[#e2e8f0]">{t('onboarding.brainRepo.title')}</h2>
             </div>
-            <p className="text-[11px] text-[#4a5a6e]">{t('onboarding.brainRepo.subtitle')}</p>
+            <p className="text-[11px] text-[color:var(--text-muted)]">{t('onboarding.brainRepo.subtitle')}</p>
           </div>
 
           <div className="px-7 py-6 space-y-5">
@@ -41,11 +42,11 @@ export default function StepBrainRepo({ onYes, onNo, onBack }: StepBrainRepoProp
             {/* Benefits list */}
             <div className="space-y-3">
               {benefits.map(({ icon: Icon, label, desc }) => (
-                <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a]">
-                  <Icon size={14} className="text-[#00FFA7] mt-0.5 flex-shrink-0" />
+                <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)]">
+                  <Icon size={14} className="text-[color:var(--evo-green)] mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-[12px] font-medium text-[#e2e8f0]">{label}</p>
-                    <p className="text-[11px] text-[#98A2B3]">{desc}</p>
+                    <p className="text-[11px] text-[color:var(--text-muted)]">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -54,19 +55,19 @@ export default function StepBrainRepo({ onYes, onNo, onBack }: StepBrainRepoProp
             <div className="flex gap-3 pt-2">
               <button
                 onClick={onBack}
-                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-none py-3 px-4 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('onboarding.back')}
               </button>
               <button
                 onClick={onNo}
-                className="flex-1 py-3 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-1 py-3 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('onboarding.brainRepo.notNow')}
               </button>
               <button
                 onClick={onYes}
-                className="flex-1 py-3 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors"
+                className="flex-1 py-3 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors"
               >
                 {t('onboarding.brainRepo.yesVersion')}
               </button>

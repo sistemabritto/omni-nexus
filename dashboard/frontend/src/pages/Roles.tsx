@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
@@ -193,19 +194,19 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
       <div className={`flex items-center justify-between ${embedded ? 'mb-4' : 'mb-6'}`}>
         {!embedded && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-              <Shield size={20} className="text-[#00FFA7]" />
+            <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+              <Shield size={20} className="text-[color:var(--evo-green)]" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#e6edf3]">{t('roles.title')}</h1>
-              <p className="text-sm text-[#98A2B3]">{roles.length} role{roles.length !== 1 ? 's' : ''} configured</p>
+              <h1 className="text-xl font-bold text-[color:var(--text-primary)]">{t('roles.title')}</h1>
+              <p className="text-sm text-[color:var(--text-muted)]">{roles.length} role{roles.length !== 1 ? 's' : ''} configured</p>
             </div>
           </div>
         )}
         {!isEditing && (
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0d1117] font-semibold text-sm hover:bg-[#00FFA7]/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors"
           >
             <Plus size={16} /> New Role
           </button>
@@ -218,22 +219,22 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
           {roles.map(role => {
             const permCount = countPermissions(role.permissions)
             return (
-              <div key={role.id} className="bg-[#161b22] rounded-xl border border-[#21262d] p-5 hover:border-[#00FFA7]/30 transition-all group">
+              <div key={role.id} className="bg-[color:var(--bg-card)] rounded-xl border border-[color:var(--border)] p-5 hover:border-[color:var(--evo-green)]/30 transition-all group">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-[#e6edf3]">{role.name}</h3>
+                    <h3 className="font-semibold text-[color:var(--text-primary)]">{role.name}</h3>
                     {role.is_builtin ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#21262d]/60 border-[#21262d] text-[#98A2B3]">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[color:var(--border)]/60 border-[color:var(--border)] text-[color:var(--text-muted)]">
                         <Lock size={8} /> built-in
                       </span>
                     ) : (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#00FFA7]/8 border-[#00FFA7]/20 text-[#00FFA7]">custom</span>
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[color:var(--evo-green)]/8 border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)]">custom</span>
                     )}
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => openEdit(role)}
-                      className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
+                      className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-white/5 transition-colors"
                       title="Edit permissions"
                     >
                       <Pencil size={14} />
@@ -241,7 +242,7 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                     {!role.is_builtin && (
                       <button
                         onClick={() => handleDelete(role)}
-                        className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         title="Delete"
                       >
                         <Trash2 size={14} />
@@ -249,23 +250,23 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-[#98A2B3] mb-3">{role.description || 'No description'}</p>
+                <p className="text-xs text-[color:var(--text-muted)] mb-3">{role.description || 'No description'}</p>
 
                 {/* Permission count badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-1">
                     {Object.entries(role.permissions).slice(0, 4).map(([resource, actions]) => (
-                      <span key={resource} className="text-[10px] px-2 py-0.5 rounded-full bg-[#00FFA7]/8 text-[#00FFA7] border border-[#00FFA7]/15">
+                      <span key={resource} className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--evo-green)]/8 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/15">
                         {resource} ({actions.length})
                       </span>
                     ))}
                     {Object.keys(role.permissions).length > 4 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#21262d] text-[#98A2B3]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--border)] text-[color:var(--text-muted)]">
                         +{Object.keys(role.permissions).length - 4}
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] font-medium text-[#98A2B3] bg-[#21262d] px-2 py-0.5 rounded-full shrink-0 ml-2">
+                  <span className="text-[11px] font-medium text-[color:var(--text-muted)] bg-[color:var(--border)] px-2 py-0.5 rounded-full shrink-0 ml-2">
                     {permCount} perm{permCount !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -277,12 +278,12 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
 
       {/* Permission Editor */}
       {isEditing && (
-        <div className="bg-[#161b22] rounded-xl border border-[#21262d] p-6">
+        <div className="bg-[color:var(--bg-card)] rounded-xl border border-[color:var(--border)] p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-[#e6edf3]">
+            <h2 className="text-lg font-bold text-[color:var(--text-primary)]">
               {creating ? 'Create New Role' : `Edit: ${editingRole?.name}`}
             </h2>
-            <button onClick={closeEditor} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors"><X size={18} /></button>
+            <button onClick={closeEditor} className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"><X size={18} /></button>
           </div>
 
           {error && (
@@ -294,23 +295,23 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
           {/* Role info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-[#e6edf3] mb-1">Name</label>
+              <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Name</label>
               <input
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 disabled={editingRole?.is_builtin}
-                className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] disabled:opacity-50 transition-colors"
+                className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] disabled:opacity-50 transition-colors"
                 placeholder="e.g. moderator"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#e6edf3] mb-1">Description</label>
+              <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Description</label>
               <input
                 type="text"
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                 placeholder="Brief description"
               />
             </div>
@@ -318,11 +319,11 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
 
           {/* Permissions matrix */}
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-[#e6edf3] mb-3">Permissions</h3>
-            <div className="overflow-x-auto rounded-lg border border-[#21262d]">
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)] mb-3">Permissions</h3>
+            <div className="overflow-x-auto rounded-lg border border-[color:var(--border)]">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]">
+                  <tr className="text-[color:var(--text-muted)] text-xs uppercase tracking-wider bg-[color:var(--bg-primary)]">
                     <th className="text-left py-2.5 pl-4 pr-4 font-medium">Resource</th>
                     {['view', 'execute', 'manage'].map(action => (
                       <th key={action} className="text-center py-2.5 px-3 font-medium">{action}</th>
@@ -335,8 +336,8 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                     const currentPerms = editPerms[resource] || []
                     const allChecked = availableActions.length === currentPerms.length
                     return (
-                      <tr key={resource} className="border-t border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
-                        <td className="py-2.5 pl-4 pr-4 text-[#e6edf3] font-medium capitalize">{resource}</td>
+                      <tr key={resource} className="border-t border-[color:var(--border)]/50 hover:bg-white/[0.02] transition-colors">
+                        <td className="py-2.5 pl-4 pr-4 text-[color:var(--text-primary)] font-medium capitalize">{resource}</td>
                         {['view', 'execute', 'manage'].map(action => {
                           const available = availableActions.includes(action)
                           const checked = currentPerms.includes(action)
@@ -347,14 +348,14 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                                   onClick={() => togglePerm(resource, action)}
                                   className={`w-6 h-6 rounded border-2 flex items-center justify-center mx-auto transition-colors ${
                                     checked
-                                      ? 'bg-[#00FFA7] border-[#00FFA7]'
-                                      : 'border-[#21262d] hover:border-[#667085]'
+                                      ? 'bg-[color:var(--evo-green)] border-[color:var(--evo-green)]'
+                                      : 'border-[color:var(--border)] hover:border-[#667085]'
                                   }`}
                                 >
-                                  {checked && <Check size={14} className="text-[#0d1117]" />}
+                                  {checked && <Check size={14} className="text-[color:var(--bg-primary)]" />}
                                 </button>
                               ) : (
-                                <span className="text-[#21262d]">-</span>
+                                <span className="text-[color:var(--border)]">-</span>
                               )}
                             </td>
                           )
@@ -364,11 +365,11 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                             onClick={() => toggleAllResource(resource)}
                             className={`w-6 h-6 rounded border-2 flex items-center justify-center mx-auto transition-colors ${
                               allChecked
-                                ? 'bg-[#00FFA7] border-[#00FFA7]'
-                                : 'border-[#21262d] hover:border-[#667085]'
+                                ? 'bg-[color:var(--evo-green)] border-[color:var(--evo-green)]'
+                                : 'border-[color:var(--border)] hover:border-[#667085]'
                             }`}
                           >
-                            {allChecked && <Check size={14} className="text-[#0d1117]" />}
+                            {allChecked && <Check size={14} className="text-[color:var(--bg-primary)]" />}
                           </button>
                         </td>
                       </tr>
@@ -381,7 +382,7 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
 
           {/* Agent Access section */}
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-[#e6edf3] mb-3">Acesso a Agentes</h3>
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)] mb-3">Acesso a Agentes</h3>
 
             {/* Mode selector */}
             <div className="flex flex-wrap gap-2 mb-4">
@@ -396,8 +397,8 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                   onClick={() => setEditAgentAccess({ mode: value })}
                   className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
                     editAgentAccess.mode === value
-                      ? 'bg-[#00FFA7]/10 border-[#00FFA7]/40 text-[#00FFA7]'
-                      : 'border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#30363d]'
+                      ? 'bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]/40 text-[color:var(--evo-green)]'
+                      : 'border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[#30363d]'
                   }`}
                 >
                   {label}
@@ -423,8 +424,8 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                       }}
                       className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
                         active
-                          ? 'bg-[#00FFA7]/10 border-[#00FFA7]/40 text-[#00FFA7]'
-                          : 'border-[#21262d] text-[#98A2B3] hover:border-[#30363d] hover:text-[#e6edf3]'
+                          ? 'bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]/40 text-[color:var(--evo-green)]'
+                          : 'border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[#30363d] hover:text-[color:var(--text-primary)]'
                       }`}
                     >
                       {layer === 'business' ? <Users size={16} /> : <Code2 size={16} />}
@@ -441,7 +442,7 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
 
             {/* Individual agent selector */}
             {editAgentAccess.mode === 'selected' && (
-              <div className="rounded-lg border border-[#21262d] overflow-hidden">
+              <div className="rounded-lg border border-[color:var(--border)] overflow-hidden">
                 {(['business', 'engineering'] as const).map((layer) => {
                   const layerAgents = Object.entries(agentLayers)
                     .filter(([, l]) => l === layer)
@@ -451,9 +452,9 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                   const selected = editAgentAccess.agents || []
                   const allSelected = layerAgents.every((a) => selected.includes(a))
                   return (
-                    <div key={layer} className="border-b border-[#21262d] last:border-b-0">
-                      <div className="flex items-center justify-between px-4 py-2 bg-[#0d1117]">
-                        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3]">
+                    <div key={layer} className="border-b border-[color:var(--border)] last:border-b-0">
+                      <div className="flex items-center justify-between px-4 py-2 bg-[color:var(--bg-primary)]">
+                        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">
                           {layer === 'business' ? <Users size={12} /> : <Code2 size={12} />}
                           {layer}
                         </div>
@@ -465,7 +466,7 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                               : [...new Set([...current, ...layerAgents])]
                             setEditAgentAccess({ mode: 'selected', agents: next })
                           }}
-                          className="text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
+                          className="text-[10px] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors"
                         >
                           {allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
                         </button>
@@ -489,16 +490,16 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                               }}
                               className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-colors ${
                                 isSelected
-                                  ? 'bg-[#00FFA7]/8 border-[#00FFA7]/20 text-[#e6edf3]'
-                                  : 'border-[#21262d] text-[#98A2B3] hover:border-[#30363d] hover:text-[#e6edf3]'
+                                  ? 'bg-[color:var(--evo-green)]/8 border-[color:var(--evo-green)]/20 text-[color:var(--text-primary)]'
+                                  : 'border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[#30363d] hover:text-[color:var(--text-primary)]'
                               }`}
                             >
                               <div
                                 className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                  isSelected ? 'bg-[#00FFA7] border-[#00FFA7]' : 'border-[#21262d]'
+                                  isSelected ? 'bg-[color:var(--evo-green)] border-[color:var(--evo-green)]' : 'border-[color:var(--border)]'
                                 }`}
                               >
-                                {isSelected && <Check size={10} className="text-[#0d1117]" />}
+                                {isSelected && <Check size={10} className="text-[color:var(--bg-primary)]" />}
                               </div>
                               <span className="text-[11px] truncate">{label}</span>
                             </button>
@@ -514,11 +515,11 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
 
           {/* Workspace Folders section */}
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-[#e6edf3] mb-1 flex items-center gap-2">
-              <FolderOpen size={14} className="text-[#00FFA7]" />
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)] mb-1 flex items-center gap-2">
+              <FolderOpen size={14} className="text-[color:var(--evo-green)]" />
               Pastas do Workspace
             </h3>
-            <p className="text-xs text-[#98A2B3] mb-3">Define quais pastas de primeiro nível do workspace este role pode acessar.</p>
+            <p className="text-xs text-[color:var(--text-muted)] mb-3">Define quais pastas de primeiro nível do workspace este role pode acessar.</p>
 
             {/* Mode selector */}
             <div className="flex flex-wrap gap-2 mb-4">
@@ -532,8 +533,8 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                   onClick={() => setEditWorkspaceFolders({ mode: value })}
                   className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
                     editWorkspaceFolders.mode === value
-                      ? 'bg-[#00FFA7]/10 border-[#00FFA7]/40 text-[#00FFA7]'
-                      : 'border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#30363d]'
+                      ? 'bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]/40 text-[color:var(--evo-green)]'
+                      : 'border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[#30363d]'
                   }`}
                 >
                   {label}
@@ -543,9 +544,9 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
 
             {/* Individual folder selector */}
             {editWorkspaceFolders.mode === 'selected' && (
-              <div className="rounded-lg border border-[#21262d] overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-[#0d1117]">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3]">
+              <div className="rounded-lg border border-[color:var(--border)] overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 bg-[color:var(--bg-primary)]">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">
                     <FolderOpen size={12} />
                     Pastas disponíveis
                   </div>
@@ -557,7 +558,7 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                         folders: allSelected ? [] : [...workspaceFolderList],
                       })
                     }}
-                    className="text-[10px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
+                    className="text-[10px] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors"
                   >
                     {workspaceFolderList.every(f => (editWorkspaceFolders.folders || []).includes(f))
                       ? 'Desmarcar todas'
@@ -583,16 +584,16 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
                         }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-colors ${
                           isSelected
-                            ? 'bg-[#00FFA7]/8 border-[#00FFA7]/20 text-[#e6edf3]'
-                            : 'border-[#21262d] text-[#98A2B3] hover:border-[#30363d] hover:text-[#e6edf3]'
+                            ? 'bg-[color:var(--evo-green)]/8 border-[color:var(--evo-green)]/20 text-[color:var(--text-primary)]'
+                            : 'border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[#30363d] hover:text-[color:var(--text-primary)]'
                         }`}
                       >
                         <div
                           className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                            isSelected ? 'bg-[#00FFA7] border-[#00FFA7]' : 'border-[#21262d]'
+                            isSelected ? 'bg-[color:var(--evo-green)] border-[color:var(--evo-green)]' : 'border-[color:var(--border)]'
                           }`}
                         >
-                          {isSelected && <Check size={10} className="text-[#0d1117]" />}
+                          {isSelected && <Check size={10} className="text-[color:var(--bg-primary)]" />}
                         </div>
                         <span className="text-[11px] truncate">{label}</span>
                       </button>
@@ -607,14 +608,14 @@ export default function Roles({ embedded = false }: { embedded?: boolean }) {
           <div className="flex justify-end gap-3">
             <button
               onClick={closeEditor}
-              className="px-4 py-2 rounded-lg text-[#98A2B3] text-sm hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
+              className="px-4 py-2 rounded-lg text-[color:var(--text-muted)] text-sm hover:text-[color:var(--text-primary)] hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0d1117] font-semibold text-sm hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
             >
               {saving ? 'Saving...' : creating ? 'Create Role' : 'Save Changes'}
             </button>

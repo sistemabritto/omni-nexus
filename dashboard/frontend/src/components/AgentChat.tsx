@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Markdown from './Markdown'
 import { AgentAvatar } from './AgentAvatar'
@@ -1077,29 +1078,29 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
       </button>
       {showTicketPicker && (
         <div
-          className="absolute mt-1.5 left-0 w-72 rounded-lg border bg-[#161b22] shadow-xl z-50 max-h-80 overflow-y-auto"
+          className="absolute mt-1.5 left-0 w-72 rounded-lg border bg-[color:var(--bg-card)] shadow-xl z-50 max-h-80 overflow-y-auto"
           style={{ borderColor: '#21262d' }}
         >
-          <div className="px-3 py-2 border-b border-[#21262d] text-[10px] text-[#98A2B3] uppercase tracking-wider">
+          <div className="px-3 py-2 border-b border-[color:var(--border)] text-[10px] text-[color:var(--text-muted)] uppercase tracking-wider">
             Attach to ticket
           </div>
           {ticketId && (
             <button
               onClick={() => bindTicket(null)}
-              className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-white/5 border-b border-[#21262d] flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-white/5 border-b border-[color:var(--border)] flex items-center gap-2"
             >
               <X size={12} /> Detach current ticket
             </button>
           )}
           <button
             onClick={() => { setShowTicketPicker(false); setShowCreateTicketModal(true) }}
-            className="w-full text-left px-3 py-2 text-xs text-[#e6edf3] hover:bg-white/5 border-b border-[#21262d] flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-xs text-[color:var(--text-primary)] hover:bg-white/5 border-b border-[color:var(--border)] flex items-center gap-2"
             style={{ color: accentColor }}
           >
             <Plus size={12} /> Create new task
           </button>
           {tickets.length === 0 ? (
-            <div className="px-3 py-3 text-[11px] text-[#98A2B3] italic">
+            <div className="px-3 py-3 text-[11px] text-[color:var(--text-muted)] italic">
               No open tasks for @{agent}
             </div>
           ) : (
@@ -1115,7 +1116,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                 >
                   #{t.id.slice(0, 6)}
                 </span>
-                <span className="text-[#e6edf3] truncate flex-1">{t.title}</span>
+                <span className="text-[color:var(--text-primary)] truncate flex-1">{t.title}</span>
                 {t.id === ticketId && <CheckCircle2 size={11} style={{ color: accentColor }} />}
               </button>
             ))
@@ -1144,7 +1145,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
 
   return (
     <div
-      className="flex flex-col h-full bg-[#0C111D] relative"
+      className="flex flex-col h-full bg-[color:var(--bg-primary)] relative"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -1182,7 +1183,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
           — see TerminalHudPanel.tsx) — only appears once the backend has
           sent at least one hud_update, same as the Terminal. */}
       {hud && (
-        <div className="flex-shrink-0 flex flex-wrap items-center gap-2 px-4 py-1.5 border-b border-[#21262d] bg-[#0d1117]">
+        <div className="flex-shrink-0 flex flex-wrap items-center gap-2 px-4 py-1.5 border-b border-[color:var(--border)] bg-[color:var(--bg-primary)]">
           <TerminalHudPanel hud={hud} accentColor={accentColor} />
           {ticketPillBlock}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -1202,10 +1203,10 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
             >
               <TermIcon size={24} style={{ color: accentColor }} />
             </div>
-            <p className="text-[#e6edf3] font-medium text-sm mb-1">
+            <p className="text-[color:var(--text-primary)] font-medium text-sm mb-1">
               Chat with @{agent}
             </p>
-            <p className="text-[#98A2B3] text-xs max-w-[300px]">
+            <p className="text-[color:var(--text-muted)] text-xs max-w-[300px]">
               Type a message below to start a conversation. The agent has access to your workspace tools.
             </p>
           </div>
@@ -1215,7 +1216,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
           <div key={i}>
             {msg.role === 'user' && editingUuid && msg.uuid === editingUuid && (
               <div className="flex justify-end">
-                <div className="w-full max-w-[85%] rounded-2xl border bg-[#1a2744] px-3 py-2" style={{ borderColor: accentColor + '60' }}>
+                <div className="w-full max-w-[85%] rounded-2xl border bg-[color:var(--surface-active)] px-3 py-2" style={{ borderColor: accentColor + '60' }}>
                   <textarea
                     value={editingText}
                     onChange={(e) => setEditingText(e.target.value)}
@@ -1230,12 +1231,12 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                     }}
                     autoFocus
                     rows={Math.min(10, Math.max(2, editingText.split('\n').length))}
-                    className="w-full bg-transparent text-sm text-[#e6edf3] placeholder:text-[#98A2B3] focus:outline-none resize-none"
+                    className="w-full bg-transparent text-sm text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none resize-none"
                   />
-                  <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-[#21262d]">
+                  <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-[color:var(--border)]">
                     <button
                       onClick={cancelEdit}
-                      className="px-3 py-1 rounded-md text-xs text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
+                      className="px-3 py-1 rounded-md text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)] transition-colors"
                     >
                       Cancel
                     </button>
@@ -1262,15 +1263,15 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                 <div className="flex items-center gap-0.5 opacity-0 group-hover/usermsg:opacity-100 transition-opacity mr-1">
                   <button
                     onClick={() => copyMessage(msg, i)}
-                    className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-md text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d]"
+                    className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-md text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)]"
                     title={copiedIndex === i ? 'Copied' : 'Copy message'}
                   >
-                    {copiedIndex === i ? <Check size={12} className="text-[#00FFA7]" /> : <Copy size={12} />}
+                    {copiedIndex === i ? <Check size={12} className="text-[color:var(--evo-green)]" /> : <Copy size={12} />}
                   </button>
                   {msg.uuid && status !== 'running' && !editingUuid && (
                     <button
                       onClick={() => startEdit(msg)}
-                      className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-md text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d]"
+                      className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-md text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)]"
                       title="Edit message"
                     >
                       <Pencil size={12} />
@@ -1287,15 +1288,15 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                             key={fi}
                             src={f.previewUrl}
                             alt={f.name}
-                            className="w-24 h-24 object-cover rounded-xl border border-[#21262d]"
+                            className="w-24 h-24 object-cover rounded-xl border border-[color:var(--border)]"
                           />
                         ) : (
                           <div
                             key={fi}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#161b22]"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)]"
                           >
-                            <FileIcon size={12} className="text-[#98A2B3]" />
-                            <span className="text-[11px] text-[#8b949e] truncate max-w-[140px]">{f.name}</span>
+                            <FileIcon size={12} className="text-[color:var(--text-muted)]" />
+                            <span className="text-[11px] text-[color:var(--text-muted)] truncate max-w-[140px]">{f.name}</span>
                           </div>
                         )
                       ))}
@@ -1303,7 +1304,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                   )}
                   {/* Text bubble */}
                   {(msg as any).text && (
-                    <div className="px-4 py-2.5 rounded-2xl rounded-br-md bg-[#1a2744] border border-[#21262d] text-[#e6edf3] text-sm leading-relaxed">
+                    <div className="px-4 py-2.5 rounded-2xl rounded-br-md bg-[color:var(--surface-active)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm leading-relaxed">
                       {(msg as any).text}
                     </div>
                   )}
@@ -1320,7 +1321,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                   {(msg as any).blocks.map((block: AssistantBlock, j: number) => (
                     <div key={j}>
                       {block.type === 'text' && (
-                        <div className="text-sm text-[#e6edf3] leading-relaxed prose-invert max-w-none">
+                        <div className="text-sm text-[color:var(--text-primary)] leading-relaxed prose-invert max-w-none">
                           <Markdown>{block.text}</Markdown>
                         </div>
                       )}
@@ -1342,10 +1343,10 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                     <div className="opacity-0 group-hover/asstmsg:opacity-100 transition-opacity">
                       <button
                         onClick={() => copyMessage(msg, i)}
-                        className="flex items-center justify-center w-6 h-6 rounded-md text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d]"
+                        className="flex items-center justify-center w-6 h-6 rounded-md text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)]"
                         title={copiedIndex === i ? 'Copied' : 'Copy message'}
                       >
-                        {copiedIndex === i ? <Check size={12} className="text-[#00FFA7]" /> : <Copy size={12} />}
+                        {copiedIndex === i ? <Check size={12} className="text-[color:var(--evo-green)]" /> : <Copy size={12} />}
                       </button>
                     </div>
                   )}
@@ -1355,7 +1356,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
 
             {msg.role === 'system' && (
               <div className="text-center">
-                <span className="text-[11px] text-[#98A2B3] bg-[#161b22] px-3 py-1 rounded-full border border-[#21262d]">
+                <span className="text-[11px] text-[color:var(--text-muted)] bg-[color:var(--bg-card)] px-3 py-1 rounded-full border border-[color:var(--border)]">
                   {msg.text}
                 </span>
               </div>
@@ -1386,7 +1387,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
       </div>
 
       {/* Input area */}
-      <div className="flex-shrink-0 border-t border-[#21262d] bg-[#0d1117] px-4 py-3">
+      <div className="flex-shrink-0 border-t border-[color:var(--border)] bg-[color:var(--bg-primary)] px-4 py-3">
         <div className="max-w-3xl mx-auto space-y-2">
           {/* File previews */}
           {attachedFiles.length > 0 && (
@@ -1398,22 +1399,22 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                       <img
                         src={af.previewUrl}
                         alt={af.name}
-                        className="w-16 h-16 object-cover rounded-lg border border-[#21262d]"
+                        className="w-16 h-16 object-cover rounded-lg border border-[color:var(--border)]"
                       />
                       <button
                         onClick={() => removeFile(idx)}
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#161b22] border border-[#21262d] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[#98A2B3] hover:text-[#ef4444]"
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[color:var(--text-muted)] hover:text-[#ef4444]"
                       >
                         <X size={9} />
                       </button>
                     </div>
                   ) : (
-                    <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#21262d] bg-[#161b22] pr-6">
-                      <FileIcon size={11} className="text-[#98A2B3] flex-shrink-0" />
-                      <span className="text-[11px] text-[#8b949e] truncate max-w-[120px]">{af.name}</span>
+                    <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-card)] pr-6">
+                      <FileIcon size={11} className="text-[color:var(--text-muted)] flex-shrink-0" />
+                      <span className="text-[11px] text-[color:var(--text-muted)] truncate max-w-[120px]">{af.name}</span>
                       <button
                         onClick={() => removeFile(idx)}
-                        className="absolute right-1.5 text-[#98A2B3] hover:text-[#ef4444] transition-colors"
+                        className="absolute right-1.5 text-[color:var(--text-muted)] hover:text-[#ef4444] transition-colors"
                       >
                         <X size={10} />
                       </button>
@@ -1429,14 +1430,14 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
             {/* Slash-command autocomplete popup */}
             {slashPopup.open && (
               <div
-                className="absolute left-0 right-0 rounded-xl border bg-[#161b22] shadow-xl overflow-y-auto z-50"
+                className="absolute left-0 right-0 rounded-xl border bg-[color:var(--bg-card)] shadow-xl overflow-y-auto z-50"
                 style={{ borderColor: '#21262d', maxHeight: '280px', bottom: 'calc(100% + 6px)' }}
               >
-                <div className="px-3 py-1.5 border-b border-[#21262d] text-[10px] text-[#98A2B3] uppercase tracking-wider">
+                <div className="px-3 py-1.5 border-b border-[color:var(--border)] text-[10px] text-[color:var(--text-muted)] uppercase tracking-wider">
                   Skills
                 </div>
                 {slashPopup.items.length === 0 ? (
-                  <div className="px-3 py-3 text-[11px] text-[#98A2B3] italic">
+                  <div className="px-3 py-3 text-[11px] text-[color:var(--text-muted)] italic">
                     No matching skills
                   </div>
                 ) : (
@@ -1457,7 +1458,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                         /{skill.name}
                       </span>
                       {skill.description && (
-                        <span className="text-[#98A2B3] truncate text-[11px]">
+                        <span className="text-[color:var(--text-muted)] truncate text-[11px]">
                           {skill.description.slice(0, 80)}
                         </span>
                       )}
@@ -1469,13 +1470,13 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
 
           {/* Input row */}
           <div
-            className="flex items-end gap-2 rounded-xl border bg-[#161b22] px-3 py-2"
+            className="flex items-end gap-2 rounded-xl border bg-[color:var(--bg-card)] px-3 py-2"
             style={{ borderColor: '#21262d' }}
           >
             {/* Paperclip button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors mb-0.5"
+              className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)] transition-colors mb-0.5"
               title="Anexar arquivo"
             >
               <Paperclip size={14} />
@@ -1507,7 +1508,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
                   ? 'text-[#ef4444] bg-[#ef4444]/15'
                   : micState === 'transcribing'
                   ? 'cursor-wait text-[#4b5563]'
-                  : 'text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#21262d]'
+                  : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--border)]'
               }`}
             >
               {micState === 'transcribing'
@@ -1525,7 +1526,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
               aria-label={`Mensagem para ${agent}`}
               placeholder={`Message @${agent}...`}
               rows={1}
-              className="flex-1 resize-none bg-transparent text-sm text-[#e6edf3] placeholder:text-[#98A2B3] focus:outline-none max-h-32 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex-1 resize-none bg-transparent text-sm text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none max-h-32 disabled:cursor-not-allowed disabled:opacity-60"
               style={{ minHeight: '28px' }}
               onInput={(e) => {
                 const el = e.currentTarget
@@ -1608,7 +1609,7 @@ function TypingIndicator({ accentColor, isThinking }: { accentColor: string; isT
         ))}
       </div>
       <span
-        className="text-[10px] text-[#98A2B3]"
+        className="text-[10px] text-[color:var(--text-muted)]"
         style={{ animation: 'chat-pulse 2s ease-in-out infinite' }}
       >
         {isThinking ? 'Thinking...' : 'Typing...'}
@@ -1620,16 +1621,16 @@ function TypingIndicator({ accentColor, isThinking }: { accentColor: string; isT
 function AgentInputToggle({ parsedInput, rawInput }: { parsedInput: any; rawInput: string }) {
   const [showInput, setShowInput] = useState(false)
   return (
-    <div className="border-t border-[#21262d]/50">
+    <div className="border-t border-[color:var(--border)]/50">
       <button
         onClick={() => setShowInput(v => !v)}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] text-[#98A2B3] hover:text-[#8b949e] transition-colors w-full"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] text-[color:var(--text-muted)] hover:text-[color:var(--text-muted)] transition-colors w-full"
       >
         {showInput ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
         View input
       </button>
       {showInput && (
-        <pre className="px-3 pb-2 text-[11px] text-[#8b949e] font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
+        <pre className="px-3 pb-2 text-[11px] text-[color:var(--text-muted)] font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
           {parsedInput ? JSON.stringify(parsedInput, null, 2) : rawInput}
         </pre>
       )}
@@ -1655,19 +1656,19 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
     const toolCount = subagentTools.length
 
     const getToolIcon = (toolName: string) => {
-      if (toolName === 'Bash') return <TermIcon size={11} className="text-[#98A2B3] flex-shrink-0" />
-      if (toolName === 'Read') return <FileText size={11} className="text-[#98A2B3] flex-shrink-0" />
-      if (toolName === 'Edit' || toolName === 'Write') return <Edit2 size={11} className="text-[#98A2B3] flex-shrink-0" />
-      return <FileCode size={11} className="text-[#98A2B3] flex-shrink-0" />
+      if (toolName === 'Bash') return <TermIcon size={11} className="text-[color:var(--text-muted)] flex-shrink-0" />
+      if (toolName === 'Read') return <FileText size={11} className="text-[color:var(--text-muted)] flex-shrink-0" />
+      if (toolName === 'Edit' || toolName === 'Write') return <Edit2 size={11} className="text-[color:var(--text-muted)] flex-shrink-0" />
+      return <FileCode size={11} className="text-[color:var(--text-muted)] flex-shrink-0" />
     }
 
     return (
-      <div className="border border-[#21262d] rounded-lg overflow-hidden">
+      <div className="border border-[color:var(--border)] rounded-lg overflow-hidden">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2.5 w-full px-3 py-2.5 text-[12px] bg-[#161b22] hover:bg-[#1c2333] transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-2.5 text-[12px] bg-[color:var(--bg-card)] hover:bg-[#1c2333] transition-colors"
         >
-          {open ? <ChevronDown size={12} className="text-[#98A2B3]" /> : <ChevronRight size={12} className="text-[#98A2B3]" />}
+          {open ? <ChevronDown size={12} className="text-[color:var(--text-muted)]" /> : <ChevronRight size={12} className="text-[color:var(--text-muted)]" />}
 
           {/* Subagent avatar */}
           {(() => {
@@ -1680,26 +1681,26 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
             )
           })()}
 
-          <span className="font-medium text-[#e6edf3]">
+          <span className="font-medium text-[color:var(--text-primary)]">
             {(() => {
               const isUuid = /^[0-9a-f]{8,}$/i.test(subagentName)
               return isUuid ? (block.toolName === 'SendMessage' ? 'SendMessage' : 'Agent') : subagentName ? `@${subagentName}` : block.toolName
             })()}
           </span>
           {subagentDesc && (
-            <span className="text-[#8b949e] truncate max-w-[300px] text-[11px]">{subagentDesc}</span>
+            <span className="text-[color:var(--text-muted)] truncate max-w-[300px] text-[11px]">{subagentDesc}</span>
           )}
 
           <span className="ml-auto flex-shrink-0 flex items-center gap-2">
             {/* Tool count badge */}
             {toolCount > 0 && (
-              <span className="text-[10px] text-[#98A2B3] tabular-nums">
+              <span className="text-[10px] text-[color:var(--text-muted)] tabular-nums">
                 {toolCount} {toolCount === 1 ? 'tool' : 'tools'}
               </span>
             )}
             {/* Progress summary */}
             {isRunning && block.subagentSummary && (
-              <span className="text-[10px] text-[#98A2B3] truncate max-w-[200px]" style={{ animation: 'chat-pulse 2s ease-in-out infinite' }}>
+              <span className="text-[10px] text-[color:var(--text-muted)] truncate max-w-[200px]" style={{ animation: 'chat-pulse 2s ease-in-out infinite' }}>
                 {block.subagentSummary}
               </span>
             )}
@@ -1711,11 +1712,11 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
           </span>
         </button>
         {open && (
-          <div className="border-t border-[#21262d] bg-[#0d1117]">
+          <div className="border-t border-[color:var(--border)] bg-[color:var(--bg-primary)]">
             {/* Tool list */}
             <div className="max-h-80 overflow-y-auto">
               {subagentTools.length === 0 ? (
-                <div className="px-3 py-2 text-[11px] text-[#98A2B3]">No tools yet</div>
+                <div className="px-3 py-2 text-[11px] text-[color:var(--text-muted)]">No tools yet</div>
               ) : (
                 subagentTools.map((t, i) => {
                   let inputPreview = ''
@@ -1726,11 +1727,11 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
                     inputPreview = t.input.slice(0, 60)
                   }
                   return (
-                    <div key={t.toolUseId || i} className="flex items-center gap-2 px-3 py-1.5 text-[11px] border-t border-[#21262d]/50 first:border-t-0">
+                    <div key={t.toolUseId || i} className="flex items-center gap-2 px-3 py-1.5 text-[11px] border-t border-[color:var(--border)]/50 first:border-t-0">
                       {getToolIcon(t.toolName)}
-                      <span className="text-[#8b949e] font-medium flex-shrink-0">{t.toolName}</span>
+                      <span className="text-[color:var(--text-muted)] font-medium flex-shrink-0">{t.toolName}</span>
                       {inputPreview && (
-                        <span className="text-[#98A2B3] truncate">{inputPreview}</span>
+                        <span className="text-[color:var(--text-muted)] truncate">{inputPreview}</span>
                       )}
                     </div>
                   )
@@ -1751,15 +1752,15 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
     const completedCount = todos.filter(t => t.status === 'completed').length
 
     return (
-      <div className="border border-[#21262d] rounded-lg overflow-hidden">
+      <div className="border border-[color:var(--border)] rounded-lg overflow-hidden">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 w-full px-3 py-2 text-[12px] bg-[#161b22] hover:bg-[#1c2333] transition-colors"
+          className="flex items-center gap-2 w-full px-3 py-2 text-[12px] bg-[color:var(--bg-card)] hover:bg-[#1c2333] transition-colors"
         >
-          {open ? <ChevronDown size={12} className="text-[#98A2B3]" /> : <ChevronRight size={12} className="text-[#98A2B3]" />}
+          {open ? <ChevronDown size={12} className="text-[color:var(--text-muted)]" /> : <ChevronRight size={12} className="text-[color:var(--text-muted)]" />}
           <CheckCircle2 size={13} style={{ color: accentColor }} />
-          <span className="font-medium text-[#e6edf3]">TodoWrite</span>
-          <span className="text-[#98A2B3] text-[11px]">{completedCount}/{todos.length} done</span>
+          <span className="font-medium text-[color:var(--text-primary)]">TodoWrite</span>
+          <span className="text-[color:var(--text-muted)] text-[11px]">{completedCount}/{todos.length} done</span>
           <span className="ml-auto flex-shrink-0">
             {block.done ? (
               <CheckCircle2 size={13} className="text-[#22C55E]" />
@@ -1768,7 +1769,7 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
             )}
           </span>
         </button>
-        <div className="px-3 py-2 border-t border-[#21262d] bg-[#0d1117] space-y-1">
+        <div className="px-3 py-2 border-t border-[color:var(--border)] bg-[color:var(--bg-primary)] space-y-1">
           {todos.map((todo, i) => {
             const isPending = todo.status === 'pending'
             const isInProgress = todo.status === 'in_progress'
@@ -1802,16 +1803,16 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
     : ''
 
   return (
-    <div className="border border-[#21262d] rounded-lg overflow-hidden">
+    <div className="border border-[color:var(--border)] rounded-lg overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 w-full px-3 py-2 text-[12px] bg-[#161b22] hover:bg-[#1c2333] transition-colors"
+        className="flex items-center gap-2 w-full px-3 py-2 text-[12px] bg-[color:var(--bg-card)] hover:bg-[#1c2333] transition-colors"
       >
-        {open ? <ChevronDown size={12} className="text-[#98A2B3]" /> : <ChevronRight size={12} className="text-[#98A2B3]" />}
+        {open ? <ChevronDown size={12} className="text-[color:var(--text-muted)]" /> : <ChevronRight size={12} className="text-[color:var(--text-muted)]" />}
         <FileCode size={13} style={{ color: accentColor }} />
-        <span className="font-medium text-[#e6edf3]">{block.toolName}</span>
+        <span className="font-medium text-[color:var(--text-primary)]">{block.toolName}</span>
         {displayInfo && (
-          <span className="text-[#98A2B3] truncate max-w-[300px] text-[11px] font-mono">{displayInfo}</span>
+          <span className="text-[color:var(--text-muted)] truncate max-w-[300px] text-[11px] font-mono">{displayInfo}</span>
         )}
         <span className="ml-auto flex-shrink-0">
           {block.done ? (
@@ -1822,8 +1823,8 @@ function ToolCard({ block, accentColor }: { block: Extract<AssistantBlock, { typ
         </span>
       </button>
       {open && block.input && (
-        <div className="px-3 py-2 border-t border-[#21262d] bg-[#0d1117]">
-          <pre className="text-[11px] text-[#8b949e] font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
+        <div className="px-3 py-2 border-t border-[color:var(--border)] bg-[color:var(--bg-primary)]">
+          <pre className="text-[11px] text-[color:var(--text-muted)] font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
             {parsedInput ? JSON.stringify(parsedInput, null, 2) : block.input}
           </pre>
         </div>
@@ -1864,13 +1865,13 @@ function ApprovalCard({ req, accentColor, onAllow, onDeny }: ApprovalCardProps) 
       <ShieldAlert size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#F59E0B' }} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-[11px] font-semibold text-[#e6edf3]">{req.toolName}</span>
+          <span className="text-[11px] font-semibold text-[color:var(--text-primary)]">{req.toolName}</span>
           {summary && (
-            <span className="text-[10px] text-[#8b949e] font-mono truncate max-w-[260px]">{summary}</span>
+            <span className="text-[10px] text-[color:var(--text-muted)] font-mono truncate max-w-[260px]">{summary}</span>
           )}
         </div>
         {req.description && (
-          <p className="text-[10px] text-[#98A2B3] truncate">{req.description}</p>
+          <p className="text-[10px] text-[color:var(--text-muted)] truncate">{req.description}</p>
         )}
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">

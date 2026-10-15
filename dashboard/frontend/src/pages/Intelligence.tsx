@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useNavigate } from 'react-router-dom'
 import { Cpu, Zap, Terminal, Package, Plug, Database, Brain, Library, DollarSign } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -28,23 +29,23 @@ export default function Intelligence() {
   const { hasPermission } = useAuth()
 
   const cardClass = (enabled: boolean) =>
-    `group flex flex-col gap-2 rounded-xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/50 ${
+    `group flex flex-col gap-2 rounded-xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/50 ${
       enabled
-        ? 'border-[#344054] bg-[#182230]/60 hover:border-[#00FFA7]/50 hover:bg-[#182230] cursor-pointer'
-        : 'border-[#344054]/40 bg-[#0f1522]/40 opacity-60 cursor-not-allowed'
+        ? 'border-[color:var(--border)] bg-[color:var(--bg-card)]/60 hover:border-[color:var(--evo-green)]/50 hover:bg-[color:var(--bg-card)] cursor-pointer'
+        : 'border-[color:var(--border)]/40 bg-[#0f1522]/40 opacity-60 cursor-not-allowed'
     }`
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <h1 className="text-xl font-semibold text-white mb-1">
         Inteligência
       </h1>
-      <p className="text-sm text-[#98A2B3] mb-6">
+      <p className="text-sm text-[color:var(--text-muted)] mb-6">
         Tudo que dá cérebro à operação — provedores, conhecimento, memória e integrações.
       </p>
 
       <section className="mb-8">
-        <h2 className="text-xs uppercase tracking-wider text-[#98A2B3] font-semibold mb-3">
+        <h2 className="text-xs uppercase tracking-wider text-[color:var(--text-muted)] font-semibold mb-3">
           Cérebro & memória
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -54,15 +55,15 @@ export default function Intelligence() {
               onClick={() => tab.path && navigate(tab.path)}
               className={cardClass(!!tab.path)}
             >
-              <tab.icon size={20} className="text-[#00FFA7]" />
-              <span className="text-sm font-medium text-[#D0D5DD]">{tab.label}</span>
+              <tab.icon size={20} className="text-[color:var(--evo-green)]" />
+              <span className="text-sm font-medium text-[color:var(--text-secondary)]">{tab.label}</span>
             </button>
           ))}
         </div>
       </section>
 
       <section>
-        <h2 className="text-xs uppercase tracking-wider text-[#98A2B3] font-semibold mb-3">
+        <h2 className="text-xs uppercase tracking-wider text-[color:var(--text-muted)] font-semibold mb-3">
           Catálogo (disponível para todos os agentes)
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -74,8 +75,8 @@ export default function Intelligence() {
                 onClick={() => can && navigate(tab.path)}
                 className={cardClass(can)}
               >
-                <tab.icon size={20} className="text-[#00FFA7]" />
-                <span className="text-sm font-medium text-[#D0D5DD]">{tab.label}</span>
+                <tab.icon size={20} className="text-[color:var(--evo-green)]" />
+                <span className="text-sm font-medium text-[color:var(--text-secondary)]">{tab.label}</span>
               </button>
             )
           })}

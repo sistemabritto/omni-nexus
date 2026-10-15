@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Database } from 'lucide-react'
@@ -18,7 +19,7 @@ export default function KnowledgeLayout() {
 
   if (!hasPermission('knowledge', 'view')) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#98A2B3] text-sm">
+      <div className="flex items-center justify-center h-64 text-[color:var(--text-muted)] text-sm">
         {t('knowledge.noPermission')}
       </div>
     )
@@ -30,17 +31,17 @@ export default function KnowledgeLayout() {
         <HubBackLink />
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#F9FAFB] flex items-center gap-2">
-            <Database size={22} className="text-[#00FFA7]" />
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] flex items-center gap-2">
+            <Database size={22} className="text-[color:var(--evo-green)]" />
             {t('knowledge.title')}
           </h1>
-          <p className="text-[#98A2B3] mt-1 text-sm">
+          <p className="text-[color:var(--text-muted)] mt-1 text-sm">
             {t('knowledge.layoutSubtitle')}
           </p>
         </div>
 
         {/* Global tabs (connection-agnostic) */}
-        <div className="flex gap-1 mb-6 border-b border-[#344054] overflow-x-auto">
+        <div className="flex gap-1 mb-6 border-b border-[color:var(--border)] overflow-x-auto">
           {tabs.map((tab) => (
             <NavLink
               key={tab.to}
@@ -49,8 +50,8 @@ export default function KnowledgeLayout() {
               className={({ isActive }) =>
                 `px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                   isActive
-                    ? 'text-[#00FFA7] border-[#00FFA7]'
-                    : 'text-[#98A2B3] border-transparent hover:text-[#D0D5DD]'
+                    ? 'text-[color:var(--evo-green)] border-[color:var(--evo-green)]'
+                    : 'text-[color:var(--text-muted)] border-transparent hover:text-[color:var(--text-secondary)]'
                 }`
               }
             >

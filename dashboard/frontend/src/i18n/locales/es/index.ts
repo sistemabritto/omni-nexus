@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 /**
  * es translation bundle.
  *
@@ -6,6 +7,64 @@
 
 const translations = {
   translation: {
+    // OmniNexus Live global navigation (2026-10-15).
+    shell: {
+      "links": {
+            "root": "Conversación central",
+            "omninexus": "Conversación central",
+            "overview": "Panel operativo",
+            "agents": "Squad de agentes",
+            "approvals": "Aprobaciones",
+            "missions": "Proyectos y misiones",
+            "kanban": "Tablero de trabajo",
+            "workspace": "Materiales",
+            "orquestracao": "Trabajos y bloqueos",
+            "tasks": "Tareas",
+            "activity": "Actividad",
+            "scheduler": "Agenda",
+            "routines": "Rutinas",
+            "heartbeats": "Heartbeats",
+            "triggers": "Disparadores",
+            "media": "Contenido y medios",
+            "memory": "Memoria y fuentes",
+            "mempalace": "Palacio de memoria",
+            "knowledge": "Base de conocimiento",
+            "skills": "Skills",
+            "inteligencia": "Integraciones",
+            "integrations": "Integraciones",
+            "providers": "Proveedores",
+            "mcp_servers": "Servidores MCP",
+            "plugins": "Plugins",
+            "plugins_ui": "Extensión",
+            "templates": "Plantillas",
+            "systems": "Sistemas",
+            "settings": "Configuración",
+            "users": "Usuarios",
+            "roles": "Roles y permisos",
+            "audit": "Auditoría",
+            "backups": "Copias de seguridad",
+            "shares": "Enlaces compartidos",
+            "costs": "Costos",
+            "topics": "Temas",
+            "tickets": "Ticket"
+      },
+      "groups": {
+            "workspace": "Workspace",
+            "work": "Trabajo",
+            "operations": "Operación",
+            "knowledge": "Memoria y conocimiento",
+            "connections": "Conexiones y herramientas",
+            "administration": "Administración"
+      },
+      "tagline": "Tu workspace de agentes",
+      "subtitle": "Workspace de agentes",
+      "noCompany": "Sin empresa seleccionada",
+      "companyContext": "Contexto seleccionado en el menú de empresas",
+      "navigation": "Navegación principal",
+      "openMenu": "Abrir menú de navegación",
+      "closeMenu": "Cerrar menú de navegación",
+      "selectCompany": "Seleccionar empresa"
+},
     common: {
       save: 'Guardar',
       cancel: 'Cancelar',

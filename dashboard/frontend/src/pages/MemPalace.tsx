@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { Library, Search, FolderPlus, Play, Trash2, RefreshCw, Download, Database, Layers, Grid3X3 } from 'lucide-react'
 import HubBackLink from '../components/HubBackLink'
@@ -185,8 +186,8 @@ export default function MemPalace() {
       <div>
         <div className="mb-8">
           <HubBackLink />
-          <h1 className="text-2xl font-bold text-[#F9FAFB]">{t('mempalace.title')}</h1>
-          <p className="text-[#98A2B3] mt-1">Semantic search powered by MemPalace</p>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('mempalace.title')}</h1>
+          <p className="text-[color:var(--text-muted)] mt-1">Semantic search powered by MemPalace</p>
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
@@ -199,18 +200,18 @@ export default function MemPalace() {
     <div>
       <div className="mb-8">
         <HubBackLink />
-        <h1 className="text-2xl font-bold text-[#F9FAFB]">{t('mempalace.title')}</h1>
-        <p className="text-[#98A2B3] mt-1">Semantic search powered by MemPalace</p>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">{t('mempalace.title')}</h1>
+        <p className="text-[color:var(--text-muted)] mt-1">Semantic search powered by MemPalace</p>
       </div>
 
       {/* Not installed */}
       {!status?.installed && (
-        <div className="bg-[#182230] border border-[#344054] rounded-xl p-8 text-center max-w-lg mx-auto">
-          <div className="w-16 h-16 rounded-2xl bg-[#00FFA7]/10 flex items-center justify-center mx-auto mb-4">
-            <Library size={32} className="text-[#00FFA7]" />
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-8 text-center max-w-lg mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-[color:var(--evo-green)]/10 flex items-center justify-center mx-auto mb-4">
+            <Library size={32} className="text-[color:var(--evo-green)]" />
           </div>
-          <h2 className="text-xl font-semibold text-[#F9FAFB] mb-2">Enable MemPalace</h2>
-          <p className="text-[#98A2B3] text-sm mb-6">
+          <h2 className="text-xl font-semibold text-[color:var(--text-primary)] mb-2">Enable MemPalace</h2>
+          <p className="text-[color:var(--text-muted)] text-sm mb-6">
             Index your code, docs, and knowledge for semantic search.
             Everything runs locally — no external APIs required.
           </p>
@@ -218,7 +219,7 @@ export default function MemPalace() {
             <button
               onClick={handleInstall}
               disabled={installing}
-              className="px-6 py-2.5 bg-[#00FFA7] text-[#0C111D] rounded-lg font-medium text-sm hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg font-medium text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
             >
               {installing ? (
                 <span className="flex items-center gap-2">
@@ -231,7 +232,7 @@ export default function MemPalace() {
               )}
             </button>
           ) : (
-            <p className="text-xs text-[#98A2B3]">Ask an admin to enable MemPalace.</p>
+            <p className="text-xs text-[color:var(--text-muted)]">Ask an admin to enable MemPalace.</p>
           )}
         </div>
       )}
@@ -240,15 +241,15 @@ export default function MemPalace() {
       {status?.installed && (
         <>
           {/* Tabs */}
-          <div className="flex gap-1 mb-6 border-b border-[#344054]">
+          <div className="flex gap-1 mb-6 border-b border-[color:var(--border)]">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                   tab === t.key
-                    ? 'text-[#00FFA7] border-[#00FFA7]'
-                    : 'text-[#98A2B3] border-transparent hover:text-[#D0D5DD]'
+                    ? 'text-[color:var(--evo-green)] border-[color:var(--evo-green)]'
+                    : 'text-[color:var(--text-muted)] border-transparent hover:text-[color:var(--text-secondary)]'
                 }`}
               >
                 {t.label}
@@ -261,32 +262,32 @@ export default function MemPalace() {
             <div className="space-y-6">
               {/* Metric cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-[#182230] border border-[#344054] rounded-xl p-5">
+                <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-1">
-                    <Layers size={14} className="text-[#00FFA7]" />
-                    <span className="text-xs text-[#98A2B3] uppercase tracking-wider">Wings</span>
+                    <Layers size={14} className="text-[color:var(--evo-green)]" />
+                    <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wider">Wings</span>
                   </div>
-                  <p className="text-2xl font-bold text-[#F9FAFB]">{status.stats?.wings?.length || 0}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text-primary)]">{status.stats?.wings?.length || 0}</p>
                   {status.stats?.wings && status.stats.wings.length > 0 && (
-                    <p className="text-xs text-[#98A2B3] mt-1 truncate">{status.stats.wings.join(', ')}</p>
+                    <p className="text-xs text-[color:var(--text-muted)] mt-1 truncate">{status.stats.wings.join(', ')}</p>
                   )}
                 </div>
-                <div className="bg-[#182230] border border-[#344054] rounded-xl p-5">
+                <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-1">
-                    <Grid3X3 size={14} className="text-[#00FFA7]" />
-                    <span className="text-xs text-[#98A2B3] uppercase tracking-wider">Rooms</span>
+                    <Grid3X3 size={14} className="text-[color:var(--evo-green)]" />
+                    <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wider">Rooms</span>
                   </div>
-                  <p className="text-2xl font-bold text-[#F9FAFB]">{status.stats?.rooms?.length || 0}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text-primary)]">{status.stats?.rooms?.length || 0}</p>
                   {status.stats?.rooms && status.stats.rooms.length > 0 && (
-                    <p className="text-xs text-[#98A2B3] mt-1 truncate">{status.stats.rooms.join(', ')}</p>
+                    <p className="text-xs text-[color:var(--text-muted)] mt-1 truncate">{status.stats.rooms.join(', ')}</p>
                   )}
                 </div>
-                <div className="bg-[#182230] border border-[#344054] rounded-xl p-5">
+                <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-1">
-                    <Database size={14} className="text-[#00FFA7]" />
-                    <span className="text-xs text-[#98A2B3] uppercase tracking-wider">Drawers</span>
+                    <Database size={14} className="text-[color:var(--evo-green)]" />
+                    <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wider">Drawers</span>
                   </div>
-                  <p className="text-2xl font-bold text-[#F9FAFB]">{status.stats?.total_drawers || 0}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text-primary)]">{status.stats?.total_drawers || 0}</p>
                 </div>
               </div>
 
@@ -314,14 +315,14 @@ export default function MemPalace() {
                 }
                 const isScanning = m.phase === 'scanning' || (total === 0 && done === 0)
                 return (
-                  <div className="bg-[#00FFA7]/5 border border-[#00FFA7]/20 rounded-xl p-5 space-y-3">
+                  <div className="bg-[color:var(--evo-green)]/5 border border-[color:var(--evo-green)]/20 rounded-xl p-5 space-y-3">
                     <div className="flex items-center gap-3">
-                      <RefreshCw size={16} className="text-[#00FFA7] animate-spin shrink-0" />
+                      <RefreshCw size={16} className="text-[color:var(--evo-green)] animate-spin shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[#F9FAFB] font-medium">
+                        <p className="text-sm text-[color:var(--text-primary)] font-medium">
                           {isScanning ? 'Scanning files...' : 'Mining in progress'}
                         </p>
-                        <p className="text-xs text-[#98A2B3] truncate">
+                        <p className="text-xs text-[color:var(--text-muted)] truncate">
                           Started {new Date(m.started_at).toLocaleTimeString()}
                           {' · '}{m.sources?.length ?? 0} source(s)
                           {m.drawers_added != null && m.drawers_added > 0 && (
@@ -331,8 +332,8 @@ export default function MemPalace() {
                       </div>
                       {!isScanning && (
                         <div className="text-right shrink-0">
-                          <p className="text-2xl font-bold text-[#00FFA7] tabular-nums">{percent}%</p>
-                          <p className="text-[10px] text-[#98A2B3] tabular-nums">
+                          <p className="text-2xl font-bold text-[color:var(--evo-green)] tabular-nums">{percent}%</p>
+                          <p className="text-[10px] text-[color:var(--text-muted)] tabular-nums">
                             {done.toLocaleString()} / {total.toLocaleString()}
                           </p>
                         </div>
@@ -341,9 +342,9 @@ export default function MemPalace() {
 
                     {/* Progress bar */}
                     {!isScanning && (
-                      <div className="h-2 bg-[#0C111D] rounded-full overflow-hidden">
+                      <div className="h-2 bg-[color:var(--bg-primary)] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#00FFA7] transition-all duration-500 ease-out"
+                          className="h-full bg-[color:var(--evo-green)] transition-all duration-500 ease-out"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -352,16 +353,16 @@ export default function MemPalace() {
                     {/* Current file */}
                     {currentFileName && (
                       <div className="flex items-baseline gap-2 text-xs">
-                        <span className="text-[#98A2B3] shrink-0">Processing:</span>
-                        <span className="text-[#D0D5DD] font-mono truncate" title={m.current_file || undefined}>
-                          {currentFileDir && <span className="text-[#98A2B3]">{currentFileDir}/</span>}
+                        <span className="text-[color:var(--text-muted)] shrink-0">Processing:</span>
+                        <span className="text-[color:var(--text-secondary)] font-mono truncate" title={m.current_file || undefined}>
+                          {currentFileDir && <span className="text-[color:var(--text-muted)]">{currentFileDir}/</span>}
                           {currentFileName}
                         </span>
                       </div>
                     )}
 
                     {/* Metrics row */}
-                    <div className="flex items-center gap-4 text-xs text-[#98A2B3] tabular-nums">
+                    <div className="flex items-center gap-4 text-xs text-[color:var(--text-muted)] tabular-nums">
                       <span>⏱ {fmtDuration(m.elapsed_seconds)} elapsed</span>
                       {!isScanning && m.eta_seconds != null && (
                         <span>ETA {fmtDuration(m.eta_seconds)}</span>
@@ -378,7 +379,7 @@ export default function MemPalace() {
               })()}
 
               {/* Version info */}
-              <div className="flex items-center gap-4 text-xs text-[#98A2B3]">
+              <div className="flex items-center gap-4 text-xs text-[color:var(--text-muted)]">
                 <span>MemPalace v{status.version}</span>
                 <span>{status.palace_path}</span>
                 <span>{status.sources_count} source(s)</span>
@@ -391,9 +392,9 @@ export default function MemPalace() {
             <div className="space-y-6">
               {/* Add source form */}
               {canManage && (
-                <div className="bg-[#182230] border border-[#344054] rounded-xl p-5">
-                  <h3 className="text-sm font-semibold text-[#D0D5DD] mb-4 flex items-center gap-2">
-                    <FolderPlus size={14} className="text-[#00FFA7]" />
+                <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5">
+                  <h3 className="text-sm font-semibold text-[color:var(--text-secondary)] mb-4 flex items-center gap-2">
+                    <FolderPlus size={14} className="text-[color:var(--evo-green)]" />
                     Add Source
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -402,26 +403,26 @@ export default function MemPalace() {
                       placeholder="Directory path (e.g. /path/to/project)"
                       value={newPath}
                       onChange={(e) => setNewPath(e.target.value)}
-                      className="bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none sm:col-span-3"
+                      className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none sm:col-span-3"
                     />
                     <input
                       type="text"
                       placeholder="Label (optional)"
                       value={newLabel}
                       onChange={(e) => setNewLabel(e.target.value)}
-                      className="bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Wing override (optional)"
                       value={newWing}
                       onChange={(e) => setNewWing(e.target.value)}
-                      className="bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                     <button
                       onClick={handleAddSource}
                       disabled={addingSource || !newPath.trim()}
-                      className="px-4 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg font-medium text-sm hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg font-medium text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
                     >
                       {addingSource ? 'Adding...' : 'Add'}
                     </button>
@@ -431,7 +432,7 @@ export default function MemPalace() {
 
               {/* Sources list */}
               {sources.length === 0 ? (
-                <div className="text-center py-12 text-[#98A2B3] text-sm">
+                <div className="text-center py-12 text-[color:var(--text-muted)] text-sm">
                   No sources configured yet. Add a directory to get started.
                 </div>
               ) : (
@@ -441,24 +442,24 @@ export default function MemPalace() {
                       <button
                         onClick={() => handleMine()}
                         disabled={mining || !!status?.mining}
-                        className="px-4 py-2 bg-[#00FFA7]/10 text-[#00FFA7] rounded-lg text-sm font-medium hover:bg-[#00FFA7]/20 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="px-4 py-2 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] rounded-lg text-sm font-medium hover:bg-[color:var(--evo-green)]/20 transition-colors disabled:opacity-50 flex items-center gap-2"
                       >
                         <Play size={14} /> Index All
                       </button>
                     </div>
                   )}
                   {sources.map((source, idx) => (
-                    <div key={idx} className="bg-[#182230] border border-[#344054] rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div key={idx} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-4 flex items-center justify-between gap-4">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[#F9FAFB] truncate">{source.label}</p>
-                        <p className="text-xs text-[#98A2B3] truncate">{source.path}</p>
+                        <p className="text-sm font-medium text-[color:var(--text-primary)] truncate">{source.label}</p>
+                        <p className="text-xs text-[color:var(--text-muted)] truncate">{source.path}</p>
                         <div className="flex gap-3 mt-1">
                           {source.wing && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-[#00FFA7]/10 text-[#00FFA7]">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]">
                               {source.wing}
                             </span>
                           )}
-                          <span className="text-xs text-[#98A2B3]">
+                          <span className="text-xs text-[color:var(--text-muted)]">
                             {source.last_indexed
                               ? `Indexed ${new Date(source.last_indexed).toLocaleDateString()}`
                               : 'Not indexed'}
@@ -470,14 +471,14 @@ export default function MemPalace() {
                           <button
                             onClick={() => handleMine(idx)}
                             disabled={mining || !!status?.mining}
-                            className="p-2 rounded-lg text-[#98A2B3] hover:text-[#00FFA7] hover:bg-[#00FFA7]/10 transition-colors disabled:opacity-50"
+                            className="p-2 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/10 transition-colors disabled:opacity-50"
                             title="Index this source"
                           >
                             <Play size={14} />
                           </button>
                           <button
                             onClick={() => handleDeleteSource(idx)}
-                            className="p-2 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="p-2 rounded-lg text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             title="Remove source"
                           >
                             <Trash2 size={14} />
@@ -495,23 +496,23 @@ export default function MemPalace() {
           {tab === 'search' && (
             <div className="space-y-6">
               {/* Search bar */}
-              <div className="bg-[#182230] border border-[#344054] rounded-xl p-5">
+              <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-5">
                 <div className="flex gap-3">
                   <div className="flex-1 relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
                     <input
                       type="text"
                       placeholder="Search your knowledge base..."
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      className="w-full bg-[#0C111D] border border-[#344054] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F9FAFB] placeholder-[#667085] focus:border-[#00FFA7] focus:outline-none"
+                      className="w-full bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)] focus:outline-none"
                     />
                   </div>
                   <button
                     onClick={handleSearch}
                     disabled={searching || !query.trim()}
-                    className="px-5 py-2.5 bg-[#00FFA7] text-[#0C111D] rounded-lg font-medium text-sm hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+                    className="px-5 py-2.5 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg font-medium text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
                   >
                     {searching ? 'Searching...' : 'Search'}
                   </button>
@@ -523,7 +524,7 @@ export default function MemPalace() {
                       <select
                         value={searchWing}
                         onChange={(e) => setSearchWing(e.target.value)}
-                        className="bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-1.5 text-xs text-[#D0D5DD] focus:border-[#00FFA7] focus:outline-none"
+                        className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-1.5 text-xs text-[color:var(--text-secondary)] focus:border-[color:var(--evo-green)] focus:outline-none"
                       >
                         <option value="">All wings</option>
                         {status.stats.wings?.map((w) => (
@@ -535,7 +536,7 @@ export default function MemPalace() {
                       <select
                         value={searchRoom}
                         onChange={(e) => setSearchRoom(e.target.value)}
-                        className="bg-[#0C111D] border border-[#344054] rounded-lg px-3 py-1.5 text-xs text-[#D0D5DD] focus:border-[#00FFA7] focus:outline-none"
+                        className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg px-3 py-1.5 text-xs text-[color:var(--text-secondary)] focus:border-[color:var(--evo-green)] focus:outline-none"
                       >
                         <option value="">All rooms</option>
                         {status.stats.rooms?.map((r) => (
@@ -550,36 +551,36 @@ export default function MemPalace() {
               {/* Results */}
               {searchResults && (
                 <div>
-                  <p className="text-xs text-[#98A2B3] mb-3">
+                  <p className="text-xs text-[color:var(--text-muted)] mb-3">
                     {searchResults.results?.length ?? 0} result(s) for "{searchResults.query}"
                   </p>
                   {(searchResults.results?.length ?? 0) === 0 ? (
-                    <div className="text-center py-12 text-[#98A2B3] text-sm">
+                    <div className="text-center py-12 text-[color:var(--text-muted)] text-sm">
                       No results found. Try a different query.
                     </div>
                   ) : (
                     <div className="space-y-2">
                       {searchResults.results?.map((r, i) => (
-                        <div key={i} className="bg-[#182230] border border-[#344054] rounded-xl p-4 hover:border-[#00FFA7]/30 transition-colors">
+                        <div key={i} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-4 hover:border-[color:var(--evo-green)]/30 transition-colors">
                           <div className="flex items-start justify-between gap-3 mb-2">
-                            <p className="text-xs text-[#98A2B3] truncate flex-1">{r.source_file}</p>
+                            <p className="text-xs text-[color:var(--text-muted)] truncate flex-1">{r.source_file}</p>
                             <span className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
                               r.similarity > 0.8
-                                ? 'bg-[#00FFA7]/10 text-[#00FFA7]'
+                                ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]'
                                 : r.similarity > 0.6
                                   ? 'bg-yellow-500/10 text-yellow-400'
-                                  : 'bg-white/5 text-[#98A2B3]'
+                                  : 'bg-white/5 text-[color:var(--text-muted)]'
                             }`}>
                               {(r.similarity * 100).toFixed(0)}%
                             </span>
                           </div>
-                          <p className="text-sm text-[#D0D5DD] whitespace-pre-wrap line-clamp-4">{r.text}</p>
+                          <p className="text-sm text-[color:var(--text-secondary)] whitespace-pre-wrap line-clamp-4">{r.text}</p>
                           <div className="flex gap-2 mt-2">
                             {r.wing && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00FFA7]/10 text-[#00FFA7]">{r.wing}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)]">{r.wing}</span>
                             )}
                             {r.room && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[#98A2B3]">{r.room}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[color:var(--text-muted)]">{r.room}</span>
                             )}
                           </div>
                         </div>
@@ -590,7 +591,7 @@ export default function MemPalace() {
               )}
 
               {!searchResults && (
-                <div className="text-center py-12 text-[#98A2B3] text-sm">
+                <div className="text-center py-12 text-[color:var(--text-muted)] text-sm">
                   Enter a query to search your indexed knowledge.
                 </div>
               )}

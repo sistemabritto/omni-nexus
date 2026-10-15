@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -117,7 +118,7 @@ export default function ConnectionDetail() {
     return (
       <div className="space-y-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-16 bg-[#182230] border border-[#344054] rounded-xl animate-pulse" />
+          <div key={i} className="h-16 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -125,7 +126,7 @@ export default function ConnectionDetail() {
 
   if (!conn) {
     return (
-      <div className="text-center py-12 text-[#98A2B3] text-sm">
+      <div className="text-center py-12 text-[color:var(--text-muted)] text-sm">
         {error || 'Connection not found.'}
       </div>
     )
@@ -134,9 +135,9 @@ export default function ConnectionDetail() {
   const StatusIcon = conn.status === 'ready' ? CheckCircle :
     conn.status === 'needs_migration' ? AlertTriangle :
     conn.status === 'error' ? XCircle : Wifi
-  const statusColor = conn.status === 'ready' ? 'text-[#00FFA7]' :
+  const statusColor = conn.status === 'ready' ? 'text-[color:var(--evo-green)]' :
     conn.status === 'needs_migration' ? 'text-yellow-400' :
-    conn.status === 'error' ? 'text-red-400' : 'text-[#98A2B3]'
+    conn.status === 'error' ? 'text-red-400' : 'text-[color:var(--text-muted)]'
 
   return (
     <div className="space-y-6">
@@ -144,23 +145,23 @@ export default function ConnectionDetail() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/knowledge')}
-          className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
         >
           <ArrowLeft size={16} />
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-[#F9FAFB]">{conn.name}</h2>
+            <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">{conn.name}</h2>
             <StatusIcon size={14} className={statusColor} />
           </div>
-          <p className="text-xs text-[#98A2B3]">/{conn.slug}</p>
+          <p className="text-xs text-[color:var(--text-muted)]">/{conn.slug}</p>
         </div>
         {canManage && (
           <div className="flex items-center gap-2">
             <button
               onClick={handleHealthCheck}
               disabled={actionLoading === 'health'}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 text-[#D0D5DD] rounded-lg text-xs font-medium hover:bg-white/10 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 text-[color:var(--text-secondary)] rounded-lg text-xs font-medium hover:bg-white/10 transition-colors disabled:opacity-50"
             >
               {actionLoading === 'health' ? <RefreshCw size={10} className="animate-spin" /> : <RefreshCw size={10} />}
               Health check
@@ -179,7 +180,7 @@ export default function ConnectionDetail() {
               <button
                 onClick={handleReconnect}
                 disabled={actionLoading === 'reconnect'}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#00FFA7]/10 text-[#00FFA7] rounded-lg text-xs font-medium hover:bg-[#00FFA7]/20 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] rounded-lg text-xs font-medium hover:bg-[color:var(--evo-green)]/20 transition-colors disabled:opacity-50"
               >
                 {actionLoading === 'reconnect' ? <RefreshCw size={10} className="animate-spin" /> : null}
                 Reconnect
@@ -208,16 +209,16 @@ export default function ConnectionDetail() {
           { label: 'Last Health Check', value: conn.last_health_check ? new Date(conn.last_health_check).toLocaleString() : '—' },
           { label: 'Created', value: new Date(conn.created_at).toLocaleString() },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-[#182230] border border-[#344054] rounded-xl p-4">
-            <p className="text-xs text-[#98A2B3] mb-1">{label}</p>
-            <p className="text-sm text-[#D0D5DD] font-medium truncate">{value}</p>
+          <div key={label} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-4">
+            <p className="text-xs text-[color:var(--text-muted)] mb-1">{label}</p>
+            <p className="text-sm text-[color:var(--text-secondary)] font-medium truncate">{value}</p>
           </div>
         ))}
       </div>
 
       {conn.last_error && (
         <div className="bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
-          <p className="text-xs text-[#98A2B3] mb-1">Last Error</p>
+          <p className="text-xs text-[color:var(--text-muted)] mb-1">Last Error</p>
           <p className="text-sm text-red-400 font-mono">{conn.last_error}</p>
         </div>
       )}
@@ -225,17 +226,17 @@ export default function ConnectionDetail() {
       {/* Events */}
       {conn.events && conn.events.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-[#D0D5DD] mb-3">{t('knowledge.recentEvents')}</h3>
+          <h3 className="text-sm font-semibold text-[color:var(--text-secondary)] mb-3">{t('knowledge.recentEvents')}</h3>
           <div className="space-y-2">
             {conn.events.map((ev) => (
-              <div key={ev.id} className="bg-[#182230] border border-[#344054] rounded-xl px-4 py-3 flex items-start gap-3">
+              <div key={ev.id} className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl px-4 py-3 flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-[#D0D5DD]">{ev.event_type}</span>
-                    <span className="text-[10px] text-[#98A2B3]">{new Date(ev.created_at).toLocaleString()}</span>
+                    <span className="text-xs font-medium text-[color:var(--text-secondary)]">{ev.event_type}</span>
+                    <span className="text-[10px] text-[color:var(--text-muted)]">{new Date(ev.created_at).toLocaleString()}</span>
                   </div>
                   {ev.details && Object.keys(ev.details).length > 0 && (
-                    <p className="text-xs text-[#98A2B3] mt-0.5 font-mono truncate">
+                    <p className="text-xs text-[color:var(--text-muted)] mt-0.5 font-mono truncate">
                       {JSON.stringify(ev.details).slice(0, 120)}
                     </p>
                   )}
@@ -250,9 +251,9 @@ export default function ConnectionDetail() {
       {canManage && (
         <div className="border border-red-500/20 rounded-xl p-4">
           <h3 className="text-sm font-semibold text-red-400 mb-2">{t('knowledge.dangerZone')}</h3>
-          <p className="text-xs text-[#98A2B3] mb-4">
+          <p className="text-xs text-[color:var(--text-muted)] mb-4">
             Deleting this connection removes it from EvoNexus only.{' '}
-            <strong className="text-[#D0D5DD]">Data on your Postgres remains untouched.</strong>
+            <strong className="text-[color:var(--text-secondary)]">Data on your Postgres remains untouched.</strong>
           </p>
           {!confirmDelete ? (
             <button
@@ -266,7 +267,7 @@ export default function ConnectionDetail() {
               <p className="text-xs text-red-400 flex-1">Are you sure? This cannot be undone.</p>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="px-3 py-1.5 bg-white/5 text-[#D0D5DD] rounded-lg text-xs font-medium hover:bg-white/10 transition-colors"
+                className="px-3 py-1.5 bg-white/5 text-[color:var(--text-secondary)] rounded-lg text-xs font-medium hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>

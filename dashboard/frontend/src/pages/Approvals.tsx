@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
@@ -45,7 +46,7 @@ const GATE_LABELS: Record<string, string> = {
 }
 
 const GATE_COLORS: Record<string, string> = {
-  publish: 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/20',
+  publish: 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border-[color:var(--evo-green)]/20',
   decomposition: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   project_suggestion: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   goal_suggestion: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
@@ -146,7 +147,7 @@ function PublishPreview({ p }: { p: PublishPreview }) {
           href={p.source_url}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10 text-xs text-[#00FFA7] hover:underline"
+          className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10 text-xs text-[color:var(--evo-green)] hover:underline"
         >
           <ExternalLink size={12} /> Abrir o artigo completo
         </a>
@@ -305,7 +306,7 @@ export default function Approvals({ embedded = false }: { embedded?: boolean }) 
             onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition border ${
               statusFilter === s
-                ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/30'
+                ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border-[color:var(--evo-green)]/30'
                 : 'text-white/50 border-white/10 hover:text-white/80'
             }`}
           >
@@ -365,7 +366,7 @@ export default function Approvals({ embedded = false }: { embedded?: boolean }) 
                   {a.agent && <span>via @{a.agent}</span>}
                   {a.decided_by && <span>decidido por {a.decided_by}</span>}
                   {link && (
-                    <Link to={link.to} className="flex items-center gap-1 text-[#00FFA7] hover:underline">
+                    <Link to={link.to} className="flex items-center gap-1 text-[color:var(--evo-green)] hover:underline">
                       <ExternalLink size={12} /> {link.label}
                     </Link>
                   )}
@@ -390,7 +391,7 @@ export default function Approvals({ embedded = false }: { embedded?: boolean }) 
                     <button
                       disabled={actingId === a.id}
                       onClick={() => decide(a, 'approve')}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[#00FFA7] border border-[#00FFA7]/30 hover:bg-[#00FFA7]/10 transition disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/30 hover:bg-[color:var(--evo-green)]/10 transition disabled:opacity-50"
                     >
                       <CheckCircle2 size={14} /> Aprovar
                     </button>

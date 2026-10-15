@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
@@ -119,13 +120,13 @@ export default function Reports() {
     return (
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-6">
-          <button onClick={handleBack} className="text-[#00FFA7] text-sm hover:underline mb-4 inline-flex items-center gap-1">
+          <button onClick={handleBack} className="text-[color:var(--evo-green)] text-sm hover:underline mb-4 inline-flex items-center gap-1">
             <ArrowLeft size={14} /> Back
           </button>
-          <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{viewItem.name}</h1>
-          <p className="text-[#98A2B3] text-sm mt-1 font-mono">{currentPath}</p>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{viewItem.name}</h1>
+          <p className="text-[color:var(--text-muted)] text-sm mt-1 font-mono">{currentPath}</p>
         </div>
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden">
           {isHtml ? (
             <iframe
               srcDoc={viewContent}
@@ -136,11 +137,11 @@ export default function Reports() {
           ) : isMd ? (
             <div className="p-6"><Markdown>{viewContent}</Markdown></div>
           ) : isJson ? (
-            <pre className="p-6 text-sm font-mono text-[#e6edf3] overflow-x-auto whitespace-pre-wrap">
+            <pre className="p-6 text-sm font-mono text-[color:var(--text-primary)] overflow-x-auto whitespace-pre-wrap">
               {(() => { try { return JSON.stringify(JSON.parse(viewContent), null, 2) } catch { return viewContent } })()}
             </pre>
           ) : (
-            <pre className="p-6 text-sm font-mono text-[#8b949e] overflow-x-auto whitespace-pre-wrap">{viewContent}</pre>
+            <pre className="p-6 text-sm font-mono text-[color:var(--text-muted)] overflow-x-auto whitespace-pre-wrap">{viewContent}</pre>
           )}
         </div>
       </div>
@@ -162,8 +163,8 @@ export default function Reports() {
     <div className="max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('reports.title')}</h1>
-        <p className="text-[#98A2B3] text-sm mt-1">Browse your workspace files and reports</p>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('reports.title')}</h1>
+        <p className="text-[color:var(--text-muted)] text-sm mt-1">Browse your workspace files and reports</p>
       </div>
 
       {/* Breadcrumbs */}
@@ -175,8 +176,8 @@ export default function Reports() {
               onClick={() => handleNavigate(bc.path)}
               className={`px-2 py-0.5 rounded transition-colors ${
                 i === breadcrumbs.length - 1
-                  ? 'text-[#e6edf3] font-medium'
-                  : 'text-[#98A2B3] hover:text-[#00FFA7]'
+                  ? 'text-[color:var(--text-primary)] font-medium'
+                  : 'text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)]'
               }`}
             >
               {bc.name}
@@ -187,49 +188,49 @@ export default function Reports() {
 
       {/* Search */}
       <div className="relative mb-6">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
         <input
           type="text"
           placeholder="Filter files..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md bg-[#161b22] border border-[#21262d] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#e6edf3] placeholder-[#667085] focus:outline-none focus:border-[#00FFA7]/50 transition-all"
+          className="w-full max-w-md bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:outline-none focus:border-[color:var(--evo-green)]/50 transition-all"
         />
       </div>
 
       {loading ? (
         <div className="space-y-2">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#161b22] border border-[#21262d]">
-              <div className="h-8 w-8 rounded-lg bg-[#21262d] animate-pulse" />
-              <div className="h-4 w-48 rounded bg-[#21262d] animate-pulse" />
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)]">
+              <div className="h-8 w-8 rounded-lg bg-[color:var(--border)] animate-pulse" />
+              <div className="h-4 w-48 rounded bg-[color:var(--border)] animate-pulse" />
             </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#161b22] border border-[#21262d]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--bg-card)] border border-[color:var(--border)]">
             <FolderOpen size={32} className="text-[#3F3F46]" />
           </div>
-          <p className="text-[#98A2B3] text-lg">{search ? 'No matches found' : 'Empty directory'}</p>
+          <p className="text-[color:var(--text-muted)] text-lg">{search ? 'No matches found' : 'Empty directory'}</p>
         </div>
       ) : (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden">
           {/* Directories */}
           {dirs.map((item) => (
             <button
               key={item.path}
               onClick={() => handleNavigate(item.path)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#1c2128] transition-colors border-b border-[#21262d] last:border-b-0 group"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#1c2128] transition-colors border-b border-[color:var(--border)] last:border-b-0 group"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#00FFA7]/8 group-hover:bg-[#00FFA7]/15 transition-colors">
-                <Folder size={16} className="text-[#00FFA7]" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[color:var(--evo-green)]/8 group-hover:bg-[color:var(--evo-green)]/15 transition-colors">
+                <Folder size={16} className="text-[color:var(--evo-green)]" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-[#e6edf3] group-hover:text-[#00FFA7] transition-colors">{item.name}</span>
+                <span className="text-sm font-medium text-[color:var(--text-primary)] group-hover:text-[color:var(--evo-green)] transition-colors">{item.name}</span>
               </div>
-              <span className="text-xs text-[#98A2B3]">{item.children_count} items</span>
-              <ChevronRight size={14} className="text-[#3F3F46] group-hover:text-[#98A2B3] transition-colors" />
+              <span className="text-xs text-[color:var(--text-muted)]">{item.children_count} items</span>
+              <ChevronRight size={14} className="text-[#3F3F46] group-hover:text-[color:var(--text-muted)] transition-colors" />
             </button>
           ))}
 
@@ -241,20 +242,20 @@ export default function Reports() {
                 key={item.path}
                 onClick={() => item.viewable ? handleNavigate(item.path) : null}
                 disabled={!item.viewable}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-[#21262d] last:border-b-0 transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-[color:var(--border)] last:border-b-0 transition-colors ${
                   item.viewable ? 'hover:bg-[#1c2128] cursor-pointer group' : 'opacity-50 cursor-default'
                 }`}
               >
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#21262d]">
-                  <IconComp size={16} className="text-[#8b949e]" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[color:var(--border)]">
+                  <IconComp size={16} className="text-[color:var(--text-muted)]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className={`text-sm text-[#e6edf3] ${item.viewable ? 'group-hover:text-[#00FFA7]' : ''} transition-colors truncate block`}>
+                  <span className={`text-sm text-[color:var(--text-primary)] ${item.viewable ? 'group-hover:text-[color:var(--evo-green)]' : ''} transition-colors truncate block`}>
                     {item.name}
                   </span>
                 </div>
-                <span className="text-xs text-[#98A2B3] hidden sm:block">{item.size ? formatSize(item.size) : ''}</span>
-                <span className="text-xs text-[#98A2B3] hidden md:block w-20 text-right">{item.modified ? relativeTime(item.modified) : ''}</span>
+                <span className="text-xs text-[color:var(--text-muted)] hidden sm:block">{item.size ? formatSize(item.size) : ''}</span>
+                <span className="text-xs text-[color:var(--text-muted)] hidden md:block w-20 text-right">{item.modified ? relativeTime(item.modified) : ''}</span>
               </button>
             )
           })}

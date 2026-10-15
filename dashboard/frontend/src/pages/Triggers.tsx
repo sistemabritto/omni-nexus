@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
@@ -42,12 +43,12 @@ const AGENTS = [
 ]
 
 const SOURCE_COLORS: Record<string, string> = {
-  github: 'bg-[#e6edf3]/10 text-[#e6edf3] border-[#e6edf3]/20',
+  github: 'bg-[color:var(--text-primary)]/10 text-[color:var(--text-primary)] border-[color:var(--text-primary)]/20',
   stripe: 'bg-[#635bff]/10 text-[#635bff] border-[#635bff]/20',
   linear: 'bg-[#5e6ad2]/10 text-[#5e6ad2] border-[#5e6ad2]/20',
   telegram: 'bg-[#229ed9]/10 text-[#229ed9] border-[#229ed9]/20',
   discord: 'bg-[#5865f2]/10 text-[#5865f2] border-[#5865f2]/20',
-  custom: 'bg-[#667085]/10 text-[#98A2B3] border-[#667085]/20',
+  custom: 'bg-[#667085]/10 text-[color:var(--text-muted)] border-[#667085]/20',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -237,7 +238,7 @@ export default function Triggers() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-[#e6edf3] mb-8">Triggers</h1>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] mb-8">Triggers</h1>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
         </div>
@@ -250,17 +251,17 @@ export default function Triggers() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00FFA7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"/><path d="m6 7 3 5"/><path d="m12 6 1.97 3.44"/><path d="M22 17c0 2.21-1.79 4-4 4-1.29 0-2.44-.62-3.16-1.58"/><path d="M2 12c1.9-3.31 5.57-5 9.24-5a11.57 11.57 0 0 1 6.93 2.34"/><circle cx="18" cy="17" r="1"/></svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e6edf3]">Triggers</h1>
-            <p className="text-[#98A2B3] mt-0.5 text-sm">Reactive event triggers — webhook & event-based</p>
+            <h1 className="text-2xl font-bold text-[color:var(--text-primary)]">Triggers</h1>
+            <p className="text-[color:var(--text-muted)] mt-0.5 text-sm">Reactive event triggers — webhook & event-based</p>
           </div>
         </div>
         {hasPermission('triggers', 'execute') && (
           <button onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/20 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors font-medium text-sm"
           >
             <Plus size={16} /> New Trigger
           </button>
@@ -274,29 +275,29 @@ export default function Triggers() {
             onClick={() => setFilter(f.value)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               filter === f.value
-                ? 'bg-[#00FFA7]/10 border-[#00FFA7]/20 text-[#00FFA7]'
-                : 'bg-[#161b22] border-[#21262d] text-[#98A2B3] hover:text-[#D0D5DD] hover:border-[#344054]'
+                ? 'bg-[color:var(--evo-green)]/10 border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)]'
+                : 'bg-[color:var(--bg-card)] border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:border-[color:var(--border)]'
             }`}
           >
             {f.label}
           </button>
         ))}
-        <span className="text-[11px] text-[#98A2B3] ml-2">{triggers.length} triggers</span>
-        <button onClick={fetchTriggers} className="ml-auto p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Refresh">
+        <span className="text-[11px] text-[color:var(--text-muted)] ml-2">{triggers.length} triggers</span>
+        <button onClick={fetchTriggers} className="ml-auto p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors" title="Refresh">
           <RefreshCw size={14} />
         </button>
       </div>
 
       {/* Table */}
       {triggers.length === 0 ? (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl p-12 text-center">
-          <p className="text-[#98A2B3] text-sm">No triggers yet. Create one to get started.</p>
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl p-12 text-center">
+          <p className="text-[color:var(--text-muted)] text-sm">No triggers yet. Create one to get started.</p>
         </div>
       ) : (
-        <div className="bg-[#161b22] border border-[#21262d] rounded-xl overflow-hidden">
+        <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+              <tr className="text-[color:var(--text-muted)] text-xs uppercase tracking-wider bg-[color:var(--bg-primary)]/50 border-b border-[color:var(--border)]">
                 <th className="text-left p-4 font-medium">Name</th>
                 <th className="text-left p-4 font-medium">Type</th>
                 <th className="text-left p-4 font-medium">Source</th>
@@ -309,16 +310,16 @@ export default function Triggers() {
             </thead>
             <tbody>
               {triggers.map(t => (
-                <tr key={t.id} className="border-t border-[#21262d]/50 hover:bg-white/[0.02]">
+                <tr key={t.id} className="border-t border-[color:var(--border)]/50 hover:bg-white/[0.02]">
                   <td className="p-4">
-                    <div className="text-[#e6edf3] font-medium">{t.name}</div>
-                    <div className="text-[#98A2B3] text-xs mt-0.5">
+                    <div className="text-[color:var(--text-primary)] font-medium">{t.name}</div>
+                    <div className="text-[color:var(--text-muted)] text-xs mt-0.5">
                       {Object.entries(t.event_filter).map(([k, v]) => `${k}:${v}`).join(', ') || 'no filter'}
                     </div>
                   </td>
                   <td className="p-4">
                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium border ${
-                      t.type === 'webhook' ? 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                      t.type === 'webhook' ? 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border-[color:var(--evo-green)]/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
                     }`}>
                       {t.type}
                     </span>
@@ -329,22 +330,22 @@ export default function Triggers() {
                     </span>
                   </td>
                   <td className="p-4 hidden xl:table-cell">
-                    <span className="text-[#98A2B3] text-xs">{t.action_type}:</span>{' '}
-                    <span className="text-[#e6edf3] text-xs">{t.action_payload.length > 40 ? t.action_payload.slice(0, 40) + '...' : t.action_payload}</span>
+                    <span className="text-[color:var(--text-muted)] text-xs">{t.action_type}:</span>{' '}
+                    <span className="text-[color:var(--text-primary)] text-xs">{t.action_payload.length > 40 ? t.action_payload.slice(0, 40) + '...' : t.action_payload}</span>
                   </td>
                   <td className="p-4 hidden lg:table-cell">
-                    <span className="text-[#98A2B3] text-xs">{t.agent ? `@${t.agent.replace('-assistant', '').replace('-financeiro', '').replace('-community', '').replace('-strategy', '').replace('-social-media', '').replace('-comercial', '').replace('-courses', '').replace('-personal', '')}` : '--'}</span>
+                    <span className="text-[color:var(--text-muted)] text-xs">{t.agent ? `@${t.agent.replace('-assistant', '').replace('-financeiro', '').replace('-community', '').replace('-strategy', '').replace('-social-media', '').replace('-comercial', '').replace('-courses', '').replace('-personal', '')}` : '--'}</span>
                   </td>
                   <td className="p-4 text-center">
                     <button onClick={() => handleToggle(t)} title={t.enabled ? 'Disable' : 'Enable'}
-                      className={`inline-block w-8 h-4 rounded-full relative cursor-pointer transition-colors ${t.enabled ? 'bg-[#00FFA7]/30' : 'bg-[#344054]'}`}
+                      className={`inline-block w-8 h-4 rounded-full relative cursor-pointer transition-colors ${t.enabled ? 'bg-[color:var(--evo-green)]/30' : 'bg-[color:var(--border)]'}`}
                     >
-                      <span className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${t.enabled ? 'left-4 bg-[#00FFA7]' : 'left-0.5 bg-[#667085]'}`} />
+                      <span className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${t.enabled ? 'left-4 bg-[color:var(--evo-green)]' : 'left-0.5 bg-[#667085]'}`} />
                     </button>
                   </td>
                   <td className="p-4 text-center">
                     <button onClick={() => openExecutions(t.id, t.name)}
-                      className="text-[#98A2B3] hover:text-[#e6edf3] text-xs transition-colors"
+                      className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] text-xs transition-colors"
                     >
                       {t.execution_count}
                     </button>
@@ -353,28 +354,28 @@ export default function Triggers() {
                     <div className="flex items-center gap-1 justify-end">
                       {t.type === 'webhook' && (
                         <button onClick={() => copyWebhookUrl(t)}
-                          className={`p-1.5 rounded-lg transition-colors ${copied === t.id ? 'text-[#00FFA7]' : 'hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]'}`}
+                          className={`p-1.5 rounded-lg transition-colors ${copied === t.id ? 'text-[color:var(--evo-green)]' : 'hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}
                           title="Copy webhook URL"
                         >
                           <Copy size={14} />
                         </button>
                       )}
                       {hasPermission('triggers', 'execute') && (
-                        <button onClick={() => handleTest(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Test">
+                        <button onClick={() => handleTest(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors" title="Test">
                           <Play size={14} />
                         </button>
                       )}
                       {hasPermission('triggers', 'execute') && (
-                        <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3] transition-colors" title="Edit">
+                        <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors" title="Edit">
                           <Pencil size={14} />
                         </button>
                       )}
                       {hasPermission('triggers', 'manage') && (
                         <>
-                          <button onClick={() => handleRegenerateSecret(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-yellow-400 transition-colors" title="Regenerate Secret">
+                          <button onClick={() => handleRegenerateSecret(t.id)} className="p-1.5 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-yellow-400 transition-colors" title="Regenerate Secret">
                             <KeyRound size={14} />
                           </button>
-                          <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[#98A2B3] hover:text-red-400 transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-[color:var(--text-muted)] hover:text-red-400 transition-colors" title="Delete">
                             <Trash2 size={14} />
                           </button>
                         </>
@@ -391,56 +392,56 @@ export default function Triggers() {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
-              <h2 className="text-lg font-semibold text-[#e6edf3]">{editingId ? 'Edit Trigger' : 'New Trigger'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]"><X size={18} /></button>
+          <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
+              <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">{editingId ? 'Edit Trigger' : 'New Trigger'}</h2>
+              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"><X size={18} /></button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Name *</label>
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Name *</label>
                 <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Deploy Notification"
-                  className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none" />
+                  className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)]/50 focus:outline-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Type *</label>
+                  <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Type *</label>
                   <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
+                    className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)]/50 focus:outline-none">
                     <option value="webhook">Webhook</option>
                     <option value="event">Event</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Source *</label>
+                  <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Source *</label>
                   <select value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
+                    className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)]/50 focus:outline-none">
                     {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Event Filter (JSON)</label>
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Event Filter (JSON)</label>
                 <textarea value={form.event_filter} onChange={e => setForm({ ...form, event_filter: e.target.value })}
                   placeholder='{"event": "push", "branch": "main"}' rows={3}
-                  className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none resize-none font-mono" />
+                  className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)]/50 focus:outline-none resize-none font-mono" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Action Type *</label>
+                  <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Action Type *</label>
                   <select value={form.action_type} onChange={e => setForm({ ...form, action_type: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
+                    className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)]/50 focus:outline-none">
                     {ACTION_TYPES.map(at => <option key={at} value={at}>{at}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Agent</label>
+                  <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Agent</label>
                   <select value={form.agent} onChange={e => setForm({ ...form, agent: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] focus:border-[#00FFA7]/50 focus:outline-none">
+                    className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)]/50 focus:outline-none">
                     <option value="">None</option>
                     {AGENTS.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
@@ -448,26 +449,26 @@ export default function Triggers() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#98A2B3] mb-1.5">Action Payload *</label>
+                <label className="block text-xs font-medium text-[color:var(--text-muted)] mb-1.5">Action Payload *</label>
                 <textarea value={form.action_payload} onChange={e => setForm({ ...form, action_payload: e.target.value })}
                   placeholder="discord-send-message Deploy detectado na main" rows={2}
-                  className="w-full px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-sm text-[#e6edf3] placeholder-[#667085] focus:border-[#00FFA7]/50 focus:outline-none resize-none" />
+                  className="w-full px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-sm text-[color:var(--text-primary)] placeholder-[#667085] focus:border-[color:var(--evo-green)]/50 focus:outline-none resize-none" />
               </div>
 
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={form.enabled} onChange={e => setForm({ ...form, enabled: e.target.checked })}
-                  className="rounded border-[#21262d] bg-[#0d1117] text-[#00FFA7] focus:ring-[#00FFA7]/50" />
-                <label className="text-xs text-[#98A2B3]">Enabled</label>
+                  className="rounded border-[color:var(--border)] bg-[color:var(--bg-primary)] text-[color:var(--evo-green)] focus:ring-[color:var(--evo-green)]/50" />
+                <label className="text-xs text-[color:var(--text-muted)]">Enabled</label>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#21262d]">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[color:var(--border)]">
               <button onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg border border-[#21262d] text-[#98A2B3] hover:text-[#e6edf3] hover:border-[#344054] transition-colors text-sm">
+                className="px-4 py-2 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--border)] transition-colors text-sm">
                 Cancel
               </button>
               <button onClick={handleSave} disabled={saving || !form.name || !form.action_payload}
-                className="px-4 py-2 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/20 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-4 py-2 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
               </button>
             </div>
@@ -478,20 +479,20 @@ export default function Triggers() {
       {/* Executions Modal */}
       {execModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setExecModal(null)}>
-          <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
-              <h2 className="text-lg font-semibold text-[#e6edf3]">Executions — {execModal.name}</h2>
-              <button onClick={() => setExecModal(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]"><X size={18} /></button>
+          <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
+              <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Executions — {execModal.name}</h2>
+              <button onClick={() => setExecModal(null)} className="p-1 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"><X size={18} /></button>
             </div>
             <div className="overflow-y-auto flex-1">
               {execLoading ? (
-                <div className="p-6 text-center text-[#98A2B3] text-sm">Loading...</div>
+                <div className="p-6 text-center text-[color:var(--text-muted)] text-sm">Loading...</div>
               ) : executions.length === 0 ? (
-                <div className="p-6 text-center text-[#98A2B3] text-sm">No executions yet</div>
+                <div className="p-6 text-center text-[color:var(--text-muted)] text-sm">No executions yet</div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-[#98A2B3] text-xs uppercase tracking-wider bg-[#0d1117]/50 border-b border-[#21262d]">
+                    <tr className="text-[color:var(--text-muted)] text-xs uppercase tracking-wider bg-[color:var(--bg-primary)]/50 border-b border-[color:var(--border)]">
                       <th className="text-left p-3 font-medium">Status</th>
                       <th className="text-left p-3 font-medium">Event</th>
                       <th className="text-left p-3 font-medium">Duration</th>
@@ -500,20 +501,20 @@ export default function Triggers() {
                   </thead>
                   <tbody>
                     {executions.map(ex => (
-                      <tr key={ex.id} className="border-t border-[#21262d]/50 hover:bg-white/[0.02]">
+                      <tr key={ex.id} className="border-t border-[color:var(--border)]/50 hover:bg-white/[0.02]">
                         <td className="p-3">
                           <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${STATUS_COLORS[ex.status] || ''}`}>
                             {ex.status}
                           </span>
                         </td>
-                        <td className="p-3 text-[#98A2B3] text-xs max-w-[200px] truncate">
+                        <td className="p-3 text-[color:var(--text-muted)] text-xs max-w-[200px] truncate">
                           {(ex.event_data as Record<string, unknown>)?._test ? 'test' : (String((ex.event_data as Record<string, unknown>)?.event_type || '--'))}
                           {ex.error && <span className="text-red-400 ml-2" title={ex.error}>error</span>}
                         </td>
-                        <td className="p-3 text-[#98A2B3] text-xs">
+                        <td className="p-3 text-[color:var(--text-muted)] text-xs">
                           {ex.duration_seconds != null ? `${ex.duration_seconds.toFixed(1)}s` : '--'}
                         </td>
-                        <td className="p-3 text-[#98A2B3] text-xs">
+                        <td className="p-3 text-[color:var(--text-muted)] text-xs">
                           {ex.started_at ? relativeTime(ex.started_at) : '--'}
                         </td>
                       </tr>
@@ -529,26 +530,26 @@ export default function Triggers() {
       {/* New Secret Modal */}
       {newSecret && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setNewSecret(null)}>
-          <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262d]">
-              <h2 className="text-lg font-semibold text-[#e6edf3]">New Secret Generated</h2>
-              <button onClick={() => setNewSecret(null)} className="p-1 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#e6edf3]"><X size={18} /></button>
+          <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
+              <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">New Secret Generated</h2>
+              <button onClick={() => setNewSecret(null)} className="p-1 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"><X size={18} /></button>
             </div>
             <div className="p-6">
-              <p className="text-[#98A2B3] text-xs mb-3">Copy this secret now — it won't be shown again.</p>
+              <p className="text-[color:var(--text-muted)] text-xs mb-3">Copy this secret now — it won't be shown again.</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 px-3 py-2 bg-[#0d1117] border border-[#21262d] rounded-lg text-xs text-[#e6edf3] font-mono break-all">
+                <code className="flex-1 px-3 py-2 bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-lg text-xs text-[color:var(--text-primary)] font-mono break-all">
                   {newSecret.secret}
                 </code>
                 <button onClick={() => { navigator.clipboard.writeText(newSecret.secret); }}
-                  className="p-2 rounded-lg hover:bg-white/5 text-[#98A2B3] hover:text-[#00FFA7] transition-colors" title="Copy">
+                  className="p-2 rounded-lg hover:bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors" title="Copy">
                   <Copy size={16} />
                 </button>
               </div>
             </div>
-            <div className="flex justify-end px-6 py-4 border-t border-[#21262d]">
+            <div className="flex justify-end px-6 py-4 border-t border-[color:var(--border)]">
               <button onClick={() => setNewSecret(null)}
-                className="px-4 py-2 rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/20 text-[#00FFA7] hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium">
+                className="px-4 py-2 rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/20 transition-colors text-sm font-medium">
                 Done
               </button>
             </div>

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff, RefreshCw, Terminal, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -22,8 +23,8 @@ const PROVIDERS: Provider[] = [
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 const OPENROUTER_DEFAULT_MODEL = 'anthropic/claude-sonnet-4'
 
-const inp = "w-full px-4 py-3 rounded-lg bg-[#0f1520] border border-[#1e2a3a] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[#00FFA7]/60 focus:ring-1 focus:ring-[#00FFA7]/20"
-const lbl = "block text-[11px] font-semibold text-[#98A2B3] mb-1.5 tracking-[0.08em] uppercase"
+const inp = "w-full px-4 py-3 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] text-[#e2e8f0] placeholder-[#3d4f65] text-sm transition-colors duration-200 focus:outline-none focus:border-[color:var(--evo-green)]/60 focus:ring-1 focus:ring-[color:var(--evo-green)]/20"
+const lbl = "block text-[11px] font-semibold text-[color:var(--text-muted)] mb-1.5 tracking-[0.08em] uppercase"
 
 interface StepProviderProps {
   onNext: (provider: string) => void
@@ -35,10 +36,10 @@ type Phase = 'select' | ProviderId
 export default function StepProvider({ onNext, onBack }: StepProviderProps) {
   const [phase, setPhase] = useState<Phase>('select')
 
-  const cardShell = "rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]"
+  const cardShell = "rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)]"
 
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 font-[Inter,-apple-system,sans-serif]">
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center px-4 font-[family-name:var(--sb-font-body)]">
       <div className="w-full max-w-[480px] relative z-10">
         <OnboardingHeader step="step1of3" filled={1} />
 
@@ -92,9 +93,9 @@ function ProviderSelect({ shell, onPick, onBack }: { shell: string; onPick: (id:
   const { t } = useTranslation()
   return (
     <div className={shell}>
-      <div className="px-7 pt-7 pb-5 border-b border-[#152030]">
+      <div className="px-7 pt-7 pb-5 border-b border-[color:var(--border)]">
         <h2 className="text-[16px] font-semibold text-[#e2e8f0]">{t('onboarding.provider.title')}</h2>
-        <p className="text-[11px] text-[#4a5a6e] mt-1">{t('onboarding.provider.subtitle')}</p>
+        <p className="text-[11px] text-[color:var(--text-muted)] mt-1">{t('onboarding.provider.subtitle')}</p>
       </div>
 
       <div className="px-7 py-6 space-y-4">
@@ -103,7 +104,7 @@ function ProviderSelect({ shell, onPick, onBack }: { shell: string; onPick: (id:
             <button
               key={p.id}
               onClick={() => onPick(p.id)}
-              className="p-3 rounded-lg border text-left transition-all duration-200 border-[#1e2a3a] bg-[#0f1520] hover:border-[#00FFA7]/60 hover:bg-[#00FFA7]/5"
+              className="p-3 rounded-lg border text-left transition-all duration-200 border-[color:var(--border)] bg-[color:var(--bg-card)] hover:border-[color:var(--evo-green)]/60 hover:bg-[color:var(--evo-green)]/5"
             >
               <div className="flex items-center gap-2 mb-1">
                 <span
@@ -112,7 +113,7 @@ function ProviderSelect({ shell, onPick, onBack }: { shell: string; onPick: (id:
                 />
                 <span className="text-[13px] font-semibold text-[#e2e8f0]">{p.name}</span>
               </div>
-              <p className="text-[10px] text-[#98A2B3] leading-snug">{t(`onboarding.provider.descriptions.${p.id}`)}</p>
+              <p className="text-[10px] text-[color:var(--text-muted)] leading-snug">{t(`onboarding.provider.descriptions.${p.id}`)}</p>
             </button>
           ))}
         </div>
@@ -120,7 +121,7 @@ function ProviderSelect({ shell, onPick, onBack }: { shell: string; onPick: (id:
         <div className="flex gap-3 pt-2">
           <button
             onClick={onBack}
-            className="flex-1 py-3 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+            className="flex-1 py-3 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
           >
             {t('onboarding.back')}
           </button>
@@ -137,7 +138,7 @@ function BackLink({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="text-[11px] text-[#98A2B3] hover:text-[#00FFA7] transition-colors"
+      className="text-[11px] text-[color:var(--text-muted)] hover:text-[color:var(--evo-green)] transition-colors"
     >
       {t('onboarding.backToProviders')}
     </button>
@@ -166,7 +167,7 @@ function AnthropicSubStep({ shell, onBackToProviders, onDone }: { shell: string;
 
   return (
     <div className={shell}>
-      <div className="px-7 pt-5 pb-4 border-b border-[#152030]">
+      <div className="px-7 pt-5 pb-4 border-b border-[color:var(--border)]">
         <BackLink onClick={onBackToProviders} />
         <h2 className="text-[16px] font-semibold text-[#e2e8f0] mt-2">{t('onboarding.providerAnthropic.title')}</h2>
       </div>
@@ -180,15 +181,15 @@ function AnthropicSubStep({ shell, onBackToProviders, onDone }: { shell: string;
 
         <p className="text-[12px] text-[#8a9aae] leading-relaxed">
           {t('onboarding.providerAnthropic.bodyPart1')}
-          <code className="inline-flex items-center gap-1 font-mono text-[11px] px-1.5 py-0.5 rounded bg-[#0f1520] border border-[#00FFA7]/20 text-[#00FFA7] mx-1">
+          <code className="inline-flex items-center gap-1 font-mono text-[11px] px-1.5 py-0.5 rounded bg-[color:var(--bg-card)] border border-[color:var(--evo-green)]/20 text-[color:var(--evo-green)] mx-1">
             <Terminal size={10} />
             {t('onboarding.providerAnthropic.codeChip')}
           </code>
           {t('onboarding.providerAnthropic.bodyPart2')}
         </p>
 
-        <div className="p-3 rounded-lg bg-[#0a1220] border border-[#1e2a3a]">
-          <p className="text-[11px] text-[#98A2B3] leading-relaxed">
+        <div className="p-3 rounded-lg bg-[#0a1220] border border-[color:var(--border)]">
+          <p className="text-[11px] text-[color:var(--text-muted)] leading-relaxed">
             {t('onboarding.providerAnthropic.noKeyNote')}
           </p>
         </div>
@@ -196,14 +197,14 @@ function AnthropicSubStep({ shell, onBackToProviders, onDone }: { shell: string;
         <div className="flex gap-3 pt-2">
           <button
             onClick={onBackToProviders}
-            className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+            className="flex-none py-3 px-4 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
           >
             {t('onboarding.back')}
           </button>
           <button
             onClick={handleContinue}
             disabled={saving}
-            className="flex-1 py-3 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
+            className="flex-1 py-3 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
           >
             {saving ? t('onboarding.provider.saving') : t('onboarding.providerAnthropic.continue')}
           </button>
@@ -272,7 +273,7 @@ function OpenAISubStep({ shell, onBackToProviders, onDone }: { shell: string; on
 
   return (
     <div className={shell}>
-      <div className="px-7 pt-5 pb-4 border-b border-[#152030]">
+      <div className="px-7 pt-5 pb-4 border-b border-[color:var(--border)]">
         <BackLink onClick={onBackToProviders} />
         <h2 className="text-[16px] font-semibold text-[#e2e8f0] mt-2">{t('onboarding.providerOpenAI.title')}</h2>
       </div>
@@ -299,7 +300,7 @@ function OpenAISubStep({ shell, onBackToProviders, onDone }: { shell: string; on
             <button
               type="button"
               onClick={() => setShowKey(!showKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#e2e8f0] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)] hover:text-[#e2e8f0] transition-colors"
             >
               {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -309,7 +310,7 @@ function OpenAISubStep({ shell, onBackToProviders, onDone }: { shell: string; on
         <button
           onClick={handleValidate}
           disabled={validating || !apiKey.trim()}
-          className="w-full py-2.5 rounded-lg border border-[#00FFA7]/30 text-[#00FFA7] hover:bg-[#00FFA7]/10 text-xs font-semibold tracking-[0.08em] uppercase transition-colors disabled:opacity-40"
+          className="w-full py-2.5 rounded-lg border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/10 text-xs font-semibold tracking-[0.08em] uppercase transition-colors disabled:opacity-40"
         >
           {validating ? (
             <span className="inline-flex items-center gap-2"><RefreshCw size={12} className="animate-spin" /> {t('onboarding.providerOpenAI.validating')}</span>
@@ -322,7 +323,7 @@ function OpenAISubStep({ shell, onBackToProviders, onDone }: { shell: string; on
           <div>
             <label className={lbl}>
               {t('onboarding.providerOpenAI.modelLabel')}
-              <span className="ml-2 text-[#00FFA7] normal-case tracking-normal font-normal">
+              <span className="ml-2 text-[color:var(--evo-green)] normal-case tracking-normal font-normal">
                 <CheckCircle2 size={10} className="inline mr-1" />{models.length} models
               </span>
             </label>
@@ -339,8 +340,8 @@ function OpenAISubStep({ shell, onBackToProviders, onDone }: { shell: string; on
           </div>
         )}
 
-        <div className="p-3 rounded-lg bg-[#0a1220] border border-[#1e2a3a]">
-          <p className="text-[11px] text-[#98A2B3] leading-relaxed">
+        <div className="p-3 rounded-lg bg-[#0a1220] border border-[color:var(--border)]">
+          <p className="text-[11px] text-[color:var(--text-muted)] leading-relaxed">
             {t('onboarding.providerOpenAI.storageNote')}
           </p>
         </div>
@@ -348,14 +349,14 @@ function OpenAISubStep({ shell, onBackToProviders, onDone }: { shell: string; on
         <div className="flex gap-3 pt-2">
           <button
             onClick={onBackToProviders}
-            className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+            className="flex-none py-3 px-4 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
           >
             {t('onboarding.back')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !apiKey.trim() || !model}
-            className="flex-1 py-3 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
+            className="flex-1 py-3 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
           >
             {saving ? t('onboarding.providerOpenAI.saving') : t('onboarding.providerOpenAI.save')}
           </button>
@@ -398,7 +399,7 @@ function OpenRouterSubStep({ shell, onBackToProviders, onDone }: { shell: string
 
   return (
     <div className={shell}>
-      <div className="px-7 pt-5 pb-4 border-b border-[#152030]">
+      <div className="px-7 pt-5 pb-4 border-b border-[color:var(--border)]">
         <BackLink onClick={onBackToProviders} />
         <h2 className="text-[16px] font-semibold text-[#e2e8f0] mt-2">{t('onboarding.providerOpenRouter.title')}</h2>
       </div>
@@ -412,7 +413,7 @@ function OpenRouterSubStep({ shell, onBackToProviders, onDone }: { shell: string
 
         <div>
           <label className={lbl}>{t('onboarding.providerOpenRouter.baseUrlLabel')}</label>
-          <div className="px-3 py-2.5 rounded-lg bg-[#0f1520] border border-[#1e2a3a] font-mono text-[12px] text-[#6366F1] flex items-center gap-2">
+          <div className="px-3 py-2.5 rounded-lg bg-[color:var(--bg-card)] border border-[color:var(--border)] font-mono text-[12px] text-[#6366F1] flex items-center gap-2">
             <ExternalLink size={12} />
             {OPENROUTER_BASE_URL}
           </div>
@@ -433,7 +434,7 @@ function OpenRouterSubStep({ shell, onBackToProviders, onDone }: { shell: string
             <button
               type="button"
               onClick={() => setShowKey(!showKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#e2e8f0] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)] hover:text-[#e2e8f0] transition-colors"
             >
               {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -452,8 +453,8 @@ function OpenRouterSubStep({ shell, onBackToProviders, onDone }: { shell: string
           />
         </div>
 
-        <div className="p-3 rounded-lg bg-[#0a1220] border border-[#1e2a3a]">
-          <p className="text-[11px] text-[#98A2B3] leading-relaxed">
+        <div className="p-3 rounded-lg bg-[#0a1220] border border-[color:var(--border)]">
+          <p className="text-[11px] text-[color:var(--text-muted)] leading-relaxed">
             {t('onboarding.providerOpenAI.storageNote')}
           </p>
         </div>
@@ -461,14 +462,14 @@ function OpenRouterSubStep({ shell, onBackToProviders, onDone }: { shell: string
         <div className="flex gap-3 pt-2">
           <button
             onClick={onBackToProviders}
-            className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+            className="flex-none py-3 px-4 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
           >
             {t('onboarding.back')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !apiKey.trim() || !model.trim()}
-            className="flex-1 py-3 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
+            className="flex-1 py-3 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
           >
             {saving ? t('onboarding.providerOpenAI.saving') : t('onboarding.providerOpenAI.save')}
           </button>
@@ -607,21 +608,21 @@ function CodexSubStep({ shell, onBackToProviders, onDone }: { shell: string; onB
 
   return (
     <div className={shell}>
-      <div className="px-7 pt-5 pb-4 border-b border-[#152030]">
+      <div className="px-7 pt-5 pb-4 border-b border-[color:var(--border)]">
         <BackLink onClick={onBackToProviders} />
         <h2 className="text-[16px] font-semibold text-[#e2e8f0] mt-2">{t('onboarding.providerCodex.title')}</h2>
       </div>
 
-      <div className="flex border-b border-[#152030]">
+      <div className="flex border-b border-[color:var(--border)]">
         <button
           onClick={() => setTab('browser')}
-          className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${tab === 'browser' ? 'text-[#00FFA7] border-b-2 border-[#00FFA7]' : 'text-[#98A2B3]'}`}
+          className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${tab === 'browser' ? 'text-[color:var(--evo-green)] border-b-2 border-[color:var(--evo-green)]' : 'text-[color:var(--text-muted)]'}`}
         >
           {t('onboarding.providerCodex.tabBrowser')}
         </button>
         <button
           onClick={() => setTab('device')}
-          className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${tab === 'device' ? 'text-[#00FFA7] border-b-2 border-[#00FFA7]' : 'text-[#98A2B3]'}`}
+          className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide uppercase transition-colors ${tab === 'device' ? 'text-[color:var(--evo-green)] border-b-2 border-[color:var(--evo-green)]' : 'text-[color:var(--text-muted)]'}`}
         >
           {t('onboarding.providerCodex.tabDevice')}
         </button>
@@ -632,18 +633,18 @@ function CodexSubStep({ shell, onBackToProviders, onDone }: { shell: string; onB
           authUrl ? (
             <>
               <div className="space-y-3">
-                <p className="text-xs text-[#98A2B3]">{t('onboarding.providerCodex.step1Open')}</p>
+                <p className="text-xs text-[color:var(--text-muted)]">{t('onboarding.providerCodex.step1Open')}</p>
                 <a
                   href={authUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block text-center py-2.5 rounded-md bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 hover:bg-[#00FFA7]/20 transition-colors text-sm font-medium"
+                  className="block text-center py-2.5 rounded-md bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20 hover:bg-[color:var(--evo-green)]/20 transition-colors text-sm font-medium"
                 >
                   {t('onboarding.providerCodex.generateLink')}
                 </a>
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-[#98A2B3]">{t('onboarding.providerCodex.step2Paste')}</p>
+                <p className="text-xs text-[color:var(--text-muted)]">{t('onboarding.providerCodex.step2Paste')}</p>
                 <input
                   type="text"
                   value={callbackUrl}
@@ -655,45 +656,45 @@ function CodexSubStep({ shell, onBackToProviders, onDone }: { shell: string; onB
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center py-8 gap-2 text-[#98A2B3] text-sm">
+            <div className="flex items-center justify-center py-8 gap-2 text-[color:var(--text-muted)] text-sm">
               <RefreshCw size={14} className="animate-spin" /> {t('onboarding.providerCodex.generateLink')}...
             </div>
           )
         ) : (
           deviceCode ? (
             <div className="space-y-4">
-              <p className="text-xs text-[#98A2B3]">
+              <p className="text-xs text-[color:var(--text-muted)]">
                 {t('onboarding.providerCodex.device1')}:{' '}
                 <a
                   href={deviceCode.verification_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#00FFA7] underline"
+                  className="text-[color:var(--evo-green)] underline"
                 >
                   {deviceCode.verification_url}
                 </a>
               </p>
-              <p className="text-xs text-[#98A2B3]">{t('onboarding.providerCodex.device2')}:</p>
+              <p className="text-xs text-[color:var(--text-muted)]">{t('onboarding.providerCodex.device2')}:</p>
               <div className="flex items-center justify-center">
-                <code className="text-xl font-bold text-white tracking-[0.15em] bg-[#0f1520] px-5 py-2.5 rounded-lg border border-[#1e2a3a]">
+                <code className="text-xl font-bold text-white tracking-[0.15em] bg-[color:var(--bg-card)] px-5 py-2.5 rounded-lg border border-[color:var(--border)]">
                   {deviceCode.user_code}
                 </code>
               </div>
               {devicePolling && (
-                <p className="text-center text-xs text-[#98A2B3] flex items-center justify-center gap-2">
+                <p className="text-center text-xs text-[color:var(--text-muted)] flex items-center justify-center gap-2">
                   <RefreshCw size={11} className="animate-spin" /> {t('onboarding.providerCodex.waitingAuth')}
                 </p>
               )}
             </div>
           ) : authLoading ? (
-            <div className="flex items-center justify-center py-8 gap-2 text-[#98A2B3] text-sm">
+            <div className="flex items-center justify-center py-8 gap-2 text-[color:var(--text-muted)] text-sm">
               <RefreshCw size={14} className="animate-spin" /> {t('onboarding.providerCodex.startingDevice')}
             </div>
           ) : null
         )}
 
         {authMessage && (
-          <div className={`rounded-lg p-3 text-xs ${authMessage.type === 'success' ? 'bg-[#00FFA7]/5 text-[#00FFA7]' : 'bg-[#1a0a0a] text-[#f87171]'}`}>
+          <div className={`rounded-lg p-3 text-xs ${authMessage.type === 'success' ? 'bg-[color:var(--evo-green)]/5 text-[color:var(--evo-green)]' : 'bg-[#1a0a0a] text-[#f87171]'}`}>
             {authMessage.text}
             {authMessage.type === 'error' && tab === 'device' && (
               <p className="text-[10px] text-[#3d4f65] mt-1">{t('onboarding.providerCodex.deviceOrgWarning')}</p>
@@ -704,7 +705,7 @@ function CodexSubStep({ shell, onBackToProviders, onDone }: { shell: string; onB
         <div className="flex gap-3 pt-2">
           <button
             onClick={onBackToProviders}
-            className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+            className="flex-none py-3 px-4 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
           >
             {t('onboarding.back')}
           </button>
@@ -712,7 +713,7 @@ function CodexSubStep({ shell, onBackToProviders, onDone }: { shell: string; onB
             <button
               onClick={completeBrowserAuth}
               disabled={!callbackUrl || authLoading}
-              className="flex-1 py-3 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
+              className="flex-1 py-3 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
             >
               {authLoading ? t('onboarding.providerCodex.verifying') : t('onboarding.providerCodex.confirm')}
             </button>

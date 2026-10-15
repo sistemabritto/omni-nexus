@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import { useConfirm } from '../components/ConfirmDialog'
 import { api } from '../lib/api'
@@ -157,18 +158,18 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
       <div className={`flex items-center justify-between ${embedded ? 'mb-4' : 'mb-6'}`}>
         {!embedded && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#161b22] border border-[#21262d] flex items-center justify-center">
-              <UsersIcon size={20} className="text-[#00FFA7]" />
+            <div className="w-10 h-10 rounded-xl bg-[color:var(--bg-card)] border border-[color:var(--border)] flex items-center justify-center">
+              <UsersIcon size={20} className="text-[color:var(--evo-green)]" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#e6edf3]">User Management</h1>
-              <p className="text-sm text-[#98A2B3]">{users.length} user{users.length !== 1 ? 's' : ''}</p>
+              <h1 className="text-xl font-bold text-[color:var(--text-primary)]">User Management</h1>
+              <p className="text-sm text-[color:var(--text-muted)]">{users.length} user{users.length !== 1 ? 's' : ''}</p>
             </div>
           </div>
         )}
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0d1117] font-semibold text-sm hover:bg-[#00FFA7]/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors"
         >
           <Plus size={16} /> Add User
         </button>
@@ -179,10 +180,10 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
         </div>
       ) : (
-        <div className="bg-[#161b22] rounded-xl border border-[#21262d] overflow-hidden">
+        <div className="bg-[color:var(--bg-card)] rounded-xl border border-[color:var(--border)] overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#21262d] text-[#98A2B3]">
+              <tr className="border-b border-[color:var(--border)] text-[color:var(--text-muted)]">
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">User</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Email</th>
                 <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider">Role</th>
@@ -195,7 +196,7 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
               {users.map((u) => {
                 const rb = getRoleBadge(u.role)
                 return (
-                  <tr key={u.id} className="border-b border-[#21262d]/50 hover:bg-white/[0.02] transition-colors">
+                  <tr key={u.id} className="border-b border-[color:var(--border)]/50 hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div
@@ -205,12 +206,12 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
                           {getInitials(u.display_name || u.username)}
                         </div>
                         <div>
-                          <div className="text-[#e6edf3] font-medium">{u.display_name || u.username}</div>
-                          <div className="text-[#98A2B3] text-xs">@{u.username}</div>
+                          <div className="text-[color:var(--text-primary)] font-medium">{u.display_name || u.username}</div>
+                          <div className="text-[color:var(--text-muted)] text-xs">@{u.username}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#98A2B3]">{u.email || '--'}</td>
+                    <td className="px-4 py-3 text-[color:var(--text-muted)]">{u.email || '--'}</td>
                     <td className="px-4 py-3">
                       <span
                         className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium border"
@@ -220,17 +221,17 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 text-xs ${u.is_active ? 'text-[#00FFA7]' : 'text-red-400'}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-[#00FFA7]' : 'bg-red-400'}`} />
+                      <span className={`inline-flex items-center gap-1.5 text-xs ${u.is_active ? 'text-[color:var(--evo-green)]' : 'text-red-400'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-[color:var(--evo-green)]' : 'bg-red-400'}`} />
                         {u.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#98A2B3] text-xs">{timeAgo(u.last_login)}</td>
+                    <td className="px-4 py-3 text-[color:var(--text-muted)] text-xs">{timeAgo(u.last_login)}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(u)}
-                          className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
+                          className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-white/5 transition-colors"
                           title="Edit"
                         >
                           <Pencil size={14} />
@@ -238,7 +239,7 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
                         {u.is_active && (
                           <button
                             onClick={() => handleDeactivate(u)}
-                            className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             title="Deactivate"
                           >
                             <Trash2 size={14} />
@@ -251,7 +252,7 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
               })}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-[#98A2B3]">No users found</td>
+                  <td colSpan={6} className="px-4 py-12 text-center text-[color:var(--text-muted)]">No users found</td>
                 </tr>
               )}
             </tbody>
@@ -262,10 +263,10 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="bg-[#161b22] rounded-2xl border border-[#21262d] p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-[color:var(--bg-card)] rounded-2xl border border-[color:var(--border)] p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-[#e6edf3]">{editingId ? 'Edit User' : 'Create User'}</h2>
-              <button onClick={() => setModalOpen(false)} className="text-[#98A2B3] hover:text-[#e6edf3] transition-colors"><X size={18} /></button>
+              <h2 className="text-lg font-bold text-[color:var(--text-primary)]">{editingId ? 'Edit User' : 'Create User'}</h2>
+              <button onClick={() => setModalOpen(false)} className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"><X size={18} /></button>
             </div>
 
             {error && (
@@ -276,49 +277,49 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-[#e6edf3] mb-1">Username</label>
+                <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Username</label>
                 <input
                   type="text"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#e6edf3] mb-1">Email</label>
+                <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Email</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#e6edf3] mb-1">Display Name</label>
+                <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Display Name</label>
                 <input
                   type="text"
                   value={form.display_name}
                   onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#e6edf3] mb-1">
-                  Password {editingId && <span className="text-[#98A2B3]">(leave blank to keep current)</span>}
+                <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">
+                  Password {editingId && <span className="text-[color:var(--text-muted)]">(leave blank to keep current)</span>}
                 </label>
                 <input
                   type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#e6edf3] mb-1">Role</label>
+                <label className="block text-sm font-medium text-[color:var(--text-primary)] mb-1">Role</label>
                 <select
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-[#21262d] text-[#e6edf3] text-sm focus:outline-none focus:border-[#00FFA7] transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-[color:var(--bg-primary)] border border-[color:var(--border)] text-[color:var(--text-primary)] text-sm focus:outline-none focus:border-[color:var(--evo-green)] transition-colors"
                 >
                   {availableRoles.map(r => (
                     <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
@@ -330,14 +331,14 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-[#98A2B3] text-sm hover:text-[#e6edf3] hover:bg-white/5 transition-colors"
+                className="px-4 py-2 rounded-lg text-[color:var(--text-muted)] text-sm hover:text-[color:var(--text-primary)] hover:bg-white/5 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-4 py-2 rounded-lg bg-[#00FFA7] text-[#0d1117] font-semibold text-sm hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] font-semibold text-sm hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50"
               >
                 {submitting ? 'Saving...' : editingId ? 'Save Changes' : 'Create User'}
               </button>

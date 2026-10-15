@@ -1,0 +1,24 @@
+[
+  {
+    "width": 375,
+    "switchTarget44": true,
+    "localToggle": true,
+    "keyboardDetailNavigation": true,
+    "changes": [
+      {
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "switchTarget44": true,
+    "localToggle": true,
+    "keyboardDetailNavigation": true,
+    "changes": [
+      {
+        "enabled": false
+      }
+    ]
+  }
+]

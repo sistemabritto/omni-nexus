@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Pencil, Trash2, Building2, AlertTriangle } from 'lucide-react'
@@ -34,22 +35,22 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-md mx-4 p-5 max-h-[85vh] overflow-y-auto"
+        className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-md mx-4 p-5 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Building2 size={16} className="text-[#00FFA7]" />
+            <Building2 size={16} className="text-[color:var(--evo-green)]" />
             <h2 className="text-sm font-semibold text-white">{t('nav.companies.manageAll')}</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[#98A2B3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60">
+          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60">
             <X size={16} />
           </button>
         </div>
 
         <div className="space-y-2">
           {companies.map((c) => (
-            <div key={c.id} className={`rounded-lg border p-3 ${activeCompanyId === c.id ? 'border-[#00FFA7]/40 bg-[#00FFA7]/5' : 'border-[#30363d]'}`}>
+            <div key={c.id} className={`rounded-lg border p-3 ${activeCompanyId === c.id ? 'border-[color:var(--evo-green)]/40 bg-[color:var(--evo-green)]/5' : 'border-[#30363d]'}`}>
               <div className="flex items-center gap-3">
                 {c.logo_url ? (
                   <img src={c.logo_url} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
@@ -66,14 +67,14 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                   <button
                     onClick={() => setEditing(c)}
                     title={t('nav.companies.edit')}
-                    className="p-1.5 rounded-lg bg-white/5 text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/10 transition-colors"
+                    className="p-1.5 rounded-lg bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/10 transition-colors"
                   >
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => { setDeleting(c); setConfirmDelete(false); setError('') }}
                     title={t('nav.companies.delete')}
-                    className="p-1.5 rounded-lg bg-white/5 text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    className="p-1.5 rounded-lg bg-white/5 text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -92,14 +93,14 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
         {/* 2-stage delete confirm */}
         {deleting && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setDeleting(null)}>
-            <div className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
               {!confirmDelete ? (
                 <>
                   <div className="flex items-center gap-2 mb-3">
                     <AlertTriangle size={16} className="text-amber-400" />
                     <h3 className="text-sm font-semibold text-white">{t('nav.companies.deleteTitle')}</h3>
                   </div>
-                  <p className="text-xs text-[#98A2B3] mb-4">
+                  <p className="text-xs text-[color:var(--text-muted)] mb-4">
                     {t('nav.companies.deleteMsg', { name: deleting.name })}
                   </p>
                   <div className="flex gap-2">
@@ -112,7 +113,7 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                     </button>
                     <button
                       onClick={() => setDeleting(null)}
-                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 text-[#98A2B3] text-xs hover:bg-white/10 transition-colors"
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 text-[color:var(--text-muted)] text-xs hover:bg-white/10 transition-colors"
                     >
                       {t('nav.companies.cancel')}
                     </button>
@@ -124,7 +125,7 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                     <AlertTriangle size={16} className="text-red-400" />
                     <h3 className="text-sm font-semibold text-white">{t('nav.companies.deleteFinal')}</h3>
                   </div>
-                  <p className="text-xs text-[#98A2B3] mb-4">
+                  <p className="text-xs text-[color:var(--text-muted)] mb-4">
                     {t('nav.companies.deleteFinalMsg', { name: deleting.name })}
                   </p>
                   <div className="flex gap-2">
@@ -138,7 +139,7 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                     <button
                       onClick={() => setDeleting(null)}
                       disabled={busy}
-                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 text-[#98A2B3] text-xs hover:bg-white/10 disabled:opacity-50 transition-colors"
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 text-[color:var(--text-muted)] text-xs hover:bg-white/10 disabled:opacity-50 transition-colors"
                     >
                       {t('nav.companies.cancel')}
                     </button>

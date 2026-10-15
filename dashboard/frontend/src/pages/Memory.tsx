@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import {
   Brain,
@@ -134,34 +135,34 @@ export default function Memory() {
       {/* Header */}
       <div className="mb-8">
         <HubBackLink />
-        <h1 className="text-2xl font-bold text-[#e6edf3] tracking-tight">{t('memory.title')}</h1>
-        <p className="text-[#98A2B3] text-sm mt-1">Persistent workspace memory</p>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] tracking-tight">{t('memory.title')}</h1>
+        <p className="text-[color:var(--text-muted)] text-sm mt-1">Persistent workspace memory</p>
 
         {/* Stats bar */}
         {!loading && data && (
           <div className="mt-4 flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-5 h-5 rounded bg-[#00FFA7]/10">
-                <Database size={12} className="text-[#00FFA7]" />
+              <div className="flex items-center justify-center w-5 h-5 rounded bg-[color:var(--evo-green)]/10">
+                <Database size={12} className="text-[color:var(--evo-green)]" />
               </div>
-              <span className="text-[#8b949e]">
-                <span className="font-medium text-[#e6edf3]">{totalEntries}</span> total entries
+              <span className="text-[color:var(--text-muted)]">
+                <span className="font-medium text-[color:var(--text-primary)]">{totalEntries}</span> total entries
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-5 h-5 rounded bg-[#00FFA7]/10">
-                <Brain size={12} className="text-[#00FFA7]" />
+              <div className="flex items-center justify-center w-5 h-5 rounded bg-[color:var(--evo-green)]/10">
+                <Brain size={12} className="text-[color:var(--evo-green)]" />
               </div>
-              <span className="text-[#8b949e]">
-                <span className="font-medium text-[#e6edf3]">{globalFiles.length}</span> global files
+              <span className="text-[color:var(--text-muted)]">
+                <span className="font-medium text-[color:var(--text-primary)]">{globalFiles.length}</span> global files
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-5 h-5 rounded bg-[#00FFA7]/10">
-                <Bot size={12} className="text-[#00FFA7]" />
+              <div className="flex items-center justify-center w-5 h-5 rounded bg-[color:var(--evo-green)]/10">
+                <Bot size={12} className="text-[color:var(--evo-green)]" />
               </div>
-              <span className="text-[#8b949e]">
-                <span className="font-medium text-[#e6edf3]">{agentCount}</span> agents with memory
+              <span className="text-[color:var(--text-muted)]">
+                <span className="font-medium text-[color:var(--text-primary)]">{agentCount}</span> agents with memory
               </span>
             </div>
           </div>
@@ -171,10 +172,10 @@ export default function Memory() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="rounded-2xl border border-[#21262d] bg-[#161b22] p-5">
+            <div key={i} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg-card)] p-5">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-[#21262d] animate-pulse" />
-                <div className="h-4 w-48 rounded bg-[#21262d] animate-pulse" />
+                <div className="h-8 w-8 rounded-lg bg-[color:var(--border)] animate-pulse" />
+                <div className="h-4 w-48 rounded bg-[color:var(--border)] animate-pulse" />
               </div>
             </div>
           ))}
@@ -184,12 +185,12 @@ export default function Memory() {
           {/* Global Memory */}
           {globalFiles.length > 0 && (
             <div>
-              <h2 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-3 flex items-center gap-2">
-                <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-                  <Brain size={12} className="text-[#00FFA7]" />
+              <h2 className="text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
+                <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+                  <Brain size={12} className="text-[color:var(--evo-green)]" />
                 </div>
                 Global Memory
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 normal-case">
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20 normal-case">
                   {globalFiles.length}
                 </span>
               </h2>
@@ -197,30 +198,30 @@ export default function Memory() {
                 {globalFiles.map((file) => (
                   <div
                     key={file.path}
-                    className="group bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden transition-all duration-300 hover:border-[#00FFA7]/40 hover:shadow-[0_0_24px_rgba(0,255,167,0.06)]"
+                    className="group bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden transition-all duration-300 hover:border-[color:var(--evo-green)]/40 hover:shadow-[0_0_24px_rgba(0,255,167,0.06)]"
                   >
                     <button onClick={() => toggleGlobal(file)} className="w-full flex items-center justify-between p-4 text-left">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04]">
-                          <FileText size={14} className="text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors" />
+                          <FileText size={14} className="text-[color:var(--text-muted)] group-hover:text-[color:var(--text-primary)] transition-colors" />
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-[#e6edf3]">{file.name}</span>
+                          <span className="text-sm font-medium text-[color:var(--text-primary)]">{file.name}</span>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-[#98A2B3]">{file.path}</span>
+                            <span className="text-xs text-[color:var(--text-muted)]">{file.path}</span>
                             {file.size > 0 && (
-                              <span className="text-[10px] text-[#98A2B3]/60">{formatSize(file.size)}</span>
+                              <span className="text-[10px] text-[color:var(--text-muted)]/60">{formatSize(file.size)}</span>
                             )}
                           </div>
                         </div>
                       </div>
                       {expandedGlobal === file.path
-                        ? <ChevronDown size={16} className="text-[#98A2B3]" />
-                        : <ChevronRight size={16} className="text-[#98A2B3]" />
+                        ? <ChevronDown size={16} className="text-[color:var(--text-muted)]" />
+                        : <ChevronRight size={16} className="text-[color:var(--text-muted)]" />
                       }
                     </button>
                     {expandedGlobal === file.path && (
-                      <div className="px-4 pb-4 border-t border-[#21262d]">
+                      <div className="px-4 pb-4 border-t border-[color:var(--border)]">
                         <div className="mt-3">
                           <Markdown>{fileContents[file.path] || 'Loading...'}</Markdown>
                         </div>
@@ -234,12 +235,12 @@ export default function Memory() {
 
           {/* Agent Memory */}
           <div>
-            <h2 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider mb-3 flex items-center gap-2">
-              <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#00FFA7]/8 border border-[#00FFA7]/15">
-                <Bot size={12} className="text-[#00FFA7]" />
+            <h2 className="text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
+              <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[color:var(--evo-green)]/8 border border-[color:var(--evo-green)]/15">
+                <Bot size={12} className="text-[color:var(--evo-green)]" />
               </div>
               Agent Memory
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#00FFA7]/10 text-[#00FFA7] border border-[#00FFA7]/20 normal-case">
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/20 normal-case">
                 {agentCount}
               </span>
             </h2>
@@ -250,7 +251,7 @@ export default function Memory() {
                 return (
                   <div
                     key={agent}
-                    className="group bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden transition-all duration-300 hover:border-transparent"
+                    className="group bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden transition-all duration-300 hover:border-transparent"
                   >
                     {/* Hover glow */}
                     <div
@@ -270,7 +271,7 @@ export default function Memory() {
                           <Icon size={16} style={{ color: meta.color }} />
                         </div>
                         <div>
-                          <span className="text-sm font-semibold text-[#e6edf3]">{formatAgentName(agent)}</span>
+                          <span className="text-sm font-semibold text-[color:var(--text-primary)]">{formatAgentName(agent)}</span>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span
                               className="text-[10px] font-medium uppercase tracking-wider"
@@ -278,22 +279,22 @@ export default function Memory() {
                             >
                               {meta.label}
                             </span>
-                            <span className="flex items-center gap-1 rounded-full bg-[#0d1117] px-2 py-0.5 border border-[#21262d]">
-                              <FileText size={10} className="text-[#98A2B3]" />
-                              <span className="text-[10px] font-medium text-[#8b949e]">{count} files</span>
+                            <span className="flex items-center gap-1 rounded-full bg-[color:var(--bg-primary)] px-2 py-0.5 border border-[color:var(--border)]">
+                              <FileText size={10} className="text-[color:var(--text-muted)]" />
+                              <span className="text-[10px] font-medium text-[color:var(--text-muted)]">{count} files</span>
                             </span>
                           </div>
                         </div>
                       </div>
                       {expandedAgent === agent
-                        ? <ChevronDown size={16} className="text-[#98A2B3]" />
-                        : <ChevronRight size={16} className="text-[#98A2B3]" />
+                        ? <ChevronDown size={16} className="text-[color:var(--text-muted)]" />
+                        : <ChevronRight size={16} className="text-[color:var(--text-muted)]" />
                       }
                     </button>
                     {expandedAgent === agent && (
-                      <div className="border-t border-[#21262d] relative z-10">
+                      <div className="border-t border-[color:var(--border)] relative z-10">
                         {(agentFiles[agent] || []).length === 0 ? (
-                          <div className="p-4 text-sm text-[#98A2B3]">Loading files...</div>
+                          <div className="p-4 text-sm text-[color:var(--text-muted)]">Loading files...</div>
                         ) : (
                           (agentFiles[agent] || []).map((file) => {
                             const fileKey = `${agent}/${file.name}`
@@ -305,19 +306,19 @@ export default function Memory() {
                                   className="w-full flex items-center justify-between px-6 py-3 text-left hover:bg-white/[0.03] transition-colors"
                                 >
                                   <div className="flex items-center gap-2">
-                                    <FileText size={12} className="text-[#98A2B3]" />
-                                    <span className="text-sm text-[#8b949e]">{file.name}</span>
+                                    <FileText size={12} className="text-[color:var(--text-muted)]" />
+                                    <span className="text-sm text-[color:var(--text-muted)]">{file.name}</span>
                                     {file.size > 0 && (
-                                      <span className="text-[10px] text-[#98A2B3]/60">{formatSize(file.size)}</span>
+                                      <span className="text-[10px] text-[color:var(--text-muted)]/60">{formatSize(file.size)}</span>
                                     )}
                                   </div>
                                   {expandedFile === fileKey
-                                    ? <ChevronDown size={14} className="text-[#98A2B3]" />
-                                    : <ChevronRight size={14} className="text-[#98A2B3]" />
+                                    ? <ChevronDown size={14} className="text-[color:var(--text-muted)]" />
+                                    : <ChevronRight size={14} className="text-[color:var(--text-muted)]" />
                                   }
                                 </button>
                                 {expandedFile === fileKey && (
-                                  <div className="px-6 pb-4 border-t border-[#21262d]/50">
+                                  <div className="px-6 pb-4 border-t border-[color:var(--border)]/50">
                                     <div className="mt-3">
                                       <Markdown>{fileContents[contentKey] || 'Loading...'}</Markdown>
                                     </div>

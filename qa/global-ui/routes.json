@@ -1,0 +1,415 @@
+[
+  {
+    "route": "/share/:token",
+    "url": "/share/qa-share",
+    "category": "public",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/docs",
+    "url": "/docs",
+    "category": "public",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/docs/*",
+    "url": "/docs",
+    "category": "public",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/onboarding/*",
+    "url": "/onboarding",
+    "category": "onboarding",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/settings/brain-repo",
+    "url": "/settings/brain-repo",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/",
+    "url": "/",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/overview",
+    "url": "/overview",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/omninexus",
+    "url": "/omninexus",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/workspace/*",
+    "url": "/workspace",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/agents",
+    "url": "/agents",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/agents/:name",
+    "url": "/agents/qa-agent",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/routines",
+    "url": "/routines",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/activity",
+    "url": "/activity",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/tasks",
+    "url": "/tasks",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/triggers",
+    "url": "/triggers",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/skills",
+    "url": "/skills",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/skills/:name",
+    "url": "/skills/qa-agent",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/costs",
+    "url": "/costs",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/inteligencia",
+    "url": "/inteligencia",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/integrations",
+    "url": "/integrations",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/templates",
+    "url": "/templates",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/scheduler",
+    "url": "/scheduler",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/heartbeats",
+    "url": "/heartbeats",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/heartbeats/:id",
+    "url": "/heartbeats/qa",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/memory",
+    "url": "/memory",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/mempalace",
+    "url": "/mempalace",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/systems",
+    "url": "/systems",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/settings",
+    "url": "/settings",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/backups",
+    "url": "/backups",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/config",
+    "url": "/config",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/providers",
+    "url": "/providers",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/users",
+    "url": "/users",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/audit",
+    "url": "/audit",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/roles",
+    "url": "/roles",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/shares",
+    "url": "/shares",
+    "category": "public",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/missions",
+    "url": "/missions",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/pautas",
+    "url": "/pautas",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/orquestracao",
+    "url": "/orquestracao",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/media",
+    "url": "/media",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/projects",
+    "url": "/projects",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/goals",
+    "url": "/goals",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/plugins",
+    "url": "/plugins",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/plugins/:slug",
+    "url": "/plugins/qa-plugin",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/mcp-servers",
+    "url": "/mcp-servers",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/plugins-ui/:slug/*",
+    "url": "/plugins-ui/qa-plugin",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/topics",
+    "url": "/topics",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/kanban",
+    "url": "/kanban",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/issues",
+    "url": "/issues",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/tickets/:id",
+    "url": "/tickets/qa",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/approvals",
+    "url": "/approvals",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge",
+    "url": "/knowledge",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/connections/:id",
+    "url": "/knowledge/connections/qa",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/settings",
+    "url": "/knowledge/settings",
+    "category": "authenticated",
+    "dynamic": false,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/connections/:id/spaces",
+    "url": "/knowledge/connections/qa/spaces",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/connections/:id/units",
+    "url": "/knowledge/connections/qa/units",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/connections/:id/upload",
+    "url": "/knowledge/connections/qa/upload",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/connections/:id/browse",
+    "url": "/knowledge/connections/qa/browse",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/connections/:id/search",
+    "url": "/knowledge/connections/qa/search",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  },
+  {
+    "route": "/knowledge/connections/:id/api-keys",
+    "url": "/knowledge/connections/qa/api-keys",
+    "category": "authenticated",
+    "dynamic": true,
+    "validation": "pending"
+  }
+]

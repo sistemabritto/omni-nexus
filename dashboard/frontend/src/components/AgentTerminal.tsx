@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
@@ -510,7 +511,7 @@ export default function AgentTerminal({ agent, sessionId: externalSessionId, wor
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden">
       {/* Status bar */}
-      <div className="flex-shrink-0 h-8 flex items-center gap-3 px-4 border-b border-[#21262d] bg-[#0d1117]">
+      <div className="flex-shrink-0 h-8 flex items-center gap-3 px-4 border-b border-[color:var(--border)] bg-[color:var(--bg-primary)]">
         <span
           className="inline-block h-1.5 w-1.5 rounded-full"
           style={{
@@ -518,11 +519,11 @@ export default function AgentTerminal({ agent, sessionId: externalSessionId, wor
             boxShadow: status === 'running' ? `0 0 6px ${accentColor}aa` : 'none',
           }}
         />
-        <code className="font-mono text-[10.5px] text-[#8b949e] truncate">
+        <code className="font-mono text-[10.5px] text-[color:var(--text-muted)] truncate">
           @{agent}
         </code>
-        <span className="text-[#21262d]">·</span>
-        <span className="text-[10px] uppercase tracking-[0.12em] text-[#98A2B3]">
+        <span className="text-[color:var(--border)]">·</span>
+        <span className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
           {statusLabel}
         </span>
         {errorMsg && (
@@ -539,7 +540,7 @@ export default function AgentTerminal({ agent, sessionId: externalSessionId, wor
           crammed into the 32px status bar above, so the LCD readout has
           real width to work with instead of truncating provider/model. */}
       {hud && (
-        <div className="flex-shrink-0 flex items-center gap-2 px-4 py-1.5 border-b border-[#21262d] bg-[#0d1117]">
+        <div className="flex-shrink-0 flex items-center gap-2 px-4 py-1.5 border-b border-[color:var(--border)] bg-[color:var(--bg-primary)]">
           <TerminalHudPanel hud={hud} accentColor={accentColor} />
 
           {/* Semaphore (Sprint 2): 3 fixed lights, only the active one
@@ -573,7 +574,7 @@ export default function AgentTerminal({ agent, sessionId: externalSessionId, wor
       )}
 
       {/* xterm */}
-      <div ref={containerRef} className="flex-1 min-h-0 px-4 py-3 bg-[#0C111D]" />
+      <div ref={containerRef} className="flex-1 min-h-0 px-4 py-3 bg-[color:var(--bg-primary)]" />
 
       {/* Dedicated input bar (opencode sessions only, i.e. hud !== null) —
           keeps what you type visually separate from the AI's streamed
@@ -595,7 +596,7 @@ export default function AgentTerminal({ agent, sessionId: externalSessionId, wor
             ws.send(JSON.stringify({ type: 'input', data: text + '\n' }))
             setInputValue('')
           }}
-          className="flex-shrink-0 flex items-end gap-2 border-t border-[#21262d] bg-[#0d1117] px-3 py-2"
+          className="flex-shrink-0 flex items-end gap-2 border-t border-[color:var(--border)] bg-[color:var(--bg-primary)] px-3 py-2"
         >
           <textarea
             value={inputValue}
@@ -608,7 +609,7 @@ export default function AgentTerminal({ agent, sessionId: externalSessionId, wor
             }}
             placeholder="Digite sua mensagem… (Shift+Enter para nova linha)"
             rows={1}
-            className="flex-1 resize-none rounded-md border border-[#21262d] bg-[#0a0e14] px-3 py-1.5 text-[13px] leading-normal text-[#e6edf3] placeholder:text-[#4b5563] outline-none focus:border-[#3a4256]"
+            className="flex-1 resize-none rounded-md border border-[color:var(--border)] bg-[#0a0e14] px-3 py-1.5 text-[13px] leading-normal text-[color:var(--text-primary)] placeholder:text-[#4b5563] outline-none focus:border-[#3a4256]"
           />
           <button
             type="submit"

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 /**
  * en-US translation bundle.
  *
@@ -12,6 +13,64 @@
 
 const translations = {
   translation: {
+    // OmniNexus Live global navigation (2026-10-15).
+    shell: {
+      "links": {
+            "root": "Central conversation",
+            "omninexus": "Central conversation",
+            "overview": "Operations overview",
+            "agents": "Agent squad",
+            "approvals": "Approvals",
+            "missions": "Projects and missions",
+            "kanban": "Work board",
+            "workspace": "Workspace files",
+            "orquestracao": "Jobs and blockers",
+            "tasks": "Tasks",
+            "activity": "Activity",
+            "scheduler": "Schedule",
+            "routines": "Routines",
+            "heartbeats": "Heartbeats",
+            "triggers": "Triggers",
+            "media": "Content and media",
+            "memory": "Memory and sources",
+            "mempalace": "Memory palace",
+            "knowledge": "Knowledge base",
+            "skills": "Skills",
+            "inteligencia": "Integrations",
+            "integrations": "Integrations",
+            "providers": "Providers",
+            "mcp_servers": "MCP servers",
+            "plugins": "Plugins",
+            "plugins_ui": "Extension",
+            "templates": "Templates",
+            "systems": "Systems",
+            "settings": "Settings",
+            "users": "Users",
+            "roles": "Roles and permissions",
+            "audit": "Audit",
+            "backups": "Backups",
+            "shares": "Shared links",
+            "costs": "Costs",
+            "topics": "Topics",
+            "tickets": "Ticket"
+      },
+      "groups": {
+            "workspace": "Workspace",
+            "work": "Work",
+            "operations": "Operations",
+            "knowledge": "Memory and knowledge",
+            "connections": "Connections and tools",
+            "administration": "Administration"
+      },
+      "tagline": "Your agent workspace",
+      "subtitle": "Agent workspace",
+      "noCompany": "No company selected",
+      "companyContext": "Context selected in the company menu",
+      "navigation": "Main navigation",
+      "openMenu": "Open navigation menu",
+      "closeMenu": "Close navigation menu",
+      "selectCompany": "Select company"
+},
     common: {
       // Actions
       save: 'Save',

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Newspaper, Check, X, Pencil, Mic, Square, Loader2, RefreshCw,
@@ -280,7 +281,7 @@ export default function Pautas({ embedded = false }: { embedded?: boolean }) {
       <div className="flex items-center justify-between mb-6">
         {!embedded && (
           <div className="flex items-center gap-2">
-            <Newspaper className="text-[#00FFA7]" size={22} />
+            <Newspaper className="text-[color:var(--evo-green)]" size={22} />
             <h1 className="text-xl font-bold text-white">Fila de Pautas</h1>
           </div>
         )}
@@ -325,7 +326,7 @@ export default function Pautas({ embedded = false }: { embedded?: boolean }) {
                   <button
                     onClick={() => aprovarCiclo(ciclo)}
                     disabled={busyId === -1}
-                    className="flex items-center gap-1.5 text-xs text-[#00FFA7] border border-[#00FFA7]/40 rounded-full px-3 py-1 hover:bg-[#00FFA7]/10"
+                    className="flex items-center gap-1.5 text-xs text-[color:var(--evo-green)] border border-[color:var(--evo-green)]/40 rounded-full px-3 py-1 hover:bg-[color:var(--evo-green)]/10"
                   >
                     <CheckCheck size={13} /> Aprovar {pendentes} pendente{pendentes > 1 ? 's' : ''}
                   </button>

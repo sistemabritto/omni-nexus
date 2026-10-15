@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -55,7 +56,7 @@ export default function Materiais() {
     <div className="flex flex-col h-full min-h-0" style={{ background: 'var(--bg-primary)' }}>
       <PageTabBar ariaLabel="Materiais" slim extraClass="flex-shrink-0" active={activeTab} onSelect={selectTab} tabs={visibleTabs.map((x) => ({ key: x.key, label: t(x.labelKey) }))} />
       <div className="flex-1 min-h-0 overflow-hidden">
-        <Suspense fallback={<div className="p-8 text-sm text-[#98A2B3]">Carregando…</div>}>
+        <Suspense fallback={<div className="p-8 text-sm text-[color:var(--text-muted)]">Carregando…</div>}>
           {/* O Workspace fica montado (oculto nas outras abas) para não perder
               os tabs abertos/editor no estado ao alternar. */}
           <div className="h-full" style={{ display: activeTab === 'arquivos' ? 'block' : 'none' }}>

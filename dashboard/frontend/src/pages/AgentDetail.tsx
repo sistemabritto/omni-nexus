@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, ChevronRight, PanelLeft, X, Lock, Plus, Terminal as TerminalIcon, MessageSquare } from 'lucide-react'
@@ -345,17 +346,17 @@ export default function AgentDetail() {
   // Check agent access before rendering anything
   if (!hasAgentAccess(name)) {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-[#0C111D] gap-4">
-        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#161b22] border border-[#21262d]">
-          <Lock size={28} className="text-[#98A2B3]" />
+      <div className="h-full w-full flex flex-col items-center justify-center bg-[color:var(--bg-primary)] gap-4">
+        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[color:var(--bg-card)] border border-[color:var(--border)]">
+          <Lock size={28} className="text-[color:var(--text-muted)]" />
         </div>
         <div className="text-center">
-          <p className="text-[#e6edf3] font-semibold text-base mb-1">Acesso restrito</p>
-          <p className="text-[#98A2B3] text-sm">Você não tem permissão para acessar este agente.</p>
+          <p className="text-[color:var(--text-primary)] font-semibold text-base mb-1">Acesso restrito</p>
+          <p className="text-[color:var(--text-muted)] text-sm">Você não tem permissão para acessar este agente.</p>
         </div>
         <Link
           to="/agents"
-          className="mt-2 text-[11px] uppercase tracking-[0.12em] text-[#00FFA7] hover:underline"
+          className="mt-2 text-[11px] uppercase tracking-[0.12em] text-[color:var(--evo-green)] hover:underline"
         >
           ← Agentes
         </Link>
@@ -368,17 +369,17 @@ export default function AgentDetail() {
 
   if (loading) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-[#0C111D]">
-        <div className="text-[#98A2B3] text-xs uppercase tracking-[0.12em]">loading agent…</div>
+      <div className="h-full w-full flex items-center justify-center bg-[color:var(--bg-primary)]">
+        <div className="text-[color:var(--text-muted)] text-xs uppercase tracking-[0.12em]">loading agent…</div>
       </div>
     )
   }
 
   if (!content) {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-[#0C111D] gap-3">
-        <p className="text-[#98A2B3] text-sm">Agent not found</p>
-        <Link to="/agents" className="text-[11px] uppercase tracking-[0.12em] text-[#00FFA7] hover:underline">
+      <div className="h-full w-full flex flex-col items-center justify-center bg-[color:var(--bg-primary)] gap-3">
+        <p className="text-[color:var(--text-muted)] text-sm">Agent not found</p>
+        <Link to="/agents" className="text-[11px] uppercase tracking-[0.12em] text-[color:var(--evo-green)] hover:underline">
           ← Agents
         </Link>
       </div>
@@ -389,18 +390,18 @@ export default function AgentDetail() {
   const profileLead = extractProfileLead(content)
 
   return (
-    <div className="flex h-full w-full flex-col bg-[#0C111D]">
+    <div className="flex h-full w-full flex-col bg-[color:var(--bg-primary)]">
       {/* ── HERO STRIP ─────────────────────────────────────────────── */}
-      <header className="flex-shrink-0 h-20 flex items-center px-4 lg:px-6 gap-4 border-b border-[#21262d] bg-[#0d1117]">
+      <header className="flex-shrink-0 h-20 flex items-center px-4 lg:px-6 gap-4 border-b border-[color:var(--border)] bg-[color:var(--bg-primary)]">
         <Link
           to="/agents"
-          className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-[#98A2B3] hover:text-[#e6edf3] transition-colors"
+          className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"
         >
           <ArrowLeft size={12} />
           Agents
         </Link>
 
-        <span className="text-[#21262d]">·</span>
+        <span className="text-[color:var(--border)]">·</span>
 
         {/* Avatar */}
         <div
@@ -411,7 +412,7 @@ export default function AgentDetail() {
         </div>
 
         <div className="flex flex-col gap-0.5 min-w-0">
-          <h1 className="text-[16px] font-semibold text-[#e6edf3] tracking-tight truncate">
+          <h1 className="text-[16px] font-semibold text-[color:var(--text-primary)] tracking-tight truncate">
             {formatName(name)}
           </h1>
           <code
@@ -424,14 +425,14 @@ export default function AgentDetail() {
 
         {/* Memory count — right aligned */}
         <div className="ml-auto flex items-center gap-4">
-          <span className="hidden sm:inline text-[10px] uppercase tracking-[0.12em] text-[#98A2B3]">
+          <span className="hidden sm:inline text-[10px] uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
             {memories.length} {memories.length === 1 ? 'memory' : 'memories'}
           </span>
 
           {/* Mobile drawer toggle */}
           <button
             onClick={() => setRailOpen(true)}
-            className="lg:hidden flex h-8 w-8 items-center justify-center rounded-md border border-[#21262d] text-[#8b949e] hover:text-[#e6edf3] hover:border-[#30363d]"
+            className="lg:hidden flex h-8 w-8 items-center justify-center rounded-md border border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[#30363d]"
             aria-label="Open agent info"
           >
             <PanelLeft size={14} />
@@ -442,7 +443,7 @@ export default function AgentDetail() {
       {/* ── BODY ───────────────────────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 relative">
         {/* Info rail — desktop */}
-        <aside className="hidden lg:flex flex-col w-[320px] flex-shrink-0 border-r border-[#21262d] bg-[#0d1117]">
+        <aside className="hidden lg:flex flex-col w-[320px] flex-shrink-0 border-r border-[color:var(--border)] bg-[color:var(--bg-primary)]">
           <InfoRail
             tab={tab}
             setTab={setTab}
@@ -472,16 +473,16 @@ export default function AgentDetail() {
             onClick={() => setRailOpen(false)}
           >
             <aside
-              className="absolute top-14 left-0 bottom-0 w-[85vw] max-w-[340px] border-r border-[#21262d] bg-[#0d1117] flex flex-col"
+              className="absolute top-14 left-0 bottom-0 w-[85vw] max-w-[340px] border-r border-[color:var(--border)] bg-[color:var(--bg-primary)] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-4 h-10 border-b border-[#21262d]">
-                <span className="text-[10px] uppercase tracking-[0.12em] text-[#98A2B3]">
+              <div className="flex items-center justify-between px-4 h-10 border-b border-[color:var(--border)]">
+                <span className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                   {formatName(name)}
                 </span>
                 <button
                   onClick={() => setRailOpen(false)}
-                  className="text-[#8b949e] hover:text-[#e6edf3]"
+                  className="text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"
                   aria-label="Close"
                 >
                   <X size={14} />
@@ -512,7 +513,7 @@ export default function AgentDetail() {
         )}
 
         {/* Terminal / Chat stage */}
-        <section className="flex-1 min-w-0 relative bg-[#0C111D] overflow-hidden flex flex-col">
+        <section className="flex-1 min-w-0 relative bg-[color:var(--bg-primary)] overflow-hidden flex flex-col">
           {/* Ambient glow */}
           <div
             className="pointer-events-none absolute top-0 right-0 h-[400px] w-[400px] blur-3xl"
@@ -523,15 +524,15 @@ export default function AgentDetail() {
           />
 
           {/* View mode bar + terminal tabs */}
-          <div className="relative z-10 flex items-center flex-shrink-0 h-9 border-b border-[#21262d] bg-[#0d1117]">
+          <div className="relative z-10 flex items-center flex-shrink-0 h-9 border-b border-[color:var(--border)] bg-[color:var(--bg-primary)]">
             {/* View mode toggle */}
-            <div className="flex items-center border-r border-[#21262d] h-full">
+            <div className="flex items-center border-r border-[color:var(--border)] h-full">
               <button
                 onClick={() => { setViewMode('chat'); localStorage.setItem('evo:agent-view-mode', 'chat') }}
                 className={`flex items-center gap-1.5 px-3 h-full text-[11px] transition-colors ${
                   viewMode === 'chat'
-                    ? 'text-[#e6edf3] bg-[#0C111D]'
-                    : 'text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#161b22]'
+                    ? 'text-[color:var(--text-primary)] bg-[color:var(--bg-primary)]'
+                    : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--bg-card)]'
                 }`}
               >
                 <MessageSquare size={12} style={{ color: viewMode === 'chat' ? agentColor : undefined }} />
@@ -541,8 +542,8 @@ export default function AgentDetail() {
                 onClick={() => { setViewMode('terminal'); localStorage.setItem('evo:agent-view-mode', 'terminal') }}
                 className={`flex items-center gap-1.5 px-3 h-full text-[11px] transition-colors ${
                   viewMode === 'terminal'
-                    ? 'text-[#e6edf3] bg-[#0C111D]'
-                    : 'text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#161b22]'
+                    ? 'text-[color:var(--text-primary)] bg-[color:var(--bg-primary)]'
+                    : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--bg-card)]'
                 }`}
               >
                 <TerminalIcon size={12} style={{ color: viewMode === 'terminal' ? agentColor : undefined }} />
@@ -556,10 +557,10 @@ export default function AgentDetail() {
                 {termTabs.length > 1 && termTabs.map((tt) => (
                   <div
                     key={tt.id}
-                    className={`group flex items-center gap-2 px-3 h-full text-[11px] cursor-pointer border-r border-[#21262d] transition-colors ${
+                    className={`group flex items-center gap-2 px-3 h-full text-[11px] cursor-pointer border-r border-[color:var(--border)] transition-colors ${
                       activeTermTab === tt.id
-                        ? 'bg-[#0C111D] text-[#e6edf3]'
-                        : 'text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#161b22]'
+                        ? 'bg-[color:var(--bg-primary)] text-[color:var(--text-primary)]'
+                        : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--bg-card)]'
                     }`}
                     onClick={() => setActiveTermTab(tt.id)}
                   >
@@ -573,7 +574,7 @@ export default function AgentDetail() {
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); closeTerminalTab(tt.id) }}
-                      className="opacity-0 group-hover:opacity-100 text-[#98A2B3] hover:text-[#ef4444] transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 text-[color:var(--text-muted)] hover:text-[#ef4444] transition-opacity"
                     >
                       <X size={11} />
                     </button>
@@ -581,7 +582,7 @@ export default function AgentDetail() {
                 ))}
                 <button
                   onClick={createNewTerminal}
-                  className="flex items-center justify-center h-full px-2.5 text-[#98A2B3] hover:text-[#e6edf3] hover:bg-[#161b22] transition-colors"
+                  className="flex items-center justify-center h-full px-2.5 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--bg-card)] transition-colors"
                   title="New terminal"
                 >
                   <Plus size={13} />
@@ -663,7 +664,7 @@ function InfoRail({
   return (
     <>
       {/* Tab bar */}
-      <div className="flex-shrink-0 flex items-center h-10 px-5 gap-6 border-b border-[#21262d]">
+      <div className="flex-shrink-0 flex items-center h-10 px-5 gap-6 border-b border-[color:var(--border)]">
         <TabButton
           label="Sessions"
           active={tab === 'sessions'}
@@ -700,12 +701,12 @@ function InfoRail({
         {tab === 'profile' && (
           <div className="px-5 py-4">
             {profileLead && (
-              <p className="text-[13px] leading-[1.6] text-[#e6edf3] mb-4 pb-4 border-b border-[#21262d]">
+              <p className="text-[13px] leading-[1.6] text-[color:var(--text-primary)] mb-4 pb-4 border-b border-[color:var(--border)]">
                 {profileLead}
               </p>
             )}
             <div
-              className="prose-agent text-[12.5px] leading-[1.65] text-[#8b949e]"
+              className="prose-agent text-[12.5px] leading-[1.65] text-[color:var(--text-muted)]"
               style={
                 {
                   ['--agent-color' as string]: agentColor,
@@ -720,11 +721,11 @@ function InfoRail({
         {tab === 'memory' && (
           <div className="px-5 py-4">
             {memories.length === 0 ? (
-              <div className="text-[12px] text-[#98A2B3]">
+              <div className="text-[12px] text-[color:var(--text-muted)]">
                 <p className="mb-1">Sem memórias ainda.</p>
                 <p className="text-[11px] text-[#3F3F46]">
                   Adicione arquivos em{' '}
-                  <code className="font-mono text-[#98A2B3]">.claude/agent-memory/{agentSlug}/</code>
+                  <code className="font-mono text-[color:var(--text-muted)]">.claude/agent-memory/{agentSlug}/</code>
                 </p>
               </div>
             ) : (
@@ -735,23 +736,23 @@ function InfoRail({
                     <li key={mem.name}>
                       <button
                         onClick={() => toggleMemory(mem.name)}
-                        className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-[#161b22] text-left transition-colors"
+                        className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-[color:var(--bg-card)] text-left transition-colors"
                       >
                         {open ? (
-                          <ChevronDown size={11} className="text-[#98A2B3] flex-shrink-0" />
+                          <ChevronDown size={11} className="text-[color:var(--text-muted)] flex-shrink-0" />
                         ) : (
                           <ChevronRight size={11} className="text-[#3F3F46] flex-shrink-0" />
                         )}
-                        <span className="font-mono text-[11.5px] text-[#e6edf3] truncate">
+                        <span className="font-mono text-[11.5px] text-[color:var(--text-primary)] truncate">
                           {mem.name}
                         </span>
-                        <span className="ml-auto font-mono text-[10px] text-[#98A2B3] flex-shrink-0">
+                        <span className="ml-auto font-mono text-[10px] text-[color:var(--text-muted)] flex-shrink-0">
                           {formatSize(mem.size)}
                         </span>
                       </button>
                       {open && (
                         <div
-                          className="ml-4 mt-1 mb-2 pl-4 py-1 border-l text-[11.5px] leading-[1.6] text-[#8b949e] overflow-hidden"
+                          className="ml-4 mt-1 mb-2 pl-4 py-1 border-l text-[11.5px] leading-[1.6] text-[color:var(--text-muted)] overflow-hidden"
                           style={{ borderColor: `${agentColor}40` }}
                         >
                           <Markdown>{memoryContents[mem.name] || 'Loading...'}</Markdown>

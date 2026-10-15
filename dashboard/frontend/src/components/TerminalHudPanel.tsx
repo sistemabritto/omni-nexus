@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState } from 'react'
 
 // Terminal HUD — gear/LCD panel (see workspace/development/features/terminal-hud).
@@ -81,7 +82,7 @@ export default function TerminalHudPanel({ hud, accentColor }: Props) {
 
   return (
     <div
-      className="flex items-center gap-2 rounded-md border border-[#21262d] bg-[#0a0e14] px-2 py-1"
+      className="flex items-center gap-2 rounded-md border border-[color:var(--border)] bg-[#0a0e14] px-2 py-1"
       title={routeLabel}
     >
       {/* Shifter knob — H-gate diagram with a puck that slides between the

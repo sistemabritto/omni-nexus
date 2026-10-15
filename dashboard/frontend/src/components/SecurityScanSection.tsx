@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 /**
  * Wave 2.5 — SecurityScanSection
  *
@@ -5,7 +6,7 @@
  * install modal). Runs POST /api/plugins/scan on mount and propagates the
  * verdict upward via onVerdict / onOverride callbacks.
  *
- * Dark theme: bg-[#161b22], border-[#344054], accent #00FFA7
+ * Dark theme: bg-[color:var(--bg-card)], border-[color:var(--border)], accent #00FFA7
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -85,7 +86,7 @@ function severityColor(sev: string): string {
     case 'HIGH':     return 'text-orange-400'
     case 'MEDIUM':   return 'text-yellow-400'
     case 'LOW':      return 'text-blue-400'
-    default:         return 'text-[#98A2B3]'
+    default:         return 'text-[color:var(--text-muted)]'
   }
 }
 
@@ -101,8 +102,8 @@ function verdictColors(v: ScanVerdict) {
   switch (v) {
     case 'APPROVE':
       return {
-        badge: 'bg-[#00FFA7]/10 text-[#00FFA7] border-[#00FFA7]/30',
-        icon: <ShieldCheck size={14} className="text-[#00FFA7]" />,
+        badge: 'bg-[color:var(--evo-green)]/10 text-[color:var(--evo-green)] border-[color:var(--evo-green)]/30',
+        icon: <ShieldCheck size={14} className="text-[color:var(--evo-green)]" />,
       }
     case 'WARN':
       return {
@@ -198,18 +199,18 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
   }
 
   return (
-    <div className="border border-[#344054] rounded-xl overflow-hidden">
+    <div className="border border-[color:var(--border)] rounded-xl overflow-hidden">
       {/* Section header */}
-      <div className="flex items-center gap-2 px-4 py-3 bg-white/3 border-b border-[#21262d]">
-        <Shield size={14} className="text-[#00FFA7] shrink-0" />
-        <span className="text-xs font-semibold text-[#D0D5DD]">Security Scan</span>
+      <div className="flex items-center gap-2 px-4 py-3 bg-white/3 border-b border-[color:var(--border)]">
+        <Shield size={14} className="text-[color:var(--evo-green)] shrink-0" />
+        <span className="text-xs font-semibold text-[color:var(--text-secondary)]">Security Scan</span>
         {result?.cache_hit && (
-          <span className="ml-auto text-[10px] text-[#98A2B3] bg-white/5 rounded px-1.5 py-0.5">
+          <span className="ml-auto text-[10px] text-[color:var(--text-muted)] bg-white/5 rounded px-1.5 py-0.5">
             cached
           </span>
         )}
         {result && (
-          <span className="text-[10px] text-[#98A2B3] ml-auto">
+          <span className="text-[10px] text-[color:var(--text-muted)] ml-auto">
             {result.scan_duration_ms}ms · {result.scanners_used.join('+')}
           </span>
         )}
@@ -218,7 +219,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
       <div className="px-4 py-3 space-y-3">
         {/* Scanning spinner */}
         {scanning && (
-          <div className="flex items-center gap-2 text-xs text-[#98A2B3]">
+          <div className="flex items-center gap-2 text-xs text-[color:var(--text-muted)]">
             <Loader2 size={13} className="animate-spin shrink-0" />
             <span>Scanning for security issues…</span>
           </div>
@@ -244,58 +245,58 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                 {verdictLabel(result.verdict)}
               </span>
               {result.findings.length > 0 && (
-                <span className="text-[10px] text-[#98A2B3]">
+                <span className="text-[10px] text-[color:var(--text-muted)]">
                   {result.findings.length}{result.findings_truncated ? '+' : ''} finding
                   {result.findings.length !== 1 ? 's' : ''}
                 </span>
               )}
               {result.verdict === 'APPROVE' && result.findings.length === 0 && (
-                <span className="text-[10px] text-[#98A2B3]">No issues found</span>
+                <span className="text-[10px] text-[color:var(--text-muted)]">No issues found</span>
               )}
             </div>
 
             {/* LLM reasoning (if any) */}
             {result.llm_used && result.llm_reasoning && (
-              <p className="text-[10px] text-[#98A2B3] italic leading-relaxed">
+              <p className="text-[10px] text-[color:var(--text-muted)] italic leading-relaxed">
                 {result.llm_reasoning}
               </p>
             )}
 
             {/* Findings collapsible */}
             {result.findings.length > 0 && (
-              <div className="border border-[#21262d] rounded-lg overflow-hidden">
+              <div className="border border-[color:var(--border)] rounded-lg overflow-hidden">
                 <button
                   onClick={() => setFindingsOpen((o) => !o)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-medium text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/3 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-medium text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/3 transition-colors"
                 >
                   <span>Findings</span>
                   {findingsOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
                 </button>
                 {findingsOpen && (
-                  <div className="divide-y divide-[#21262d]">
+                  <div className="divide-y divide-[color:var(--border)]">
                     {sortedFindings(result.findings).map((f, i) => (
                       <div key={i} className="px-3 py-2 space-y-0.5">
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[10px] font-semibold uppercase ${severityColor(f.severity)}`}>
                             {f.severity}
                           </span>
-                          <span className="text-[10px] text-[#98A2B3] font-mono">{f.category}</span>
+                          <span className="text-[10px] text-[color:var(--text-muted)] font-mono">{f.category}</span>
                         </div>
-                        <p className="text-xs text-[#D0D5DD] leading-relaxed">{f.description}</p>
+                        <p className="text-xs text-[color:var(--text-secondary)] leading-relaxed">{f.description}</p>
                         {f.file && (
-                          <p className="text-[10px] text-[#98A2B3] font-mono truncate">
+                          <p className="text-[10px] text-[color:var(--text-muted)] font-mono truncate">
                             {f.file}{f.line > 0 ? `:${f.line}` : ''}
                           </p>
                         )}
                         {f.snippet && (
-                          <p className="text-[10px] text-[#98A2B3] font-mono bg-black/20 rounded px-2 py-1 truncate">
+                          <p className="text-[10px] text-[color:var(--text-muted)] font-mono bg-black/20 rounded px-2 py-1 truncate">
                             {f.snippet}
                           </p>
                         )}
                       </div>
                     ))}
                     {result.findings_truncated && (
-                      <p className="px-3 py-2 text-[10px] text-[#98A2B3] text-center">
+                      <p className="px-3 py-2 text-[10px] text-[color:var(--text-muted)] text-center">
                         More findings not shown. Review the full scan report.
                       </p>
                     )}
@@ -316,7 +317,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                   </button>
                 ) : (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-[#98A2B3]">
+                    <label className="text-[10px] text-[color:var(--text-muted)]">
                       Override reason (min 20 chars, required)
                     </label>
                     <textarea
@@ -324,7 +325,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                       onChange={(e) => setOverrideReason(e.target.value)}
                       rows={2}
                       placeholder="Explain why this BLOCK is being overridden…"
-                      className="w-full bg-black/20 border border-[#344054] rounded-lg px-3 py-2 text-xs text-[#D0D5DD] placeholder-[#667085] resize-none focus:outline-none focus:border-red-500/50"
+                      className="w-full bg-black/20 border border-[color:var(--border)] rounded-lg px-3 py-2 text-xs text-[color:var(--text-secondary)] placeholder-[#667085] resize-none focus:outline-none focus:border-red-500/50"
                     />
                     <div className="flex gap-2">
                       <button
@@ -336,7 +337,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                       </button>
                       <button
                         onClick={() => { setShowOverrideInput(false); setOverrideReason('') }}
-                        className="px-3 py-1.5 text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+                        className="px-3 py-1.5 text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
                       >
                         Cancel
                       </button>
@@ -350,7 +351,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
 
         {/* Skip scan checkbox — admin only */}
         {isAdmin && !scanning && (
-          <div className="pt-1 border-t border-[#21262d]">
+          <div className="pt-1 border-t border-[color:var(--border)]">
             <label className="flex items-start gap-2 cursor-pointer group">
               <div className="relative mt-0.5">
                 <input
@@ -363,7 +364,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                   className={`w-3.5 h-3.5 rounded border transition-colors ${
                     skipScan
                       ? 'bg-yellow-500 border-yellow-500'
-                      : 'border-[#344054] group-hover:border-[#667085]'
+                      : 'border-[color:var(--border)] group-hover:border-[#667085]'
                   }`}
                 >
                   {skipScan && (
@@ -372,7 +373,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                 </div>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] text-[#98A2B3]">
+                <span className="text-[10px] text-[color:var(--text-muted)]">
                   Skip scan — will be logged to audit
                 </span>
                 {skipScan && (
@@ -382,7 +383,7 @@ export default function SecurityScanSection({ sourceUrl, authToken, onVerdict, o
                       onChange={(e) => setSkipReason(e.target.value)}
                       rows={1}
                       placeholder="Reason for skipping (required)"
-                      className="w-full bg-black/20 border border-[#344054] rounded px-2 py-1 text-[10px] text-[#D0D5DD] placeholder-[#667085] resize-none focus:outline-none focus:border-yellow-500/50"
+                      className="w-full bg-black/20 border border-[color:var(--border)] rounded px-2 py-1 text-[10px] text-[color:var(--text-secondary)] placeholder-[#667085] resize-none focus:outline-none focus:border-yellow-500/50"
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>

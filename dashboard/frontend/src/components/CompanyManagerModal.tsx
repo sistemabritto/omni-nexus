@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Upload, Building2 } from 'lucide-react'
@@ -127,24 +128,24 @@ export default function CompanyManagerModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-[#161b22] border border-[#21262d] rounded-xl w-full max-w-sm mx-4 p-5 max-h-[90vh] overflow-y-auto"
+        className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-sm mx-4 p-5 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Building2 size={16} className="text-[#00FFA7]" />
+            <Building2 size={16} className="text-[color:var(--evo-green)]" />
             <h2 className="text-sm font-semibold text-white">
               {isCreate ? t('nav.companies.newTitle') : company!.name}
             </h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[#98A2B3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FFA7]/60">
+          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60">
             <X size={16} />
           </button>
         </div>
 
         <form onSubmit={save} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-[#D0D5DD] mb-1">
+            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.nameLabel')}
             </label>
             <input
@@ -156,13 +157,13 @@ export default function CompanyManagerModal({
               }}
               placeholder={t('nav.companies.namePlaceholder')}
               autoFocus={isCreate}
-              className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[#00FFA7] focus:outline-none"
+              className="w-full bg-[color:var(--bg-primary)] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[color:var(--evo-green)] focus:outline-none"
             />
           </div>
 
           {isCreate && (
             <div>
-              <label className="block text-xs font-medium text-[#D0D5DD] mb-1">
+              <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
                 {t('nav.companies.slugLabel')}
               </label>
               <input
@@ -170,14 +171,14 @@ export default function CompanyManagerModal({
                 value={slug}
                 onChange={(e) => { setSlugTouched(true); setSlug(slugify(e.target.value)) }}
                 placeholder={t('nav.companies.slugPlaceholder')}
-                className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[#00FFA7] focus:outline-none font-mono"
+                className="w-full bg-[color:var(--bg-primary)] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[color:var(--evo-green)] focus:outline-none font-mono"
               />
               <p className="text-[10px] text-[#484f58] mt-1">{t('nav.companies.slugHint')}</p>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-[#D0D5DD] mb-1">
+            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.cnpjLabel')}
             </label>
             <input
@@ -186,12 +187,12 @@ export default function CompanyManagerModal({
               value={cnpj}
               onChange={(e) => setCnpj(formatCnpj(e.target.value))}
               placeholder={t('nav.companies.cnpjPlaceholder')}
-              className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[#00FFA7] focus:outline-none"
+              className="w-full bg-[color:var(--bg-primary)] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[color:var(--evo-green)] focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#D0D5DD] mb-1">
+            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.domainLabel')}
             </label>
             <input
@@ -199,12 +200,12 @@ export default function CompanyManagerModal({
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               placeholder={t('nav.companies.domainPlaceholder')}
-              className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[#00FFA7] focus:outline-none"
+              className="w-full bg-[color:var(--bg-primary)] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[color:var(--evo-green)] focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#D0D5DD] mb-1">
+            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.upload')}
             </label>
             <div className="flex items-center gap-3">
@@ -230,7 +231,7 @@ export default function CompanyManagerModal({
                 type="button"
                 disabled={busy || (isCreate && !created)}
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00FFA7]/15 text-[#00FFA7] text-xs hover:bg-[#00FFA7]/25 disabled:opacity-40 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[color:var(--evo-green)]/15 text-[color:var(--evo-green)] text-xs hover:bg-[color:var(--evo-green)]/25 disabled:opacity-40 transition-colors"
               >
                 <Upload size={13} /> {preview ? t('nav.companies.changeLogo') : t('nav.companies.upload')}
               </button>
@@ -239,7 +240,7 @@ export default function CompanyManagerModal({
                   type="button"
                   disabled={busy}
                   onClick={removeLogo}
-                  className="px-2 py-1.5 rounded-lg bg-white/5 text-[#98A2B3] text-xs hover:bg-white/10 disabled:opacity-40 transition-colors"
+                  className="px-2 py-1.5 rounded-lg bg-white/5 text-[color:var(--text-muted)] text-xs hover:bg-white/10 disabled:opacity-40 transition-colors"
                 >
                   {t('nav.companies.removeLogo')}
                 </button>
@@ -253,13 +254,13 @@ export default function CompanyManagerModal({
           {error && <p className="text-xs text-red-400">{error}</p>}
 
           {isCreate && created ? (
-            <div className="rounded-lg bg-[#00FFA7]/10 border border-[#00FFA7]/30 px-3 py-2.5 text-xs text-[#00FFA7] space-y-2">
+            <div className="rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 px-3 py-2.5 text-xs text-[color:var(--evo-green)] space-y-2">
               <p>{t('nav.companies.createdMsg', { name: created.name })}</p>
-              <p className="text-[#98A2B3]">{t('nav.companies.emptyHint')}</p>
+              <p className="text-[color:var(--text-muted)]">{t('nav.companies.emptyHint')}</p>
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full px-3 py-2 rounded-lg bg-[#00FFA7] text-black font-semibold text-xs hover:bg-[#00FFA7]/85 transition-colors"
+                className="w-full px-3 py-2 rounded-lg bg-[color:var(--evo-green)] text-black font-semibold text-xs hover:bg-[color:var(--evo-green)]/85 transition-colors"
               >
                 {t('nav.companies.done')}
               </button>
@@ -268,7 +269,7 @@ export default function CompanyManagerModal({
             <button
               type="submit"
               disabled={busy || !name.trim()}
-              className="w-full px-3 py-2.5 rounded-lg bg-[#00FFA7] text-black font-semibold text-sm hover:bg-[#00FFA7]/85 disabled:opacity-50 transition-colors"
+              className="w-full px-3 py-2.5 rounded-lg bg-[color:var(--evo-green)] text-black font-semibold text-sm hover:bg-[color:var(--evo-green)]/85 disabled:opacity-50 transition-colors"
             >
               {busy ? t('nav.companies.saving') : isCreate ? t('nav.companies.create') : t('nav.companies.save')}
             </button>

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useState, useEffect } from 'react'
 import { Clock, Tag, GitCommit, AlertTriangle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -43,18 +44,18 @@ function SnapshotItem({
       onClick={onClick}
       className={`w-full flex items-center gap-3 p-2.5 rounded-lg border text-left transition-all ${
         selected
-          ? 'border-[#00FFA7]/60 bg-[#00FFA7]/8'
-          : 'border-[#1e2a3a] bg-[#0f1520] hover:border-[#2a3a4a]'
+          ? 'border-[color:var(--evo-green)]/60 bg-[color:var(--evo-green)]/8'
+          : 'border-[color:var(--border)] bg-[color:var(--bg-card)] hover:border-[#2a3a4a]'
       }`}
     >
-      <GitCommit size={12} className={selected ? 'text-[#00FFA7]' : 'text-[#98A2B3]'} />
+      <GitCommit size={12} className={selected ? 'text-[color:var(--evo-green)]' : 'text-[color:var(--text-muted)]'} />
       <div className="flex-1 min-w-0">
         <p className="text-[12px] font-medium text-[#e2e8f0] truncate">{snapshot.label}</p>
         {snapshot.date && (
-          <p className="text-[10px] text-[#98A2B3]">{snapshot.date}</p>
+          <p className="text-[10px] text-[color:var(--text-muted)]">{snapshot.date}</p>
         )}
         {snapshot.message && (
-          <p className="text-[10px] text-[#4a5a6e] truncate">{snapshot.message}</p>
+          <p className="text-[10px] text-[color:var(--text-muted)] truncate">{snapshot.message}</p>
         )}
       </div>
       <code className="text-[9px] font-mono text-[#2d3d4f] flex-shrink-0">{snapshot.ref.slice(0, 8)}</code>
@@ -93,12 +94,12 @@ export default function RestoreSelectSnapshot({ repoUrl, onNext, onBack }: Resto
   ]
 
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 font-[Inter,-apple-system,sans-serif]">
+    <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center px-4 font-[family-name:var(--sb-font-body)]">
       <div className="w-full max-w-[480px] relative z-10">
-        <div className="rounded-xl border border-[#152030] bg-[#0b1018] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
-          <div className="px-7 pt-7 pb-5 border-b border-[#152030]">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-[0_4px_40px_rgba(0,0,0,0.4)]">
+          <div className="px-7 pt-7 pb-5 border-b border-[color:var(--border)]">
             <h2 className="text-[16px] font-semibold text-[#e2e8f0]">{t('restore.selectSnapshot.title')}</h2>
-            <p className="text-[11px] text-[#4a5a6e] mt-1">{t('restore.selectSnapshot.subtitle')}</p>
+            <p className="text-[11px] text-[color:var(--text-muted)] mt-1">{t('restore.selectSnapshot.subtitle')}</p>
           </div>
 
           <div className="px-7 py-6 space-y-4">
@@ -110,7 +111,7 @@ export default function RestoreSelectSnapshot({ repoUrl, onNext, onBack }: Resto
 
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 size={24} className="text-[#98A2B3] animate-spin" />
+                <Loader2 size={24} className="text-[color:var(--text-muted)] animate-spin" />
               </div>
             ) : data ? (
               <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
@@ -121,8 +122,8 @@ export default function RestoreSelectSnapshot({ repoUrl, onNext, onBack }: Resto
                   return (
                     <div key={key}>
                       <div className="flex items-center gap-2 mb-2">
-                        <Icon size={12} className="text-[#98A2B3]" />
-                        <span className="text-[11px] font-semibold text-[#98A2B3] uppercase tracking-[0.08em]">{label}</span>
+                        <Icon size={12} className="text-[color:var(--text-muted)]" />
+                        <span className="text-[11px] font-semibold text-[color:var(--text-muted)] uppercase tracking-[0.08em]">{label}</span>
                         <span className="text-[10px] text-[#2d3d4f]">{items.length}</span>
                       </div>
                       <div className="space-y-1">
@@ -153,7 +154,7 @@ export default function RestoreSelectSnapshot({ repoUrl, onNext, onBack }: Resto
                   />
                   <div>
                     <p className="text-[12px] font-medium text-[#e2e8f0]">{t('restore.selectSnapshot.includeKb')}</p>
-                    <p className="text-[10px] text-[#98A2B3] mt-0.5">{t('restore.selectSnapshot.includeKbDesc')}</p>
+                    <p className="text-[10px] text-[color:var(--text-muted)] mt-0.5">{t('restore.selectSnapshot.includeKbDesc')}</p>
                   </div>
                 </label>
 
@@ -171,14 +172,14 @@ export default function RestoreSelectSnapshot({ repoUrl, onNext, onBack }: Resto
             <div className="flex gap-3 pt-2">
               <button
                 onClick={onBack}
-                className="flex-none py-3 px-4 rounded-lg border border-[#152030] text-[#98A2B3] hover:border-[#00FFA7]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
+                className="flex-none py-3 px-4 rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--evo-green)]/30 hover:text-[#e2e8f0] text-sm font-medium transition-colors"
               >
                 {t('restore.back')}
               </button>
               <button
                 onClick={handleNext}
                 disabled={!selected}
-                className="flex-1 py-3 rounded-lg bg-[#00FFA7] text-[#080c14] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
+                className="flex-1 py-3 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] hover:bg-[#00e69a] text-sm font-semibold transition-colors disabled:opacity-40"
               >
                 {t('restore.next')}
               </button>

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 /**
  * i18n bootstrap for the EvoNexus dashboard.
  *
@@ -110,6 +111,12 @@ export function setWorkspaceLanguage(raw: string | null | undefined): void {
   } catch {
     // private mode / storage disabled — not fatal
   }
+}
+
+// Keep document language in sync for assistive technology across every route.
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = normalizeLocale(i18n.language)
+  i18n.on('languageChanged', language => { document.documentElement.lang = normalizeLocale(language) })
 }
 
 export default i18n

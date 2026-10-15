@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useRef } from 'react'
 import { api } from '../lib/api'
 import { Puzzle } from 'lucide-react'
@@ -48,16 +49,16 @@ function WidgetSlot({ widget }: { widget: PluginWidget }) {
 
   if (error) {
     return (
-      <div className="bg-[#161b22] border border-red-500/20 rounded-2xl p-4 text-xs text-red-400">
+      <div className="bg-[color:var(--bg-card)] border border-red-500/20 rounded-2xl p-4 text-xs text-red-400">
         Widget <code>{widget.widget_id}</code>: {error}
       </div>
     )
   }
 
   return (
-    <div className="bg-[#161b22] border border-[#21262d] rounded-2xl overflow-hidden">
+    <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-2xl overflow-hidden">
       {!ready && (
-        <div className="flex items-center justify-center h-24 text-xs text-[#98A2B3]">
+        <div className="flex items-center justify-center h-24 text-xs text-[color:var(--text-muted)]">
           Loading widget…
         </div>
       )}
@@ -86,8 +87,8 @@ export default function PluginWidgetsGrid({ mountPoint = 'overview' }: Props) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-3">
-        <Puzzle size={14} className="text-[#00FFA7]" />
-        <h3 className="text-xs font-medium text-[#98A2B3] uppercase tracking-wider">Plugin Widgets</h3>
+        <Puzzle size={14} className="text-[color:var(--evo-green)]" />
+        <h3 className="text-xs font-medium text-[color:var(--text-muted)] uppercase tracking-wider">Plugin Widgets</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {widgets.map((w) => (

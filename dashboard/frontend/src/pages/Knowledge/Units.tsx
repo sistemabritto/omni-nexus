@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Plus, Pencil, Trash2, RefreshCw, X, GripVertical } from 'lucide-react'
 import { api } from '../../lib/api'
@@ -143,7 +144,7 @@ export default function KnowledgeUnits() {
   }
 
   if (!activeConnectionId) {
-    return <div className="text-center py-12 text-[#98A2B3] text-sm">Select a connection using the switcher above.</div>
+    return <div className="text-center py-12 text-[color:var(--text-muted)] text-sm">Select a connection using the switcher above.</div>
   }
 
   return (
@@ -156,15 +157,15 @@ export default function KnowledgeUnits() {
         <select
           value={selectedSpaceId}
           onChange={(e) => setSelectedSpaceId(e.target.value)}
-          className="bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#D0D5DD] focus:border-[#00FFA7] focus:outline-none"
+          className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-secondary)] focus:border-[color:var(--evo-green)] focus:outline-none"
         >
           {spaces.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        {reordering && <RefreshCw size={14} className="text-[#00FFA7] animate-spin" />}
+        {reordering && <RefreshCw size={14} className="text-[color:var(--evo-green)] animate-spin" />}
         {canManage && (
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg text-sm font-medium hover:bg-[#00FFA7]/90 transition-colors ml-auto"
+            className="flex items-center gap-2 px-4 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg text-sm font-medium hover:bg-[color:var(--evo-green)]/90 transition-colors ml-auto"
           >
             <Plus size={14} /> New Unit
           </button>
@@ -173,10 +174,10 @@ export default function KnowledgeUnits() {
 
       {loading ? (
         <div className="space-y-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-14 bg-[#182230] border border-[#344054] rounded-xl animate-pulse" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-14 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl animate-pulse" />)}
         </div>
       ) : units.length === 0 ? (
-        <div className="text-center py-12 bg-[#182230] border border-[#344054] rounded-xl text-[#98A2B3] text-sm">
+        <div className="text-center py-12 bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl text-[color:var(--text-muted)] text-sm">
           No units yet. Units group documents into lessons or modules.
         </div>
       ) : (
@@ -189,23 +190,23 @@ export default function KnowledgeUnits() {
               onDragOver={(e) => handleDragOver(e, idx)}
               onDrop={handleDrop}
               onDragEnd={() => { setDragIdx(null); dragOver.current = null }}
-              className={`bg-[#182230] border border-[#344054] rounded-xl px-4 py-3 flex items-center gap-3 transition-colors ${canManage ? 'cursor-grab active:cursor-grabbing' : ''} ${dragIdx === idx ? 'opacity-50' : ''}`}
+              className={`bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl px-4 py-3 flex items-center gap-3 transition-colors ${canManage ? 'cursor-grab active:cursor-grabbing' : ''} ${dragIdx === idx ? 'opacity-50' : ''}`}
             >
-              {canManage && <GripVertical size={14} className="text-[#344054] shrink-0" />}
-              <div className="w-6 h-6 rounded-full bg-[#00FFA7]/10 flex items-center justify-center text-xs font-mono text-[#00FFA7] shrink-0">
+              {canManage && <GripVertical size={14} className="text-[color:var(--border)] shrink-0" />}
+              <div className="w-6 h-6 rounded-full bg-[color:var(--evo-green)]/10 flex items-center justify-center text-xs font-mono text-[color:var(--evo-green)] shrink-0">
                 {idx + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#D0D5DD] truncate">{unit.title}</p>
-                <p className="text-xs text-[#98A2B3] font-mono">{unit.slug}</p>
+                <p className="text-sm font-medium text-[color:var(--text-secondary)] truncate">{unit.title}</p>
+                <p className="text-xs text-[color:var(--text-muted)] font-mono">{unit.slug}</p>
               </div>
               {unit.description && (
-                <p className="text-xs text-[#98A2B3] hidden sm:block truncate max-w-[200px]">{unit.description}</p>
+                <p className="text-xs text-[color:var(--text-muted)] hidden sm:block truncate max-w-[200px]">{unit.description}</p>
               )}
               {canManage && (
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => openEdit(unit)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"><Pencil size={12} /></button>
-                  <button onClick={() => setConfirmDeleteId(unit.id)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 size={12} /></button>
+                  <button onClick={() => openEdit(unit)} className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"><Pencil size={12} /></button>
+                  <button onClick={() => setConfirmDeleteId(unit.id)} className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 size={12} /></button>
                 </div>
               )}
             </div>
@@ -216,30 +217,30 @@ export default function KnowledgeUnits() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0C111D] border border-[#344054] rounded-xl w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#344054]">
-              <h3 className="text-sm font-semibold text-[#F9FAFB]">{editingUnit ? 'Edit Unit' : 'New Unit'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5"><X size={14} /></button>
+          <div className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--border)]">
+              <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">{editingUnit ? 'Edit Unit' : 'New Unit'}</h3>
+              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5"><X size={14} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
-                <label className="block text-xs text-[#98A2B3] mb-1">Title *</label>
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Title *</label>
                 <input type="text" value={form.title} onChange={(e) => {
                   const v = e.target.value
                   setForm((p) => ({ ...p, title: v, slug: v.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }))
-                }} className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] focus:border-[#00FFA7] focus:outline-none" placeholder="Module 1 — Introduction" />
+                }} className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)] focus:outline-none" placeholder="Module 1 — Introduction" />
               </div>
               <div>
-                <label className="block text-xs text-[#98A2B3] mb-1">Slug *</label>
-                <input type="text" value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))} className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] font-mono focus:border-[#00FFA7] focus:outline-none" />
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Slug *</label>
+                <input type="text" value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))} className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] font-mono focus:border-[color:var(--evo-green)] focus:outline-none" />
               </div>
               <div>
-                <label className="block text-xs text-[#98A2B3] mb-1">Description</label>
-                <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} className="w-full bg-[#182230] border border-[#344054] rounded-lg px-3 py-2 text-sm text-[#F9FAFB] focus:border-[#00FFA7] focus:outline-none resize-none" />
+                <label className="block text-xs text-[color:var(--text-muted)] mb-1">Description</label>
+                <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} className="w-full bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm text-[color:var(--text-primary)] focus:border-[color:var(--evo-green)] focus:outline-none resize-none" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 bg-white/5 text-[#D0D5DD] rounded-lg text-sm hover:bg-white/10 transition-colors">Cancel</button>
-                <button onClick={handleSave} disabled={saving || !form.title} className="flex-1 px-4 py-2 bg-[#00FFA7] text-[#0C111D] rounded-lg text-sm font-semibold hover:bg-[#00FFA7]/90 transition-colors disabled:opacity-50">
+                <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 bg-white/5 text-[color:var(--text-secondary)] rounded-lg text-sm hover:bg-white/10 transition-colors">Cancel</button>
+                <button onClick={handleSave} disabled={saving || !form.title} className="flex-1 px-4 py-2 bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] rounded-lg text-sm font-semibold hover:bg-[color:var(--evo-green)]/90 transition-colors disabled:opacity-50">
                   {saving ? <RefreshCw size={14} className="animate-spin mx-auto" /> : (editingUnit ? 'Save' : 'Create')}
                 </button>
               </div>
@@ -251,12 +252,12 @@ export default function KnowledgeUnits() {
       {/* Delete confirm */}
       {confirmDeleteId && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0C111D] border border-[#344054] rounded-xl w-full max-w-sm shadow-2xl p-6 text-center">
+          <div className="bg-[color:var(--bg-primary)] border border-[color:var(--border)] rounded-xl w-full max-w-sm shadow-2xl p-6 text-center">
             <Trash2 size={28} className="text-red-400 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-[#F9FAFB] mb-1">Delete Unit?</p>
-            <p className="text-xs text-[#98A2B3] mb-6">Documents assigned to this unit will remain but lose their unit assignment.</p>
+            <p className="text-sm font-semibold text-[color:var(--text-primary)] mb-1">Delete Unit?</p>
+            <p className="text-xs text-[color:var(--text-muted)] mb-6">Documents assigned to this unit will remain but lose their unit assignment.</p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 px-4 py-2 bg-white/5 text-[#D0D5DD] rounded-lg text-sm hover:bg-white/10 transition-colors">Cancel</button>
+              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 px-4 py-2 bg-white/5 text-[color:var(--text-secondary)] rounded-lg text-sm hover:bg-white/10 transition-colors">Cancel</button>
               <button onClick={() => handleDelete(confirmDeleteId)} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors">Delete</button>
             </div>
           </div>

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -103,8 +104,8 @@ export default function OnboardingRouter() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080c14] flex items-center justify-center">
-        <div className="text-[#98A2B3] text-sm">{t('onboarding.loading')}</div>
+      <div className="min-h-screen bg-[color:var(--bg-primary)] flex items-center justify-center">
+        <div className="text-[color:var(--text-muted)] text-sm">{t('onboarding.loading')}</div>
       </div>
     )
   }

@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, BellRing, CheckCircle2, X } from 'lucide-react'
@@ -58,12 +59,12 @@ export default function NotificationBell() {
       <button
         ref={buttonRef}
         onClick={() => setOpen(v => !v)}
-        className="relative p-1.5 rounded-lg text-[#98A2B3] hover:text-[#D0D5DD] hover:bg-white/5 transition-colors"
+        className="relative p-1.5 rounded-lg text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/5 transition-colors"
         title="Notifications"
       >
         <Bell size={16} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[#00FFA7] text-[#0C111D] text-[9px] font-bold flex items-center justify-center leading-none">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] text-[9px] font-bold flex items-center justify-center leading-none">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -72,16 +73,16 @@ export default function NotificationBell() {
       {open && (
         <div
           ref={panelRef}
-          className="absolute left-full top-0 ml-2 w-[360px] max-h-[480px] flex flex-col rounded-xl border border-[#21262d] bg-[#161b22] shadow-2xl z-[100] overflow-hidden"
+          className="absolute left-full top-0 ml-2 w-[360px] max-h-[480px] flex flex-col rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-card)] shadow-2xl z-[100] overflow-hidden"
           style={{ minWidth: 280 }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#21262d]">
-            <span className="text-sm font-semibold text-[#D0D5DD]">Notifications</span>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border)]">
+            <span className="text-sm font-semibold text-[color:var(--text-secondary)]">Notifications</span>
             {notifications.length > 0 && (
               <button
                 onClick={dismissAll}
-                className="text-xs text-[#98A2B3] hover:text-[#D0D5DD] transition-colors"
+                className="text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] transition-colors"
               >
                 Clear all
               </button>
@@ -91,30 +92,30 @@ export default function NotificationBell() {
           {/* List */}
           <div className="flex-1 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-[#98A2B3]">
+              <div className="px-4 py-8 text-center text-sm text-[color:var(--text-muted)]">
                 No notifications
               </div>
             ) : (
               [...notifications].reverse().map((n, idx) => (
                 <div key={n.id}>
-                  {idx > 0 && <div className="border-t border-[#21262d]/60" />}
+                  {idx > 0 && <div className="border-t border-[color:var(--border)]/60" />}
                   <button
                     className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors flex items-start gap-3 group"
                     onClick={() => handleEntryClick(n)}
                   >
                     {/* Unread dot */}
-                    <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${n.read ? 'bg-transparent' : 'bg-[#00FFA7]'}`} />
+                    <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${n.read ? 'bg-transparent' : 'bg-[color:var(--evo-green)]'}`} />
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         {n.event === 'agent_awaiting'
-                          ? <BellRing size={12} className="text-[#00FFA7] shrink-0" />
-                          : <CheckCircle2 size={12} className="text-[#98A2B3] shrink-0" />}
-                        <span className="text-sm font-semibold text-[#D0D5DD] truncate">
+                          ? <BellRing size={12} className="text-[color:var(--evo-green)] shrink-0" />
+                          : <CheckCircle2 size={12} className="text-[color:var(--text-muted)] shrink-0" />}
+                        <span className="text-sm font-semibold text-[color:var(--text-secondary)] truncate">
                           @{n.agentName}
                         </span>
                       </div>
-                      <p className="text-xs text-[#98A2B3] mt-0.5 truncate">
+                      <p className="text-xs text-[color:var(--text-muted)] mt-0.5 truncate">
                         {n.event === 'agent_awaiting'
                           ? `${toolLabel(n)} — needs approval${inputPreview(n) ? `: ${inputPreview(n)}` : ''}`
                           : 'finished turn'}
@@ -122,9 +123,9 @@ export default function NotificationBell() {
                     </div>
 
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-[10px] text-[#98A2B3]">{relativeTime(n.createdAt)}</span>
+                      <span className="text-[10px] text-[color:var(--text-muted)]">{relativeTime(n.createdAt)}</span>
                       <button
-                        className="text-[#98A2B3] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#D0D5DD]"
+                        className="text-[color:var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[color:var(--text-secondary)]"
                         onClick={(e) => { e.stopPropagation(); dismiss(n.id) }}
                         aria-label="Dismiss"
                       >

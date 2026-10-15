@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, Pencil, X, Check, FileText } from 'lucide-react'
@@ -48,19 +49,19 @@ export default function CockpitReference() {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-3 text-left"
       >
-        <span className="flex items-center gap-2.5 text-sm text-[#8b949e] group">
-          <FileText size={14} className="text-[#98A2B3] group-hover:text-[#e6edf3] transition-colors" />
+        <span className="flex items-center gap-2.5 text-sm text-[color:var(--text-muted)] group">
+          <FileText size={14} className="text-[color:var(--text-muted)] group-hover:text-[color:var(--text-primary)] transition-colors" />
           CLAUDE.md
-          <span className="text-[11px] text-[#98A2B3] hidden sm:inline">
+          <span className="text-[11px] text-[color:var(--text-muted)] hidden sm:inline">
             {t('cockpit.referenceHint')}
           </span>
         </span>
-        <ChevronDown size={14} className={`text-[#98A2B3] transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-[color:var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <div className="px-5 pb-5">
           {!editing ? (
-            <div className="rounded-xl bg-[#0b1018]/60 border border-white/[0.06] max-h-[420px] overflow-y-auto">
+            <div className="rounded-xl bg-[color:var(--bg-card)]/60 border border-white/[0.06] max-h-[420px] overflow-y-auto">
               {loading ? (
                 <div className="p-4 space-y-2">
                   {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-4 rounded" />)}
@@ -75,7 +76,7 @@ export default function CockpitReference() {
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full h-[420px] p-4 rounded-xl bg-[#0b1018]/80 border border-[#00FFA7]/20 text-[12px] font-mono text-[#e6edf3] focus:outline-none focus:border-[#00FFA7]/50 resize-y"
+              className="w-full h-[420px] p-4 rounded-xl bg-[color:var(--bg-card)]/80 border border-[color:var(--evo-green)]/20 text-[12px] font-mono text-[color:var(--text-primary)] focus:outline-none focus:border-[color:var(--evo-green)]/50 resize-y"
               spellCheck={false}
             />
           )}
@@ -83,17 +84,17 @@ export default function CockpitReference() {
             {editing ? (
               <>
                 <button onClick={save} disabled={saving}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00FFA7] text-[#080c14] text-xs font-semibold hover:bg-[#00e69a] disabled:opacity-40 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[color:var(--evo-green)] text-[color:var(--bg-primary)] text-xs font-semibold hover:bg-[#00e69a] disabled:opacity-40 transition-colors">
                   <Check size={13} /> {t('cockpit.referenceSave')}
                 </button>
                 <button onClick={cancelEdit}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.1] text-xs text-[#8b949e] hover:text-[#e6edf3] transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.1] text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors">
                   <X size={13} /> {t('cockpit.referenceCancel')}
                 </button>
               </>
             ) : (
               <button onClick={startEdit} disabled={!content}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.1] text-xs text-[#8b949e] hover:text-[#e6edf3] disabled:opacity-40 transition-colors">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.1] text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] disabled:opacity-40 transition-colors">
                 <Pencil size={13} /> {t('cockpit.referenceEdit')}
               </button>
             )}

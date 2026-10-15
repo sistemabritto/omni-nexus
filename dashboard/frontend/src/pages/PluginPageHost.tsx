@@ -1,3 +1,4 @@
+// Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 /**
  * PluginPageHost — Wave 2.1
  *
@@ -96,9 +97,9 @@ function PageSlot({ customElementName, bundleUrl, slug }: PageSlotProps) {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="bg-[#161b22] border border-red-500/30 rounded-2xl p-6 max-w-lg text-center">
+        <div className="bg-[color:var(--bg-card)] border border-red-500/30 rounded-2xl p-6 max-w-lg text-center">
           <p className="text-red-400 text-sm font-medium mb-2">Plugin page failed to load</p>
-          <p className="text-[#98A2B3] text-xs font-mono">{error}</p>
+          <p className="text-[color:var(--text-muted)] text-xs font-mono">{error}</p>
         </div>
       </div>
     )
@@ -107,7 +108,7 @@ function PageSlot({ customElementName, bundleUrl, slug }: PageSlotProps) {
   if (!ready) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-[#98A2B3] text-sm">Loading plugin…</div>
+        <div className="text-[color:var(--text-muted)] text-sm">Loading plugin…</div>
       </div>
     )
   }
@@ -151,7 +152,7 @@ export default function PluginPageHost() {
   if (!slug) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-[#98A2B3] text-sm">Invalid plugin URL.</p>
+        <p className="text-[color:var(--text-muted)] text-sm">Invalid plugin URL.</p>
       </div>
     )
   }
@@ -160,19 +161,19 @@ export default function PluginPageHost() {
     if (!registryReady) {
       return (
         <div className="flex items-center justify-center h-full">
-          <div className="text-[#98A2B3] text-sm">Loading plugin…</div>
+          <div className="text-[color:var(--text-muted)] text-sm">Loading plugin…</div>
         </div>
       )
     }
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <p className="text-[#98A2B3] text-sm mb-2">
-            Plugin page <code className="text-xs bg-[#21262d] px-1 rounded">{slug}/{pageSubPath || '(index)'}</code> not found.
+          <p className="text-[color:var(--text-muted)] text-sm mb-2">
+            Plugin page <code className="text-xs bg-[color:var(--border)] px-1 rounded">{slug}/{pageSubPath || '(index)'}</code> not found.
           </p>
           <button
             onClick={() => navigate('/plugins')}
-            className="text-xs text-[#00FFA7] hover:underline"
+            className="text-xs text-[color:var(--evo-green)] hover:underline"
           >
             Go to Plugins
           </button>

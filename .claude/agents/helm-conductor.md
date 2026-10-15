@@ -174,3 +174,7 @@ Helm routes work across four mechanisms. Pick the right one:
 Goals (Mission→Project→Goal→Task) can link any of the first 3 via `goal_id`, giving agents automatic context. When routing, ask "should this link to a goal?".
 
 See `.claude/rules/heartbeats.md`, `.claude/rules/goals.md`, `.claude/rules/tickets.md`.
+
+## Métodos de responsabilidade e evidência
+
+Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.

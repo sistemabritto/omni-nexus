@@ -155,7 +155,11 @@ def register_websocket_proxy(sock) -> None:
 
         target = f"{TERMINAL_WS_BASE}/ws"
         try:
-            upstream = create_connection(target, timeout=10)
+            # Existing signed Flask session, not a claimed user/company header.
+            # Node's opt-in callback revalidates it with Flask for every read.
+            upstream = create_connection(target, timeout=10,
+                                         cookie=request.headers.get("Cookie", ""),
+                                         origin=request.headers.get("Origin", ""))
         except Exception as exc:
             log.warning("terminal_proxy: upstream WS connect failed: %s", exc)
             try:

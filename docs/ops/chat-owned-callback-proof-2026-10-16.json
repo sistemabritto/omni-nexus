@@ -1,0 +1,119 @@
+{
+  "local_binary_version": "1.18.18",
+  "local_binary_sha256": "bb71f45b564f9234a97f54d6252a4a41d2f4388ae4b078918f691824cc3b3e54",
+  "container_1_17_18_compatibility": "not_attested",
+  "records": [
+    {
+      "mode": "no_tools",
+      "result": {
+        "error": "intentional_no_tools"
+      },
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 0,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "origin",
+      "result": {
+        "error": "owned_read_context_required"
+      },
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 0,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "path",
+      "result": {
+        "error": "read_transport_tool_denied"
+      },
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 2,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "revoke",
+      "result": {
+        "error": "read_context_revoked"
+      },
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 4,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": true,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "snapshot",
+      "result": {
+        "error": "read_snapshot_changed"
+      },
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 4,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": true,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "success",
+      "result": {
+        "success": true
+      },
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 4,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": true,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "tenant",
+      "result": {
+        "error": "owned_read_context_required"
+      },
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 0,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    }
+  ]
+}

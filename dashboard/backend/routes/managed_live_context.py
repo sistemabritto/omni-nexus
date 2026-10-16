@@ -1014,3 +1014,65 @@ def read_file_result(receipt_id):
         return response
     except (FileSourceDenied, sqlite3.Error, ValueError, KeyError):
         return _reply({'error': 'file_result_unavailable'}, 404)
+
+
+@bp.post('/api/live/omni-context/runtime-read')
+def runtime_read_snapshot():
+    """Read-only server callback; existing cookie/owned/ACL authority only.
+
+    Runtime session ID is a selector, never identity. No context creation,
+    browser documents, arbitrary path, shared API token or grant adoption.
+    """
+    denied = _guard(write=True)
+    if denied is not None:
+        return denied
+    data = request.get_json(silent=True)
+    if (not isinstance(data, dict) or set(data) not in ({'runtimeSessionId', 'agentName', 'query'}, {'runtimeSessionId', 'agentName'})
+            or not isinstance(data['runtimeSessionId'], str) or not _ID.fullmatch(data['runtimeSessionId'])
+            or not isinstance(data['agentName'], str) or not _ID.fullmatch(data['agentName'])
+            or ('query' in data and (not isinstance(data['query'], str) or not 1 <= len(data['query'].strip()) <= 200))):
+        return _reply({'error': 'invalid_runtime_read'}, 400)
+    if (current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is not True
+            or not has_permission(current_user.role, 'memory', 'view')):
+        return _reply({'error': 'scope_denied'}, 403)
+    with _store() as conn:
+        candidate = conn.execute('SELECT id FROM contexts WHERE runtime_session_id=? AND user_id=?',
+                                (data['runtimeSessionId'], int(current_user.get_id()))).fetchone()
+    row = _owned(candidate['id']) if candidate else None
+    if row is None or not row['conversation_id'] or row['agent_name'] != data['agentName']:
+        return _reply({'error': 'scope_denied'}, 403)
+    try:
+        runtime = requests.get(TERMINAL_HTTP_BASE + '/api/sessions/' + row['runtime_session_id'],
+                               timeout=(3, 10), allow_redirects=False)
+        runtime.raise_for_status()
+        if runtime.json().get('id') != row['runtime_session_id'] or runtime.json().get('agentName') != row['agent_name']:
+            return _reply({'error': 'scope_denied'}, 403)
+        if 'query' not in data:
+            return _reply({'sessionId': row['runtime_session_id'], 'userId': row['user_id'],
+                'companyId': row['company_id'], 'agentName': row['agent_name']})
+        from skill_capability_dispatch import dispatch_query
+        result = dispatch_query(data['query'], root=WORKSPACE, row=row, read_files=_query_files,
+                                verify_scope=lambda: _guard() is None and _owned(row['id']) is not None)
+        if result.get('status') != 'context_ready':
+            return _reply({'error': 'authorized_read_snapshot_unavailable'}, 409)
+        documents = []
+        def add(name, text):
+            documents.append({'name': name, 'text': text, 'sha256': hashlib.sha256(text.encode()).hexdigest()})
+        skill = result['skills'][0]
+        add('skill.md', skill['text'])
+        for index, document in enumerate(skill.get('documents', [])):
+            add(f'cookbook-{index}.md', document['text'])
+        for index, reference in enumerate(result['references']):
+            add(f'reference-{index}.md', reference['text'])
+        if sum(len(d['text'].encode()) for d in documents) > 64000:
+            return _reply({'error': 'read_snapshot_budget'}, 409)
+        # Bind source revisions/digests as well as the staged excerpt bytes.
+        revision = hashlib.sha256(json.dumps({'context': dict(row), 'sources': result['references'],
+            'documents': documents}, sort_keys=True).encode()).hexdigest()
+        if _guard() is not None or _owned(row['id']) is None:
+            return _reply({'error': 'scope_denied'}, 403)
+        return _reply({'sessionId': row['runtime_session_id'], 'userId': row['user_id'],
+            'companyId': row['company_id'], 'agentName': row['agent_name'],
+            'sourceRevision': revision, 'documents': documents})
+    except (PermissionError, ValueError, TypeError, KeyError, requests.RequestException):
+        return _reply({'error': 'scope_denied'}, 403)

@@ -7,6 +7,8 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const ClaudeBridge = require('./claude-bridge');
 const { ChatBridge } = require('./chat-bridge');
+const { OpenCodeReadTransport } = require('./opencode-chat-transport');
+const { createOwnedReadResolver, OWNED_READ_CONNECTION } = require('./owned-chat-read-context');
 const SessionStore = require('./utils/session-store');
 const ChatLogger = require('./utils/chat-logger');
 const { loadProviderConfig, getProviderMode } = require('./provider-config');
@@ -64,7 +66,14 @@ class TerminalServer {
     this.webSocketConnections = new Map();
     this.globalSubscribers = new Set(); // wsIds subscribed to global notifications
     this.claudeBridge = new ClaudeBridge();
-    this.chatBridge = new ChatBridge();
+    // No environment/browser switch enables this path: reviewed bootstrap only.
+    this.ownedReadConnections = new WeakMap();
+    const ownedRead = options.ownedChatRead;
+    this.ownedReadResolver=ownedRead ? createOwnedReadResolver({backendBase:ownedRead.backendBase,publicOrigin:ownedRead.publicOrigin}) : null;
+    this.chatBridge = new ChatBridge({openCodeReadTransport: ownedRead ? new OpenCodeReadTransport({
+      binary:ownedRead.binary,attestation:ownedRead.attestation,receiptRoot:ownedRead.receiptRoot,
+      resolveReadContext:this.ownedReadResolver,
+    }) : null});
     this.sessionStore = new SessionStore({ sessionTtlMs: this.sessionTtlMs });
     this.chatLogger = new ChatLogger(this.baseFolder);
     this.autoSaveInterval = null;
@@ -627,6 +636,7 @@ class TerminalServer {
       if (!session) return res.status(404).json({ error: 'Session not found' });
       res.json({
         id: session.id,
+        agentName: session.agentName,
         name: session.name,
         created: session.created,
         active: session.active,
@@ -741,9 +751,11 @@ class TerminalServer {
 
     const wsInfo = { id: wsId, ws, claudeSessionId: null, created: new Date() };
     this.webSocketConnections.set(wsId, wsInfo);
+    // Retain only for this live connection; never persist or emit cookies.
+    if (req.headers?.cookie) this.ownedReadConnections.set(wsInfo, {cookie:req.headers.cookie,origin:req.headers.origin});
 
     // Send pending chat history if session is in chat mode
-    if (claudeSessionId) {
+    if (claudeSessionId && !this.ownedReadResolver) {
       const sess = this.claudeSessions.get(claudeSessionId);
       if (sess?.chatHistory?.length > 0) {
         this.sendToWebSocket(ws, { type: 'chat_history', messages: sess.chatHistory });
@@ -840,6 +852,10 @@ class TerminalServer {
         break;
 
       case 'chat_send':
+        // Legacy subscriptions do not authorize owned responses.
+        const emitChat = (payload) => this.ownedReadResolver
+          ? this.sendToWebSocket(wsInfo.ws,payload)
+          : this.broadcastToSession(wsInfo.claudeSessionId,payload);
         // Send a chat message via Agent SDK
         if (wsInfo.claudeSessionId) {
           const chatSession = this.claudeSessions.get(wsInfo.claudeSessionId);
@@ -901,8 +917,10 @@ class TerminalServer {
               files: data.files || undefined,
               ts: Date.now(),
             };
-            chatSession.chatHistory.push(userMsg);
-            this.chatLogger.append(chatSession.agentName, wsInfo.claudeSessionId, userMsg);
+            if (!this.ownedReadResolver) {
+              chatSession.chatHistory.push(userMsg);
+              this.chatLogger.append(chatSession.agentName, wsInfo.claudeSessionId, userMsg);
+            }
 
             // Accumulate assistant response for history
             let assistantBlocks = [];
@@ -911,8 +929,13 @@ class TerminalServer {
             try {
               await this.chatBridge.startSession(wsInfo.claudeSessionId, {
                 agentName: chatSession.agentName,
+                [OWNED_READ_CONNECTION]: {
+                  ...this.ownedReadConnections.get(wsInfo),agentName:chatSession.agentName,
+                  active:()=>this.webSocketConnections.get(wsId)===wsInfo && this.claudeSessions.get(wsInfo.claudeSessionId)===chatSession && wsInfo.ws.readyState===WebSocket.OPEN,
+                },
                 workingDir: chatSession.workingDir,
                 prompt: data.prompt,
+                toolPolicy:data.toolPolicy==='no_tools'?'no_tools':'read_only',
                 files: data.files,
                 sdkSessionId: chatSession.sdkSessionId || undefined,
                 systemPromptExtras: chatSession.systemPromptExtras || undefined,
@@ -934,7 +957,7 @@ class TerminalServer {
                       title: msg.title || null,
                       description: msg.description || null,
                     };
-                    this.broadcastToSession(wsInfo.claudeSessionId, permPayload);
+                    emitChat(permPayload);
                     // Global notification
                     const createdAt = Date.now();
                     const inputPreview = msg.input
@@ -958,7 +981,7 @@ class TerminalServer {
                   if (msg.type === 'ticket_detected' && msg.ticketId) {
                     if (!chatSession.ticketId) {
                       chatSession.ticketId = msg.ticketId;
-                      this.broadcastToSession(wsInfo.claudeSessionId, {
+                      emitChat({
                         type: 'ticket_bound',
                         ticketId: msg.ticketId,
                         auto: true,
@@ -1003,11 +1026,11 @@ class TerminalServer {
                   }
 
                   // Also broadcast the current assistant blocks for live history
-                  this.broadcastToSession(wsInfo.claudeSessionId, { type: 'chat_event', event: msg });
+                  emitChat({ type: 'chat_event', event: msg });
                 },
                 onError: (err) => {
                   chatSession.active = false;
-                  this.broadcastToSession(wsInfo.claudeSessionId, {
+                  emitChat({
                     type: 'chat_error',
                     message: err.message || 'Unknown error',
                   });
@@ -1019,7 +1042,7 @@ class TerminalServer {
                     chatSession.sdkSessionId = info.sdkSessionId;
                   }
                   // Save assistant message to history
-                  if (assistantBlocks.length > 0) {
+                  if (assistantBlocks.length > 0 && !this.ownedReadResolver) {
                     const assistantMsg = {
                       role: 'assistant',
                       blocks: assistantBlocks,
@@ -1030,7 +1053,7 @@ class TerminalServer {
                     this.chatLogger.append(chatSession.agentName, wsInfo.claudeSessionId, assistantMsg);
                   }
                   this.saveSessionsToDisk();
-                  this.broadcastToSession(wsInfo.claudeSessionId, { type: 'chat_complete' });
+                  emitChat({ type: 'chat_complete' });
                   // Global notification — skip if a client is already watching this session
                   const hasWatcher = chatSession.connections && chatSession.connections.size > 0;
                   if (!hasWatcher) {
@@ -1106,6 +1129,17 @@ class TerminalServer {
       return;
     }
 
+    if (this.ownedReadResolver) {
+      try {
+        await this.ownedReadResolver.authorize(claudeSessionId,{
+          ...this.ownedReadConnections.get(wsInfo),agentName:session.agentName,
+          active:()=>this.webSocketConnections.get(wsId)===wsInfo && wsInfo.ws.readyState===WebSocket.OPEN,
+        });
+      } catch {
+        this.sendToWebSocket(wsInfo.ws,{type:'chat_error',message:'owned_read_context_required'});
+        return;
+      }
+    }
     if (wsInfo.claudeSessionId) await this.leaveClaudeSession(wsId);
 
     wsInfo.claudeSessionId = claudeSessionId;

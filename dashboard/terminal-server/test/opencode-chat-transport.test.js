@@ -51,3 +51,20 @@ test('tampered snapshot and secret-like text fail before native call',async t=>{
 test('scope revocation after process result discards output and receipt',async t=>{
  let calls=0;const f=fixture(t,{verify:async()=>++calls<3});await assert.rejects(run(f),e=>e.code==='read_context_revoked');assert.equal(fs.existsSync(path.join(f.root,'receipts')),false);
 });
+
+test('receipt root symlink and changed preexisting receipt fail closed',async t=>{
+ const f=fixture(t);const elsewhere=path.join(f.root,'elsewhere');fs.mkdirSync(elsewhere,{mode:0o700});
+ fs.symlinkSync(elsewhere,path.join(f.root,'receipts'));
+ await assert.rejects(run(f),e=>e.code==='read_receipt_root_unsafe');assert.equal(fs.readdirSync(elsewhere).length,0);
+ const g=fixture(t);const first=await run(g);const file=path.join(g.root,'receipts',first.receipt.id+'.json');
+ fs.writeFileSync(file,'arbitrary preexisting bytes');
+ await assert.rejects(run(g),e=>e.code==='read_receipt_collision');
+ fs.unlinkSync(file);fs.symlinkSync(g.binary,file);
+ await assert.rejects(run(g),e=>e.code==='read_receipt_collision');
+});
+
+test('snapshot changed after native read is discarded without success receipt',async t=>{
+ const f=fixture(t);const original=f.transport._run.bind(f.transport);
+ f.transport._run=async(...args)=>{const result=await original(...args);const file=[...args[4].values()][0].target;fs.chmodSync(file,0o600);fs.writeFileSync(file,'modified');return result;};
+ await assert.rejects(run(f),e=>e.code==='read_snapshot_changed');assert.equal(fs.existsSync(path.join(f.root,'receipts')),false);
+});

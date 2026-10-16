@@ -92,7 +92,7 @@ jobs:
           tests/backend/test_execution_catalog.py tests/backend/test_execution_runtime.py tests/backend/test_provider_explorer_contract.py tests/backend/test_live_playback_regressions.py tests/backend/test_live_query_tools.py tests/backend/test_live_recording_source.py tests/backend/test_live_tool_audit.py
           tests/backend/test_provider_fallback_config_errors.py tests/media/test_provider_fallback_cwd.py
           tests/backend/test_design_cookbook.py tests/backend/test_marketing_research_skill.py
-          tests/backend/test_squad_catalog.py tests/backend/test_team_methods_skill.py tests/backend/test_reels_editorial_skill.py
+          tests/backend/test_live_squad_selector.py tests/backend/test_squad_catalog.py tests/backend/test_team_methods_skill.py tests/backend/test_reels_editorial_skill.py
           tests/backend/test_health_routes.py tests/backend/test_managed_live_context.py tests/backend/test_live_voices.py tests/backend/test_logo_design_skill.py tests/backend/test_creative_brief_skill.py tests/backend/test_live_disabled_routes.py
           tests/backend/test_live_transport.py tests/backend/test_live_model_policy.py tests/backend/test_live_socket_integration.py tests/backend/test_live_app_wiring.py
           tests/backend/test_share_publico.py

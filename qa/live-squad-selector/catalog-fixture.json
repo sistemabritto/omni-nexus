@@ -1,0 +1,464 @@
+[
+  {
+    "name": "oracle",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Oracle",
+      "function": "Descoberta do negócio e contexto de conhecimento",
+      "sector_id": "coordination",
+      "sector": "Coordenação e estratégia"
+    }
+  },
+  {
+    "name": "clawdia-assistant",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Clawdia",
+      "function": "Fila operacional, contexto e encaminhamento",
+      "sector_id": "coordination",
+      "sector": "Coordenação e estratégia"
+    }
+  },
+  {
+    "name": "helm-conductor",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Helm",
+      "function": "Coordenação do ciclo de engenharia",
+      "sector_id": "coordination",
+      "sector": "Coordenação e estratégia"
+    }
+  },
+  {
+    "name": "sage-strategy",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Sage",
+      "function": "Estratégia e prioridades de negócio",
+      "sector_id": "coordination",
+      "sector": "Coordenação e estratégia"
+    }
+  },
+  {
+    "name": "mirror-retro",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Mirror",
+      "function": "Retrospectiva e aprendizado do processo",
+      "sector_id": "coordination",
+      "sector": "Coordenação e estratégia"
+    }
+  },
+  {
+    "name": "atlas-project",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Atlas",
+      "function": "Acompanhamento de projetos e bloqueios",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "nova-product",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Nova",
+      "function": "Requisitos e decisões de produto",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "project-planner",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Planejador de projetos",
+      "function": "Transformar contexto em plano de projeto",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "goal-suggester",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Sugestor de objetivos",
+      "function": "Propor objetivos para revisão",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "goal-planner",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Planejador de objetivos",
+      "function": "Decompor objetivos em trabalho verificável",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "compass-planner",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Compass",
+      "function": "Plano técnico e interfaces da implementação",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "echo-analyst",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Echo",
+      "function": "Lacunas e critérios dos requisitos",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "raven-critic",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Raven",
+      "function": "Crítica de riscos e coerência de planos",
+      "sector_id": "projects",
+      "sector": "Produto e projetos"
+    }
+  },
+  {
+    "name": "mako-marketing",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Mako",
+      "function": "Pesquisa competitiva, posicionamento e campanhas",
+      "sector_id": "growth",
+      "sector": "Marketing, criação e relacionamento"
+    }
+  },
+  {
+    "name": "pixel-social-media",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Pixel",
+      "function": "Conteúdo social e adaptação por canal",
+      "sector_id": "growth",
+      "sector": "Marketing, criação e relacionamento"
+    }
+  },
+  {
+    "name": "reels-copilot",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Coprodutor de Reels",
+      "function": "Um roteiro por rodada no fluxo de revisão",
+      "sector_id": "growth",
+      "sector": "Marketing, criação e relacionamento"
+    }
+  },
+  {
+    "name": "canvas-designer",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Canvas",
+      "function": "Design de interfaces e direção visual",
+      "sector_id": "growth",
+      "sector": "Marketing, criação e relacionamento"
+    }
+  },
+  {
+    "name": "nex-sales",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Nex",
+      "function": "Qualificação, pipeline e próxima ação comercial",
+      "sector_id": "growth",
+      "sector": "Marketing, criação e relacionamento"
+    }
+  },
+  {
+    "name": "pulse-community",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Pulse",
+      "function": "Comunidade e relacionamento coletivo",
+      "sector_id": "growth",
+      "sector": "Marketing, criação e relacionamento"
+    }
+  },
+  {
+    "name": "zara-cs",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Zara",
+      "function": "Sucesso do cliente e tratamento de demandas",
+      "sector_id": "growth",
+      "sector": "Marketing, criação e relacionamento"
+    }
+  },
+  {
+    "name": "dex-data",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Dex",
+      "function": "Métricas, qualidade de dados e reconciliação",
+      "sector_id": "data",
+      "sector": "Dados e pesquisa"
+    }
+  },
+  {
+    "name": "prism-scientist",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Prism",
+      "function": "Análise científica e hipóteses estatísticas",
+      "sector_id": "data",
+      "sector": "Dados e pesquisa"
+    }
+  },
+  {
+    "name": "scout-explorer",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Scout",
+      "function": "Exploração de código e localização de evidências",
+      "sector_id": "data",
+      "sector": "Dados e pesquisa"
+    }
+  },
+  {
+    "name": "scroll-docs",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Scroll",
+      "function": "Pesquisa em documentação técnica",
+      "sector_id": "data",
+      "sector": "Dados e pesquisa"
+    }
+  },
+  {
+    "name": "quill-writer",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Quill",
+      "function": "Documentação técnica com exemplos verificáveis",
+      "sector_id": "data",
+      "sector": "Dados e pesquisa"
+    }
+  },
+  {
+    "name": "apex-architect",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Apex",
+      "function": "Arquitetura e decisões técnicas",
+      "sector_id": "engineering",
+      "sector": "Engenharia e manutenção"
+    }
+  },
+  {
+    "name": "bolt-executor",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Bolt",
+      "function": "Implementação de mudanças delimitadas",
+      "sector_id": "engineering",
+      "sector": "Engenharia e manutenção"
+    }
+  },
+  {
+    "name": "hawk-debugger",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Hawk",
+      "function": "Reprodução e correção de bugs",
+      "sector_id": "engineering",
+      "sector": "Engenharia e manutenção"
+    }
+  },
+  {
+    "name": "trail-tracer",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Trail",
+      "function": "Rastreamento causal entre componentes",
+      "sector_id": "engineering",
+      "sector": "Engenharia e manutenção"
+    }
+  },
+  {
+    "name": "zen-simplifier",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Zen",
+      "function": "Simplificação de código no escopo pedido",
+      "sector_id": "engineering",
+      "sector": "Engenharia e manutenção"
+    }
+  },
+  {
+    "name": "flow-git",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Flow",
+      "function": "Histórico Git e organização de alterações",
+      "sector_id": "engineering",
+      "sector": "Engenharia e manutenção"
+    }
+  },
+  {
+    "name": "lens-reviewer",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Lens",
+      "function": "Revisão de código: especificação e qualidade",
+      "sector_id": "quality",
+      "sector": "Qualidade e segurança"
+    }
+  },
+  {
+    "name": "oath-verifier",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Oath",
+      "function": "Verificação independente com evidência",
+      "sector_id": "quality",
+      "sector": "Qualidade e segurança"
+    }
+  },
+  {
+    "name": "grid-tester",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Grid",
+      "function": "Estratégia e implementação de testes",
+      "sector_id": "quality",
+      "sector": "Qualidade e segurança"
+    }
+  },
+  {
+    "name": "probe-qa",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Probe",
+      "function": "QA interativo e diagnóstico de falhas de uso",
+      "sector_id": "quality",
+      "sector": "Qualidade e segurança"
+    }
+  },
+  {
+    "name": "vault-security",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Vault",
+      "function": "Revisão de segurança e fronteiras de confiança",
+      "sector_id": "quality",
+      "sector": "Qualidade e segurança"
+    }
+  },
+  {
+    "name": "flux-finance",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Flux",
+      "function": "Operação financeira e relatórios",
+      "sector_id": "operations",
+      "sector": "Administração e desenvolvimento humano"
+    }
+  },
+  {
+    "name": "lex-legal",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Lex",
+      "function": "Análise jurídica e revisão de conformidade",
+      "sector_id": "operations",
+      "sector": "Administração e desenvolvimento humano"
+    }
+  },
+  {
+    "name": "aria-hr",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Aria",
+      "function": "Pessoas e processos de RH",
+      "sector_id": "operations",
+      "sector": "Administração e desenvolvimento humano"
+    }
+  },
+  {
+    "name": "kai-personal-assistant",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Kai",
+      "function": "Organização pessoal no domínio isolado",
+      "sector_id": "operations",
+      "sector": "Administração e desenvolvimento humano"
+    }
+  },
+  {
+    "name": "mentor-courses",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Mentor",
+      "function": "Cursos e percursos de aprendizagem",
+      "sector_id": "operations",
+      "sector": "Administração e desenvolvimento humano"
+    }
+  },
+  {
+    "name": "lumen-learning",
+    "description": "Descrição original fixture",
+    "locked": false,
+    "catalog": {
+      "display_name": "Lumen",
+      "function": "Retenção e revisão do aprendizado",
+      "sector_id": "operations",
+      "sector": "Administração e desenvolvimento humano"
+    }
+  }
+]

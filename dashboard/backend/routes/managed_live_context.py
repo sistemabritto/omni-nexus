@@ -188,8 +188,8 @@ def read_context(context_id):
         payload = {'authenticatedUser': authenticated_user, 'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
         if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True:
             query_result = _query_for_current_turn(row)
-            while (query_result['memory'] or query_result.get('documents', {}).get('results')) and len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
-                (query_result['memory'] or query_result['documents']['results']).pop()
+            while (query_result['memory'] or query_result.get('documents', {}).get('results') or query_result.get('files', {}).get('results')) and len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
+                (query_result['memory'] or query_result.get('documents', {}).get('results') or query_result['files']['results']).pop()
             if len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
                 query_result = {'memory': [], 'coverage': 'context_budget_exhausted'}
             payload['queryResult'] = query_result
@@ -778,8 +778,9 @@ def _query_payload(row, query, *, include_work=True, exclude_event=None):
     from live_query_terms import query_terms
     query = query.strip()[:200]
     terms = query_terms(query)
+    files = _query_files(row, terms)
     if not terms:
-        return {'kind': 'untrusted_reference_data', 'memory': [], 'work': {'results': []}, 'coverage': 'query_too_broad'}
+        return {'kind': 'untrusted_reference_data', 'memory': [], 'work': {'results': []}, 'files': files, 'coverage': 'query_too_broad'}
     try:
         store, principal = _continuity_store(row)
         memories = []
@@ -801,10 +802,10 @@ def _query_payload(row, query, *, include_work=True, exclude_event=None):
         documents = search_current_scripts(row['company_id'], terms)
         if _owned(row['id']) is None:
             raise ContinuityDenied()
-        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents,
-                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_recording_scripts'] + (['authorized_company_tickets'] if include_work else []),
+        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents, 'files': files,
+                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_recording_scripts', 'explicit_workspace_files'] + (['authorized_company_tickets'] if include_work else []),
                        'excluded': ['unowned_mempalace_index', 'private_dot_history', 'arbitrary_mcp_execution'],
-                       'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600, 'documents': 3}}
+                       'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600, 'documents': 3, 'files': 3}}
     except ContinuityDenied:
         raise
 
@@ -819,8 +820,8 @@ def _query_for_current_turn(row):
     query = question['text'][:200] if question else ''
     exclude_event = (cid, question['event_id']) if question else None
     result = _query_payload(row, query, include_work=False, exclude_event=exclude_event)
-    while (result['memory'] or result.get('documents', {}).get('results')) and len(json.dumps(result, ensure_ascii=False)) > 4000:
-        (result['memory'] or result['documents']['results']).pop()
+    while (result['memory'] or result.get('documents', {}).get('results') or result.get('files', {}).get('results')) and len(json.dumps(result, ensure_ascii=False)) > 4000:
+        (result['memory'] or result.get('documents', {}).get('results') or result['files']['results']).pop()
     return result
 
 
@@ -869,3 +870,76 @@ def read_tool_audit(context_id):
         return _reply({'error': 'invalid_audit_metadata'}, 400)
     except sqlite3.Error:
         return _reply({'error': 'audit_unavailable'}, 503)
+
+
+# File ownership is an explicit browser action, never an agent/model tool.
+def _query_files(row, terms):
+    from live_file_sources import search
+    try:
+        with _store() as conn:
+            return search(conn, row, terms)
+    except sqlite3.Error:
+        return {'status': 'unavailable', 'source': 'explicit_workspace_files', 'results': []}
+
+
+
+def _file_source_operation(row, action, data, verify_scope):
+    from live_file_sources import preview, bind, revoke, list_bindings, FileSourceDenied, FileSourceConflict
+    expected = {'preview': {'path'},
+                'bind': {'path', 'sha256', 'expectedRevision', 'confirmOwnership'},
+                'revoke': {'id', 'expectedRevision'}, 'list': set()}
+    if action not in expected or not isinstance(data, dict) or set(data) != expected[action]:
+        return _reply({'error': 'invalid_file_source_request'}, 400)
+    if action == 'bind' and data['confirmOwnership'] is not True:
+        return _reply({'error': 'explicit_file_ownership_required'}, 400)
+    try:
+        with _store() as conn:
+            if action == 'preview':
+                output = preview(conn, row, data['path'])
+            elif action == 'bind':
+                output = bind(conn, row, path=data['path'], sha256=data['sha256'], expected_revision=data['expectedRevision'])
+            elif action == 'revoke':
+                output = revoke(conn, row, data['id'], data['expectedRevision'])
+            else:
+                output = list_bindings(conn, row)
+            if not verify_scope():
+                raise FileSourceDenied()
+        return _reply(output)
+    except FileSourceDenied:
+        return _reply({'error': 'file_source_denied'}, 403)
+    except FileSourceConflict:
+        return _reply({'error': 'file_source_conflict'}, 409)
+    except (ValueError, TypeError):
+        return _reply({'error': 'invalid_file_source_request'}, 400)
+    except sqlite3.Error:
+        return _reply({'error': 'file_sources_unavailable'}, 503)
+
+
+@bp.post('/api/live/omni-context/<int:context_id>/file-sources/<string:action>')
+def manage_file_sources(context_id, action):
+    denied = _guard(write=True)
+    if denied is not None:
+        return denied
+    row = _owned(context_id)
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or 'conversationId' not in data:
+        return _reply({'error': 'invalid_file_source_request'}, 400)
+    if row is None or not row['conversation_id'] or data['conversationId'] != row['conversation_id']:
+        return _reply({'error': 'scope_denied'}, 403)
+    return _file_source_operation(row, action, {k:v for k,v in data.items() if k != 'conversationId'},
+                                  lambda: _owned(context_id) is not None)
+
+
+@bp.post('/api/live/file-sources/<int:company_id>/<string:action>')
+def manage_company_file_sources(company_id, action):
+    # Browser-managed sources can be reviewed before any paid voice connection.
+    # This is the existing personal-admin company gate, not a new membership grant.
+    denied = _guard(write=True)
+    if denied is not None:
+        return denied
+    def available():
+        return Company.query.filter_by(id=company_id, status='active').first() is not None
+    if not available():
+        return _reply({'error': 'scope_denied'}, 403)
+    row = {'user_id': int(current_user.get_id()), 'company_id': company_id}
+    return _file_source_operation(row, action, request.get_json(silent=True), available)

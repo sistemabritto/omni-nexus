@@ -30,6 +30,14 @@ const tick=()=>new Promise(resolve=>setTimeout(resolve,10));
   if(fixture.auditFailureStage)assert.equal(session.snapshot().toolAuditDegraded,true);
   const existing=await tool('read_current_omni_session',{},'existing-read');assert.equal(existing.is_error,false);assert.ok(JSON.parse(existing.result).queryResult.memory.some(x=>x.text==='Zephyr confirmado na terça'));
   if(fixture.expectedProfileName)assert.deepEqual(JSON.parse(existing.result).authenticatedUser,{displayName:fixture.expectedProfileName,nameAvailable:true,source:'authenticated_profile'});
+  if(fixture.expectedFile){
+    for(const files of [data.files,JSON.parse(existing.result).queryResult.files]){
+      assert.equal(files.results.length,1);assert.equal(files.results[0].path,fixture.expectedFile.path);
+      assert.equal(files.results[0].sha256,fixture.expectedFile.sha256);assert.equal(files.results[0].revision,1);
+      assert.equal(files.source,'explicit_workspace_files');assert.ok(files.results[0].text.includes('Zephyr roteiro aprovado'));
+    }
+    assert.ok(!existing.result.includes('SECRET unbound file'));
+  }
   const denied=await tool('search_omni_context',{query:'Zephyr',companyId:8},'tenant-injection');assert.equal(denied.is_error,true);
   const sourceIndex=requests.findIndex(r=>r.url.endsWith('/query'));
   const receivedIndex=requests.findIndex(r=>r.url.endsWith('/tool-audit')&&r.body.toolCallId==='query-http'&&r.body.stage==='received');

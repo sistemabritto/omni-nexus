@@ -20,3 +20,26 @@ The invalid-publication-target path in heartbeat_outcome now records `publish_co
 No change or rollback of the earlier5de37020 administrative transition is attempted. Review is not completion; its sources/baseline/keyword split remain for human decision.
 
 Validation:37 tests passed across dry-run/read-only/idempotency, invalid owner-state/gates, unsupported --apply, publication/decomposition fail-closed tests, publish-gate reachability and blocked-reason preservation. Existing SQLAlchemy deprecation warnings only. Real dry-run returned nine diagnostic proposals and one protected case; zero changes were applied.
+
+
+## Independent integration review
+
+The initial independent reproduction passed 23 tests (dry-run + decomposition);
+the author's 37-test count also includes publish-gate and reason-persistence
+suites. Review found that locked_by without locked_at could still emit a
+proposal. The generator now treats either lock field as a stop condition and
+records both in expected state; regression covers a worker lock with missing
+timestamp. This does not implement any apply path or change tickets. The new
+read-only suite is explicitly included in CI.
+
+The included initial JSON snapshot predates that expected-state enhancement;
+it is historical evidence, never an execution token. A refreshed read-only
+manifest must carry both lock fields before review of any future change.
+Only the dashboard heartbeat runner executes heartbeat_outcome in the
+currently deployed service topology; scheduler/Telegram/worker images and all
+Live fields/flags are preserved by this independent diagnostic rollout.
+
+Independent final suite: 38 passed across the four suites above, including the
+new lock-owner regression, with existing SQLAlchemy deprecation warnings only.
+The 23-test initial reproduction was a subset, not a contradiction of the
+author's 37-case run. No production ticket changes are part of the release.

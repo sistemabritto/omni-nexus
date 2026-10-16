@@ -20,12 +20,12 @@ def plan(conn, root):
             proposals.append({'case': prefix, 'decision': 'identity_missing_or_ambiguous', 'proposed': None})
             continue
         t = dict(rows[0])
-        expected = {k:t.get(k) for k in ('status','assignee_agent','blocked_reason','updated_at','requires_human_approval','approval_id','locked_at')}
+        expected = {k:t.get(k) for k in ('status','assignee_agent','blocked_reason','updated_at','requires_human_approval','approval_id','locked_by','locked_at')}
         item = {'ticket_id':t['id'], 'expected':expected, 'proposed':None,
                 'job_restart':False, 'manual_review_required':True, 'evidence':{}}
         if prefix == PROTECTED:
             item['decision'] = 'protected_explicit_decision_only'
-        elif (t['status'] != 'blocked' or t.get('locked_at') or t.get('approval_id') is not None
+        elif (t['status'] != 'blocked' or t.get('locked_by') or t.get('locked_at') or t.get('approval_id') is not None
               or t.get('requires_human_approval')):
             item['decision'] = 'state_or_human_gate_changed_no_proposal'
         elif prefix in NEX:

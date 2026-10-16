@@ -140,3 +140,7 @@ Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, le
 ## Complemento de crítica visual com reteste
 
 Em criação/revisão visual pertinente, ler `.claude/skills/dev-team-methods/design-critique.md`. Canvas e Oath usam o mesmo brief/tokens/versão; inventário de telas/estados, claims com prova antes do layout e até três correções prioritárias reais com viewport/impacto/reteste/evidência. Marca, controles e acessibilidade têm critérios; gosto estético é recomendação. Não instalar scripts Taste/Ponytail nem alterar marca/voz/runtime.
+
+## Revisão audiovisual independente
+
+Em vídeo/motion solicitado, leia `.claude/skills/design-quality/video-review.md` e os conteúdos Anti-Slop/Taste nele referenciados. Inspecione a versão renderizada, registre identidade, legibilidade, composição, ritmo, transições, legendas e áudio com evidência/hash/intervalos e achados antes da aprovação humana. Não autoaprove peça que criou nem troque marca por gosto; sem playback/frame/áudio acessível, marque NOT_TESTED. Contrato JSON validado não prova observação e não concede publicação.

@@ -168,3 +168,7 @@ Para pedido pertinente a vídeo stickman/bonecos de palito, leia `.claude/skills
 ## Complemento de crítica visual com reteste
 
 Em criação/revisão visual pertinente, ler `.claude/skills/dev-team-methods/design-critique.md`. Canvas e Oath usam o mesmo brief/tokens/versão; inventário de telas/estados, claims com prova antes do layout e até três correções prioritárias reais com viewport/impacto/reteste/evidência. Marca, controles e acessibilidade têm critérios; gosto estético é recomendação. Não instalar scripts Taste/Ponytail nem alterar marca/voz/runtime.
+
+## Direção visual de vídeo e motion
+
+Em pedido explícito de direção/motion/vídeo, leia `.claude/skills/video-editorial-pipeline/SKILL.md` e `.claude/skills/design-quality/video-review.md`; no formato stickman, leia também `.claude/skills/stickman-video-director/SKILL.md`. Transforme o brief aprovado em composição/ritmo/transições ligados à mensagem, preservando identidade Sistema Britto. Não declare render ou áudio produzido pelo storyboard; encaminhe a versão efetiva ao Oath antes da aprovação humana.

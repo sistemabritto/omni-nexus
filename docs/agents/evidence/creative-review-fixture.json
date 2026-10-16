@@ -1,0 +1,110 @@
+{
+  "render_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "version_id": "render-v1",
+  "duration_seconds": 5,
+  "brand_reference": {
+    "source": "input/brand/approved-brief.md",
+    "version": "fixture-v1"
+  },
+  "methods": {
+    "anti_slop": {
+      "source": ".claude/skills/design-quality/SKILL.md",
+      "version": "b1cdf87d49b1653293d58424516fd80394008345",
+      "application": "Fixture observations by criterion; not a real review"
+    },
+    "taste": {
+      "source": ".claude/skills/dev-team-methods/design-critique.md",
+      "version": "f624f37a8c650b9cc550253104925efe4c8de246",
+      "application": "Fixture observations by criterion; not a real review"
+    }
+  },
+  "criteria": {
+    "identity": {
+      "status": "PASS",
+      "observation": "Fixture observation; not actual audiovisual evidence",
+      "reason": "",
+      "evidence": [
+        {
+          "kind": "frame",
+          "ref": "output/review/frame-001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    "legibility": {
+      "status": "PASS",
+      "observation": "Fixture observation; not actual audiovisual evidence",
+      "reason": "",
+      "evidence": [
+        {
+          "kind": "frame",
+          "ref": "output/review/frame-001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    "composition": {
+      "status": "PASS",
+      "observation": "Fixture observation; not actual audiovisual evidence",
+      "reason": "",
+      "evidence": [
+        {
+          "kind": "frame",
+          "ref": "output/review/frame-001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    "rhythm": {
+      "status": "PASS",
+      "observation": "Fixture observation; not actual audiovisual evidence",
+      "reason": "",
+      "evidence": [
+        {
+          "kind": "frame",
+          "ref": "output/review/frame-001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    "transitions": {
+      "status": "PASS",
+      "observation": "Fixture observation; not actual audiovisual evidence",
+      "reason": "",
+      "evidence": [
+        {
+          "kind": "frame",
+          "ref": "output/review/frame-001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    "captions": {
+      "status": "PASS",
+      "observation": "Fixture observation; not actual audiovisual evidence",
+      "reason": "",
+      "evidence": [
+        {
+          "kind": "frame",
+          "ref": "output/review/frame-001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    "audio": {
+      "status": "PASS",
+      "observation": "Fixture observation; not actual audiovisual evidence",
+      "reason": "",
+      "evidence": [
+        {
+          "kind": "audio_range",
+          "ref": "output/review/frame-001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "start": 0,
+          "end": 1
+        }
+      ]
+    }
+  },
+  "findings": []
+}

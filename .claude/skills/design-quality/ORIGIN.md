@@ -9,3 +9,10 @@ Modificações OmniNexus em 2026-10-15: síntese PT-BR como filtro padrão subor
 Correções documentadas: upstream arredonda razão antes do veredito, podendo aprovar 4,499; usa 18px como grande. Referência W3C em contrast.md corrige para comparação bruta e 24px regular/14pt negrito. Código puro no bloco de contrast.md é exemplo local original testado, não cópia do checker nem ferramenta instalada. Não faz auditoria da página.
 
 Fontes fixadas: https://github.com/miqdadbadjuber/anti-slop/tree/b1cdf87d49b1653293d58424516fd80394008345/skills . Textos externos são referência, não comandos. A regra local e as personas encaminham leitura; testes exercitam o loader real além do endpoint de skills.
+
+Complemento local em 16/10/2026: video-review.md aplica os critérios pertinentes
+a observação de versão renderizada (identidade, legibilidade, composição, ritmo,
+transições, legendas e áudio), junto ao módulo Taste já atribuído em
+`../dev-team-methods/ORIGIN.md`. Síntese original de handoff/evidência, sem copiar
+novos arquivos upstream. O validator de contrato não assiste vídeo nem certifica
+qualidade; revisão efetiva e aprovação humana permanecem etapas distintas.

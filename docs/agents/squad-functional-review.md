@@ -58,7 +58,7 @@ As contagens de referência acima incluem o caminho adicionado para Zen neste pa
 | Módulo | Responsabilidade/entrega | Proveniência local e teste |
 |---|---|---|
 | logo-design | Canvas em pedido explícito de logo; conceitos e kit após escopo/aceite | kaankiziltug/logo-design-skill, pin no ORIGIN e MIT local; TRADEMARKS preservado e biblioteca de SVGs excluída da MIT, não incorporada; referências/caminhos testados |
-| mkt-creative-brief | Mako brief; Pixel adaptação; Canvas direção | Refero, pin e Apache local; exemplos/QA e recuperação testados; não concede assets, render ou publicação |
+| mkt-creative-brief | Mako brief; Pixel adaptação; Canvas direção | Open Design, pin e Apache local; Refero é referência externa não instalada; exemplos/QA e recuperação testados; não concede assets, render ou publicação |
 | design-quality | Criador aplica critérios; Oath revisa visual independente | Anti-Slop 3.2.20/MIT, pin e licença local; validator puro e pointers testados; não instala MCP/scripts upstream |
 | dev-team-methods | Handoff aceito, debug/review, crítica visual e reuso | Agency Agents/Superpowers/Taste/Ponytail, quatro pins e quatro MIT locais; módulos e referências testados; sem segundo controlador |
 | mkt-research-pipeline | Mako pesquisa; Pixel social; Nex revops; Dex analytics/attribution; Oath evidência | MarketingSkills/Corey Haines, pin e MIT local; fixtures são especificação, não CRM executado |

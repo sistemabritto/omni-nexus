@@ -1,0 +1,7 @@
+# Consulta Live e revisão editorial: integração sobre149c649
+
+Inclui45099f5 +0b5338d e33adb07, sem alterar configuração remota, grants, credenciais ou flags. Contrato read_current_omni_session sem argumentos preservado: consulta memória própria e roteiros correntes autorizados. Tickets fora do bootstrap exigem /query ou alias opcional; alias remoto não configurado. Knowledge/global MemPalace/MCP externo permanecem excluídos. Coverage da leitura sem argumentos corrigida para não anunciar busca de tickets não executada.
+
+Validação combinada:52 testes iniciais;95 regressões finais passaram, incluindo HTTP localhost real/Flask/SQLite/dispatcher TS, ACL/revogação/revisões/hash, áudio e MediaRelease. Build TypeScript/Vite passou. Chrome375/1440 da build: adicionar dois segmentos, fechar/payload, reprovar com hash, prévia preservada e QA removida; API100%fixture, zero chamadas externas. Capturas locais /tmp/query-video-{375,1440}.png,375 inspecionada. Render sintético do autor33adb07 registrado no relatório próprio; não repetido nesta integração. Microfone real, escuta humana e entrega social real pendentes. Nenhum conteúdo reaberto/enfileirado pelo deploy.
+
+CI inclui novos testes de consulta/fonte/editorial. Deploy coordenado worker/dashboard/runtime com backup privado; ENV/dados/sessões/continuidade preservados, tarefas e routing desligados. Rollback não remove nova tabela nem restaura aprovações; conservar worker compatível se houver snapshots com cortes. Não reprocessar jobsv2 automaticamente.

@@ -799,7 +799,7 @@ def _query_payload(row, query, *, include_work=True):
         if _owned(row['id']) is None:
             raise ContinuityDenied()
         return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents,
-                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_company_tickets', 'authorized_recording_scripts'],
+                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_recording_scripts'] + (['authorized_company_tickets'] if include_work else []),
                        'excluded': ['unowned_mempalace_index', 'private_dot_history', 'arbitrary_mcp_execution'],
                        'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600, 'documents': 3}}
     except ContinuityDenied:

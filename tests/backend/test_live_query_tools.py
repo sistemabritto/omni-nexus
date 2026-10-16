@@ -56,6 +56,7 @@ def test_query_finds_work_outside_bootstrap_and_current_revisions_of_owned_histo
     # Already-registered zero-argument tool can use the latest persisted question.
     post(c,current,'transcript','current-provider',eventId='query-1',role='user',text='Zephyr')
     context=read(c,current['contextId'],'current-provider').json
+    assert 'authorized_company_tickets' not in context['queryResult']['coverage']
     assert any(m['text']=='Zephyr confirmado na terça' for m in context['queryResult']['memory'])
 
 

@@ -89,7 +89,7 @@ jobs:
           tests/backend/test_image_workflow_architecture.py
           tests/backend/test_live_task_dispatch.py tests/backend/test_live_cli_isolation.py tests/backend/test_orchestration_jobs.py
           tests/backend/test_live_continuity_endpoints.py tests/backend/test_live_memory_bootstrap.py tests/backend/test_live_conversation_store.py tests/backend/test_live_memory_contract.py
-          tests/backend/test_execution_catalog.py tests/backend/test_execution_runtime.py tests/backend/test_provider_explorer_contract.py tests/backend/test_live_playback_regressions.py
+          tests/backend/test_execution_catalog.py tests/backend/test_execution_runtime.py tests/backend/test_provider_explorer_contract.py tests/backend/test_live_playback_regressions.py tests/backend/test_live_query_tools.py tests/backend/test_live_recording_source.py
           tests/backend/test_provider_fallback_config_errors.py tests/media/test_provider_fallback_cwd.py
           tests/backend/test_design_cookbook.py tests/backend/test_marketing_research_skill.py
           tests/backend/test_team_methods_skill.py tests/backend/test_reels_editorial_skill.py
@@ -102,7 +102,7 @@ jobs:
           tests/goals tests/tickets tests/heartbeats
           tests/media/test_media_retry_loop.py tests/media/test_routes_media_jobs.py tests/media/test_media_stack_contract.py
           tests/media/test_media_editorial.py tests/media/test_media_release.py
-          tests/media/test_recording_edits.py tests/media/test_recording_worker_packaging.py
+          tests/media/test_recording_edits.py tests/media/test_recording_editorial_review.py tests/media/test_recording_worker_packaging.py
           tests/media/test_recordings.py tests/media/test_recording_render.py tests/media/test_recording_codecs.py tests/media/test_publication_evidence.py
           -q
 

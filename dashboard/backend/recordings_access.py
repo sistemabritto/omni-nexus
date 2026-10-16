@@ -33,6 +33,8 @@ def require_recording_job_access(job_id):
         if not isinstance(data, dict) or data.get("recording_batch") != "v1":
             abort(409, description="recording_worker_upgrade_required")
         import json
+        if json.loads(version.snapshot_json).get('edit_plan_version',1)>2 and data.get('recording_project')!='v1':
+            abort(409,description='project_worker_upgrade_required')
         if json.loads(version.snapshot_json).get('edit_plan_version',1)>1 and data.get('recording_edits')!='v2':
             abort(409,description='recording_segments_worker_upgrade_required')
     if request.method == "PATCH":
@@ -64,6 +66,30 @@ def release_readiness_error(job):
     if version.id!=latest.id or version.batch!=row.batch or version.script_revision!=row.script_revision or not row.closed:
         return 'recording_version_superseded'
     if m.db.session.get(m.RecordingRejection,version.id):return 'recording_version_rejected'
+    creative_error=creative_review_error(version,job)
+    if creative_error:return creative_error
     if not version.qa_sha256 or version.qa_sha256!=job.render_sha256:
         return 'recording_requires_human_audio_caption_rights_qa'
+    return None
+
+
+def creative_review_error(version,job):
+    import json
+    import models as m
+    if not json.loads(version.snapshot_json).get('creative_review_required'):return None
+    review=m.RecordingCreativeReview.query.filter_by(version_id=version.id,render_sha256=job.render_sha256).order_by(m.RecordingCreativeReview.created_at.desc(),m.RecordingCreativeReview.id.desc()).first()
+    if not review or not review.eligible or review.reviewer==job.created_by:return 'render_bound_creative_review_required'
+    from media_workspace import job_dir,resolve_within
+    from recordings_storage import hash_file
+    try:
+        payload=json.loads(review.payload_json)
+        result=json.loads(job.result_json or '{}');manifest=result.get('review_evidence',{})
+        if manifest.get('render_sha256')!=job.render_sha256:return 'creative_evidence_stale'
+        permitted={'output/final.mp4':job.render_sha256,**{item['ref']:item['sha256'] for item in manifest.get('frames',[])}}
+        evidence=[item for criterion in payload['criteria'].values() for item in criterion['evidence']]
+        evidence.extend(item for finding in payload['findings'] for item in finding.get('evidence',[]))
+        for item in evidence:
+            path=resolve_within(job_dir(job.id),item['ref'])
+            if permitted.get(item['ref'])!=item['sha256'] or not path.is_file() or hash_file(path)!=item['sha256']:return 'creative_evidence_stale'
+    except (ValueError,KeyError,TypeError,OSError):return 'creative_evidence_stale'
     return None

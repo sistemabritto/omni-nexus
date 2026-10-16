@@ -1,0 +1,62 @@
+import { useState } from 'react'
+
+type Asset = { id: string; name: string; kind: string }
+type Scene = { kind: string; duration: number; title: string; text: string; show_title?: boolean; asset_id?: string; source_start?: number; rights_reference?: string; pose?: string; metric?: number; metric_source?: string; frame?: string; grade?: string; overlay_asset_id?: string; overlay_rights_reference?: string; selection?: { rationale: string; transcript_excerpt: string; source_reference: string } }
+const modes = { long_cuts: 'Cortes de vídeo longo', enriched_edit: 'Edição enriquecida', faceless: 'Faceless sem footage', stickman: 'Bonecos palito', motion_vsl: 'VSL / mini-VSL de motion' }
+const field = 'w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-3 text-base text-[#e6edf3]'
+function splitScript(script: string): string[] {
+  const chunks: string[] = []
+  for (const sentence of script.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [script]) {
+    let line = ''
+    for (const word of sentence.trim().split(/\s+/)) {
+      if (line && line.length + word.length + 1 > 260) { chunks.push(line); line = '' }
+      line += (line ? ' ' : '') + word
+    }
+    if (line) chunks.push(line)
+  }
+  return chunks
+}
+const button = 'min-h-11 rounded-lg border border-[#30363d] px-4 py-2 text-sm disabled:opacity-40'
+
+export default function VideoProjectEditor({ assets, script, busy, onProduce }: { assets: Asset[]; script: string; busy: boolean; onProduce: (production: object, format: string) => void }) {
+  const [projectScript, setProjectScript] = useState(script)
+  const [selected, setSelected] = useState<string[]>(['motion_vsl'])
+  const [brand, setBrand] = useState('')
+  const [palette, setPalette] = useState({ background: '#0d1117', foreground: '#e6edf3', accent: '#58a6ff' })
+  const [format, setFormat] = useState('vertical')
+  const [audio, setAudio] = useState('silent')
+  const [audioId, setAudioId] = useState('')
+  const [scenes, setScenes] = useState<Scene[]>([{ kind: 'motion', duration: 5, title: 'Título da primeira cena', text: '' }])
+  const [captions, setCaptions] = useState('[]')
+  const [error, setError] = useState('')
+  const update = (index: number, values: Partial<Scene>) => setScenes(old => old.map((scene, n) => n === index ? { ...scene, ...values } : scene))
+  return <details className="space-y-4 rounded-xl border border-[#30363d] bg-[#161b22] p-4"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Projeto de vídeo · combinar formatos e cenas</summary>
+    <p className="text-sm text-[#8b949e]">Um projeto pode combinar as cinco entradas. Você define roteiro e cenas; este editor não gera voz, B-roll ou imagens pagos. Faceless e VSL podem usar apenas texto, gráficos e motion originais. A prévia exige revisão criativa da versão renderizada e aprovação humana antes de qualquer distribuição.</p>
+    <label className="block">Roteiro completo desta versão de vídeo<textarea className={field} rows={8} maxLength={100000} value={projectScript} onChange={e => setProjectScript(e.target.value)} /></label>
+    <fieldset><legend>Entradas deste projeto</legend><div className="grid gap-2 sm:grid-cols-2">{Object.entries(modes).map(([id, label]) => <label key={id} className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={selected.includes(id)} onChange={e => setSelected(old => e.target.checked ? [...old, id] : old.filter(mode => mode !== id))} />{label}</label>)}</div></fieldset>
+    <label className="block">Referência de marca aprovada (fonte@versão)<input className={field} value={brand} onChange={e => setBrand(e.target.value)} placeholder="caminho-da-direção@versão-revisada" /></label>
+    <fieldset><legend>Confirme as cores conforme a marca aprovada</legend><div className="grid gap-3 sm:grid-cols-3">{(['background', 'foreground', 'accent'] as const).map(key => <label key={key}>{({ background: 'Fundo', foreground: 'Texto', accent: 'Destaque' })[key]}<input type="color" className={field} value={palette[key]} onChange={e => setPalette(old => ({ ...old, [key]: e.target.value }))} /></label>)}</div></fieldset>
+    <label className="block">Formato<select className={field} value={format} onChange={e => setFormat(e.target.value)}><option value="vertical">Vertical 9:16</option><option value="horizontal">Horizontal 16:9 · VSL longa</option><option value="square">Quadrado</option></select></label>
+    <label className="block">Áudio<select className={field} value={audio} onChange={e => setAudio(e.target.value)}><option value="silent">Silêncio intencional</option><option value="source">Áudio dos vídeos de origem</option><option value="provided">Narração/áudio enviado</option></select></label>
+    {audio === 'provided' && <label className="block">Arquivo de áudio<select className={field} value={audioId} onChange={e => setAudioId(e.target.value)}><option value="">Escolha um áudio enviado</option>{assets.filter(asset => asset.kind === 'audio').map(asset => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select></label>}
+    <button className={button} disabled={busy || !projectScript.trim()} onClick={() => { const parts = splitScript(projectScript); if (parts.length > 200 || parts.some(part => part.length > 1600)) { setError('O roteiro excede o limite de cenas ou texto; revise a divisão sem descartar conteúdo.'); return } setError(''); setScenes(parts.map((part, index) => ({ kind: selected.includes('stickman') ? 'stickman' : 'motion', title: `Cena ${index + 1}`, text: part.trim(), duration: Math.max(3, Math.min(30, part.trim().split(/\s+/).length / 2.4)) }))) }}>Distribuir roteiro em rascunho de cenas</button><p className="text-sm text-[#8b949e]">A divisão é mecânica por frases, não uma revisão editorial. Confira texto, ritmo e duração antes de renderizar.</p>
+    <ol className="space-y-4">{scenes.map((scene, index) => <li key={index} className="space-y-3 rounded-lg border border-[#30363d] p-3"><h4>Cena {index + 1}</h4>
+      <div className="grid gap-3 sm:grid-cols-2"><label>Visual<select className={field} value={scene.kind} onChange={e => update(index, { kind: e.target.value, asset_id: undefined })}><option value="motion">Texto / gráfico em motion</option><option value="stickman">Boneco palito original</option><option value="footage">Trecho de vídeo enviado</option><option value="image">Foto/B-roll em imagem enviada</option></select></label><label>Duração em segundos<input type="number" min={.1} max={300} step="any" className={field} value={scene.duration} onChange={e => update(index, { duration: Number(e.target.value) })} /></label></div>
+      <label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={scene.show_title ?? !['footage', 'image'].includes(scene.kind)} onChange={e => update(index, { show_title: e.target.checked })} />Exibir título/texto sobre a cena (confira rosto e textos existentes)</label>
+      <label className="block">Título da cena<input className={field} maxLength={180} value={scene.title} onChange={e => update(index, { title: e.target.value })} /></label>
+      <label className="block">Texto da cena<textarea className={field} maxLength={1600} value={scene.text} onChange={e => update(index, { text: e.target.value })} /></label>
+      {['footage', 'image'].includes(scene.kind) && <><label className="block">Material autorizado<select className={field} value={scene.asset_id || ''} onChange={e => update(index, { asset_id: e.target.value })}><option value="">Escolha um arquivo</option>{assets.filter(asset => asset.kind === (scene.kind === 'footage' ? 'video' : 'image')).map(asset => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select></label><label className="block">Origem/licença/autorização<input className={field} value={scene.rights_reference || ''} onChange={e => update(index, { rights_reference: e.target.value })} /></label>{scene.kind === 'footage' && <label className="block">Início no vídeo original<input type="number" min={0} step="any" className={field} value={scene.source_start || 0} onChange={e => update(index, { source_start: Number(e.target.value) })} /></label>}</>}
+      {selected.includes('long_cuts') && scene.kind === 'footage' && <><p className="text-sm text-[#8b949e]">A escolha com sentido deve vir de revisão editorial/transcrição. Cortar por tempo não comprova uma ideia completa.</p>{(['rationale', 'transcript_excerpt', 'source_reference'] as const).map(key => <label key={key} className="block">{({ rationale: 'Por que este corte faz sentido sozinho?', transcript_excerpt: 'Trecho completo da transcrição', source_reference: 'Referência da seleção/transcrição' })[key]}<textarea className={field} value={scene.selection?.[key] || ''} onChange={e => update(index, { selection: { rationale: '', transcript_excerpt: '', source_reference: '', ...scene.selection, [key]: e.target.value } })} /></label>)}</>}
+      <div className="grid gap-3 sm:grid-cols-2"><label>Enquadramento<select className={field} value={scene.frame || 'contain'} onChange={e => update(index, { frame: e.target.value })}><option value="contain">Preservar imagem inteira</option><option value="cover">Preencher com crop (conferir rosto)</option></select></label><label>Tratamento de cor<select className={field} value={scene.grade || 'none'} onChange={e => update(index, { grade: e.target.value })}><option value="none">Original</option><option value="warm">Quente leve</option><option value="cool">Frio leve</option></select></label></div>
+      <label className="block">Imagem/meme autorizado sobre a cena (opcional)<select className={field} value={scene.overlay_asset_id || ''} onChange={e => update(index, { overlay_asset_id: e.target.value || undefined })}><option value="">Sem overlay</option>{assets.filter(asset => asset.kind === 'image').map(asset => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select></label>
+      {scene.overlay_asset_id && <label className="block">Prova de autorização/licença do overlay<input className={field} value={scene.overlay_rights_reference || ''} onChange={e => update(index, { overlay_rights_reference: e.target.value })} /></label>}
+      {scene.kind === 'stickman' && <label className="block">Ação<select className={field} value={scene.pose || 'explain'} onChange={e => update(index, { pose: e.target.value })}><option value="explain">Explicar</option><option value="wave">Acenar</option><option value="walk">Mover</option></select></label>}
+      {scene.kind === 'motion' && <><label className="block">Gráfico percentual (opcional; use dados com prova)<input type="number" min={0} max={100} className={field} value={scene.metric ?? ''} onChange={e => update(index, { metric: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>{scene.metric !== undefined && <label className="block">Fonte/prova do dado<input className={field} value={scene.metric_source || ''} onChange={e => update(index, { metric_source: e.target.value })} /></label>}</>}
+      <div className="flex flex-wrap gap-2"><button className={button} disabled={index === 0} onClick={() => setScenes(old => { const next = [...old]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; return next })}>Subir cena</button><button className={button} disabled={scenes.length === 1} onClick={() => setScenes(old => old.filter((_, n) => n !== index))}>Remover cena</button></div>
+    </li>)}</ol>
+    <button className={button} disabled={busy || scenes.length >= 200} onClick={() => setScenes(old => [...old, { kind: 'motion', duration: 5, title: 'Nova cena', text: '' }])}>Adicionar cena</button>
+    <details><summary className="min-h-11 cursor-pointer py-2">Legendas temporizadas (JSON de start/end/text)</summary><p className="text-sm">Tempos em segundos no vídeo editado. Sem transcrição automática.</p><textarea className={field} rows={5} value={captions} onChange={e => setCaptions(e.target.value)} /></details>
+    {error && <p role="alert">{error}</p>}
+    <button className={`${button} w-full border-[#58a6ff]`} disabled={busy || !selected.length || !brand.trim()} onClick={() => { try { const parsed = JSON.parse(captions); setError(''); onProduce({ entry_modes: selected, script: projectScript, brand_reference: brand, palette, scenes, captions: parsed, audio_policy: audio, ...(audio === 'provided' ? { audio_upload_id: audioId } : {}) }, format) } catch { setError('Confira o JSON das legendas antes de gerar a prévia.') } }}>Tudo enviado e cenas definidas — gerar prévia do projeto</button>
+  </details>
+}

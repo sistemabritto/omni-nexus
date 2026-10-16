@@ -1803,3 +1803,14 @@ class RecordingRejection(db.Model):
     reason = db.Column(db.Text, nullable=False)
     rejected_by = db.Column(db.String(100), nullable=False)
     rejected_at = db.Column(db.String(30), nullable=False)
+
+
+class RecordingCreativeReview(db.Model):
+    __tablename__ = 'recording_creative_reviews'
+    id = db.Column(db.String(36), primary_key=True)
+    version_id = db.Column(db.String(36), db.ForeignKey('recording_versions.id'), nullable=False, index=True)
+    render_sha256 = db.Column(db.String(64), nullable=False)
+    reviewer = db.Column(db.String(100), nullable=False)
+    payload_json = db.Column(db.Text, nullable=False)
+    eligible = db.Column(db.Boolean, nullable=False)
+    created_at = db.Column(db.String(30), nullable=False)

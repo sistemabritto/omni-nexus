@@ -118,6 +118,8 @@ COPY dashboard/backend/sdk_client.py \
      dashboard/backend/media_render.py \
      dashboard/backend/recording_render.py \
      dashboard/backend/recording_edits.py \
+     dashboard/backend/video_project_spec.py \
+     dashboard/backend/video_project_render.py \
      dashboard/backend/recordings_storage.py \
      dashboard/backend/media_validation.py \
      dashboard/backend/media_manifest.py \

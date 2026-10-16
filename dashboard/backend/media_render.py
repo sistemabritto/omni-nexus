@@ -47,6 +47,7 @@ def render_composition(
     format_: str = "mp4",
     timeout_seconds: int = 900,
     strict: bool = True,
+    workers: int | None = None,
 ) -> dict:
     project_dir = Path(project_dir).resolve()
     output_path = Path(output_path).resolve()
@@ -55,6 +56,8 @@ def render_composition(
     if quality not in VALID_QUALITY:
         raise ValueError(f"quality inválida: {quality!r} (aceita {VALID_QUALITY})")
 
+    if workers is not None and (isinstance(workers,bool) or not isinstance(workers,int) or not 1<=workers<=4):
+        raise ValueError("workers deve ser inteiro entre 1 e 4")
     binary = _resolve_hyperframes_bin(project_dir)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
@@ -66,6 +69,7 @@ def render_composition(
     ]
     if strict:
         cmd.append("--strict")
+    if workers is not None:cmd.extend(["--workers",str(workers)])
 
     try:
         proc = subprocess.run(

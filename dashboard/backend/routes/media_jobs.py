@@ -323,6 +323,10 @@ def list_media_jobs():
         import models as m
         advanced=db.select(m.RecordingVersion.job_id).where(m.RecordingVersion.snapshot_json.like('%"edit_plan_version": 2%'))
         query=query.filter(~MediaJob.id.in_(advanced))
+    if getattr(g, "auth_via_api_token", False) and request.args.get("recording_project") != "v1":
+        import models as m
+        projects=db.select(m.RecordingVersion.job_id).where(m.RecordingVersion.snapshot_json.like('%"edit_plan_version": 3%'))
+        query=query.filter(~MediaJob.id.in_(projects))
     # Legacy jobs retain existing policy; private Gravações never leak through this list.
     if current_user.role != "admin":
         import models as m

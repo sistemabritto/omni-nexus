@@ -99,3 +99,25 @@ Final file-backed fixture validation: 37 passed, 12 existing SQLAlchemy warnings
 95.79s under local load. The authenticated fixture name was asserted in the SDK
 result through real loopback HTTP and the TypeScript dispatcher. The earlier
 failed repeats remain documented; they are not counted as successful runs.
+
+
+## Final authorized Live union
+
+This release additionally includes f8b78ed (shared lexical policy, ranking before
+the candidate cap and exclusion of the exact current-question event), plus
+f94700c/231815d evidence/test clarifications. User/company SQL ownership, current
+revision, revocation checks and result budgets remain in place. The last saved
+assistant announcement is not used as the user query. This is lexical retrieval,
+not semantic search or proof that the requested complete script exists.
+
+Independent final validation: 50 passed, 14 existing SQLAlchemy warnings, 74.90s,
+covering context, continuity, recording ACL, audit outage/timeout, query and
+conversation-store isolation/ranking. One earlier 49-pass/1-fail run lacked the
+local terminal express dependency after the integrator removed its symlink;
+the link to already installed packages was restored (no installation), then the
+full 50-case suite passed. No failing run is represented as passing.
+
+Raw managed-session.ts, audio.ts and tool-dispatch-audit.ts are byte-for-byte
+unchanged from 4985996. No remote configuration or real provider call is needed
+to validate this software release. Production model consumption remains a
+separate, naturally initiated user-call verification.

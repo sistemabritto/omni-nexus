@@ -56,3 +56,10 @@ Isso é rastreabilidade de revisão por ator autorizado, não um algoritmo capaz
 4. Criador e revisor autorizados distintos; preencher achados/evidências da versão renderizada, resolver P0/P1/NOT_TESTED, conferir marca, só então QA final e aprovação MediaRelease.
 5. Cada edição ou nova observação invalida aprovações. Nunca cancelar/recriar posts remotos por inferência. Testar idempotência e reconciliação antes de autorizar conteúdo/destinos/horário reais.
 6. Rollback: deixar jobs de projeto3 parados até worker compatível; não converter spec em trim nem alterar snapshots. Histórico v1/v2 continua; não remover tabela de revisão ou restaurar aprovação antiga.
+
+## Incremento de usabilidade após PR90
+
+- Legendas agora têm campos de início/fim/texto, adição e remoção; não exigem JSON. Duração total e intervalos das cenas ficam visíveis. Validação local recusa legenda vazia/fora do tempo, cena inválida, ausência de áudio escolhido e roteiro/marca incompletos; servidor continua autoridade.
+- CUA no navegador, fixture isolada sem backend: abriu editor, informou fixture/original@1, selecionou horizontal, dividiu duas frases em duas cenas de3s, adicionou legenda, comprovou bloqueio do texto vazio e envio de DTO após preencher. Isto valida o formulário; não comprova login/upload/player/revisão completos em produção. TypeScript e ESLint passaram.
+- A fixture temporária não entra no produto nem chama API. Referência de marca usada é teste, não marca Britto aprovada.
+- Duração longa: preparado ensaio original de10min/10cenas60s em160×90/30fps,1core/1worker/nice19, sem gastos/posts; aguarda janela coordenada com integrador. Não declarar render longo validado antes do resultado.

@@ -76,7 +76,9 @@ def test_audit_failure_does_not_block_actual_http_source_or_sdk_output(enabled,t
     app,c,_,_,_,_=enabled
     prepare_history(enabled)
     app.wsgi_app=ProxyFix(app.wsgi_app,x_host=1)
-    server=make_server('127.0.0.1',0,app)
+    # Browser bootstrap/events/audit/source fetches are concurrent; a serial
+    # fixture can starve source requests on an idle keep-alive connection.
+    server=make_server('127.0.0.1',0,app,threaded=True)
     thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
     fixture=tmp_path/'audit-outage.json'
     cookie=c.get_cookie('session',domain='example.test')

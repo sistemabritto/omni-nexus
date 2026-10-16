@@ -29,6 +29,7 @@ const tick=()=>new Promise(resolve=>setTimeout(resolve,10));
   const data=JSON.parse(query.result);assert.ok(data.work.results.some(x=>x.reference==='/api/tickets/ticket-3'));assert.ok(data.memory.some(x=>x.text==='Zephyr confirmado na terça'&&x.revision===2));assert.ok(!query.result.includes('SECRET'));assert.ok(!query.result.includes('obsolete'));
   if(fixture.auditFailureStage)assert.equal(session.snapshot().toolAuditDegraded,true);
   const existing=await tool('read_current_omni_session',{},'existing-read');assert.equal(existing.is_error,false);assert.ok(JSON.parse(existing.result).queryResult.memory.some(x=>x.text==='Zephyr confirmado na terça'));
+  if(fixture.expectedProfileName)assert.deepEqual(JSON.parse(existing.result).authenticatedUser,{displayName:fixture.expectedProfileName,nameAvailable:true,source:'authenticated_profile'});
   const denied=await tool('search_omni_context',{query:'Zephyr',companyId:8},'tenant-injection');assert.equal(denied.is_error,true);
   const sourceIndex=requests.findIndex(r=>r.url.endsWith('/query'));
   const receivedIndex=requests.findIndex(r=>r.url.endsWith('/tool-audit')&&r.body.toolCallId==='query-http'&&r.body.stage==='received');

@@ -29,7 +29,9 @@ def setup(tmp_path,monkeypatch):
         modules[name] = module
     mod = modules['routes.managed_live_context']
     app=Flask(__name__)
-    app.config.update(TESTING=True,SECRET_KEY='test-only',SERVER_NAME='example.test',SQLALCHEMY_DATABASE_URI='sqlite://',SQLALCHEMY_TRACK_MODIFICATIONS=False,NEXUS_LIVE_USER_ID=31,NEXUS_LIVE_CONTEXT_DB=str(tmp_path/'contexts.db'))
+    app.config.update(TESTING=True,SECRET_KEY='test-only',SERVER_NAME='example.test',SQLALCHEMY_DATABASE_URI='sqlite:///'+str(tmp_path/'dashboard.db'),SQLALCHEMY_TRACK_MODIFICATIONS=False,NEXUS_LIVE_USER_ID=31,NEXUS_LIVE_CONTEXT_DB=str(tmp_path/'contexts.db'))
+    # Real HTTP threads need separate DB connections; sqlite:// shares one
+    # in-memory StaticPool connection and can misattribute concurrent rollbacks.
     db.init_app(app);login=LoginManager(app)
     @login.user_loader
     def load(uid):return db.session.get(User,int(uid))

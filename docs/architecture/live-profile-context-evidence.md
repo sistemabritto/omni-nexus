@@ -66,3 +66,36 @@ HTTP audit rejection harness; that exact case passed alone (1 passed, 6.40s).
 Two new profile tests passed. Initial sandbox run lacked the existing TypeScript
 module path and loopback permission; the subsequent run supplied both without
 installing dependencies. Existing SQLAlchemy Subquery warning remains.
+
+
+## Independent integration review
+
+Integrated separately after squad revision 4985996, together with the authorized
+matching-excerpt correction 06f6285. No remote prompt, model, voice, audio,
+grants, task flags or company ownership changes are included.
+
+The original 31-test profile/continuity/audit regression passed (62.15s); the
+previously timed-out reject-received case also passed alone (4.31s), without
+increasing timeouts. The expanded 37-test union initially had 3 tool-timeout
+failures in the local HTTP fixture. That fixture used a serial Werkzeug server
+while browser bootstrap/events/audit/source fetches are concurrent. Both HTTP
+fixtures now use threaded=True; all tool/subprocess limits remain unchanged.
+The expanded suite then passed all 37 cases in 30.77s. This is a fixture change,
+not a relaxation of production audit timeouts or a claim of provider reliability.
+
+The real loopback HTTP/Flask/SQLite/TypeScript dispatcher scenario also asserts
+the isolated authenticated profile reaches the simulated SDK tool result. It
+uses fixture data, no production cookies, provider or microphone. Production
+software packaging and protected-route checks do not replace a natural signed-in
+user call or prove the model used the new field.
+
+A subsequent repeated run exposed a second fixture issue: SQLite InterfaceError
+in a concurrent scope lookup. The fixture used sqlite:// (one shared in-memory
+StaticPool connection). The ephemeral dashboard fixture now uses a per-test
+SQLite file, matching production's connection model; HTTP server concurrency
+and original timeouts are retained. No production DB/config change is made.
+
+Final file-backed fixture validation: 37 passed, 12 existing SQLAlchemy warnings,
+95.79s under local load. The authenticated fixture name was asserted in the SDK
+result through real loopback HTTP and the TypeScript dispatcher. The earlier
+failed repeats remain documented; they are not counted as successful runs.

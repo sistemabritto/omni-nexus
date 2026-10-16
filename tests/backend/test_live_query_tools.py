@@ -90,15 +90,21 @@ def test_query_does_not_reactivate_tasks_or_import_legacy(enabled,monkeypatch):
 def test_actual_http_query_and_zero_argument_read_reach_real_dispatcher(enabled,tmp_path):
     app,c,_,_,_,_=enabled
     prepare_history(enabled)
+    from models import db,User
+    with app.app_context():
+        db.session.get(User,31).display_name='Isolated HTTP profile';db.session.commit()
     from werkzeug.middleware.proxy_fix import ProxyFix
     from werkzeug.serving import make_server
     app.wsgi_app=ProxyFix(app.wsgi_app,x_host=1)
-    server=make_server('127.0.0.1',0,app)
+    # Browser bootstrap/events/audit/source fetches are concurrent; a serial
+    # fixture can starve source requests on an idle keep-alive connection.
+    server=make_server('127.0.0.1',0,app,threaded=True)
     thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
     fixture=tmp_path/'query-http.json'
     cookie=c.get_cookie('session',domain='example.test')
     fixture.write_text(json.dumps({'base':f'http://127.0.0.1:{server.server_port}',
-                                   'cookie':'session='+cookie.value}))
+                                   'cookie':'session='+cookie.value,
+                                   'expectedProfileName':'Isolated HTTP profile'}))
     root=Path(__file__).resolve().parents[2]
     try:
         result=subprocess.run(['node',str(root/'qa/managed-live-context/query-http-tests.cjs'),str(fixture)],

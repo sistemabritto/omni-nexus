@@ -78,6 +78,33 @@ EXPECTED_KNOWLEDGE = {
     'oath-verifier': ['design-quality', 'mkt-research-pipeline', 'dev-team-methods'],
 }
 _PATH = re.compile(r'\.claude/(skills(?:-media)?)/([a-z0-9][a-z0-9-]*)/SKILL\.md')
+_DOCUMENT_PATH = re.compile(
+    r'\.claude/skills(?:-media)?/[a-z0-9][a-z0-9-]*/'
+    r'(?:[a-zA-Z0-9_-]+/)*[a-zA-Z0-9_-]+\.md\b'
+)
+
+
+def reference_documents(source: str, workspace: Path) -> list[dict]:
+    """Explicit read pointers in the bounded persona, not model/tool execution.
+
+    Keep subdocuments separate from the strict root-SKILL detector. In
+    particular, design-critique.md does not imply SKILL.md was requested.
+    Symlinks escaping the workspace are not evidence of a readable document.
+    """
+    root = workspace.resolve()
+    documents = []
+    for relative in sorted(set(_DOCUMENT_PATH.findall(_runtime_body(source)))):
+        path = root / relative
+        within_workspace = path.resolve().is_relative_to(root)
+        documents.append({
+            'path': relative,
+            'kind': 'skill_root' if path.name == 'SKILL.md' else 'reference_document',
+            'document_present': within_workspace and path.is_file(),
+            'read_instruction_in_persona': True,
+            'model_read_status': 'not_verified',
+            'operational_status': 'not_verified',
+        })
+    return documents
 
 
 def _runtime_body(source: str) -> str:
@@ -107,6 +134,7 @@ def catalog_entry(name: str, source: str, workspace: Path) -> dict:
         for layer, slug in sorted(candidates)
     ]
     entry['evidence_scope'] = 'files_and_explicit_persona_paths_only'
+    entry['reference_documents'] = reference_documents(source, workspace)
     # reels_copilot.generate_reel uses agent="" in this base: persona alone is insufficient.
     entry['execution_note'] = (
         'Handler in-process: referência na persona não comprova inclusão no prompt de geração.'

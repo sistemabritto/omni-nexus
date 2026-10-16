@@ -1,0 +1,4032 @@
+{
+  "schema_version": 1,
+  "scope": "offline_native_persona_pointers_and_six_adapted_modules",
+  "limits": [
+    "Pointer presence is not skill-content injection or model reading.",
+    "Script presence is not executable availability or operational success.",
+    "Python provider persona slicing is not every runtime path.",
+    "No credentials, DB, memory, tools, providers or network were accessed."
+  ],
+  "agents": [
+    {
+      "slug": "apex-architect",
+      "persona_present": true,
+      "bounded_persona_sha256": "940f65ebf80abad5db667335d87c0eef117b710755117ae110bc58159162e300",
+      "bounded_persona_chars": 6600,
+      "named_skill_hints": [
+        "dev-ask",
+        "dev-ccg",
+        "dev-deep-interview",
+        "dev-mcp-setup",
+        "dev-plan",
+        "dev-ralplan",
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Apex",
+        "function": "Arquitetura e decisões técnicas",
+        "sector_id": "engineering",
+        "sector": "Engenharia e manutenção",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "aria-hr",
+      "persona_present": true,
+      "bounded_persona_sha256": "d6fec1d1f663db1ee70f8d1bfa07cdf55c0686aef73abcd39c7de0556ad7f25e",
+      "bounded_persona_chars": 7811,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Aria",
+        "function": "Pessoas e processos de RH",
+        "sector_id": "operations",
+        "sector": "Administração e desenvolvimento humano",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "atlas-project",
+      "persona_present": true,
+      "bounded_persona_sha256": "b9613f3eb31a8f5e3f3f4400f03880529b3909684631625055bb181c3bab152a",
+      "bounded_persona_chars": 6354,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Atlas",
+        "function": "Acompanhamento de projetos e bloqueios",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "bolt-executor",
+      "persona_present": true,
+      "bounded_persona_sha256": "d05671b9e861893262efab2bbfd39d36edafb37c65ecca39af5d4d9151c3426c",
+      "bounded_persona_chars": 7543,
+      "named_skill_hints": [
+        "dev-autopilot",
+        "dev-ralph",
+        "dev-ultraqa",
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Bolt",
+        "function": "Implementação de mudanças delimitadas",
+        "sector_id": "engineering",
+        "sector": "Engenharia e manutenção",
+        "knowledge": [
+          {
+            "name": "design-quality",
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "ui-ux-pro-max",
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "canvas-designer",
+      "persona_present": true,
+      "bounded_persona_sha256": "b7439adec85bcd94325428f6905682bba6f9826b8d1876e9497831c7b867c5f4",
+      "bounded_persona_chars": 8595,
+      "named_skill_hints": [
+        "dev-verify",
+        "dev-visual-verdict"
+      ],
+      "catalog": {
+        "display_name": "Canvas",
+        "function": "Design de interfaces e direção visual",
+        "sector_id": "growth",
+        "sector": "Marketing, criação e relacionamento",
+        "knowledge": [
+          {
+            "name": "design-quality",
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": false,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "logo-design",
+            "path": ".claude/skills/logo-design/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-creative-brief",
+            "path": ".claude/skills/mkt-creative-brief/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "stickman-video-director",
+            "path": ".claude/skills/stickman-video-director/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "ui-ux-pro-max",
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/design-quality/ux-heuristics.md",
+            "kind": "reference_document",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/dev-team-methods/design-critique.md",
+            "kind": "reference_document",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/logo-design/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-creative-brief/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/stickman-video-director/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "clawdia-assistant",
+      "persona_present": true,
+      "bounded_persona_sha256": "33b0a183e847e72ed8596c51dfa62078997e140223326803b33859df1d40bdfc",
+      "bounded_persona_chars": 8343,
+      "named_skill_hints": [
+        "prod-memory-management"
+      ],
+      "catalog": {
+        "display_name": "Clawdia",
+        "function": "Fila operacional, contexto e encaminhamento",
+        "sector_id": "coordination",
+        "sector": "Coordenação e estratégia",
+        "knowledge": [
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "compass-planner",
+      "persona_present": true,
+      "bounded_persona_sha256": "72a0de7c07d19594d45b415a1ac3e8d9c04f405ebad2f7715045a09d2207df0e",
+      "bounded_persona_chars": 8388,
+      "named_skill_hints": [
+        "dev-deep-interview",
+        "dev-plan",
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Compass",
+        "function": "Plano técnico e interfaces da implementação",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "dex-data",
+      "persona_present": true,
+      "bounded_persona_sha256": "ed6eb0951ff2dcffa1beca12a2b4854bf705647f72f3b89bf83cb1ba213aa728",
+      "bounded_persona_chars": 8672,
+      "named_skill_hints": [
+        "int-evo-crm",
+        "int-omie",
+        "int-stripe"
+      ],
+      "catalog": {
+        "display_name": "Dex",
+        "function": "Métricas, qualidade de dados e reconciliação",
+        "sector_id": "data",
+        "sector": "Dados e pesquisa",
+        "knowledge": [
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-research-pipeline",
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "echo-analyst",
+      "persona_present": true,
+      "bounded_persona_sha256": "3d560305765b2b4e1749896b4189a1fe84d22456261c0f8f6e9dcedf0ebfc0f9",
+      "bounded_persona_chars": 5249,
+      "named_skill_hints": [
+        "dev-deep-interview",
+        "dev-plan"
+      ],
+      "catalog": {
+        "display_name": "Echo",
+        "function": "Lacunas e critérios dos requisitos",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "flow-git",
+      "persona_present": true,
+      "bounded_persona_sha256": "e13f99253725c7fbd61e68ed6ad80380e3536c46e43bb8a06973114be5954e11",
+      "bounded_persona_chars": 4545,
+      "named_skill_hints": [
+        "dev-release"
+      ],
+      "catalog": {
+        "display_name": "Flow",
+        "function": "Histórico Git e organização de alterações",
+        "sector_id": "engineering",
+        "sector": "Engenharia e manutenção",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "flux-finance",
+      "persona_present": true,
+      "bounded_persona_sha256": "bc201ee22750af91c67db00927dbcb4707c59bff3dae5c69f12d1af28274d422",
+      "bounded_persona_chars": 6213,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Flux",
+        "function": "Operação financeira e relatórios",
+        "sector_id": "operations",
+        "sector": "Administração e desenvolvimento humano",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "goal-planner",
+      "persona_present": true,
+      "bounded_persona_sha256": "23cfd4708af8b4858327c4e9c10c81f1a60a06f2f1e0e2f2c24756383f491dfa",
+      "bounded_persona_chars": 8321,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Planejador de objetivos",
+        "function": "Decompor objetivos em trabalho verificável",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "goal-suggester",
+      "persona_present": true,
+      "bounded_persona_sha256": "9701b9ef1c2c3119ad13964e831ecbfceba87958aca173609f1034b954611f69",
+      "bounded_persona_chars": 4590,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Sugestor de objetivos",
+        "function": "Propor objetivos para revisão",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "grid-tester",
+      "persona_present": true,
+      "bounded_persona_sha256": "9b21a4f51ecd04742c4d75cc0f8be6011bad0bf189389a578d82039650309ff8",
+      "bounded_persona_chars": 5130,
+      "named_skill_hints": [
+        "dev-ultraqa",
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Grid",
+        "function": "Estratégia e implementação de testes",
+        "sector_id": "quality",
+        "sector": "Qualidade e segurança",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "hawk-debugger",
+      "persona_present": true,
+      "bounded_persona_sha256": "15549164b9d3017c05043e2133e8053e8b0a7392bd75a0037cfc3373dbe6d617",
+      "bounded_persona_chars": 6454,
+      "named_skill_hints": [
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Hawk",
+        "function": "Reprodução e correção de bugs",
+        "sector_id": "engineering",
+        "sector": "Engenharia e manutenção",
+        "knowledge": [
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "helm-conductor",
+      "persona_present": true,
+      "bounded_persona_sha256": "70281ed6dd955bbbb374a1c511ced5f95095331d02344b38a017b61f1f9f77c3",
+      "bounded_persona_chars": 8649,
+      "named_skill_hints": [
+        "dev-cancel",
+        "dev-configure-notifications",
+        "dev-project-session-manager",
+        "dev-team"
+      ],
+      "catalog": {
+        "display_name": "Helm",
+        "function": "Coordenação do ciclo de engenharia",
+        "sector_id": "coordination",
+        "sector": "Coordenação e estratégia",
+        "knowledge": [
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "kai-personal-assistant",
+      "persona_present": true,
+      "bounded_persona_sha256": "9a3e5eb2bb2948ba58d0755caac671dd355e391220cb0976f9b787f4bbb89ca4",
+      "bounded_persona_chars": 9337,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Kai",
+        "function": "Organização pessoal no domínio isolado",
+        "sector_id": "operations",
+        "sector": "Administração e desenvolvimento humano",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "lens-reviewer",
+      "persona_present": true,
+      "bounded_persona_sha256": "91584eb7141d6a6297c66de438b2c1cd999a677fc8232d6b998e1c0edd3a89b0",
+      "bounded_persona_chars": 5968,
+      "named_skill_hints": [
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Lens",
+        "function": "Revisão de código: especificação e qualidade",
+        "sector_id": "quality",
+        "sector": "Qualidade e segurança",
+        "knowledge": [
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "lex-legal",
+      "persona_present": true,
+      "bounded_persona_sha256": "b6b413b8c5d043dbea595679909fcd7e0145b753a210c5a1ede0b1da94371353",
+      "bounded_persona_chars": 8648,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Lex",
+        "function": "Análise jurídica e revisão de conformidade",
+        "sector_id": "operations",
+        "sector": "Administração e desenvolvimento humano",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "lumen-learning",
+      "persona_present": true,
+      "bounded_persona_sha256": "e428b7d0ab2b01d77113923f81f2f1861eaa324874df36918db1721ec5b1018a",
+      "bounded_persona_chars": 5845,
+      "named_skill_hints": [
+        "learn-capture",
+        "learn-quiz",
+        "learn-review",
+        "learn-stats"
+      ],
+      "catalog": {
+        "display_name": "Lumen",
+        "function": "Retenção e revisão do aprendizado",
+        "sector_id": "operations",
+        "sector": "Administração e desenvolvimento humano",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "mako-marketing",
+      "persona_present": true,
+      "bounded_persona_sha256": "775171cc48406fe662cf56fafe1aff9d3d2af9ad0fc53813badb6a0310ff198b",
+      "bounded_persona_chars": 9771,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Mako",
+        "function": "Pesquisa competitiva, posicionamento e campanhas",
+        "sector_id": "growth",
+        "sector": "Marketing, criação e relacionamento",
+        "knowledge": [
+          {
+            "name": "design-quality",
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-creative-brief",
+            "path": ".claude/skills/mkt-creative-brief/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-research-pipeline",
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "stickman-video-director",
+            "path": ".claude/skills/stickman-video-director/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "ui-ux-pro-max",
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-creative-brief/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/stickman-video-director/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "mentor-courses",
+      "persona_present": true,
+      "bounded_persona_sha256": "a57810475c5144550e0c21fead11d78e6d967a8632772d2493dd4caf19e9bccb",
+      "bounded_persona_chars": 5568,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Mentor",
+        "function": "Cursos e percursos de aprendizagem",
+        "sector_id": "operations",
+        "sector": "Administração e desenvolvimento humano",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "mirror-retro",
+      "persona_present": true,
+      "bounded_persona_sha256": "c545645f840f0df80d35a6face764223e594a6437a20280840cb6b03c798145e",
+      "bounded_persona_chars": 6727,
+      "named_skill_hints": [
+        "dev-learner",
+        "dev-remember",
+        "dev-skillify"
+      ],
+      "catalog": {
+        "display_name": "Mirror",
+        "function": "Retrospectiva e aprendizado do processo",
+        "sector_id": "coordination",
+        "sector": "Coordenação e estratégia",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "nex-sales",
+      "persona_present": true,
+      "bounded_persona_sha256": "6c8a9bc1b8a2ffd6490956e32d75bf9957eca8d018e61b31effd49502ef48216",
+      "bounded_persona_chars": 7703,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Nex",
+        "function": "Qualificação, pipeline e próxima ação comercial",
+        "sector_id": "growth",
+        "sector": "Marketing, criação e relacionamento",
+        "knowledge": [
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-research-pipeline",
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "nova-product",
+      "persona_present": true,
+      "bounded_persona_sha256": "f5dbb37cd440744978e31a9b628aa124f922af69a41706793a4bbac655c5a1a2",
+      "bounded_persona_chars": 7882,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Nova",
+        "function": "Requisitos e decisões de produto",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "oath-verifier",
+      "persona_present": true,
+      "bounded_persona_sha256": "1c13759b0e633e3e79e794ab1f82df38330ce6cba05c4e882ccd170c57c48b72",
+      "bounded_persona_chars": 8180,
+      "named_skill_hints": [
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Oath",
+        "function": "Verificação independente com evidência",
+        "sector_id": "quality",
+        "sector": "Qualidade e segurança",
+        "knowledge": [
+          {
+            "name": "design-quality",
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-research-pipeline",
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "ui-ux-pro-max",
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/design-quality/contrast.md",
+            "kind": "reference_document",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/design-quality/review.md",
+            "kind": "reference_document",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/design-quality/ux-heuristics.md",
+            "kind": "reference_document",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/dev-team-methods/design-critique.md",
+            "kind": "reference_document",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "oracle",
+      "persona_present": true,
+      "bounded_persona_sha256": "ab47fdc6fb1a3305864fbe871f78b1e2340b4fed2e26656821f9966aacbe78ac",
+      "bounded_persona_chars": 17179,
+      "named_skill_hints": [
+        "create-agent",
+        "create-command",
+        "create-goal",
+        "create-heartbeat",
+        "create-routine",
+        "create-ticket",
+        "initial-setup",
+        "manage-heartbeats",
+        "prod-activation-plan"
+      ],
+      "catalog": {
+        "display_name": "Oracle",
+        "function": "Descoberta do negócio e contexto de conhecimento",
+        "sector_id": "coordination",
+        "sector": "Coordenação e estratégia",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "pixel-social-media",
+      "persona_present": true,
+      "bounded_persona_sha256": "3891ffb2d6db1c2eaa1462c372eecbb91a2a80dfe75847451f4383637380e41d",
+      "bounded_persona_chars": 12993,
+      "named_skill_hints": [
+        "int-minio",
+        "social-schedule-postiz"
+      ],
+      "catalog": {
+        "display_name": "Pixel",
+        "function": "Conteúdo social e adaptação por canal",
+        "sector_id": "growth",
+        "sector": "Marketing, criação e relacionamento",
+        "knowledge": [
+          {
+            "name": "design-quality",
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "dev-team-methods",
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-creative-brief",
+            "path": ".claude/skills/mkt-creative-brief/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "mkt-research-pipeline",
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "social-reels-editorial",
+            "path": ".claude/skills/social-reels-editorial/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "stickman-video-director",
+            "path": ".claude/skills/stickman-video-director/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          },
+          {
+            "name": "ui-ux-pro-max",
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/design-quality/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/dev-team-methods/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-creative-brief/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/mkt-research-pipeline/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/social-reels-editorial/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/stickman-video-director/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          },
+          {
+            "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "prism-scientist",
+      "persona_present": true,
+      "bounded_persona_sha256": "0ef82af795ae460c78de71da8d14074fcda84b90562d3a2e9f1575cc21a835c9",
+      "bounded_persona_chars": 5588,
+      "named_skill_hints": [
+        "data-create-viz",
+        "data-statistical-analysis",
+        "dev-sciomc"
+      ],
+      "catalog": {
+        "display_name": "Prism",
+        "function": "Análise científica e hipóteses estatísticas",
+        "sector_id": "data",
+        "sector": "Dados e pesquisa",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "probe-qa",
+      "persona_present": true,
+      "bounded_persona_sha256": "35abdf82a4cfaf953db681d0f2dd234bcf81559f533dfb268279a2e03abb0bce",
+      "bounded_persona_chars": 4623,
+      "named_skill_hints": [
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Probe",
+        "function": "QA interativo e diagnóstico de falhas de uso",
+        "sector_id": "quality",
+        "sector": "Qualidade e segurança",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "project-planner",
+      "persona_present": true,
+      "bounded_persona_sha256": "79e17ada79ac2578cf5dac4fe12581dd76e018bbe94500ca006fafe757cb1bae",
+      "bounded_persona_chars": 4885,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Planejador de projetos",
+        "function": "Transformar contexto em plano de projeto",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "pulse-community",
+      "persona_present": true,
+      "bounded_persona_sha256": "ae8c1019c98a6200b0e76ecdd347d1b0cacfb21f3aa536b03985ba34c6bad91e",
+      "bounded_persona_chars": 6508,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Pulse",
+        "function": "Comunidade e relacionamento coletivo",
+        "sector_id": "growth",
+        "sector": "Marketing, criação e relacionamento",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "quill-writer",
+      "persona_present": true,
+      "bounded_persona_sha256": "e0ea6aa15f0ce9e17ebf4c194644fb1a041ff69416aa22240ea4169a23ddc775",
+      "bounded_persona_chars": 4067,
+      "named_skill_hints": [
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Quill",
+        "function": "Documentação técnica com exemplos verificáveis",
+        "sector_id": "data",
+        "sector": "Dados e pesquisa",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "raven-critic",
+      "persona_present": true,
+      "bounded_persona_sha256": "16b46a02b64204e5454e1f236f0c5d996bb8b7b52cfd4cddacf3a419b37703a4",
+      "bounded_persona_chars": 6211,
+      "named_skill_hints": [
+        "dev-ralplan",
+        "dev-trace",
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Raven",
+        "function": "Crítica de riscos e coerência de planos",
+        "sector_id": "projects",
+        "sector": "Produto e projetos",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "reels-copilot",
+      "persona_present": true,
+      "bounded_persona_sha256": "844ce08ad0e107ba29c34b4cb93871c9b442188078d41c4d5f3e7f042141054b",
+      "bounded_persona_chars": 3125,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Coprodutor de Reels",
+        "function": "Um roteiro por rodada no fluxo de revisão",
+        "sector_id": "growth",
+        "sector": "Marketing, criação e relacionamento",
+        "knowledge": [
+          {
+            "name": "social-reels-editorial",
+            "path": ".claude/skills/social-reels-editorial/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/social-reels-editorial/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Handler in-process: referência na persona não comprova inclusão no prompt de geração."
+      }
+    },
+    {
+      "slug": "sage-strategy",
+      "persona_present": true,
+      "bounded_persona_sha256": "3130b5def52c44f648d035b43bb1ab66ba0430c157f6d64407f30495a5842e4e",
+      "bounded_persona_chars": 5670,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Sage",
+        "function": "Estratégia e prioridades de negócio",
+        "sector_id": "coordination",
+        "sector": "Coordenação e estratégia",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "scout-explorer",
+      "persona_present": true,
+      "bounded_persona_sha256": "23223295145a8cedac8b88916e215bf65ef4f3a3634270655ee5bb50e26b0bc8",
+      "bounded_persona_chars": 4940,
+      "named_skill_hints": [
+        "dev-deepinit"
+      ],
+      "catalog": {
+        "display_name": "Scout",
+        "function": "Exploração de código e localização de evidências",
+        "sector_id": "data",
+        "sector": "Dados e pesquisa",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "scroll-docs",
+      "persona_present": true,
+      "bounded_persona_sha256": "94c497c62b059c6f5a6a05caa90431b5e1b85c960021411bb3429cf629847a1a",
+      "bounded_persona_chars": 5050,
+      "named_skill_hints": [
+        "dev-external-context",
+        "obs-defuddle"
+      ],
+      "catalog": {
+        "display_name": "Scroll",
+        "function": "Pesquisa em documentação técnica",
+        "sector_id": "data",
+        "sector": "Dados e pesquisa",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "trail-tracer",
+      "persona_present": true,
+      "bounded_persona_sha256": "3d13649e9b0c2776ae75330fa47541d8e371b574cb16f99cefc7d05c496c8b87",
+      "bounded_persona_chars": 6054,
+      "named_skill_hints": [
+        "dev-deep-dive",
+        "dev-sciomc",
+        "dev-trace",
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Trail",
+        "function": "Rastreamento causal entre componentes",
+        "sector_id": "engineering",
+        "sector": "Engenharia e manutenção",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "vault-security",
+      "persona_present": true,
+      "bounded_persona_sha256": "daf95d2bb8ebb5e5dc9ad375b136d53b931994aca58d96415edef70dac652858",
+      "bounded_persona_chars": 5343,
+      "named_skill_hints": [
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Vault",
+        "function": "Revisão de segurança e fronteiras de confiança",
+        "sector_id": "quality",
+        "sector": "Qualidade e segurança",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "zara-cs",
+      "persona_present": true,
+      "bounded_persona_sha256": "79d10649df6cafaaa3fe7b43969a83174a5fc3c44827f75af4380f7c3ee702fe",
+      "bounded_persona_chars": 8849,
+      "named_skill_hints": [],
+      "catalog": {
+        "display_name": "Zara",
+        "function": "Sucesso do cliente e tratamento de demandas",
+        "sector_id": "growth",
+        "sector": "Marketing, criação e relacionamento",
+        "knowledge": [],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    },
+    {
+      "slug": "zen-simplifier",
+      "persona_present": true,
+      "bounded_persona_sha256": "775973ef8142b961730c0bbd6f73fc44053fac4a53dcd906dc8a0ba478083889",
+      "bounded_persona_chars": 5430,
+      "named_skill_hints": [
+        "dev-ai-slop-cleaner",
+        "dev-verify"
+      ],
+      "catalog": {
+        "display_name": "Zen",
+        "function": "Simplificação de código no escopo pedido",
+        "sector_id": "engineering",
+        "sector": "Engenharia e manutenção",
+        "knowledge": [
+          {
+            "name": "dev-ai-slop-cleaner",
+            "path": ".claude/skills/dev-ai-slop-cleaner/SKILL.md",
+            "document_present": true,
+            "persona_reference": true,
+            "operational_status": "not_verified"
+          }
+        ],
+        "evidence_scope": "files_and_explicit_persona_paths_only",
+        "reference_documents": [
+          {
+            "path": ".claude/skills/dev-ai-slop-cleaner/SKILL.md",
+            "kind": "skill_root",
+            "document_present": true,
+            "read_instruction_in_persona": true,
+            "model_read_status": "not_verified",
+            "operational_status": "not_verified"
+          }
+        ],
+        "execution_note": "Referência carregável não comprova leitura pelo modelo nem execução de ferramenta."
+      }
+    }
+  ],
+  "skills": [
+    {
+      "name": "ai-image-creator",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ab33a8d997b0b1d98edc334c2fdccee9bee5d5d63332472e12127c47e33d0b4f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/ai-image-creator/scripts/composite-banners.py",
+        ".claude/skills/ai-image-creator/scripts/generate-image.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "autolearn-curator",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "6db73471da64d9184caf13d962f6740c4b609732c5564d7f5dc96935acd8c365",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "autolearn-reviewer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "081b47d0afcec24cffc4909fd5671fd5d854423a1a43830c4128ae052f10226d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/autolearn-reviewer/scripts/autolearn.py",
+        ".claude/skills/autolearn-reviewer/scripts/composer.py",
+        ".claude/skills/autolearn-reviewer/scripts/falsify.py",
+        ".claude/skills/autolearn-reviewer/scripts/inspector_server.py",
+        ".claude/skills/autolearn-reviewer/scripts/outcomes.py",
+        ".claude/skills/autolearn-reviewer/scripts/proposer.py",
+        ".claude/skills/autolearn-reviewer/scripts/registry.py",
+        ".claude/skills/autolearn-reviewer/scripts/retention.py",
+        ".claude/skills/autolearn-reviewer/scripts/shift.py",
+        ".claude/skills/autolearn-reviewer/scripts/shortcuts.py",
+        ".claude/skills/autolearn-reviewer/scripts/sync_crypto.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_composer.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_falsify.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_inspector_server.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_outcomes.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_proposer.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_registry.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_repair_skill_use_counts.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_retention.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_shift.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_shortcuts.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_sync_crypto.py",
+        ".claude/skills/autolearn-reviewer/scripts/test_sync_e2e.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "continua-progress-skill",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "7aebbdaeaaded24728061385584848e277db8d50b71d954d1b143b069be7cf36",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "create-agent",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d12c168b7f78878833fcf48b7945daab1d5f91419e1f8e09204bf739e5292b5c",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "create-command",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2dcbbb2123837f82c07a47982249fe8456b0eb751ab1c80aa682beedf6bd3c1a",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "create-goal",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b21219678a0564717797337a547eaa8d34aa5e99bf4d1ec868f0a446119599de",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/create-goal/scripts/nexus_goal.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "create-heartbeat",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "617b7bbf8112cf2aa4a2588fef033d8e30d94a23d3ef0adb2ffe33bc546527e0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "create-integration",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f3613cdf7bd0c70c6e562651500651addbff6dc213537e52198b4ec2f38f0d2e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "create-routine",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "190b3e063338afd26f0d801ff8e2ce8922ea7a5be874f55190c0485e65ff867d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "create-ticket",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "aa26ebc835ed964278a746948280ad6ffa74b68cf7966315812e37829bb9cfcf",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "cs-customer-escalation",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "fb0b68e6ef37132c789ac1389b6f5e0799a925383b27f67fdcd2d58775e9e796",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "cs-customer-research",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d3b4d9eccc51c54a93771e5f8edd9925392aafad58b4a258cf4e8c4fc3ee700b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "cs-draft-response",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "cfad36a4a5024943663e3e1e76a4d898ff9146d70f3c5f842318e0bad12d1180",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "cs-kb-article",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f8e21a9775667cc16392a1b0624e20f1472e7432b81afc6c14b78b68ca56f48f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "cs-ticket-triage",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c79fc57d6e64adbbfa0c04a0d8090c8d1a4f34dc0ef16a12902478b68141a953",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "data-analyze",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "bd6e53aa65c742510e9e3e9ce2e26215588d054d86a9f38492214599a8dcf960",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "data-build-dashboard",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "7733009247d9df2cc675a4d367012d94e2f4279e86db29ee466a6a33852d979e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "data-create-viz",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "6dbd61609a8c0dd8aa4d57e449c8d04ed5532b31a2b0d314d79dc5fe20e91d56",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "data-explore",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2b7a01520ebfb75715ad28ea6023baab2e5310033f2a4415d65448d974cbbc82",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "data-statistical-analysis",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "75a461b7a53330e0295a016d570aab361fbf33c5de099d0fd14d4472fc6ed24c",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "data-validate",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "da98684ff05fdca6dd9397cf1e3112dc1c2865bf3b0f2777b87ac43c0d048e92",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "data-write-query",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "17fe14a37565b37ed4d9974b2418b034c1dd76d879a422f4a6ab12b62e4a4df1",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "db-mongo",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b00e03eb834b3a04f85628c09b7edaf529f5891855e14ca0ee6aec1cee062ef8",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/db-mongo/scripts/db_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "db-mysql",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d5e852017e130fad751097f7f7ae9677b6a94804f20aaa95a55a568574b552ab",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/db-mysql/scripts/db_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "db-postgres",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e630d1381105b47d27345964901c5d0cfe3df9821dceebd4dcf0d2d4d1013350",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/db-postgres/scripts/db_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "db-redis",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "23ace9e837849fca54b43aaf1a84fd6022b3ab4ef7b6daca7b5ad1bb4bbefe35",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/db-redis/scripts/db_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "design-quality",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b32c05f53640e7e862ec85c9a2867d0e8b16a08d3aea3e544e843b2b354c2562",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-ai-slop-cleaner",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "add02697c9dc35a3f50fb3eef0537215bac2fe3f7ff79a048c411dc93877656f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-ask",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "9583096e2e7caf9ab603edb078a2d6ac353f9c3f066f9ecaec604685f6a928c7",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-autopilot",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "37f1f17f97c7cbe445e0f8b25ed3bea52cb416f89b37c1bc259066a32cac9e1e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-cancel",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4f08a55ca6e91850f9272d589601620af63af6b6d83526dbb96b8e3e29a5d3a0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-ccg",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "7c814f9434f6a02a40d3f4e52703a5e046923f3ff5034a303b16302b76d34a90",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-configure-notifications",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5d7f63d1a65ab5cf1f3855acf08be61df6d13027d23e5eabc8c2253c3ce1897d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-deep-dive",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5c8447472231005d9eb7b67c11bfd3068a50e50165144908db95640bce50fa2f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-deep-interview",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b35802413c5175a0bc02e7c1bb3a26e6668ade5800e043bc856d7d426cba1792",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-deepinit",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "af5829953b07baa050e27183765e8c2c669fbb5d1a7907defe333c8c4897914f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-external-context",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "db1d4f786efe6d44bec1a8cdfaf4595a08753cb513ea810418d2b1fedee098ff",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-learner",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5bc16a26297806af24acc083dc5517feb7fa0b75c22c3800c0ca3d62f642495b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-mcp-setup",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "a670d2fe91427e7598b52260b228a70f35aa681436695d568b3542d2862ae2d0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-plan",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "a7db4ca5a0f51e95606b490679efd9b90df1b3b06c0bfb7e1b98556b0c85e165",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-project-session-manager",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c1fa86f6db2cc9dc5273acbc0ce6110c9fee0c69e3af694bfc0a6edecbcb923c",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-ralph",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "0a2cc55f28229ef76815097cfe1207c8cd5f7112720397a99cdf1f466b99e8d5",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-ralplan",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "dc7a038197b3deb424d8d50676704512a52b0ae4d020638375e5d1cb77ca5f23",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-release",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "7a516b15ade46803ceb41bef2e607e996761ace6fb23312224145c7818eee830",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-remember",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c4e0bbccce8185a457a8f13831320a7b9d5d9d668c76d8a417a96211e2b95638",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-sciomc",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ab0c8b76783c837752a81e9085a58ecba886bc6a989869ac880a7423919c6423",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-skillify",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ca560836e4ce8d61e8ffc81de5312fa4f5c0a40b1163463d749533b45fea028e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-team",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "89ca7e371abf8d24296ecb83673bff399acd5211171939a7a965827532139b54",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-team-methods",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5803986aed5bbffb26ae5dadcb393443c8cd94c92762c4c01e0406c38654acc1",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-trace",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "6d0ea02247b1a346cf15b8b12323621b975f4246a56b2f7995a96bd9735e5df8",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-ultraqa",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "54ab041a30dbd71eec48eef8c9850c6338e7efd5d7922868ea4868b3e14b38a4",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-verify",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c5d05ddc84d163ddd0adc39bec71730e3d31648011b21997540e4346db2ee116",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-visual-verdict",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "42f2c9166d8e72e5af6868768652bfd28fe8bc639b9b197a63b41ac5aafef667",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "discord-create-channel",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "3f2cbc89607180fb2eed3dd56c9f390a9b588f39aea025fe33e4bb94451c05cd",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "discord-get-messages",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2348699127e43100e6106fe85684cf645c2f681d7c470a78262c283f47913b2d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "discord-list-channels",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f5ac775c4243e25705e93d8a7320e7ffcdc605d63e4d66fcf2aede7b9eff545b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "discord-manage-channel",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "9205bb878572da7684a1557bd9be26bead6906781e44635b0949608a59d155d5",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "discord-send-message",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "84d98b053f28b42ce8152b824a308a709fec0245848065ecf41eb41a4176384b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-audit-support",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "911f5aaa32495b5c58c93dc846845b0f0bb26e7632c706a1ff46f774888de5be",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-close-management",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "be0153c8e7393712799cbcbbea87695a7aeaa1ea6034138912749e530f19bc3b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-daily-pulse",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d9286d5195698e2dcbcda5c2fb30bfce50f2a2f4cc97a41e347671cf57741b39",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-financial-statements",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "78cf1709ad6322a22c39b8262908b889bee0461639ec988c5a29715785dc749d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-journal-entry",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "28962f6d2e07d4ca4335f8daf377e05a9f96e3867306bec3e59c807d331c626a",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-journal-entry-prep",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5dc010d755e736196714266b2b373a166c37cc78843f4b44e33ff6d4fad006ee",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-monthly-close-kickoff",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "86a96783d6fc2ace0854fe1b69b78c27d74453480cf1631fd5e407646cb8156c",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-reconciliation",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5e228dda0189d531e70687627a48a79e42c7e576cb5643946843fd9e3e06bb50",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-sox-testing",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "6717ca6aa5c6126b73f30fd724a70c489e137214447889d36087ae73359f9000",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-variance-analysis",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b172ba4f42aeb9d84c1d862e1732ff5e15f8e7fdcb85507c9faa6c31fac5f08c",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "fin-weekly-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "9aec99137119556d1ef0b071a76ce208f7c400f98522c01224183315fc061531",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "gog-calendar",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "96c8c1954c1b42bff8b4ac056da2089e61bf2013fd3ca8c144fa0a0161865c35",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "gog-email-draft",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d499418a510ccf4c97904d4ae41c54a294808413d0077f7bd4e976bb1f1c2d03",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "gog-email-send",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "80732c5d95a67e17e04e84c5e9a555fdc91fc4c3675699b07ccc118923dbd216",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "gog-email-triage",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c8f5f40dedf2458d4c5b41371b357dcce98b15d569912bd732f857d34dbf30d4",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "gog-followups",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f221b0aff05509eca1387551e3bfd1c7ad5e0cacd0002bf33e8c14f76688bba8",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "gog-tasks",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "280d3c6a7c8ba6470b999cf777f98cd2d6e993fcc8002740cbbe1db4613a21bb",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "graphify",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "3e4d30df5a936965acaa25117230a6f3ff44353c137e63030e85e3bc3a391fb7",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "growth-audit",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "80b8732e0c0b684efc28f2e92d7a3a8e6f024a5bcf6244bf8cb2e01c5023a118",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-comp-analysis",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c4394a84bea644a3a9422a63bfd297e0b2d36d10356563343a9ebea09df87d11",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-draft-offer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "0a10fe9c2bf63723f2098d8b2cc07a135240cb23c7bce1680ecd9842717359a5",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-interview-prep",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "cbfc8603690d45a6224ff29463903c1c3e67be5d7a5c369fa53c6843310d1124",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-onboarding",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "cd1a63e21afde1683444cda72925d485d731c3dd020122b8814c775ec768e54f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-org-planning",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "56567188b776b9ed4af86ac9d211e9badb5783bb92b228a0c1979ea3afb0f7d9",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-people-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c7bb3cb3279e2f8abebf0c6d6c6dc0fb1eb5f4ad52a1767ce09217e1709e270d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-performance-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c971943ecddda63e8386f021e9488a794390e79e4e0b637fe71af2a22d3003eb",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-policy-lookup",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "67d9c7a116e6c005a08502c05290834a6ba5b10c956e7b7209cf25d01b094120",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hr-recruiting-pipeline",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e4e5ea9a08fe930e46fa65560d3a46b180037c3b386403dc0ef521eeaf02ab54",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "initial-setup",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "12feb4985a1c541100a15b898456885ac0873c800bb14883adef7c65e7217a47",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-asaas",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5fdc9436a689c3ba6ee17d39cff152ad2856a8c02b56280c95930998343c2294",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-bling",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "39834bccc22d01b7d0682a6e091a9219864aef2ea8b8e28c786e20ebdcd89c09",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-bling/scripts/bling_auth.py",
+        ".claude/skills/int-bling/scripts/bling_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-evo-crm",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "0f7a6e840784e200418f93d92dea6afa979c44c6fd598c52812ac3ebd972cd19",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-evo-crm/scripts/evo_crm_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-evohub",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b012091e40a2ba91ed640f8576d1b7301d192a1c468c4372022b70e5bf0264cf",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-evolution-api",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "88d900ea53814a0eab0ee64fde55c22363d6a64016147ea88c2558fdf439bdf9",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-evolution-api/scripts/evolution_api_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-evolution-go",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "33d1caff14f70e463d75664a7826ee354a14042a61ca25646200dfa4616a3dc6",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-evolution-go/scripts/evolution_go_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-fathom",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e6e198f2efb365f7ec82918077d4a2839b0c723cf2759532ac951d08b8f3804d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-fathom/fathom.sh"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-github-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4eb2be1acb14e105be0cafa4a8c7e5f7a9b4f66768c06f122ad74ec3657e55cd",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-instagram",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "0c80fe8bcb5525df4f5efa35966ec08b73b5d4d0f27d480b95e96d98fb7f8c12",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-instagram/scripts/instagram_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-linear-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ba865aa06dcae6145a516f7a9390c6222a87a2efefa0e316f85059a5e71c4fa3",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-linkedin",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f9cb748997c4d638e867897ed70b72da951ea4f2d0f209d51d468be846f23d0f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-linkedin/scripts/linkedin_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-minio",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "777074d0668ce7d0b08b2bf950b1b19a2192962922db8541170c8a96f705bb9d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-minio/scripts/upload.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-omie",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ed997d85b48d6521064d59854d2a0ddfb19c013b69c5a141269a3ba1911dc3d0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-omie/scripts/omie_client.py",
+        ".claude/skills/int-omie/scripts/omie_webhook.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-stripe",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5a6698dfd9617cf37643021f5e5e1138d898c19258af26c8c3cff8bbab705b78",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-stripe/scripts/stripe_query.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-sync-meetings",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2fd85779b33700aad83ae146506dfdadb83f20315c901deb01bc724a8284a8c1",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-telegram",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b541e5a7655c513cec34d7803903dbbbc9a4179c63030bf6aaa564fd1951a93b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-todoist",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "df83e0a162668a45dbbf6660c17251d878bb24056ffad497fd5d62eeee1de866",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "int-youtube",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4ec423a68b3e0773172cd5a0c7955bf4f13b882d413076579b6506a68dd4326e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/int-youtube/scripts/youtube_client.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "knowledge-admin",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "67b1d6998370c3329b481a5b8187a97441d79b84d2b129eb65c26fa6e2ec07a3",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "knowledge-browse",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2cb9b37ec4dc5e9a4e5781335d0923c22dd38e4bb2ecd1ccfd1980b36042cb31",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "knowledge-ingest",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b2ec4c8de5c23d9214e77910306f6dce145270444d50ae248dc7e8406e18db80",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "knowledge-organize",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "a28abdc912d8b908cc92e43bf28325643a311aadf37aec16195b60ed355febd2",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "knowledge-query",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "9764cbf5a9996535b151cd19470aadb1a9dcb580ad075cee662f404465be019e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "knowledge-summarize",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "cd67e619dcbe7805816cb03b24b4eff5e61be7779aa5082844b6775d04a339fa",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "learn-capture",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d4a96b008f26969a2abe938b748213348cf07854680418b3f7c6718c9f55f9d9",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "learn-quiz",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "9e11426dea552012b4182fef4b12a0708ab715ac7d870d9a24350b935ecdb506",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "learn-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "339552e5b73c7454658553f468b1b7566051305a34b6f919c2f18d27137bb6c5",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "learn-stats",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "0dfb969049c9d423b92fdb23cbc1867227b2aa381764bd65efa5a420d22b0e6f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-brief",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "854ed49323a975043dd4a0d1e4dfaf75f173ca134f6980ccf51c480eb23a74c0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-compliance-check",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "637a69c2e7cc89e444edf3dcb0b5bf487e44f6c10682089becf170e2597ff388",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-meeting-briefing",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "351340ebbeb4c4b58052eb822e3bb145be1f2450b7d75e49dfec2bb9cc709ef9",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-response",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e9da2b07adad5afe33879953276e6e127014c090bb27c31c65538f97ab2498d2",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-review-contract",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4c9d8eb41869e06625868aefce2ac2c764a565b62bfc0a6d7fc9f1bb08205bab",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-risk-assessment",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "33bf3ceb396ef0bb1724c800e258981eaf91ce9eea9b1764670c9db0b56a6ae6",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-signature-request",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "1b16ad6fd2bbc13667e084ab1e9166bfefa9fba135404111764f19a590b8bc82",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-triage-nda",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b673d951c29691956ff7faf0f1075fc046c56e461f1ceb9082cdd52003c0b3f2",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "legal-vendor-check",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c74199ca7a44a081b2033e825b6376406234c373d70d2c10efafc4fe05a080fe",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "logo-design",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "91fc7eb5aa10cfc4fec69d55b4456e92cdb26fecfc7404944db2ff2c520be02f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "manage-heartbeats",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f122b62baecdd2a3f7290f936986002c6d2ae3a4e324485dddb3cb08d5df7e36",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-autoresearch",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "76fec8dfed71d91cd2f8953787c25dd0973370cce8320663bb17dc189fe11811",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/mkt-autoresearch/autoresearch.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-brand-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d51d3ded4a35f7242b811393bbe4325e69a421b4db9690eaf395d3c5c8ce6e9c",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-campaign-plan",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "972667a2bf4b441f92b3ec005ae03b954e20e9dd4ba472f81c218e2184aad24b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-competitive-brief",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "a5a59d8e23d37a56b53f71eb92bdd2db2dff4eb7172187c5c1acb38c696145bd",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-content-creation",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "7642504693ae13f2a286b376ac0436302d7948e9c120ddebfbd58314c531cdd4",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-creative-brief",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "bdf8b4a658890c24751a9c49ef7e10b7387791241b4c3c538b9c400a79b6a957",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-draft-content",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "953bf74efef199bd71e2966b1ff4c298d9d8d3af91f93821984f4af05d46fd59",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-email-sequence",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d862959927c41401f1f9f2d03fb5cc5eaa5143dc95be220feb013951e2fa1517",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-experiment",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "37ed0f9b9b71782704bcb275bc0fe648eabe176a32ce96d54b5b8c973dc38c48",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/mkt-experiment/autogrowth-weekly-scorecard.py",
+        ".claude/skills/mkt-experiment/experiment-engine.py",
+        ".claude/skills/mkt-experiment/pacing-alert.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-iscas-desafio",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5036feb9aa49f1ce27c0cb09b78b902a09664e4d9f4f9db511cad618a708e8be",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-lp-copy-framework",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e589d219dca3c45ee15440ccd9df129ae933cbb59db07f6d49b6a52d899e8985",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-performance-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c8937e1f894c0a0989147f98b52cb7515c6ca1650030b23496da0b0492710c18",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-quality-gate",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "3381b9a67df5040afad10da9631abf7bf5a13af36cc9331408547eeeb60a3c3d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/mkt-quality-gate/scripts/content-quality-gate.py",
+        ".claude/skills/mkt-quality-gate/scripts/content-quality-scorer.py",
+        ".claude/skills/mkt-quality-gate/scripts/content-transform.py",
+        ".claude/skills/mkt-quality-gate/scripts/editorial-brain.py",
+        ".claude/skills/mkt-quality-gate/scripts/quote-mining-engine.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-research-pipeline",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "0ba5b4a8d6c882a67d6eeedd7a4413ab18c7d75b11045f979429a682d6be74a5",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-seo-audit",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "90fc8f933b37b170bc2c78db3bbd42c6cf86d79ce9fd6f2b103d28dd32609e10",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-seo-ops",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "1554fed906cad4a4bb170dfd12360d5fae5c2997b619975299139b8264760cfe",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/mkt-seo-ops/content_attack_brief.py",
+        ".claude/skills/mkt-seo-ops/gsc_auth.py",
+        ".claude/skills/mkt-seo-ops/gsc_client.py",
+        ".claude/skills/mkt-seo-ops/trend_scout.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "nextjs-app-router-route-conflict-prevention",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "1807582f5acc16d929a1d81f2df2a33895899fa88bcc66eff5ceb70ab9152fbf",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "obs-defuddle",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "bbdec4dde2dc5d7233cec4dd2f880fcbd99a4b78e59075a8378849ae6a14bc1c",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "obs-json-canvas",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "da38fffd6ae5b6795973322e85ae0e643370a84438b0088681b855f57d9361a0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "obs-obsidian-bases",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "74e2bfb68ee87c05f3071c12b8e30e25078891f169f9e4258815c987908175f0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "obs-obsidian-cli",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "9af5d96e8d696506e337bcc786e99141f0fe0e7322d6430ce9535aca1e792d53",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "obs-obsidian-markdown",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2f3e4382181be089c1eb06b31d2970e0f4756546dd7b5eda3297671e0c1b8c72",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-capacity-plan",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "a923688f7d82f8bcf783bac895bcaa284b50512ff7cc04a12c02b765427e2ee1",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-change-request",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ad2a2580afa1aaa9b6b7c5e06d8eb33157c6e85f000267016df7973d4a91c3bd",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-compliance-tracking",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5e5b0bb573e35053ad3935a2d5ace97973f8e80d31930170e1eafee9c4012bfe",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-process-doc",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "411cd9829f0f2ed3b059ef17d60b07ff6b010c4e1bcf8da8fef3e6af6664f410",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-process-optimization",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "8e601d32db64270e9d7b14366d3ed0cbcef79effc71de747ba692aa0097810bf",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-risk-assessment",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "321dc56a45770027c62b9e9508dfa33c00f8ae690d63917cc5e494ff4960b970",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-runbook",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "fefdc1daa4cb21ec41cbb54959c07db80348110d1a7dab97ad4dd80d37529123",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-status-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "94a12eb886ec60024b9db8d09027fd94b7d5922a8f7c49b6d573881ea507e5ef",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ops-vendor-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f77ac62095820e1335d35fcb5b03d956e41cd02df508d45cff07938cae9db958",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "plugin-health",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "28156347b97a9ff6b93f22b93d4bebade9f61d25aede465b20a139b232109684",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "plugin-install",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b550b385acf3657461e439e62c061fda6f60670055067293975a9505a3cf3830",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "plugin-list",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "aeb6ad7091eb8b2531d1d021594d74d1228220d8d795a91667a88450a3da6fef",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "plugin-marketplace",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "6c0253faa1c9b470f7bf43268ff5c62cdce3e0408ae9822e7fb0313a053f7ac9",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "plugin-security-scan",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "3e19a2203417b55bc1cef600d8dc4a7f2c49cab768b16680f529518d7928c619",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "plugin-uninstall",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "476bcc40440c7e2a26bc7e59d7f9e4b68d6e28f0904a7e1ef04c3ae278d6ab64",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "plugin-update",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "eeb735acf25283b80a34e5ff573dc254f8712cc2182d4aa3c869642ec405658f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pm-metrics-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ca533b5c945c248b132a8ffffe703ad4396cdb17307d0fe3a9d08640cd1220c8",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pm-product-brainstorming",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c31c4505bba174932bedb05fd5923c86286b2bd480ad234c851f74d82a39b7d3",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pm-roadmap-update",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "aac7cf2ebbae4b505c52f8c390a2723ce9336b64cc5339a29c4c97941f38459a",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pm-stakeholder-update",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "202fca6718c91c2c4902aa2f9efb4c3e28ab3c9293862a3aec108fe817187a97",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pm-synthesize-research",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c3c42ea49397fd33f3784b46a8e76db966d6f6e131ff0bdec25f02c56d1daaf6",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pm-write-spec",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "fc52cc6e7ae742b2c7246e2a2e97555ef26d1447ec1a0d14d73cf0c06fa4a07e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "prod-activation-plan",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "fa75ba38cf793e1051a4ca8ea2a169200383e2000a589b60f47c969a8de07374",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "prod-dashboard",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "47922b0e46de94f4b79109e60eef7d1875191f9e5e93bbe1430c32a81239d52e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "prod-end-of-day",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "976f022683f9fa000aef58f5648bc1c8c0ff053b18d8490e5cd1675728136c72",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "prod-good-morning",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "26b650fda9ad8e9e3d5d1c1abb769ba2b2648253166b3d5852d863449108e6e3",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "prod-memory-management",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2c43cb924cfdacb723eaa0f7c7788a385f5f407dc9d809958e0fd78bbe06a65a",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "prod-review-todoist",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "1d6146275b284ffac5d7175e252373f15c7249912ec193c5c782805308cdbc29",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "prod-trends",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5e453e0c9b0a69f5c992db06a1976cca22e8d36fd87d9a69357d9bd0702aea37",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pulse-daily",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "8c6e5f5c1438fa00675644aee7fee60392e110fb2bea588a066c4295eba0271f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pulse-faq-sync",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "59b9268417c27802917f803c33c4db54d09f473c7d0b3b048fc655afbd84caa7",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pulse-monthly",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "27f056a710ad695a70aa80a7c20cd10dcc01c52fa28e67d2a8517ae2f5f189b0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pulse-weekly",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4c609cee9720ddfc12649c372fd7e599742fd1910c00337003809b841ec8ff0d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "sage-competitive-analysis",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "147ada576716c9b494f3f3fe6f261ab9cf9aa6bc1273720c2bf121176a79b058",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "sage-okr-review",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c0581ef3a510455f673cefb39cae097e840d7bafdcab4400c8db61b7a3c94898",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "sage-strategy-digest",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "21ac67d4880b01a785be79b781a9d8e4d17c8ffb2b98c1ca71c4e33a210b2817",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "salve",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "c3ad8b416897984fabf79046312c93e7660838ef7833234ee8e1595af7bd2a49",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "schedule-task",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "2cfcae61e3225829ef1bc017e3f57b92f0b087dab00fd5ffc257e81e2d325784",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "self-improving-agent",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "3fdccfc575813545fdda86ac443d3c6c91dc57ca05217f59503e4a3cb7ceb9d6",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/self-improving-agent/scripts/improve.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-ai-trends-blog",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "a425894d6661f49ed9dae151a42e79c368f5b95dfde7826a582d8a4b0bfccf09",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/social-ai-trends-blog/fetch_ai_trends.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-analytics-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "312e7403959c13ab60fb4ed465ef0cd05bda548f83fc6d33a857f27abe05505e",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-audience-growth-tracker",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4c83821ff52b4ac20068902970079020bd8fbd1d49188387062cd0ef386468af",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-carousel-writer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "87509f8b1fd3375721c2444420bb51c3c74f8d1b970c9d8ed89fa9217bec4549",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-content-calendar",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "962d902ea0d1739dd272b50c3ceaabb2c33567f0bd52c909dccdd986839754a3",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-content-pattern-analyzer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "edb70f397271e3aa0f10524eddbb4e609090b1e248bbddba2f85c2471ca48f38",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-content-repurposer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "6e563f293516c9327f7a3142375601322c5e41b9faf83b62a0b5ada8cfe5742d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-content-strategy",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5d582dbb9fb2a67b267cc810563ff43298c75bf2c73e65bb848abf0cf585d197",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-context",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b6fcfef21d2a9250ef79f8700bccdc966b96fd542215b2c5e0e77c87e3b65ab7",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-editorial-strategy",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e2dcf3214a1c21751012fe1f6d6f0b6c96ba05d7b83b12a0b2eec8b59a8e43ad",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-hook-bank",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "d18d7ac6b1ad53efb9aa62242135acee93273a0e37e5f9704f516ebd344228c3",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-hook-writer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "5140e38c719a6339f9b4e48899c6a8659564cca4fd255123b4018e8e8ce02d35",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-instagram-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4c7e43e5493b795d295aff37224b5e554ce85dad04a7da100b39d0c517487130",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-linkedin-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "62c9c2d01b2d37da62da81357a32fc4f36e3a8e997e7649378e26e55285bf9e4",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-media-production",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "f3838fd9aa65f26221636340290b83195f7dc01adff2c83fccfac775f74fad15",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-optimization-advisor",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "18812fd4edadbc92a4a407e17c7fbd5b5cdfb3dded6315d3f6fb06a5486f08ba",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-performance-analyzer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "853431a662edccdc7fc150b189d78e01acb7bc8482c6efd71ac5648c29a7ec16",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-platform-strategy",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "1efe722e8ea5d4aad2ce7d7ba84fb54fb230b5bf851e8511cc87bde43b7d5793",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-post-writer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "41728de96a4959cc61933f4465c9cef72e2a3dde251922aee454b083757eeb82",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-reels-editorial",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "3026bf2156f4afb9b83ac24ea6ecef824be41c51fd17dbe9c23f6db0e967fe46",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-reels-scripts",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "245ddb19f040814d45498e277499c8ed506a08d29080dffd714ed38c95eee898",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-schedule-postiz",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4ea6b031a5a7c0e1e590ca108e5e31db589073837c3d8107f46d25d6251579bd",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-thread-writer",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e7c86dc85e81100004bd4caccdffc7be3f3c9333b4a648288ca63f0c0547c92f",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-x-longform",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "7036684184baa5ed4e3a261f2918725d2fc5ad28fab9d03b594149f01bd062a8",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-youtube-report",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "682d48925f4aa2afb41b1a639fd8fd30776184569bf56f79b62b20e4b12b153a",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-yt-competitive",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "70dae6713a6e4ed29c91d85dcd96f69b65d8603993593aa2e83ab3f6ac62cf2b",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/social-yt-competitive/analyze.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "stickman-video-director",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "ff83139a20ae88f892864f87e9245882ad8181e6b705d5a731c0d8bbc2ecb7e4",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "trigger-registry",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "0a63611ef4051091a1b545a2824c113129ada9434ba4c127a0e68f35747c250d",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "4b1c00ffa2078c97a779758c81c4426fbcfb9c5a22eb8bb616a7bc4513dff198",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [
+        ".claude/skills/ui-ux-pro-max/data/_sync_all.py",
+        ".claude/skills/ui-ux-pro-max/scripts/core.py",
+        ".claude/skills/ui-ux-pro-max/scripts/design_system.py",
+        ".claude/skills/ui-ux-pro-max/scripts/search.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "video-editorial-pipeline",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "e7b4b1dfc21c8bc2130c07e37a1f6aa038fc162bfded706d196ae3b4a7f86958",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "voicedream-verify-skill",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "b4e13466c83ae7f4f0f1a5ceb86a86c1508fbbcd6df05f4f23d310c9eca25194",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "workspace-share",
+      "layer": "skills",
+      "document_present": true,
+      "document_sha256": "7b669333dc30682834de6b65911d029cd45bae6f0248d99c8187404de8e978d0",
+      "listed_by_existing_skills_endpoint": true,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "embedded-captions",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "805db306574228d65860dae961496147425a87debe7a8641b1f170d3e15f2ee6",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [
+        ".claude/skills-media/embedded-captions/scripts/gen-stroke-path.py",
+        ".claude/skills-media/embedded-captions/scripts/prepare.sh",
+        ".claude/skills-media/embedded-captions/scripts/render-and-composite.sh",
+        ".claude/skills-media/embedded-captions/scripts/render-theme.sh"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "faceless-explainer",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "b8857946b83d2803681254ba22f2ebd87a098a3c777dad5d2f839413c5d835d3",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "general-video",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "e1ea63b26b9a4e0d127f940f3434e5e83e312406e7fff8872389583b6054e7be",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hyperframes",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "73c0d30c9038fda3043d1e1e7ff0ad4975082c6561ed5409d10ea21e95356548",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hyperframes-animation",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "69a9903796e65c66edbe9ec9621eca8953c7cc2a93a718687306891daf0463d4",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hyperframes-cli",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "b903e2652f77b976b7b9c6f0dec167dc83b8fde3e93795a1e9d0109c0aaec03a",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hyperframes-core",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "7083f93715eb60f61bf263412b41238708d53aa2b5c0400c73ca1171987e8bff",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hyperframes-creative",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "c6023035afc137ac5261a9b6d9fd2917278fae13c19666c67f5d30d84253b295",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [
+        ".claude/skills-media/hyperframes-creative/scripts/extract-audio-data.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hyperframes-keyframes",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "4577193cca207a6812904953d278af739255a7a88d44c214ffe5aa6f0d896bff",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "hyperframes-registry",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "19ca0bf6b757d91963e57b182c3bbf2304362752670bf47093035c75c760e820",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "media-use",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "a66f5113dd5b2d53fc463b06c238a2bbd33ac8e6c1158f17ef849bb5117024ac",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [
+        ".claude/skills-media/media-use/audio/scripts/lyria-recipe.py"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "motion-graphics",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "bd54eca08fecf4bcf730f63d485f9293d47ae8565023ef3eb3c18a2936323606",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "pr-to-video",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "4eebdf6efccaead193141df7a66a2475cc267159723ad4172a95aec867d773a3",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "product-launch-video",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "979165f80872457dcc97626a10858246623e38a9b6a454f40cc399dcfd7e415a",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "remotion-to-hyperframes",
+      "layer": "skills-media",
+      "document_present": true,
+      "document_sha256": "dc0a7aaab6a90514c741a98afa93f6eda254162074793d4b5045f256de47f9f2",
+      "listed_by_existing_skills_endpoint": false,
+      "script_candidates": [
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/run.sh",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-1-title-card/remotion-src/remotion.config.ts",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-1-title-card/remotion-src/src/index.ts",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-2-multi-scene/remotion-src/remotion.config.ts",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-2-multi-scene/remotion-src/src/index.ts",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-2-multi-scene/setup.sh",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-3-data-driven/remotion-src/remotion.config.ts",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-3-data-driven/remotion-src/src/index.ts",
+        ".claude/skills-media/remotion-to-hyperframes/assets/test-corpus/tier-4-escape-hatch/validate.sh",
+        ".claude/skills-media/remotion-to-hyperframes/scripts/frame_strip.sh",
+        ".claude/skills-media/remotion-to-hyperframes/scripts/lint_source.py",
+        ".claude/skills-media/remotion-to-hyperframes/scripts/render_diff.sh",
+        ".claude/skills-media/remotion-to-hyperframes/scripts/tests/smoke.sh"
+      ],
+      "executable_status": "not_verified",
+      "operational_status": "not_verified"
+    }
+  ],
+  "adapted_modules": [
+    {
+      "name": "logo-design",
+      "document_present": true,
+      "document_sha256": "91fc7eb5aa10cfc4fec69d55b4456e92cdb26fecfc7404944db2ff2c520be02f",
+      "origin_present": true,
+      "upstream_pins": [
+        "0ecf52e9a4b3ac92b714f7cc6e3148ab8c774134"
+      ],
+      "license_notices": [
+        {
+          "path": ".claude/skills/logo-design/LICENSE",
+          "sha256": "f68cc121d7f856ec3f48993c5082960f267bd752acea4e2f694408ef55d6cfdd"
+        }
+      ],
+      "local_links_missing": [],
+      "script_candidates": [],
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-creative-brief",
+      "document_present": true,
+      "document_sha256": "bdf8b4a658890c24751a9c49ef7e10b7387791241b4c3c538b9c400a79b6a957",
+      "origin_present": true,
+      "upstream_pins": [
+        "7abd6fc2b11987c3940eb4ffc461478ff37c0b33"
+      ],
+      "license_notices": [
+        {
+          "path": ".claude/skills/mkt-creative-brief/LICENSE",
+          "sha256": "9d95806a26532623360eb84bb17d298f394b55ef73fb4c0796d99b4319b2b0da"
+        }
+      ],
+      "local_links_missing": [],
+      "script_candidates": [],
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "design-quality",
+      "document_present": true,
+      "document_sha256": "b32c05f53640e7e862ec85c9a2867d0e8b16a08d3aea3e544e843b2b354c2562",
+      "origin_present": true,
+      "upstream_pins": [
+        "b1cdf87d49b1653293d58424516fd80394008345"
+      ],
+      "license_notices": [
+        {
+          "path": ".claude/skills/design-quality/LICENSE",
+          "sha256": "9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de"
+        }
+      ],
+      "local_links_missing": [],
+      "script_candidates": [],
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "dev-team-methods",
+      "document_present": true,
+      "document_sha256": "5803986aed5bbffb26ae5dadcb393443c8cd94c92762c4c01e0406c38654acc1",
+      "origin_present": true,
+      "upstream_pins": [
+        "652b2692f8d8ec2b1f1a38e559073e287dfdc469",
+        "84740e3d344b69b4a133201fa519eb37a62a2b2a",
+        "bb92a77741419a4ab5f06e711a283343f1ada0c3",
+        "f624f37a8c650b9cc550253104925efe4c8de246"
+      ],
+      "license_notices": [
+        {
+          "path": ".claude/skills/dev-team-methods/LICENSE-agency-agents",
+          "sha256": "9a45258434d5cedf0af73c9ad4771373701225038d246c49219026c33677f66f"
+        },
+        {
+          "path": ".claude/skills/dev-team-methods/LICENSE-ponytail",
+          "sha256": "fb1bc6909ac3ef82d5c22106e32ef682b0cff66788fa915fb9b53b15c9d2f3ab"
+        },
+        {
+          "path": ".claude/skills/dev-team-methods/LICENSE-superpowers",
+          "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400"
+        },
+        {
+          "path": ".claude/skills/dev-team-methods/LICENSE-taste-skill",
+          "sha256": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df"
+        }
+      ],
+      "local_links_missing": [],
+      "script_candidates": [],
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "mkt-research-pipeline",
+      "document_present": true,
+      "document_sha256": "0ba5b4a8d6c882a67d6eeedd7a4413ab18c7d75b11045f979429a682d6be74a5",
+      "origin_present": true,
+      "upstream_pins": [
+        "55ff469422c3592dac45bcad08dfb40221981c02"
+      ],
+      "license_notices": [
+        {
+          "path": ".claude/skills/mkt-research-pipeline/LICENSE",
+          "sha256": "b70d71e24e40fce5da8f4b6f9cd862096a048e433db7f3c8cac5e348e6d34591"
+        }
+      ],
+      "local_links_missing": [],
+      "script_candidates": [],
+      "operational_status": "not_verified"
+    },
+    {
+      "name": "social-reels-editorial",
+      "document_present": true,
+      "document_sha256": "3026bf2156f4afb9b83ac24ea6ecef824be41c51fd17dbe9c23f6db0e967fe46",
+      "origin_present": true,
+      "upstream_pins": [
+        "d03c56bb598be770c60b201f94237e5d1a4268a6"
+      ],
+      "license_notices": [
+        {
+          "path": ".claude/skills/social-reels-editorial/LICENSE",
+          "sha256": "857c8d5276809c8196b3cd7cb3300324768bfc562b2b6281b06d6865058e186c"
+        }
+      ],
+      "local_links_missing": [],
+      "script_candidates": [],
+      "operational_status": "not_verified"
+    }
+  ]
+}

@@ -97,6 +97,12 @@ Your **artifact folder** for simplification reports: `workspace/development/rese
 - `dev-ai-slop-cleaner` — post-AI-generation cleanup (remove single-use helpers, over-abstractions, generic naming)
 - `dev-verify` — validate behavior is unchanged after simplification
 
+For an authorized cleanup of recently generated code, read
+`.claude/skills/dev-ai-slop-cleaner/SKILL.md` before proposing changes. Preserve
+behavior, scope and existing conventions; report verification and remaining
+uncertainty. This code-cleanup method does not replace the independent visual
+review by Oath or authorize a redesign, tool installation, publication or deploy.
+
 ## Handoffs
 
 - → `@oath-verifier` — to confirm zero behavior change after simplification

@@ -168,6 +168,10 @@ def test_derived_query_retains_subject_instead_of_question_and_greetings(enabled
     for i in range(4):
         post(c,current,'transcript','current-provider',eventId=f'greeting-{i}',role='assistant',text='Gostaria de saber? Pode mostrar. Olá, estou aqui para ajudar.')
     question=post(c,current,'transcript','current-provider',eventId='script-question',role='user',text=query).json
+    # The most recent saved event can be the assistant announcing a lookup.
+    # Query derivation must still use the latest USER turn, not this text.
+    post(c,current,'transcript','current-provider',eventId='lookup-announcement',role='assistant',
+         text='Estou consultando agora. UnrelatedSentinel para não virar a consulta.')
     result=read(c,current['contextId'],'current-provider')
     assert result.status_code==200
     memory=result.json['queryResult']['memory']

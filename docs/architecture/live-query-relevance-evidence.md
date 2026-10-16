@@ -104,3 +104,10 @@ Subquery warning remains. Initial read-only replay script had a quoting syntax
 error before running SQL; corrected script produced the aggregates above.
 Graphify AST-only update runs locally; generated graph artifacts stay outside
 this software commit. No dependency installation or paid inference.
+
+Follow-up role check: `_query_for_current_turn` and `_previous_work_for_context`
+select only transcript events with server-persisted `browser:user:` sources.
+The comparative test now saves an assistant lookup announcement AFTER the user
+question and still retrieves the approved script-topic memory and ticket from
+the user query, excluding the question itself. Focused rerun passed (1, 2.47s).
+No functional code change was needed for this observation.

@@ -63,3 +63,9 @@ Isso é rastreabilidade de revisão por ator autorizado, não um algoritmo capaz
 - CUA no navegador, fixture isolada sem backend: abriu editor, informou fixture/original@1, selecionou horizontal, dividiu duas frases em duas cenas de3s, adicionou legenda, comprovou bloqueio do texto vazio e envio de DTO após preencher. Isto valida o formulário; não comprova login/upload/player/revisão completos em produção. TypeScript e ESLint passaram.
 - A fixture temporária não entra no produto nem chama API. Referência de marca usada é teste, não marca Britto aprovada.
 - Duração longa: preparado ensaio original de10min/10cenas60s em160×90/30fps,1core/1worker/nice19, sem gastos/posts; aguarda janela coordenada com integrador. Não declarar render longo validado antes do resultado.
+
+## Revisão independente: áudio e rollback
+
+Achado do integrador: saída sem stream de áudio estava recebendo silêncio mesmo em policy source/provided. Corrigido: somente silent autoriza mux de silêncio; os outros modos falham com required_project_audio_missing, sem capturar evidências/prévia elegível. Dois testes simulados cobrem a regressão; isto não mede inteligibilidade/volume, que continua revisão real.
+
+Rollback para backend anterior ao capability3 não é seguro com jobs3 disponíveis: esse backend desconhece a nova capacidade. Antes desse rollback, o integrador deve parar consumidores e manter projetos3 retidos até backend/worker compatíveis. Não basta trocar a imagem do backend e confiar no filtro novo que deixará de existir; não converter ou reprocessar snapshots. Esta fatia protege workers antigos quando o backend novo está ativo.

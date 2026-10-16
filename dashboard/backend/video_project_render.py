@@ -67,6 +67,8 @@ def render_project(snapshot,output,work,*,width=720,height=1280,timeout_seconds=
         raise
     meta=extract_metadata(output)
     if not meta.has_audio:
+        if snapshot['production']['audio_policy'] != 'silent':
+            raise ValueError('required_project_audio_missing')
         # Explicit silence policy still produces a standard audio stream for common validation.
         silent=Path(output).with_name('with-audio.mp4')
         subprocess.run(['ffmpeg','-nostdin','-y','-v','error','-i',str(output),'-f','lavfi','-i','anullsrc=r=48000:cl=stereo','-map','0:v','-map','1:a','-c:v','copy','-c:a','aac','-t',str(snapshot['production']['duration']),str(silent)],check=True,capture_output=True,timeout=timeout_seconds)

@@ -6,8 +6,8 @@ import { ContinuityUnavailable } from './continuity-contract'
 import { ContinuitySession, type ContinuityState } from './continuity-session'
 type Connection = import('@elevenlabs/client').WebSocketConnection
 type Message = {author:string;text:string}
-type State = {phase:'idle'|'connecting'|'connected';status:string;mic:boolean;companyId:number|null;contextChanged:boolean;company:string;agent:string;messages:Message[];runtimeSessionId:string;voiceName:string;continuity?:ContinuityState}
-const initial:State={phase:'idle',status:'Selecione empresa e agente. Microfone desligado.',mic:false,companyId:null,contextChanged:false,company:'',agent:'',messages:[],runtimeSessionId:'',voiceName:''}
+type State = {toolAuditDegraded:boolean;phase:'idle'|'connecting'|'connected';status:string;mic:boolean;companyId:number|null;contextChanged:boolean;company:string;agent:string;messages:Message[];runtimeSessionId:string;voiceName:string;continuity?:ContinuityState}
+const initial:State={toolAuditDegraded:false,phase:'idle',status:'Selecione empresa e agente. Microfone desligado.',mic:false,companyId:null,contextChanged:false,company:'',agent:'',messages:[],runtimeSessionId:'',voiceName:''}
 export class ManagedSession {
   private state:State={...initial}; private listeners=new Set<()=>void>(); private connection:Connection|null=null
   private toolAudit:AuditedToolDispatcher|null=null
@@ -22,7 +22,7 @@ export class ManagedSession {
   private message(author:string,text:string){this.patch({messages:[...this.state.messages,{author,text}]})}
   async start(companyId:number,company:string,agent:string,newConversation=false){
     if(this.state.phase!=='idle'||this.state.continuity?.writeStatus==='saving'||this.state.continuity?.writeStatus==='error')return
-    const generation=++this.generation;this.patch({phase:'connecting',status:'Preparando sessão autorizada…',companyId,contextChanged:false,company,agent,messages:[],runtimeSessionId:'',voiceName:'',continuity:undefined})
+    const generation=++this.generation;this.patch({toolAuditDegraded:false,phase:'connecting',status:'Preparando sessão autorizada…',companyId,contextChanged:false,company,agent,messages:[],runtimeSessionId:'',voiceName:'',continuity:undefined})
     try {
       const context=await prepareManagedContext(companyId,agent);if(generation!==this.generation)return
       const signed=await requestManagedSignedSession(context.contextId);if(generation!==this.generation)return
@@ -45,7 +45,7 @@ export class ManagedSession {
       // Attach a rejection handler immediately while SDK listeners are being registered.
       void bootstrap.catch(()=>{})
       const toolAudit=new AuditedToolDispatcher(
-        (id,name,stage)=>tools.recordToolAudit(id,name,stage),
+        (id,name,stage,signal)=>tools.recordToolAudit(id,name,stage,signal),
         async()=>{await bootstrap;if(enabled)await continuity.flush()},
         async call=>{
             const query=call.tool_name==='search_omni_context'
@@ -55,9 +55,9 @@ export class ManagedSession {
             if(internal&&generation===this.generation){const receipt=JSON.parse(result),labels:Record<string,string>={pending:'aguardando execução',running:'em execução',success:'rascunho disponível',failed:'bloqueada por falha',cancel_requested:'cancelamento solicitado',cancelled:'cancelada'};this.message('Tarefa interna',`Tarefa ${receipt.jobId}: ${labels[receipt.status]||'estado recebido'}.`);await continuity.refresh()}
             return result
         },value=>connection.sendMessage(value),()=>generation===this.generation,
-        ()=>{if(generation===this.generation)this.patch({status:'Não foi possível confirmar o diagnóstico da ferramenta. Reconecte antes de tentar novamente.'})})
+        ()=>{if(generation===this.generation)this.patch({toolAuditDegraded:true,status:'Diagnóstico de ferramentas indisponível; a auditoria não bloqueia a conversa.'})})
       this.toolAudit=toolAudit
-      void binding.then(()=>tools.recordToolAudit('__live_audit_session__','session','instrumented')).catch(()=>{if(generation===this.generation)this.patch({status:'Diagnóstico de ferramentas não confirmado nesta sessão.'})})
+      void binding.then(()=>toolAudit.instrument()).catch(()=>{if(generation===this.generation)this.patch({toolAuditDegraded:true,status:'Diagnóstico de ferramentas indisponível; conversa permanece ativa.'})})
       // Register before awaiting binding: the SDK queues initial events until this callback.
       connection.onMessage(event=>{if(generation!==this.generation)return
         if(event.type==='ping')connection.sendMessage({type:'pong',event_id:event.ping_event.event_id})
@@ -81,7 +81,7 @@ export class ManagedSession {
       if(generation!==this.generation)return
       if(enabled)this.poll=setInterval(()=>{if(generation===this.generation)void continuity.refresh().catch(()=>{if(generation===this.generation)this.patch({status:'Não foi possível atualizar os registros salvos.'})})},5000)
       if(generation!==this.generation)return
-      this.patch({phase:'connected',runtimeSessionId:context.runtimeSessionId,voiceName:signed.voiceName||'Voz padrão do agente',status:'Conectado por texto. Ative o microfone quando quiser falar.'})
+      this.patch({phase:'connected',runtimeSessionId:context.runtimeSessionId,voiceName:signed.voiceName||'Voz padrão do agente',status:this.state.toolAuditDegraded?'Conectado por texto. Diagnóstico indisponível; ative o microfone quando quiser falar.':'Conectado por texto. Ative o microfone quando quiser falar.'})
     } catch(error) {if(generation===this.generation)this.end(error instanceof Error&&error.name==='LiveRequestError'?error.message:'A conexão não foi concluída. Verifique o acesso e a continuidade antes de tentar novamente.')}
   }
   syncCompany(companyId:number|null){

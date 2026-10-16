@@ -62,3 +62,31 @@ def test_audit_exists_before_source_http_and_send_is_reported_separately(enabled
     result=subprocess.run(['node',str(root/'qa/managed-live-context/tool-audit-tests.cjs')],cwd=root,text=True,capture_output=True,timeout=20)
     assert result.returncode==0,result.stderr
     assert 'PASS metadata trace ordering' in result.stdout
+
+
+# Actual source HTTP continues even when telemetry before/after it is unavailable.
+import pytest
+@pytest.mark.parametrize('stage',['received','response'])
+@pytest.mark.parametrize('mode',['reject','timeout'])
+def test_audit_failure_does_not_block_actual_http_source_or_sdk_output(enabled,tmp_path,stage,mode):
+    import threading
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    from werkzeug.serving import make_server
+    from tests.backend.test_live_query_tools import prepare_history
+    app,c,_,_,_,_=enabled
+    prepare_history(enabled)
+    app.wsgi_app=ProxyFix(app.wsgi_app,x_host=1)
+    server=make_server('127.0.0.1',0,app)
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    fixture=tmp_path/'audit-outage.json'
+    cookie=c.get_cookie('session',domain='example.test')
+    fixture.write_text(json.dumps({'base':f'http://127.0.0.1:{server.server_port}',
+        'cookie':'session='+cookie.value,'auditFailureStage':stage,'auditFailureMode':mode}))
+    root=Path(__file__).resolve().parents[2]
+    try:
+        result=subprocess.run(['node',str(root/'qa/managed-live-context/query-http-tests.cjs'),str(fixture)],
+                              cwd=root,text=True,capture_output=True,timeout=30)
+        assert result.returncode==0,result.stderr
+        assert 'PASS actual HTTP' in result.stdout
+    finally:
+        server.shutdown();thread.join(timeout=5)

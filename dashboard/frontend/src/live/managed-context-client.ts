@@ -18,9 +18,9 @@ const messages:Record<string,string>={
   provider_or_saved_voice_unavailable:'O provedor ou a preferência de voz não está disponível. Verifique a configuração antes de iniciar.',
   origin_forbidden:'A origem desta solicitação não foi aceita pelo servidor.',
 }
-async function call(path:string, body?:unknown) {
+async function call(path:string, body?:unknown, signal?:AbortSignal) {
   let response:Response
-  try {response=await fetch(path,{method:body===undefined?'GET':'POST',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)})}
+  try {response=await fetch(path,{method:body===undefined?'GET':'POST',credentials:'include',cache:'no-store',signal,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)})}
   catch {throw new LiveRequestError('Não foi possível alcançar o servidor. Verifique a conexão e tente novamente.')}
   const data=await response.json().catch(()=>null)
   if(!response.ok)throw new LiveRequestError((typeof messages[data?.error]==='string'?messages[data?.error]:undefined)||(response.status===401?messages.unauthorized:response.status===404?'O endpoint Live não está disponível nesta versão do servidor.':'O servidor não liberou esta operação Live. Tente verificar o acesso novamente.'))
@@ -47,10 +47,10 @@ export function createManagedContextTools(contextId:number) {
       return binding
     },
     disconnect() { closed=true },
-    async recordToolAudit(toolCallId:string,toolName:string,stage:string){
+    async recordToolAudit(toolCallId:string,toolName:string,stage:string,signal?:AbortSignal){
       if(!binding||!conversationId)throw Error('Conversa não vinculada.')
       await binding
-      const response=await call(`/api/live/omni-context/${contextId}/tool-audit`,{conversationId,toolCallId,toolName,stage})
+      const response=await call(`/api/live/omni-context/${contextId}/tool-audit`,{conversationId,toolCallId,toolName,stage},signal)
       if(response?.recorded!==true)throw Error('Auditoria não confirmada.')
     },
     async runInternalTask(name:string,parameters:Record<string,unknown>,toolCallId:string) {

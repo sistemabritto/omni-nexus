@@ -33,7 +33,7 @@ function load(file){
  const module={exports:{}};cache[file]=module;
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{
   module,exports:module.exports,require:name=>load(path.resolve(path.dirname(file),name+'.ts')),
-  fetch,Error,Number,JSON,Map,Set,crypto,Uint8Array,Float32Array,DataView,atob,btoa,
+  fetch,Error,Number,JSON,Map,Set,crypto,setTimeout,clearTimeout,AbortController,Uint8Array,Float32Array,DataView,atob,btoa,
   navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}},
   AudioContext:FakeAudioContext,setInterval:fn=>{polls.push(fn);return polls.length},clearInterval(){},
  });

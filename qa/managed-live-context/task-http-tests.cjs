@@ -7,7 +7,7 @@ async function fetch(url,options={}){
  return nativeFetch(fixture.base+url,{...options,headers:{...options.headers,Cookie:fixture.cookie,'X-Forwarded-Host':'example.test',Origin:'https://example.test'}});
 }
 function load(file){if(cache[file])return cache[file].exports;const module={exports:{}};cache[file]=module;
- vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{module,exports:module.exports,require:name=>name==='./audio'?{}:load(path.resolve(path.dirname(file),name+'.ts')),fetch,crypto,Error,Number,JSON,Map,Set,setInterval:()=>1,clearInterval:()=>{},console});return module.exports;}
+ vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{module,exports:module.exports,require:name=>name==='./audio'?{}:load(path.resolve(path.dirname(file),name+'.ts')),fetch,crypto,Error,Number,JSON,Map,Set,setTimeout,clearTimeout,AbortController,setInterval:()=>1,clearInterval:()=>{},console});return module.exports;}
 const {ManagedSession}=load(path.resolve('dashboard/frontend/src/live/managed-session.ts'));
 const socket={conversationId:'provider-http-fixture',messages:[],addListener(){},onDisconnect(){},onMessage(fn){this.emit=fn},sendMessage(value){this.messages.push(value)},close(){}};
 const tick=()=>new Promise(resolve=>setTimeout(resolve,25));

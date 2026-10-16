@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { HTTP_TEXT_NOTICE, httpTextCapability, requireCompatibleCodeTransport, rejectUnexpectedToolCall } = require('./tool-capability-contract');
 const {
   loadProviderConfig,
   resolveProviderModel,
@@ -719,7 +720,8 @@ class ChatBridge {
       }
     }
     lines.push('');
-    lines.push('If this model does not support tool calling, answer directly with best effort.');
+    lines.push('Controller capability: HTTP text only. No tools, filesystem reads, MCP, APIs or action executor are provided.');
+    lines.push('Use supplied text only. Never claim a file/API was read, a tool executed, or an artifact changed. File names are not file contents. Explain the limitation when the request requires tools.');
     return lines.join('\n');
   }
 
@@ -817,6 +819,7 @@ class ChatBridge {
     const abortController = new AbortController();
     const cwd = workingDir || process.cwd();
     const runtimePrompt = this._buildChatCompletionSystemPrompt(agentName, cwd, sessionId);
+    const capabilities = httpTextCapability();
 
     let finalPrompt = prompt || '';
     if (files && files.length > 0) {
@@ -904,6 +907,8 @@ class ChatBridge {
         if (onMessage) {
           onMessage({ type: 'message_start' });
           onMessage({ type: 'text_start' });
+          onMessage({ type: 'runtime_capabilities', ...capabilities });
+          onMessage({ type: 'text_delta', text: HTTP_TEXT_NOTICE });
         }
 
         const reader = resp.body.getReader();
@@ -929,6 +934,7 @@ class ChatBridge {
               continue;
             }
             const delta = parsed?.choices?.[0]?.delta || {};
+            rejectUnexpectedToolCall(delta);
             const text = this._extractChatDeltaText(delta);
             if (text && onMessage) {
               onMessage({ type: 'text_delta', text });
@@ -938,7 +944,7 @@ class ChatBridge {
 
         if (onMessage) {
           onMessage({ type: 'message_stop' });
-          onMessage({ type: 'result', subtype: 'success', isError: false });
+          onMessage({ type: 'result', subtype: 'success', isError: false, mode: 'http_text_only', toolsExecuted: 0 });
         }
         session.active = false;
         this.sessions.delete(sessionId);
@@ -954,7 +960,7 @@ class ChatBridge {
       }
     })();
 
-    return { sessionId, sdkSessionId: null };
+    return { sessionId, sdkSessionId: null, capabilities };
   }
 
   async startSession(sessionId, options = {}) {
@@ -983,12 +989,10 @@ class ChatBridge {
       if (SDK_COMPATIBLE_CLI.has(providerConfig.cli_command)) {
         externalCliPath = resolveCliBinary(providerConfig.cli_command || 'openclaude');
         if (!externalCliPath) {
-          console.warn(`[chat-bridge] ${providerConfig.cli_command} binary not found — falling back to chat completion. Install with: npm install -g @gitlawb/openclaude`);
-          return this._startOpenAICompatibleSession(sessionId, options, providerConfig);
+          requireCompatibleCodeTransport('code', providerConfig.cli_command, false);
         }
       } else {
-        console.warn(`[chat-bridge] Active provider "${providerConfig.active}" uses cli_command "${providerConfig.cli_command}", which doesn't speak the Agent SDK protocol — Chat will use the selected HTTP endpoint without CLI tools`);
-        return this._startOpenAICompatibleSession(sessionId, options, providerConfig);
+        requireCompatibleCodeTransport('code', providerConfig.cli_command, false);
       }
     }
 

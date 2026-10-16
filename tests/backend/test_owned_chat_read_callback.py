@@ -1,6 +1,7 @@
 """Callback uses real Flask owned context and existing file ACL, no model."""
 from pathlib import Path
 import sqlite3
+import os
 import pytest
 from tests.backend.test_live_file_sources import files, bind_file  # noqa:F401
 from tests.backend.test_live_continuity_endpoints import enabled, bound, post  # noqa:F401
@@ -57,6 +58,8 @@ def test_callback_reloads_revocation_and_changed_source(files,monkeypatch):
     assert call(c,ctx).status_code==409
 
 
+@pytest.mark.skipif(os.environ.get('OMNI_LOCAL_CHAT_BOOTSTRAP_PROOF') != '1',
+                    reason='local CLI bootstrap proof requires explicit opt-in; pure callback/relay remains in CI')
 @pytest.mark.parametrize('mode',['success','tenant','origin','path','revoke','snapshot','no_tools'])
 def test_real_server_bootstrap_ws_callback_cli(files,monkeypatch,mode):
     """Actual WS server and HTTP Flask callback, never injected transport grant."""

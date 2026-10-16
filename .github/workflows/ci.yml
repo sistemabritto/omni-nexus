@@ -104,6 +104,7 @@ jobs:
           tests/media/test_media_creative_review.py tests/media/test_media_skill_preflight.py tests/backend/test_creative_skill_handoff.py
           tests/media/test_media_editorial.py tests/media/test_media_release.py
           tests/media/test_recording_edits.py tests/media/test_recording_editorial_review.py tests/media/test_recording_worker_packaging.py
+          tests/media/test_video_projects.py tests/media/test_media_creative_review.py
           tests/media/test_recordings.py tests/media/test_recording_render.py tests/media/test_recording_codecs.py tests/media/test_publication_evidence.py
           -q
 

@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import subprocess
 import time
 import traceback
 from pathlib import Path
@@ -79,7 +80,7 @@ def _claim_next_job() -> dict | None:
     global _backoff_seconds
     for status in ("queued", "retryable_failure"):
         try:
-            jobs = evo.get("/api/media/jobs", params={"status": status, "eligible": "true", "limit": 5, "recording_batch": "v1", "recording_edits": "v2"})
+            jobs = evo.get("/api/media/jobs", params={"status": status, "eligible": "true", "limit": 5, "recording_batch": "v1", "recording_edits": "v2", "recording_project": "v1"})
         except requests.exceptions.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 429:
                 # Rate-limited pelo dashboard — backoff exponencial em vez de
@@ -95,7 +96,7 @@ def _claim_next_job() -> dict | None:
             continue
         for job in jobs or []:
             try:
-                return evo.post(f"/api/media/jobs/{job['id']}/run", {"agent": AGENT_NAME, "recording_batch": "v1", "recording_edits": "v2"})
+                return evo.post(f"/api/media/jobs/{job['id']}/run", {"agent": AGENT_NAME, "recording_batch": "v1", "recording_edits": "v2", "recording_project": "v1"})
             except Exception:
                 continue
     _backoff_seconds = 0
@@ -683,7 +684,10 @@ def process_recording_batch_job(job: dict) -> None:
         _patch(job["id"], status="generating", progress_message="Preparando montagem do lote fechado")
         _patch(job["id"], status="rendering")
         output = base / "output/final.mp4"
-        result = assemble_recording(job.get("result") or {}, output, base / "work",
+        from video_project_render import render_project
+        intent=job.get("result") or {}
+        render=render_project if intent.get("production") else assemble_recording
+        result = render(intent, output, base / "work",
                                    width=int(job["width"]), height=int(job["height"]),
                                    timeout_seconds=JOB_TIMEOUT_SECONDS)
         _patch(job["id"], status="validating")
@@ -693,7 +697,7 @@ def process_recording_batch_job(job: dict) -> None:
         _patch(job["id"], status="ready_for_review", render_path=str(output), render_sha256=sha256_file(output),
                result_json=json.dumps(result, ensure_ascii=False),
                progress_message="Prévia de montagem pronta; legendas e edição editorial exigem revisão", **meta.to_dict())
-    except (RecordingRenderError, ValidationError, OSError, ValueError) as exc:
+    except (RecordingRenderError, ValidationError, RenderError, OSError, ValueError, subprocess.SubprocessError) as exc:
         _fail_job(job["id"], f"Montagem dos brutos falhou: {exc}", terminal=True)
 
 

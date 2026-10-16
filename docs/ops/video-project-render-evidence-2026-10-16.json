@@ -1,0 +1,190 @@
+{
+  "runtime": "CLI hyperframes0.7.64 archive integrity equals worker lock; existing local dependency cache and Chrome131",
+  "metadata": {
+    "render_duration_seconds": 2.0,
+    "render_width": 320,
+    "render_height": 568,
+    "render_fps": 30,
+    "render_has_audio": true,
+    "render_size_bytes": 60412
+  },
+  "result": {
+    "production": {
+      "schema_version": 1,
+      "entry_modes": [
+        "long_cuts",
+        "enriched_edit",
+        "faceless",
+        "stickman",
+        "motion_vsl"
+      ],
+      "script": "Fixture sintética de composição mista. Sem claim de seleção semântica automática.",
+      "brand_reference": "fixture/original@1",
+      "palette": {
+        "background": "#0d1117",
+        "foreground": "#e6edf3",
+        "accent": "#58a6ff"
+      },
+      "scenes": [
+        {
+          "kind": "footage",
+          "duration": 0.4,
+          "start": 0.0,
+          "title": "Corte fornecido",
+          "text": "Fixture própria",
+          "show_title": false,
+          "frame": "contain",
+          "grade": "warm",
+          "pose": "explain",
+          "asset_id": "own-video",
+          "rights_reference": "Fixture original local desta execução",
+          "source_start": 0.2,
+          "selection": {
+            "rationale": "Trecho visual fornecido para testar montagem; não seleção semântica de modelo",
+            "transcript_excerpt": "Projeto misto — Motion sem footage (texto visível, sem fala)",
+            "source_reference": "fixture/preview.mp4 .2–.6s"
+          }
+        },
+        {
+          "kind": "image",
+          "duration": 0.4,
+          "start": 0.4,
+          "title": "Imagem própria",
+          "text": "",
+          "show_title": false,
+          "frame": "contain",
+          "grade": "none",
+          "pose": "explain",
+          "asset_id": "own-image",
+          "rights_reference": "Frame da fixture original desta execução"
+        },
+        {
+          "kind": "motion",
+          "duration": 0.6,
+          "start": 0.8,
+          "title": "Motion sem footage",
+          "text": "Dado sintético",
+          "show_title": true,
+          "frame": "contain",
+          "grade": "none",
+          "pose": "explain",
+          "overlay_asset_id": "own-image",
+          "overlay_rights_reference": "Frame próprio usado como overlay de teste",
+          "metric": 65.0,
+          "metric_source": "Fixture, não claim de negócio"
+        },
+        {
+          "kind": "stickman",
+          "duration": 0.6,
+          "start": 1.4,
+          "title": "Revisão por versão",
+          "text": "",
+          "show_title": true,
+          "frame": "contain",
+          "grade": "none",
+          "pose": "wave"
+        }
+      ],
+      "captions": [
+        {
+          "start": 0.0,
+          "end": 0.8,
+          "text": "Fixture mista"
+        },
+        {
+          "start": 0.8,
+          "end": 2.0,
+          "text": "Não aprovada para publicar"
+        }
+      ],
+      "duration": 2.0,
+      "audio_policy": "silent",
+      "audio_upload_id": null
+    },
+    "assets": [
+      {
+        "id": "own-video",
+        "kind": "video",
+        "path": "recordings/own-video.mp4",
+        "sha256": "e7aa01ec241e34cc42cde83eb48371392110681e7c9a4626d44b601f8c6e61b9"
+      },
+      {
+        "id": "own-image",
+        "kind": "image",
+        "path": "recordings/own-image.png",
+        "sha256": "ffa1bb18f5f2d9ce5c904373a4353e30b6427486c48243b49f23d732a556b615"
+      }
+    ],
+    "engine": {
+      "name": "hyperframes",
+      "version": "0.7.64",
+      "animation": "WAAPI",
+      "workers": 1
+    },
+    "review_evidence": {
+      "render_sha256": "ca7bd1fb4aed2abff3bf1de9f03a446fb5638d1f513d689c1eb289dc85807871",
+      "frames": [
+        {
+          "ref": "output/review-frame-0.png",
+          "sha256": "2e237c12e985dccb00e6b9af66f0d4de421876eab5e23c4b1b3d248073a91f5f",
+          "at": 0.3
+        },
+        {
+          "ref": "output/review-frame-1.png",
+          "sha256": "367f106a6246c61c2c979f96aebb225415d691bedc96e63adfb152e7f068dc8d",
+          "at": 1.0
+        },
+        {
+          "ref": "output/review-frame-2.png",
+          "sha256": "ab2c69540aa05de538623a2a22f4f6d469649ac483bde24ae956c2e0bda834c4",
+          "at": 1.7
+        }
+      ]
+    },
+    "expected_duration": 2.0,
+    "stage": "project_preview",
+    "creative_review_required": true,
+    "automatic_transcription": false,
+    "feedback_applied": false
+  },
+  "evidence_scope": {
+    "actual_mp4": true,
+    "actual_frames_inspected": [
+      0.3,
+      1,
+      1.7
+    ],
+    "human_independent_review": false,
+    "human_audio_playback": false,
+    "paid_generation": false,
+    "social_publication": false,
+    "docker_image_validated": false,
+    "semantic_cut_selection_validated": false
+  },
+  "findings_journal": [
+    {
+      "id": "arm-pivot",
+      "severity": "P1",
+      "status": "resolved_in_fixture",
+      "observation": "Arm rotated around wrong origin in first render",
+      "correction": "SVG fill-box left bottom pivot",
+      "retest": "pinned snapshots and final frame at1.7s"
+    },
+    {
+      "id": "missing-muted",
+      "severity": "P1",
+      "status": "resolved",
+      "observation": "Pinned CLI lint rejected silent footage without muted",
+      "correction": "Explicit muted or data-has-audio per audio policy; three regressions",
+      "retest": "Pinned final MP4 completed"
+    },
+    {
+      "id": "burned-text-overlap",
+      "severity": "P1",
+      "status": "resolved_in_fixture",
+      "observation": "Generated title duplicated existing source text; caption ghosted",
+      "correction": "Footage/image titles opt-in; opaque caption background",
+      "retest": "Final frame at0.3s"
+    }
+  ]
+}

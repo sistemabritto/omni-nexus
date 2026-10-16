@@ -1,6 +1,6 @@
 // Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useNavigate } from 'react-router-dom'
-import { Cpu, Zap, Terminal, Package, Plug, Database, Brain, Library, DollarSign } from 'lucide-react'
+import { Cpu, Zap, Terminal, Package, Plug, Database, Brain, Library, DollarSign, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 // Hub "Inteligência" (revamp 19/09): uma porta só para tudo que dá cérebro à
@@ -18,6 +18,7 @@ const TABS = [
 ]
 
 const CATALOG = [
+  { id: 'agents', path: '/agentes', icon: Users, label: 'Squad de agentes' },
   { id: 'skills', path: '/skills', icon: Zap, label: 'Skills' },
   { id: 'mcp', path: '/mcp-servers', icon: Terminal, label: 'MCP Servers' },
   { id: 'plugins', path: '/plugins', icon: Package, label: 'Plugins' },

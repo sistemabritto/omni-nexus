@@ -1,0 +1,31 @@
+const {chromium}=require(process.env.QA_PLAYWRIGHT_MODULE||'playwright'),assert=require('assert/strict'),fs=require('fs'),path=require('path');
+const fixture=require('../global-ui/fixture.cjs'),catalog=require('../live-squad-selector/catalog-fixture.json');
+(async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});const results=[];
+for(const width of [375,1440]){
+ const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce'});let mutations=0;
+ await page.addInitScript(()=>{const fetchOriginal=window.fetch.bind(window);window.fetch=(input,init)=>fetchOriginal(typeof input==='string'?input.replace('http://localhost:8080',''):input,init)});
+ await fixture(page);await page.route('https://**',r=>r.abort());
+ await page.route('**/api/agents',r=>r.fulfill({contentType:'application/json',body:JSON.stringify([...catalog,{name:'custom-locked-fixture',locked:true,description:'Locked fixture'}])}));
+ await page.route('**/api/live/omni-context/options',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({companies:[{id:1,name:'Empresa Alfa · QA'}],agents:catalog.map(a=>a.name),consumptionApproved:false,presentationGroups:{}})}));
+ page.on('request',r=>{if(['POST','PUT','PATCH','DELETE'].includes(r.method()))mutations++});
+ await page.goto('http://127.0.0.1:5199/agentes',{waitUntil:'networkidle'});
+ await page.getByRole('heading',{name:'Quem resolve o quê'}).waitFor();
+ assert.equal(await page.locator('.squad-entry:visible').count(),6);
+ assert.equal(await page.locator('.squad-specialists').getAttribute('open'),null);
+ await page.screenshot({path:path.join(process.env.QA_OUTPUT_DIR,`agents-${width}.png`),fullPage:true});
+ await page.locator('.squad-specialists summary').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('.squad-entry:visible').count(),43);
+ assert.equal(await page.locator('.squad-entry-locked a').count(),0);
+ await page.getByRole('searchbox',{name:'Buscar agente por nome ou função'}).fill('Nex');assert.equal(await page.locator('.squad-entry:visible').count(),1);
+ assert((await page.locator('.squad-entry').getAttribute('href')).endsWith('/agents/nex-sales'));
+ await page.goto('http://127.0.0.1:5199/live',{waitUntil:'networkidle'});
+ const picker=page.getByLabel('Agente da conversa');await picker.locator('optgroup[label="Responsáveis principais"]').waitFor({state:'attached'});
+ assert.equal(await picker.locator('option').count(),7);
+ await page.screenshot({path:path.join(process.env.QA_OUTPUT_DIR,`live-${width}.png`),fullPage:true});
+ await page.getByRole('button',{name:/Ver apoios e especialistas/}).click();assert.equal(await picker.locator('option').count(),43);
+ await picker.selectOption('dex-data');await page.locator('.live-context-disclosure > summary').click();await page.getByRole('button',{name:'Recolher apoios e especialistas'}).click();assert.equal(await picker.inputValue(),'dex-data');
+ assert.equal(await picker.locator('optgroup[label="Seleção atual"] option').count(),1);
+ await page.getByRole('searchbox',{name:'Buscar no squad'}).fill('Nex');assert.equal(await picker.locator('option[value="nex-sales"]').count(),1);
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(mutations,0);
+ results.push({width,principalCards:6,allPreserved:43,defaultLiveOptions:6,searchRevealsSpecialists:true,selectedSpecialistPreserved:true,mutations:0});await page.close();
+}
+await browser.close();fs.writeFileSync(path.join(process.env.QA_OUTPUT_DIR,'results.json'),JSON.stringify(results,null,2));console.log(JSON.stringify(results));})().catch(e=>{console.error(e);process.exit(1)});

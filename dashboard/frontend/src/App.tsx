@@ -270,6 +270,7 @@ function AppContent() {
               <Route path="/live/gemini" element={<LiveConversation />} />
               <Route path="/workspace/*" element={<Workspace />} />
               <Route path="/agents" element={<Agents />} />
+              <Route path="/agentes" element={<Agents />} />
               <Route path="/agents/:name" element={<AgentDetail />} />
               <Route path="/routines" element={<Routines />} />
               {hasPermission('scheduler', 'view') && <Route path="/activity" element={<Activity />} />}

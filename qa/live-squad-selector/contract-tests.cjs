@@ -10,3 +10,11 @@ console.log('PASS selector enriches only authorized slugs, locked exclusion, fal
 
 assert.equal(agentChoice('pixel-social-media',[{name:'pixel-social-media',catalog:{display_name:'Pixel',display_label:'Conteúdo · Pixel',function:'Roteiro',sector:'Criação'}}]).name,'Conteúdo · Pixel');
 assert.equal(agentChoice('legacy',[{name:'legacy',catalog:{display_name:'Legado',display_label:{bad:true},function:'Fixture',sector:'Fixture'}}]).name,'Legado');
+const {partitionSquad,squadEntryLabel}=m.exports;
+const full=Object.keys(m.exports.squadEntrances).map(slug=>({slug}));
+const split=partitionSquad([...full,{slug:'dex-data'},{slug:'custom-existing'}]);
+assert.equal(split.principal.length,6);assert.equal(split.specialists.length,2);
+assert.equal(partitionSquad([{slug:'dex-data'}]).principal.length,0);
+assert.equal(squadEntryLabel('pixel-social-media','Pixel'),'Conteúdo · Pixel');
+assert.equal(squadEntryLabel('custom-existing','Meu agente'),'Meu agente');
+console.log('PASS same six entry points, specialist preservation, missing principal never synthesized, stable slugs');

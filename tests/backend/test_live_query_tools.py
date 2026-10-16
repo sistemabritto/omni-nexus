@@ -107,3 +107,38 @@ def test_actual_http_query_and_zero_argument_read_reach_real_dispatcher(enabled,
         assert 'PASS actual HTTP' in result.stdout
     finally:
         server.shutdown();thread.join(timeout=5)
+
+
+def test_matching_excerpts_preserve_late_ticket_comment_and_memory_evidence(enabled):
+    app,c,_,_,_,_=enabled
+    current=prepare_history(enabled)
+    from models import db,Ticket,TicketComment
+    with app.app_context():
+        ticket=db.session.get(Ticket,'ticket-3')
+        ticket.description='prefix '*120+'Zephyr roteiro autorizado no final'
+        db.session.add(TicketComment(id='late-comment',ticket_id=ticket.id,
+            body='prefix '*120+'Zephyr detalhe do roteiro',author='fixture',created_at='2026-01-06'))
+        db.session.commit()
+    post(c,current,'notes','current-provider',requestId='late-note',kind='decision',
+         text='prefix '*120+'Zephyr decisão corrente no final',confirmed=True)
+    result=post(c,current,'query','current-provider',query='Zephyr')
+    assert result.status_code==200
+    work=result.json['work']['results'][0]
+    assert 'Zephyr roteiro autorizado' in work['text'] and len(work['text'])<=600
+    assert 'Zephyr detalhe' in work['comments'][0]['text'] and len(work['comments'][0]['text'])<=600
+    assert work['comments'][0]['reference'].endswith('#late-comment')
+    assert any('Zephyr decisão corrente' in m['text'] for m in result.json['memory'])
+    assert all(len(m['text'])<=600 for m in result.json['memory'])
+    assert 'SECRET' not in result.text and 'REMOVED' not in result.text and 'obsolete' not in result.text
+    post(c,current,'transcript','current-provider',eventId='late-query',role='user',text='Zephyr')
+    context=read(c,current['contextId'],'current-provider').json
+    assert 'Zephyr roteiro autorizado' in context['previousWork']['results'][0]['text']
+    assert any('Zephyr decisão corrente' in m['text'] for m in context['queryResult']['memory'])
+
+
+def test_matching_excerpt_handles_literal_terms_unicode_and_absent_matches():
+    from live_query_excerpt import matching_excerpt
+    assert matching_excerpt('x'*800+'RÓTEIRO validado',['róteiro']).endswith('RÓTEIRO validado')
+    assert matching_excerpt('x'*800+'a.b literal',['a.b']).endswith('a.b literal')
+    assert matching_excerpt('safe prefix',[])=='safe prefix'
+    assert matching_excerpt(None,['term'])==''

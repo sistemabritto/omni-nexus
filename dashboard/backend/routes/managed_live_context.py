@@ -451,6 +451,7 @@ def search_previous_work(context_id):
 def _work_payload(row, query):
     from routes.tickets import read_company_ticket_page
     from models import TicketComment
+    from live_query_excerpt import matching_excerpt
     stop = {'qual', 'quais', 'sobre', 'anterior', 'anteriores', 'trabalho', 'trabalhos', 'feito', 'fizemos', 'lembra', 'voce', 'você', 'para', 'como', 'está', 'esta'}
     terms = [t for t in re.findall(r'[^\W_]+(?:-[^\W_]+)*', query.lower()) if len(t) >= 4 and t not in stop][:4]
     tickets = {}
@@ -477,10 +478,10 @@ def _work_payload(row, query):
         for comment in comments:
             refs.append({'reference': '/api/tickets/' + ticket['id'] + '/comments#' + comment.id,
                          'revision': hashlib.sha256(comment.body.encode()).hexdigest(),
-                         'authoredAt': comment.created_at, 'text': comment.body[:600]})
+                         'authoredAt': comment.created_at, 'text': matching_excerpt(comment.body, terms)})
         excerpt = {'reference': '/api/tickets/' + ticket['id'],
                    'title': ticket['title'][:200], 'status': ticket['status'],
-                   'text': (ticket.get('description') or '')[:600],
+                   'text': matching_excerpt(ticket.get('description'), terms),
                    'updatedAt': ticket['updated_at'], 'comments': refs}
         excerpt['revision'] = hashlib.sha256(json.dumps(excerpt, sort_keys=True).encode()).hexdigest()
         results.append(excerpt)
@@ -773,6 +774,7 @@ def query_authorized_context(context_id):
 
 
 def _query_payload(row, query, *, include_work=True):
+    from live_query_excerpt import matching_excerpt
     query = query.strip()[:200]
     terms = list(dict.fromkeys(re.findall(r'[^\W_]+(?:-[^\W_]+)*', query.lower())))
     stop = {'qual','quais','sobre','anterior','anteriores','lembra','voce','você','para','como','que','uma','dos','das'}
@@ -788,7 +790,7 @@ def _query_payload(row, query, *, include_work=True):
                 continue
             memories.append({'conversationId': hit['logical_id'], 'eventId': hit['event_id'],
                              'revision': hit['revision'], 'kind': hit['kind'],
-                             'text': hit['text'][:600], 'source': hit['source'],
+                             'text': matching_excerpt(hit['text'], terms), 'source': hit['source'],
                              'verified': bool(hit['verified']), 'links': hit.get('links', [])})
         try:
             work = _work_payload(row, query) if include_work else {'source': 'previousWork', 'results': []}

@@ -10,9 +10,9 @@ const plugin=path.join(tmp,'ambient-plugin.mjs');fs.writeFileSync(plugin,`import
 fs.writeFileSync(path.join(ambient,'opencode.json'),JSON.stringify({permission:'allow',plugin:[plugin],tools:{bash:true}}));
 process.env.XDG_CONFIG_HOME=path.dirname(ambient);
 os.homedir=()=>tmp; // constructor persistence is fixture-only
-const mode=process.env.FIXTURE_MODE||'success';let calls=0,marker=false,snapshotPath;
+const mode=process.env.FIXTURE_MODE||'success';let calls=0,marker=false,snapshotPath,announcedSchema=null;
 const upstream=http.createServer((req,res)=>{let raw='';req.on('data',c=>raw+=c);req.on('end',()=>{
- calls++;const body=JSON.parse(raw);if(body.tools?.length)assert.deepEqual(body.tools.map(t=>t.function.name),['read']);
+ calls++;const body=JSON.parse(raw);if(body.tools?.length){assert.deepEqual(body.tools.map(t=>t.function.name),['read']);announcedSchema=body.tools;}
  const tools=(body.messages||[]).filter(m=>m.role==='tool');marker||=tools.some(m=>JSON.stringify(m).includes('OWNED_BRAND_FIXTURE'));
  const dir=JSON.stringify(body.messages).match(/\/tmp\/omni-chat-read-[A-Za-z0-9_-]+/)?.[0];if(dir)snapshotPath=path.join(dir,'snapshot','skill.md');
  let delta,finish;
@@ -23,8 +23,9 @@ const upstream=http.createServer((req,res)=>{let raw='';req.on('data',c=>raw+=c)
   if(mode==='snapshot'){fs.chmodSync(snapshotPath,0o600);fs.writeFileSync(snapshotPath,'altered snapshot');}
   delta={role:'assistant',content:marker?'OWNED_BRAND_FIXTURE read':'missing'};finish='stop';
  }
- res.writeHead(200,{'Content-Type':'text/event-stream'});
- for(const data of [{id:'fixture',object:'chat.completion.chunk',created:1,model:'fixture',choices:[{index:0,delta,finish_reason:null}]},{id:'fixture',object:'chat.completion.chunk',created:1,model:'fixture',choices:[{index:0,delta:{},finish_reason:finish}],usage:{prompt_tokens:0,completion_tokens:0,total_tokens:0}}])res.write('data: '+JSON.stringify(data)+'\n\n');res.end('data: [DONE]\n\n');
+ const sendFixture=()=>{res.writeHead(200,{'Content-Type':'text/event-stream'});
+ for(const data of [{id:'fixture',object:'chat.completion.chunk',created:1,model:'fixture',choices:[{index:0,delta,finish_reason:null}]},{id:'fixture',object:'chat.completion.chunk',created:1,model:'fixture',choices:[{index:0,delta:{},finish_reason:finish}],usage:{prompt_tokens:0,completion_tokens:0,total_tokens:0}}])res.write('data: '+JSON.stringify(data)+'\n\n');res.end('data: [DONE]\n\n');};
+ if(process.env.PROOF_IDLE_DELAY_MS&&calls===1)setTimeout(sendFixture,Number(process.env.PROOF_IDLE_DELAY_MS));else sendFixture();
 });});
 (async()=>{
  await new Promise(resolve=>upstream.listen(0,'127.0.0.1',resolve));fs.writeFileSync(path.join(tmp,'outside.md'),'OUTSIDE_NOT_AUTHORIZED');
@@ -33,16 +34,18 @@ const upstream=http.createServer((req,res)=>{let raw='';req.on('data',c=>raw+=c)
  const {TerminalServer}=require('../../dashboard/terminal-server/src/server');
  const WS=require('../../dashboard/terminal-server/node_modules/ws');
  const proof=require('../../docs/ops/runtime-tool-proof-2026-10-16.json').records[0];
- const binary=cp.execFileSync('which',['opencode'],{encoding:'utf8'}).trim();
+ const binary=process.env.PROOF_BINARY||cp.execFileSync('which',['opencode'],{encoding:'utf8'}).trim();
+ const binarySha256=process.env.PROOF_BINARY_SHA256||proof.binary_sha256;
  const server=new TerminalServer({autoSaveIntervalMs:0,sessionGcIntervalMs:0,ownedChatRead:{binary,
-  attestation:{binarySha256:proof.binary_sha256,schemaSha256:proof.tools_schema_sha256},receiptRoot:path.join(tmp,'receipts'),
+  attestation:{binarySha256,schemaSha256:proof.tools_schema_sha256},receiptRoot:path.join(tmp,'receipts'),
   backendBase:process.env.FIXTURE_BACKEND,publicOrigin:'https://example.test'}});
  await server.ready;server.port=0;
  const sid=process.env.FIXTURE_SID;
  server.claudeSessions.set(sid,{id:sid,name:'Owned fixture',agentName:'agent-a',workingDir:tmp,mode:'chat',active:false,created:new Date(),lastActivity:new Date(),connections:new Set(),chatHistory:[],outputBuffer:[]});
  server.chatLogger={append(){throw Error('owned text reached legacy log')},read(){return[]},appendRewindMarker(){throw Error('unexpected legacy rewind')}};
  await server.start();
- const ws=new WS(`ws://127.0.0.1:${server.server.address().port}/ws`,{headers:{Cookie:process.env.FIXTURE_COOKIE||'',Origin:mode==='origin'?'https://foreign.test':'https://example.test'}});
+ if(process.env.FIXTURE_PROXY){console.log('OWNED_NODE_PORT '+server.server.address().port);await new Promise(resolve=>process.stdin.once('data',resolve));}
+ const ws=new WS(process.env.FIXTURE_PROXY||`ws://127.0.0.1:${server.server.address().port}/ws`,{headers:{Cookie:process.env.FIXTURE_COOKIE||'',Origin:mode==='origin'?'https://foreign.test':'https://example.test'}});
  try{
   const result=await new Promise((resolve,reject)=>{
    const timer=setTimeout(()=>reject(Error('fixture timeout')),65000);
@@ -57,7 +60,7 @@ const upstream=http.createServer((req,res)=>{let raw='';req.on('data',c=>raw+=c)
   if(expected){assert.equal(result.error,expected);assert.equal(fs.existsSync(path.join(tmp,'receipts')),false);if(['tenant','origin','no_tools'].includes(mode))assert.equal(calls,0);}
   else{assert.equal(result.success,true,JSON.stringify(result));assert.equal(marker,true);assert.deepEqual(server.claudeSessions.get(sid).chatHistory,[]);assert.equal(fs.readdirSync(path.join(tmp,'receipts')).length,1);}
   assert.equal(fs.existsSync(pluginMarker),false,'ambient plugin loaded');
-  const report={mode,result,ambientPluginLoaded:false,ambientConfig:'permissive_fixture_ignored',modelRequests:calls,tools:['read'],nativeMarkerObserved:marker,admission:'real_Flask_guard_owned_and_file_ACL_over_fixture_records',bootstrap:'TerminalServer_constructor_and_WS_chat_send',upstream:'local_fake_no_paid_inference'};
-  fs.mkdirSync(path.join(root,'capability-probe-evidence'),{recursive:true});fs.writeFileSync(path.join(root,'capability-probe-evidence',`owned-server-${mode}.json`),JSON.stringify(report,null,2)+'\n');console.log('OWNED_SERVER_PROOF '+JSON.stringify(report));
+  const report={mode,result,syntheticIdleDelayMs:Number(process.env.PROOF_IDLE_DELAY_MS||0),binarySha256,announcedSchemaSha256:announcedSchema?require('node:crypto').createHash('sha256').update(JSON.stringify(announcedSchema)).digest('hex'):null,realFlaskProxy:!!process.env.FIXTURE_PROXY,ambientPluginLoaded:false,ambientConfig:'permissive_fixture_ignored',modelRequests:calls,tools:['read'],nativeMarkerObserved:marker,admission:'real_Flask_guard_owned_and_file_ACL_over_fixture_records',bootstrap:'TerminalServer_constructor_and_WS_chat_send',upstream:'local_fake_no_paid_inference'};
+  fs.mkdirSync(path.join(root,'capability-probe-evidence'),{recursive:true});fs.writeFileSync(path.join(root,'capability-probe-evidence',`${process.env.FIXTURE_PROXY?'pinned-proxy':'owned-server'}-${mode}${process.env.PROOF_IDLE_DELAY_MS?'-idle':''}.json`),JSON.stringify(report,null,2)+'\n');console.log('OWNED_SERVER_PROOF '+JSON.stringify(report));
  }finally{ws.close();server.saveSessionsToDisk=async()=>{};server.close();upstream.close();fs.rmSync(tmp,{recursive:true,force:true});}
 })().catch(e=>{console.error(e.message);upstream.close();process.exitCode=1;});

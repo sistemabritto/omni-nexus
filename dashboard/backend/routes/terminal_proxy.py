@@ -160,6 +160,9 @@ def register_websocket_proxy(sock) -> None:
             upstream = create_connection(target, timeout=10,
                                          cookie=request.headers.get("Cookie", ""),
                                          origin=request.headers.get("Origin", ""))
+            # Connect deadline is not a per-message idle deadline. CLI turns can
+            # take longer than ten seconds; close() below interrupts recv().
+            upstream.settimeout(None)
         except Exception as exc:
             log.warning("terminal_proxy: upstream WS connect failed: %s", exc)
             try:
@@ -196,6 +199,10 @@ def register_websocket_proxy(sock) -> None:
             while not stop.is_set():
                 msg = client_ws.receive(timeout=30)
                 if msg is None:
+                    # simple-websocket returns None on an idle receive timeout.
+                    # Keep a live authenticated socket; a closed one must exit.
+                    if getattr(client_ws, "connected", False):
+                        continue
                     break
                 upstream.send(msg)
         except Exception:

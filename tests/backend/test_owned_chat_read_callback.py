@@ -98,8 +98,47 @@ def test_proxy_keeps_existing_cookie_and_real_origin_in_internal_handshake(enabl
             def register(fn):self.handler=fn;return fn
             return register
     sock=Sock();register_websocket_proxy(sock)
-    client=Mock();client.receive.return_value=None
+    client=Mock();client.connected=False;client.receive.return_value=None
     with app.test_request_context('/terminal/ws',headers={'Cookie':cookie,**ORIGIN}):
         sock.handler(client)
     assert calls[0][1]['cookie']==cookie
     assert calls[0][1]['origin']==ORIGIN['Origin']
+    upstream.settimeout.assert_called_once_with(None)
+
+
+def test_proxy_idle_tick_preserves_binary_text_and_closes_after_disconnect(enabled,monkeypatch):
+    """No sleeps: emulate receive timeout then bidirectional frames and close."""
+    import queue, threading, types, sys
+    from routes.terminal_proxy import register_websocket_proxy
+    app,c,_,_,_,_=enabled
+    forwarded=[];delivered=[];outgoing=queue.Queue();complete=threading.Event();timeouts=[]
+    class Upstream:
+        def settimeout(self,value):timeouts.append(value)
+        def recv(self):return outgoing.get(timeout=5)
+        def send(self,msg):forwarded.append(msg);outgoing.put(msg)
+        def close(self):outgoing.put(b'')
+    class Client:
+        connected=True
+        ticks=0
+        def receive(self,timeout):
+            self.ticks+=1
+            if self.ticks==1:return None # idle but connected
+            if self.ticks==2:return b'fixture-binary'
+            if self.ticks==3:return 'fixture-text'
+            assert complete.wait(5)
+            self.connected=False;return None
+        def send(self,msg):
+            delivered.append(msg)
+            if len(delivered)==2:complete.set()
+        def close(self,**_):self.connected=False
+    monkeypatch.setitem(sys.modules,'websocket',types.SimpleNamespace(create_connection=lambda *_args,**_kw:Upstream()))
+    class Sock:
+        def route(self,_):
+            def register(fn):self.handler=fn;return fn
+            return register
+    sock=Sock();register_websocket_proxy(sock);client=Client()
+    cookie='session='+c.get_cookie('session',domain='example.test').value
+    with app.test_request_context('/terminal/ws',headers={'Cookie':cookie,**ORIGIN}):sock.handler(client)
+    assert client.ticks==4 and client.connected is False
+    assert forwarded==delivered==[b'fixture-binary','fixture-text']
+    assert timeouts==[None]

@@ -9,6 +9,7 @@ function fixture(t,changes={}) {
  const fs=require('fs'),path=require('path');
  const file=path.join(process.cwd(),'skill.md');
  const config=JSON.parse(process.env.OPENCODE_CONFIG_CONTENT);
+ if(process.env.HOME!==path.join(path.dirname(process.cwd()),'home')||!fs.statSync(process.env.HOME).isDirectory())process.exit(5);
  if(process.argv.includes('--auto')||!process.argv.includes('--pure')||config.permission['*']!=='deny'||config.permission.read['*']!=='deny'){console.error(JSON.stringify({argv:process.argv,tools:config.tools}));process.exit(4);}
  const value=fs.readFileSync(file,'utf8');
  console.log(JSON.stringify({type:'tool_use',part:{tool:'read',state:{status:'completed',input:{filePath:file},output:value}}}));

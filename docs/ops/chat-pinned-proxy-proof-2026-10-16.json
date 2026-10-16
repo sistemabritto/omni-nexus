@@ -1,0 +1,204 @@
+{
+  "source": {
+    "container": "ad22a1d5194f",
+    "image_digest": "excarplex/evo-nexus-dashboard@sha256:0d9722d2dba90b30f4a8019c119107051be6e84f7da548e3e14f03342a4ef93b",
+    "image_id": "sha256:51e90ce1f66d79e54bf33ba77c727237abaa6604af5950d26a82c0449900bd8a",
+    "method": "SSH BatchMode StrictHostKeyChecking UpdateHostKeys=no; docker exec read-only stdout of public exe/packages only",
+    "copied_private_config_auth_cache_sessions": false
+  },
+  "binary": {
+    "version": "1.17.18",
+    "sha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636"
+  },
+  "public_proxy_archive_sha256": "de60de9b22d6187c28dc94601a18d6e011a1b94e9eb7a8159bcc54770aa76486",
+  "proxy_dependencies": {
+    "websocket-client": "1.9.2",
+    "flask-sock": "0.7.0",
+    "simple-websocket": "1.1.0",
+    "websockets": "16.0",
+    "wsproto": "1.3.2",
+    "h11": "0.16.0"
+  },
+  "shared_framework_versions": {
+    "flask": "3.1.3",
+    "flask-login": "0.6.3",
+    "werkzeug": "3.1.8",
+    "node-ws": "8.20.0"
+  },
+  "interpreter_patch_difference": {
+    "source": {
+      "python": "3.12.15",
+      "node": "22.23.3"
+    },
+    "test_host": {
+      "python": "3.12.3",
+      "node": "22.23.2"
+    }
+  },
+  "isolation": {
+    "user_and_network_namespace": true,
+    "interfaces": [
+      "lo"
+    ],
+    "egress_routes": [],
+    "fake_sse_upstream_only": true,
+    "paid_inference": false,
+    "service_mutation": false,
+    "production_enabled": false
+  },
+  "records": [
+    {
+      "mode": "no_tools",
+      "result": {
+        "error": "intentional_no_tools"
+      },
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": null,
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 0,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "origin",
+      "result": {
+        "error": "owned_read_context_required"
+      },
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": null,
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 0,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "path",
+      "result": {
+        "error": "read_transport_tool_denied"
+      },
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": "77edfe40f049586e8a98748cef0a9ee8ad55ec3c9d37fc65a9cdf97c6a25363d",
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 2,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "revoke",
+      "result": {
+        "error": "read_context_revoked"
+      },
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": "77edfe40f049586e8a98748cef0a9ee8ad55ec3c9d37fc65a9cdf97c6a25363d",
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 4,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": true,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "snapshot",
+      "result": {
+        "error": "read_snapshot_changed"
+      },
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": "77edfe40f049586e8a98748cef0a9ee8ad55ec3c9d37fc65a9cdf97c6a25363d",
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 4,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": true,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "success",
+      "result": {
+        "success": true
+      },
+      "syntheticIdleDelayMs": 31000,
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": "77edfe40f049586e8a98748cef0a9ee8ad55ec3c9d37fc65a9cdf97c6a25363d",
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 4,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": true,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "success",
+      "result": {
+        "success": true
+      },
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": "77edfe40f049586e8a98748cef0a9ee8ad55ec3c9d37fc65a9cdf97c6a25363d",
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 4,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": true,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    },
+    {
+      "mode": "tenant",
+      "result": {
+        "error": "owned_read_context_required"
+      },
+      "binarySha256": "0cbfb6de55aa4ce3c74da12d8516376033693a88abca6238c5be32bf98130636",
+      "announcedSchemaSha256": null,
+      "realFlaskProxy": true,
+      "ambientPluginLoaded": false,
+      "ambientConfig": "permissive_fixture_ignored",
+      "modelRequests": 0,
+      "tools": [
+        "read"
+      ],
+      "nativeMarkerObserved": false,
+      "admission": "real_Flask_guard_owned_and_file_ACL_over_fixture_records",
+      "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
+      "upstream": "local_fake_no_paid_inference"
+    }
+  ]
+}

@@ -29,7 +29,7 @@ export class AuditedToolDispatcher {
         new Promise<never>((_resolve,reject)=>{timer=setTimeout(()=>{controller?.abort();reject(Error('audit_timeout'))},this.auditTimeoutMs)}),
       ])
     }catch{
-      if(!this.auditWarned){this.auditWarned=true;try{this.unavailable()}catch{}}
+      if(!this.auditWarned){this.auditWarned=true;try{this.unavailable()}catch{/* Diagnostic callbacks must not gate the tool. */}}
     }finally{if(timer!==undefined)clearTimeout(timer)}
   }
   instrument(){return this.closed?Promise.resolve():this.trace('__live_audit_session__','session','instrumented')}
@@ -73,7 +73,7 @@ export class AuditedToolDispatcher {
       if(!this.alive()){await this.trace(id,name,'cancelled');return null}
       return outcome
     })().finally(()=>{entry.done=true})
-    return entry.outcome.then(outcome=>outcome?this.emit(id,name,outcome):undefined).catch(()=>{this.unavailable();if(this.alive())try{this.send({type:'client_tool_result',tool_call_id:id,result:'Não foi possível confirmar o diagnóstico da ferramenta.',is_error:true})}catch{}})
+    return entry.outcome.then(outcome=>outcome?this.emit(id,name,outcome):undefined).catch(()=>{this.unavailable();if(this.alive())try{this.send({type:'client_tool_result',tool_call_id:id,result:'Não foi possível confirmar o diagnóstico da ferramenta.',is_error:true})}catch{/* A closed or failed socket cannot accept another diagnostic result. */}})
   }
   close(){this.closed=true;for(const [id,entry] of this.seen)if(!entry.done)void this.trace(id,entry.name,'cancelled').catch(()=>this.unavailable());this.seen.clear()}
 }

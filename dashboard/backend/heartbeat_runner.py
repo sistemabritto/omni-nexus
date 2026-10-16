@@ -988,6 +988,24 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                     or (isinstance(trigger_payload, dict) and trigger_payload.get("ticket_id"))
                 )
 
+                # Protected ticket prose never reaches a generic tool-enabled prompt.
+                from internal_ticket_draft import is_restricted, restricted_candidate, run_draft
+                inbox = [item for item in inbox if not is_restricted(item["id"])]
+                if is_restricted((trigger_payload or {}).get("ticket_id")):
+                    result = {"status": "fail", "error": "restricted_mention_not_supported",
+                              "output": "", "agent": hb["agent"]}
+                    step8_persist(run_id, heartbeat_id, result, trigger_id, triggered_by,
+                                  "[restricted ticket mention rejected]", conn)
+                    return run_id
+
+                # A mention about another ticket retains its original behavior.
+                restricted = None if _is_mention_wake else restricted_candidate(conn, hb["agent"])
+                if restricted:
+                    result = run_draft(conn, restricted, hb["agent"], run_id, WORKSPACE / "workspace")
+                    step8_persist(run_id, heartbeat_id, result, trigger_id, triggered_by,
+                                  "[restricted internal draft; no_tools]", conn)
+                    return run_id
+
                 # Cost guard: executor agents don't burn tokens "deciding to skip".
                 # If there's no assigned work and no pending approvals, skip the
                 # Claude invocation entirely (silent, ~zero cost). State-monitor

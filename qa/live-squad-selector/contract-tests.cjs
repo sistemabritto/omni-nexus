@@ -7,3 +7,6 @@ const allowed=agentChoices(['dex-data','legacy','dex-data','locked'],rows,{'Lega
 assert.equal(allowed.length,2);assert(!allowed.some(x=>['forbidden','locked'].includes(x.slug)));assert.equal(allowed[0].name,'Dex');assert.equal(allowed[1].sector,'Legado');assert(matchesAgent(allowed[0],'metricas'));assert(matchesAgent(allowed[0],'dados'));assert(!matchesAgent(allowed[0],'vendas'));assert.equal(agentChoice('custom-agent',[],{}).name,'Custom Agent');
 assert.equal(agentChoice('dex-data',[{name:'dex-data',description:42,catalog:{display_name:42,function:null,sector:{}}}],{bad:42}).name,'Dex Data');
 console.log('PASS selector enriches only authorized slugs, locked exclusion, fallback, accent search and malformed metadata');
+
+assert.equal(agentChoice('pixel-social-media',[{name:'pixel-social-media',catalog:{display_name:'Pixel',display_label:'Conteúdo · Pixel',function:'Roteiro',sector:'Criação'}}]).name,'Conteúdo · Pixel');
+assert.equal(agentChoice('legacy',[{name:'legacy',catalog:{display_name:'Legado',display_label:{bad:true},function:'Fixture',sector:'Fixture'}}]).name,'Legado');

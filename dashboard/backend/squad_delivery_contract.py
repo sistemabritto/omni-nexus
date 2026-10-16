@@ -1,5 +1,6 @@
 """Executable handoff contract. No dispatch, grants, ownership writes or approval."""
 import re
+from pathlib import Path
 
 FRONTS = {
     'operations': ('Operação', 'clawdia-assistant', 'atlas-project', 'oath-verifier'),
@@ -84,3 +85,20 @@ def validate_handoff(data):
             'acceptance': list(data['acceptance']), 'requiredMethods': list(METHODS[data['front']]),
             'acknowledgement': 'not_recorded', 'evidenceStatus': 'declared_not_verified',
             'dispatchAllowed': False, 'publicationApproved': False}
+
+
+def unavailable_methods(workspace, references):
+    """Only readable, bounded local method text counts as packaged availability."""
+    root = Path(workspace).resolve()
+    unavailable = []
+    for reference in references:
+        try:
+            path = (root / reference).resolve(strict=True)
+            path.relative_to(root)
+            if not path.is_file() or not 0 < path.stat().st_size <= 262144:
+                raise ValueError('invalid_method')
+            if not path.read_text(encoding='utf-8').strip():
+                raise ValueError('empty_method')
+        except (OSError, RuntimeError, ValueError, UnicodeError):
+            unavailable.append(reference)
+    return unavailable

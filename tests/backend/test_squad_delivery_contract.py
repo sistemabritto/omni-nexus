@@ -73,6 +73,18 @@ def test_endpoint_preserves_auth_acl_and_never_accepts_ownership(setup, monkeypa
     endpoint = '/api/agents/delivery-contract/validate'
     assert c.post(endpoint,json=candidate(),headers=ORIGIN).status_code == 401
     login()
+    from models import db, Ticket
+    with app.app_context():
+        db.session.add(Ticket(id='fixture-task', title='Protected fixture', company_id=7,
+            status='blocked', blocked_reason='registered_not_dispatched',
+            assignee_agent='pixel-social-media', created_by='fixture',
+            created_at='fixture', updated_at='fixture'))
+        db.session.commit()
+    def ticket_state():
+        with app.app_context():
+            row = db.session.get(Ticket, 'fixture-task')
+            return {column.name: getattr(row, column.name) for column in Ticket.__table__.columns}
+    protected = ticket_state()
     assert c.post(endpoint,json=candidate()).status_code == 403
     assert c.post(endpoint,json=candidate(),headers={**ORIGIN,'X-Fixture-Token':'yes'}).status_code == 403
     result = c.post(endpoint,json=candidate(),headers=ORIGIN)
@@ -86,3 +98,21 @@ def test_endpoint_preserves_auth_acl_and_never_accepts_ownership(setup, monkeypa
     monkeypatch.setattr(context, 'has_agent_access', lambda *_: False)
     assert c.post(endpoint,json=candidate(),headers=ORIGIN).status_code == 403
     assert calls == []
+    assert ticket_state() == protected
+
+
+@pytest.mark.parametrize('state', ['missing', 'empty', 'invalid_utf8', 'oversized', 'external_symlink'])
+def test_unusable_or_external_method_is_not_packaged_availability(tmp_path, state):
+    from squad_delivery_contract import unavailable_methods
+    root = tmp_path / 'workspace'; root.mkdir()
+    path = root / 'method.md'
+    if state == 'empty': path.write_text('  ')
+    elif state == 'invalid_utf8': path.write_bytes(b'\xff')
+    elif state == 'oversized': path.write_bytes(b'x' * 262145)
+    elif state == 'external_symlink':
+        external = tmp_path / 'external.md'; external.write_text('External fixture')
+        path.symlink_to(external)
+    assert unavailable_methods(root, ['method.md']) == ['method.md']
+    if path.exists() or path.is_symlink(): path.unlink()
+    path.write_text('# Local fixture method')
+    assert unavailable_methods(root, ['method.md']) == []

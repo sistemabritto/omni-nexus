@@ -95,7 +95,7 @@ def get_agent_memory_file(name, file):
 def validate_delivery_contract():
     """Validate only: no queue writes, invocation or implicit handoff acceptance."""
     from routes.managed_live_context import _guard, _scope, _reply
-    from squad_delivery_contract import validate_handoff
+    from squad_delivery_contract import validate_handoff, unavailable_methods
     denied = _guard(write=True)
     if denied is not None:
         return denied
@@ -110,7 +110,7 @@ def validate_delivery_contract():
               result['currentOwner'], *data['contributors']}
     if any(_scope(data['companyId'], actor) is None for actor in actors):
         return _reply({'error': 'scope_denied'}, 403)
-    missing = [path for path in result['requiredMethods'] if not (WORKSPACE / path).is_file()]
+    missing = unavailable_methods(WORKSPACE, result['requiredMethods'])
     if missing:
         result['status'] = 'blocked'
         result['blockers'].extend('method_missing:' + path for path in missing)

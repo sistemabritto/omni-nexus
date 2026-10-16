@@ -163,6 +163,10 @@ jobs:
           node qa/managed-live-context/session-tests.cjs
           node qa/managed-live-context/continuity-contract-tests.cjs
           node qa/managed-live-context/continuity-session-tests.cjs
+          node review/voice-first/render-tests.cjs
+          node review/voice-first/mobile-host-tests.cjs
+          node review/voice-first/integrated-flow-tests.cjs
+          node qa/live-file-chat/render-receipt.cjs
 
       - name: Lint managed Live company lifecycle
         working-directory: dashboard/frontend

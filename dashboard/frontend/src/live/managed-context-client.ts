@@ -65,7 +65,15 @@ export function createManagedContextTools(contextId:number) {
       if(closed)throw Error('Conversa encerrada.')
       return JSON.stringify(result)
     },
-    clientTools: { read_current_omni_session:async (parameters:Record<string,unknown> = {}) => {
+    clientTools: { search_omni_context:async (parameters:Record<string,unknown> = {}) => {
+      if(!parameters||typeof parameters!=='object'||Array.isArray(parameters)||Object.keys(parameters).join(',')!=='query'||typeof parameters.query!=='string'||!parameters.query.trim()||parameters.query.trim().length>200)throw Error('Consulta inválida.')
+      if(closed||!binding||!conversationId)throw Error('Conversa não vinculada.')
+      await binding
+      if(closed)throw Error('Conversa encerrada.')
+      const result=await call(`/api/live/omni-context/${contextId}/query`,{conversationId,query:parameters.query.trim()})
+      if(closed)throw Error('Conversa encerrada.')
+      return JSON.stringify(result)
+    }, read_current_omni_session:async (parameters:Record<string,unknown> = {}) => {
       if (Object.keys(parameters).length) throw Error('Esta ferramenta não aceita parâmetros.')
       if (closed || !binding || !conversationId) throw Error('Conversa ainda não vinculada ao OmniNexus.')
       await binding

@@ -201,3 +201,33 @@ class ConversationStore:
             rows = db.execute('SELECT seq,event_id,revision,kind,text,source,verified,retracted FROM events WHERE conversation_id=? AND seq>? ORDER BY seq LIMIT ?', (cid, after, limit)).fetchall()
             self._guard(p, cid)
             return [dict(r) for r in rows]
+
+    def search(self, p, terms, *, limit=5):
+        """Query current revisions in this user's/company's persisted Live history.
+
+        No vector index, imported transcript, schema change or new memory store.
+        SQL restricts ownership BEFORE candidate selection. Authorization remains
+        live per logical conversation and is checked again before returning.
+        """
+        self._guard(p)
+        if (not isinstance(terms, list) or not 1 <= len(terms) <= 4
+                or any(not isinstance(t, str) or not 1 <= len(t) <= 200 for t in terms)
+                or type(limit) is not int or not 1 <= limit <= 5):
+            raise ValueError('invalid_query')
+        with self._db() as db:
+            match = ' OR '.join('instr(lower(e.text),lower(?))>0' for _ in terms)
+            rows = db.execute('''SELECT e.*, c.id AS logical_id FROM events e
+                JOIN conversations c ON c.id=e.conversation_id
+                WHERE c.user_id=? AND c.company_id=? AND e.retracted=0
+                AND NOT EXISTS (SELECT 1 FROM events n WHERE n.conversation_id=e.conversation_id
+                    AND n.event_id=e.event_id AND n.revision>e.revision)
+                AND (''' + match + ') ORDER BY e.seq DESC LIMIT 100',
+                (p.user_id,p.company_id,*terms)).fetchall()
+            selected = []
+            for row in rows:
+                if self.allowed(p, row['logical_id']):
+                    selected.append(dict(row))
+                    if len(selected) == limit:
+                        break
+            self._guard(p)
+            return [r for r in selected if self.allowed(p, r['logical_id'])]

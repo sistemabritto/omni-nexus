@@ -183,7 +183,15 @@ def read_context(context_id):
                 return _reply({'error': 'ticket_access_denied'}, 403)
             counts[status] = count['total']
         tasks = {'source': '/api/tickets', 'total': sum(counts.values()), 'byStatus': counts, 'pendingTotal': page['total'], 'pendingLimit': 10, 'pending': [{key: ticket.get(key) for key in ('id', 'title', 'status', 'priority', 'due_date', 'blocked_reason', 'requires_human_approval')} for ticket in page['tickets']]}
-        return _reply({'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})})
+        payload = {'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
+        if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True:
+            query_result = _query_for_current_turn(row)
+            while query_result['memory'] and len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
+                query_result['memory'].pop()
+            if len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
+                query_result = {'memory': [], 'coverage': 'context_budget_exhausted'}
+            payload['queryResult'] = query_result
+        return _reply(payload)
     except (requests.RequestException, ValueError, TypeError, AttributeError, sqlite3.Error, ContinuityDenied):
         return _reply({'error': 'runtime_context_unavailable'}, 503)
 
@@ -741,3 +749,67 @@ def execution_decision_result(job_id):
         return _reply({'jobId': job_id, 'operation': decision.operation, **json.loads(decision.trace)})
     except TaskDenied:
         return _reply({'error': 'scope_denied'}, 403)
+
+
+@bp.post('/api/live/omni-context/<int:context_id>/query')
+def query_authorized_context(context_id):
+    """Read-only query tool over existing scoped Live history and ticket API."""
+    row, data, denied = _continuity_request(context_id)
+    if denied is not None:
+        return denied
+    if (set(data) != {'conversationId', 'query'} or not isinstance(data['query'], str)
+            or not 1 <= len(data['query'].strip()) <= 200):
+        return _reply({'error': 'invalid_query'}, 400)
+    try:
+        return _reply(_query_payload(row, data['query']))
+    except ValueError:
+        return _reply({'error': 'query_too_broad'}, 400)
+    except ContinuityDenied:
+        return _reply({'error': 'scope_denied'}, 403)
+    except sqlite3.Error:
+        return _reply({'error': 'continuity_unavailable'}, 503)
+
+
+def _query_payload(row, query, *, include_work=True):
+    query = query.strip()[:200]
+    terms = list(dict.fromkeys(re.findall(r'[^\W_]+(?:-[^\W_]+)*', query.lower())))
+    stop = {'qual','quais','sobre','anterior','anteriores','lembra','voce','você','para','como','que','uma','dos','das'}
+    terms = [t for t in terms if len(t) >= 3 and t not in stop][:4]
+    if not terms:
+        return {'kind': 'untrusted_reference_data', 'memory': [], 'work': {'results': []}, 'coverage': 'query_too_broad'}
+    try:
+        store, principal = _continuity_store(row)
+        memories = []
+        for hit in store.search(principal, terms, limit=5):
+            hit = _visible_event(row, hit)
+            if hit.get('retracted'):
+                continue
+            memories.append({'conversationId': hit['logical_id'], 'eventId': hit['event_id'],
+                             'revision': hit['revision'], 'kind': hit['kind'],
+                             'text': hit['text'][:600], 'source': hit['source'],
+                             'verified': bool(hit['verified']), 'links': hit.get('links', [])})
+        try:
+            work = _work_payload(row, query) if include_work else {'source': 'previousWork', 'results': []}
+        except PermissionError:
+            work = {'status': 'denied', 'results': []}
+        if _owned(row['id']) is None:
+            raise ContinuityDenied()
+        return {'kind': 'untrusted_reference_data', 'memory': memories,
+                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_company_tickets'],
+                       'excluded': ['unowned_mempalace_index', 'private_dot_history', 'arbitrary_mcp_execution'],
+                       'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600}}
+    except ContinuityDenied:
+        raise
+
+
+
+def _query_for_current_turn(row):
+    cid = _continuity_id(row)
+    store, principal = _continuity_store(row)
+    snap = store.snapshot(principal, cid, history_limit=30)
+    query = next((e['text'][:200] for e in reversed(snap['current_context'])
+                  if e['kind'] == 'transcript' and e['source'].startswith('browser:user:')), '')
+    result = _query_payload(row, query, include_work=False)
+    while result['memory'] and len(json.dumps(result, ensure_ascii=False)) > 4000:
+        result['memory'].pop()
+    return result

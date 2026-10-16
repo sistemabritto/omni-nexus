@@ -62,12 +62,13 @@ export class ManagedSession {
         if(event.type==='client_tool_call'){
           const call=event.client_tool_call
           void (async()=>{try {
-            if(!['read_current_omni_session','request_internal_task','read_internal_task_status','cancel_internal_task'].includes(call.tool_name))throw Error('Ferramenta indisponível.')
+            if(!['read_current_omni_session','search_omni_context','request_internal_task','read_internal_task_status','cancel_internal_task'].includes(call.tool_name))throw Error('Ferramenta indisponível.')
             await bootstrap
             if(enabled)await continuity.flush()
-            const internal=call.tool_name!=='read_current_omni_session'
+            const query=call.tool_name==='search_omni_context'
+            const internal=call.tool_name!=='read_current_omni_session'&&!query
             if(internal&&!enabled)throw Error('Continuidade indisponível.')
-            const result=internal?await tools.runInternalTask(call.tool_name,call.parameters,call.tool_call_id):await tools.clientTools.read_current_omni_session(call.parameters)
+            const result=query?await tools.clientTools.search_omni_context(call.parameters):internal?await tools.runInternalTask(call.tool_name,call.parameters,call.tool_call_id):await tools.clientTools.read_current_omni_session(call.parameters)
             if(internal&&generation===this.generation){const receipt=JSON.parse(result),labels:Record<string,string>={pending:'aguardando execução',running:'em execução',success:'rascunho disponível',failed:'bloqueada por falha',cancel_requested:'cancelamento solicitado',cancelled:'cancelada'};this.message('Tarefa interna',`Tarefa ${receipt.jobId}: ${labels[receipt.status]||'estado recebido'}.`);await continuity.refresh()}
             if(result.length>24000)throw Error('Contexto excede orçamento.');
             if(generation===this.generation)connection.sendMessage({type:'client_tool_result',tool_call_id:call.tool_call_id,result,is_error:false})

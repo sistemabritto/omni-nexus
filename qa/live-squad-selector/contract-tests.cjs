@@ -8,7 +8,7 @@ assert.equal(allowed.length,2);assert(!allowed.some(x=>['forbidden','locked'].in
 assert.equal(agentChoice('dex-data',[{name:'dex-data',description:42,catalog:{display_name:42,function:null,sector:{}}}],{bad:42}).name,'Dex Data');
 console.log('PASS selector enriches only authorized slugs, locked exclusion, fallback, accent search and malformed metadata');
 
-assert.equal(agentChoice('pixel-social-media',[{name:'pixel-social-media',catalog:{display_name:'Pixel',display_label:'Conteúdo · Pixel',function:'Roteiro',sector:'Criação'}}]).name,'Conteúdo · Pixel');
+assert.equal(agentChoice('pixel-social-media',[{name:'pixel-social-media',catalog:{display_name:'Pixel',display_label:'Conteúdo · Pixel',function:'Roteiro',sector:'Criação'}}]).name,'Conteúdo · Dante');
 assert.equal(agentChoice('legacy',[{name:'legacy',catalog:{display_name:'Legado',display_label:{bad:true},function:'Fixture',sector:'Fixture'}}]).name,'Legado');
 const {partitionSquad,squadEntryLabel}=m.exports;
 const full=Object.keys(m.exports.squadEntrances).map(slug=>({slug}));

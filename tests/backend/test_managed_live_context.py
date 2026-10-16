@@ -172,3 +172,28 @@ def test_read_includes_only_bound_company_tasks_through_existing_acl(setup,monke
     import routes.tickets as tickets
     monkeypatch.setattr(tickets,'has_permission',lambda *_:False)
     assert read(c,ctx['contextId']).status_code==403
+
+
+def test_read_returns_only_authenticated_profile_name_without_continuity(setup):
+    app,c,login,_,_,_=setup
+    from models import db,User
+    with app.app_context():
+        user=db.session.get(User,31);user.display_name='  Felipe  ';user.email='private@example.test'
+        db.session.get(User,32).display_name='Other person';db.session.commit()
+    login();ctx=create(c).json;link(c,ctx['contextId'])
+    result=read(c,ctx['contextId'])
+    assert result.status_code==200
+    assert result.json['authenticatedUser']=={'displayName':'Felipe','nameAvailable':True,'source':'authenticated_profile'}
+    assert 'private@example.test' not in result.text and 'Other person' not in result.text
+    assert 'password_hash' not in result.text and 'personal-fixture' not in result.text
+    assert read(c,ctx['contextId'],userId=32).status_code==400
+    login(32);assert read(c,ctx['contextId']).status_code==403
+
+
+def test_read_does_not_infer_person_name_from_username(setup):
+    app,c,login,_,_,_=setup
+    from models import db,User
+    with app.app_context():
+        user=db.session.get(User,31);user.display_name='   ';db.session.commit()
+    login();ctx=create(c).json;link(c,ctx['contextId'])
+    assert read(c,ctx['contextId']).json['authenticatedUser']=={'displayName':None,'nameAvailable':False,'source':'authenticated_profile'}

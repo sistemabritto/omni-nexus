@@ -183,7 +183,9 @@ def read_context(context_id):
                 return _reply({'error': 'ticket_access_denied'}, 403)
             counts[status] = count['total']
         tasks = {'source': '/api/tickets', 'total': sum(counts.values()), 'byStatus': counts, 'pendingTotal': page['total'], 'pendingLimit': 10, 'pending': [{key: ticket.get(key) for key in ('id', 'title', 'status', 'priority', 'due_date', 'blocked_reason', 'requires_human_approval')} for ticket in page['tickets']]}
-        payload = {'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
+        display_name = str(current_user.display_name or '').strip()[:120]
+        authenticated_user = {'displayName': display_name or None, 'nameAvailable': bool(display_name), 'source': 'authenticated_profile'}
+        payload = {'authenticatedUser': authenticated_user, 'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
         if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True:
             query_result = _query_for_current_turn(row)
             while (query_result['memory'] or query_result.get('documents', {}).get('results')) and len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:

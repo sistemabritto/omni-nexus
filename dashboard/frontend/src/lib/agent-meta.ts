@@ -158,7 +158,7 @@ export async function hydrateAgentMeta(force = false): Promise<void> {
  */
 export function getAgentMeta(name: string): AgentMeta {
   const base = _registry[name] || DEFAULT_META
-  // The six versioned portraits are intentional release assets. A stale backend
+  // The versioned squad portraits are intentional release assets. A stale backend
   // native avatar URL must not restore the previous pixel-art file after hydration.
   return { ...base, ...(squadPortraits[name] ? {avatar: squadPortraits[name], avatar_url: squadPortraits[name]} : {}), command: _registry[name]?.command || `/${name}` }
 }

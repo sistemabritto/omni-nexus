@@ -21,10 +21,14 @@ export default function Agents(){
   const searching=!!query.trim(),found=choices.filter(choice=>matchesAgent(choice,query)||squadEntryLabel(choice.slug,choice.name).toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')))
   function card(choice:typeof choices[number]){
     const entry=squadEntrances[choice.slug]
-    const body=<><AgentAvatar name={choice.slug} size={64}/><div><h2>{squadEntryLabel(choice.slug,choice.name)}</h2><p>{entry?.delivery||choice.role}</p>
+    const profile=choice.agent.catalog?.delivery_profile
+    const safe=(value:unknown)=>typeof value==='string'&&value.trim()?value.slice(0,600):'Não verificado'
+    const body=<><AgentAvatar name={choice.slug} size={64}/><div><h2>{squadEntryLabel(choice.slug,choice.name)}</h2><p>{profile?choice.role:entry?.delivery||choice.role}</p>
       {entry&&<small>Apoio: {entry.assistant} · Revisão: {entry.reviewer}</small>}
       <span>{choice.agent.locked?<><Lock size={14}/> Sem acesso</>:'Abrir agente →'}</span></div></>
-    return choice.agent.locked?<article key={choice.slug} className="squad-entry squad-entry-locked" aria-label={`${squadEntryLabel(choice.slug,choice.name)} · Sem acesso`}>{body}</article>:<Link key={choice.slug} className="squad-entry" to={`/agents/${choice.slug}`}>{body}</Link>
+    return <div key={choice.slug} className="squad-entry-wrap">{choice.agent.locked?<article className="squad-entry squad-entry-locked" aria-label={`${squadEntryLabel(choice.slug,choice.name)} · Sem acesso`}>{body}</article>:<Link className="squad-entry" to={`/agents/${choice.slug}`}>{body}</Link>}
+      {profile&&<details className="squad-contract"><summary>Como trabalha</summary><dl><dt>Entradas</dt><dd>{safe(profile.inputs)}</dd><dt>Entregas</dt><dd>{safe(profile.deliverables)}</dd><dt>Aceite</dt><dd>{safe(profile.acceptance)}</dd><dt>Métodos documentados</dt><dd>{Array.isArray(profile.methods)?profile.methods.filter(path=>typeof path==='string').map(path=>path.split('/').slice(-2,-1)[0]).join(', '):'Não verificado'}</dd><dt>Acesso e limites</dt><dd>Somente ferramentas e permissões da sessão. Método documentado não comprova execução. Em modo sem ferramentas, prepara o pedido e informa o bloqueio.</dd></dl></details>}
+    </div>
   }
   return <main className="squad-home">
     <header><p className="squad-eyebrow">SISTEMA BRITTO · OMNINEXUS</p><h1>Quem resolve o quê</h1><p>Comece pelo responsável da entrega. Apoios, revisores e especialistas continuam disponíveis quando precisar.</p></header>

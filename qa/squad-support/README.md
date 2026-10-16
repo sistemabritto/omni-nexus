@@ -1,0 +1,7 @@
+# Supplied supporting portraits
+
+Six parent-supplied GPT Image assets: Atlas, Sage, Raven, Hawk, Lens, Probe. No new generation; conversion only to 512px WebP. Manifest records Library identity, original and asset hashes. Main six portraits and stable slugs unchanged. Supporting functions are explicit, remain under collapsed specialists and searchable in Agents/Live. Optional backend delivery_profile disclosures show purpose, inputs, deliverables and acceptance outside navigation links.
+
+Validation: both portrait contract suites pass; TypeScript and targeted ESLint pass. Browser fixture 375/1440 verifies six new support assets decoded at512, six default main entries, all43 fixture entries preserved, keyboard disclosure outside links, selected Raven portrait in Live, specialist selection retained after collapse, no overflow and zero mutations. Screenshots/results in evidence. This is local fixture QA, not production readback or proof of tool operation. Source portraits were visually inspected; Live mobile screenshot inspected. Older generation references are not used as final portraits.
+
+Reproduce: node qa/squad-support/contract-tests.cjs; QA_PLAYWRIGHT_MODULE=<playwright path> QA_OUTPUT_DIR=qa/squad-support/evidence node qa/squad-support/browser-qa.cjs against local Vite5199, HMR disabled for fixture, restored afterward. Profiles fixture is a snapshot of the separate backend prompt commit; optional fields safely fall back if backend is older.

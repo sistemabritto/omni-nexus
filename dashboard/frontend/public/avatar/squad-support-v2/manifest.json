@@ -1,0 +1,71 @@
+{
+  "generation": "parent_supplied_GPT_Image_no_new_generation_here",
+  "portraits": [
+    {
+      "slug": "atlas-project",
+      "version": "v2",
+      "library_file_id": "libfile_441835fdee088191a3dcf632ae921ea9",
+      "source_sha256": "fa406ff670a323c2cc06b6d4fbf14fc051f5f7204c05977d970b97e619baed4a",
+      "asset": "/avatar/squad-support-v2/atlas-v2-fa406ff670.webp",
+      "asset_sha256": "8d6bd42660f6a62862aee4b4563e7ffed3a0d41ad16b8ee39db8f0dc7b0807f6",
+      "width": 512,
+      "height": 512,
+      "bytes": 53942
+    },
+    {
+      "slug": "sage-strategy",
+      "version": "v2",
+      "library_file_id": "libfile_5f879764fba08191b647992e93c15444",
+      "source_sha256": "6e982e1ceefc79653e2a8089459950e85bd750bb1560c38a448eb9e2d2d13d9c",
+      "asset": "/avatar/squad-support-v2/sage-v2-6e982e1cee.webp",
+      "asset_sha256": "aac3b69c344a3fba5e067a3c9798580aa6e25c7b9b6af9d63580112df2587156",
+      "width": 512,
+      "height": 512,
+      "bytes": 66658
+    },
+    {
+      "slug": "raven-critic",
+      "version": "v2",
+      "library_file_id": "libfile_99aaa9f372e48191b231e514e1437c8d",
+      "source_sha256": "fe3bb0f42f7135dbb17c1849ca14ff7c5226b703a227503f9e9483dadbb41d95",
+      "asset": "/avatar/squad-support-v2/raven-v2-fe3bb0f42f.webp",
+      "asset_sha256": "4046a36b7d91d24695d191c93293cf6cef6915d6070ecea55f9c89e9acf3db26",
+      "width": 512,
+      "height": 512,
+      "bytes": 55916
+    },
+    {
+      "slug": "hawk-debugger",
+      "version": "v2",
+      "library_file_id": "libfile_b826fc41e8708191bbb8c00d83f66f97",
+      "source_sha256": "6998bdb6c56825cdfaedd0ecd201accdd55a134edb06eaaa6a92395512f051cb",
+      "asset": "/avatar/squad-support-v2/hawk-v2-6998bdb6c5.webp",
+      "asset_sha256": "58121eafb2b4db185051b46b14f99256e1d14f5edb0ba04d2542e9494ed6ad97",
+      "width": 512,
+      "height": 512,
+      "bytes": 55684
+    },
+    {
+      "slug": "lens-reviewer",
+      "version": "v2",
+      "library_file_id": "libfile_181c3a5c166c81918a7415bac6c970e5",
+      "source_sha256": "50457112201daabd4b9a814790f66d3de549105defc08cc3d91d778810d001df",
+      "asset": "/avatar/squad-support-v2/lens-v2-5045711220.webp",
+      "asset_sha256": "831d3f51b5e75260c75549f0d3597ef3e269942199179d41994bdeec79e00c8b",
+      "width": 512,
+      "height": 512,
+      "bytes": 52434
+    },
+    {
+      "slug": "probe-qa",
+      "version": "v2",
+      "library_file_id": "libfile_7aa5233e63148191a32649bdcb200254",
+      "source_sha256": "c0756a6885759612f298d71ee73cf30b292ac5ba12ec88f3b9e39bfdbf71b971",
+      "asset": "/avatar/squad-support-v2/probe-v2-c0756a6885.webp",
+      "asset_sha256": "6dceeca1c8a732ca20f66e0f2d7a6f0bb7518b7c9dda67f42e296f673bfbc39b",
+      "width": 512,
+      "height": 512,
+      "bytes": 59374
+    }
+  ]
+}

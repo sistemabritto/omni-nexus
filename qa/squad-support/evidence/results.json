@@ -1,0 +1,86 @@
+[
+  {
+    "width": 375,
+    "principalCards": 6,
+    "allPreserved": 43,
+    "defaultLiveOptions": 6,
+    "searchRevealsSpecialists": true,
+    "selectedSpecialistPreserved": true,
+    "mutations": 0,
+    "portraitAssets": [
+      {
+        "src": "/avatar/squad-v2/clawdia-v2-3dacd78e1c.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/mako-v2-d3c6741afe.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/pixel-v2-13c68f3f29.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/canvas-v3-ce2d7cc3ed.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/bolt-v2-3befa51dc0.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/oath-v2-ce8b7a3df2.webp",
+        "loaded": true
+      }
+    ],
+    "textContrastMinimum": 12.11302956733518,
+    "circularSizes": [
+      32,
+      48,
+      64,
+      96
+    ]
+  },
+  {
+    "width": 1440,
+    "principalCards": 6,
+    "allPreserved": 43,
+    "defaultLiveOptions": 6,
+    "searchRevealsSpecialists": true,
+    "selectedSpecialistPreserved": true,
+    "mutations": 0,
+    "portraitAssets": [
+      {
+        "src": "/avatar/squad-v2/clawdia-v2-3dacd78e1c.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/mako-v2-d3c6741afe.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/pixel-v2-13c68f3f29.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/canvas-v3-ce2d7cc3ed.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/bolt-v2-3befa51dc0.webp",
+        "loaded": true
+      },
+      {
+        "src": "/avatar/squad-v2/oath-v2-ce8b7a3df2.webp",
+        "loaded": true
+      }
+    ],
+    "textContrastMinimum": 12.11302956733518,
+    "circularSizes": [
+      32,
+      48,
+      64,
+      96
+    ]
+  }
+]

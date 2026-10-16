@@ -47,11 +47,18 @@ scripts, not proof a complete current approved script exists for today. There
 remain 9 ticket title/description and 37 comment matches for roteiro in company 1;
 RecordingScript remains empty. No workspace file or external reference is opened.
 
-The native report did not include previousWork.results contents/counts. To prove
-what useful ticket evidence was actually delivered in the historical JSON, the
-reviewer must inspect that exact field (reference source, match presence and
-counts only in the report). queryResult.work is intentionally empty in /read
-because tickets are placed in previousWork; it does not prove ticket absence.
+The coordinator's final native JSON review confirmed previousWork.results had
+3 resolved tickets and 4 comments about channel/offer planning, social publishing
+routine and WhatsApp report diagnostics. None was the requested script. This is
+observed historical payload evidence, separate from the CURRENT ticket replay.
+queryResult.work.results was empty, as expected because /read places tickets in
+previousWork; documents was available with empty results. Neither field alone
+establishes absence of scripts across other authorized sources.
+
+The provider payload contains neither the query nor derived terms, and the tool
+request was {}. Exact term selection therefore comes from the local code/SQLite
+reproduction, not an ElevenLabs query log. The native report confirms irrelevant
+ticket delivery; the reproduction explains the demonstrated term-loss mechanism.
 
 ## 3. Implementation
 

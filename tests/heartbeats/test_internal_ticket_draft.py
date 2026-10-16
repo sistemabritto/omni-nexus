@@ -117,7 +117,7 @@ def test_concurrent_human_edit_not_overwritten(db,tmp_path):
 
 def test_provider_failure_or_exception_never_native_retry(db,tmp_path):
     def invoke(**kw):raise RuntimeError('adapter unavailable')
-    assert run(db,tmp_path,invoke)['error']=='adapter unavailable'
+    assert run(db,tmp_path,invoke)['error']=='restricted_execution_error'
     assert db.execute('SELECT status FROM tickets').fetchone()[0]=='blocked'
 
 
@@ -206,3 +206,80 @@ def test_approval_change_during_inference_is_preserved(db,tmp_path):
     assert run(db,tmp_path,invoke)['error']=='restricted_completion_conflict'
     assert tuple(db.execute('SELECT status,approval_id,requires_human_approval FROM tickets').fetchone())==('open',42,1)
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize('prefix,structure',[
+    ('# ', 'heading'), ('**', 'plain'), ('```markdown\n', 'fence'),
+    ('> ', 'blockquote'), ('"', 'quote'), ('{"draft":"', 'json_like'),
+    ('\ufeff','plain'), ('Private preamble\n', 'plain'),
+])
+def test_formatted_label_remains_rejected_with_sanitized_structure(db,tmp_path,prefix,structure):
+    text=prefix+d.HYPOTHESIS_LABEL+'\nPRIVATE_BODY_DO_NOT_RETAIN'
+    result=run(db,tmp_path,lambda **kw:{'status':'success','output':text})
+    assert result['error']=='restricted_hypothesis_label_missing'
+    audit=json.loads(db.execute("SELECT payload FROM ticket_activity WHERE action='internal_draft_failed'").fetchone()[0])
+    info=audit['diagnostics']
+    assert info['label_present'] is True and info['label_at_start'] is False
+    assert info['failure_stage']=='output_validation'
+    assert info['leading_structure']==structure and info['utf8_bytes']==len(text.encode())
+    assert 'PRIVATE_BODY_DO_NOT_RETAIN' not in json.dumps(audit)
+    assert 'Private preamble' not in json.dumps(result)
+    assert not list(tmp_path.iterdir())
+
+
+def test_literal_contract_single_source_and_no_normalization(db,tmp_path):
+    def invoke(**kw):
+        assert 'A primeira linha deve ser exatamente: '+d.HYPOTHESIS_LABEL in kw['prompt']
+        assert 'sem #' in kw['prompt'] and 'no_tools'==kw['tool_policy']
+        return success(**kw)
+    assert run(db,tmp_path,invoke)['status']=='success'
+
+
+@pytest.mark.parametrize('text',[d.HYPOTHESIS_LABEL.lower(), 'RASCUNHO - EXEMPLO HIPOTÉTICO',
+                                 'RASCUNHO — EXEMPLO REAL', 'EXEMPLO HIPOTÉTICO'])
+def test_near_labels_are_not_promoted_to_mandatory_label(db,tmp_path,text):
+    result=run(db,tmp_path,lambda **kw:{'status':'success','output':text})
+    assert result['error']=='restricted_hypothesis_label_missing'
+    assert result['diagnostics']['label_present'] is False
+
+
+def test_failure_retains_only_numeric_usage_not_provider_secrets(db,tmp_path):
+    raw={'status':'success','output':'PRIVATE_TEXT','error':'API_SECRET THINKING_PRIVATE',
+         'tokens_in':100,'tokens_out':20,'cost_usd':0.002,'duration_ms':1000,
+         'provider_id':'PRIVATE_ENDPOINT_NAME'}
+    result=run(db,tmp_path,lambda **kw:raw)
+    assert result['cost_usd']==0.002 and result['tokens_in']==100
+    assert 'PRIVATE' not in json.dumps(result)
+    audit=db.execute("SELECT payload FROM ticket_activity WHERE action='internal_draft_failed'").fetchone()[0]
+    assert 'PRIVATE' not in audit and json.loads(audit)['usage']['tokens_out']==20
+
+
+@pytest.mark.parametrize('value',[None,'SECRET',float('nan'),float('inf'),-1,True,{'secret':'x'},10**1000])
+def test_missing_or_invalid_cost_stays_unknown(value):
+    assert d.numeric_usage({'cost_usd':value})['cost_usd'] is None
+
+
+def test_provider_exception_never_retains_arbitrary_exception_message(db,tmp_path):
+    def invoke(**kw):raise RuntimeError('PRIVATE_CREDENTIAL_AND_REASONING')
+    result=run(db,tmp_path,invoke)
+    assert result['error']=='restricted_execution_error'
+    assert result['diagnostics']['output_type']=='not_returned'
+    assert 'PRIVATE' not in json.dumps(result)
+    assert 'PRIVATE' not in db.execute("SELECT payload FROM ticket_activity WHERE action='internal_draft_failed'").fetchone()[0]
+
+
+def test_nontext_diagnostics_do_not_serialize_values():
+    info=d.draft_diagnostics({'private':'credential/internal reasoning'})
+    assert info=={'contract':d.CONTRACT_VERSION,'output_type':'object'}
+
+
+def test_ndjson_parse_keeps_text_label_and_ignores_reasoning_events():
+    stream='\n'.join(json.dumps(event) for event in [
+        {'type':'reasoning','part':{'text':'PRIVATE_INTERNAL_REASONING'}},
+        {'type':'text','part':{'text':d.HYPOTHESIS_LABEL+'\n\nExemplo fictício.'}},
+        {'type':'step_finish','part':{'tokens':{'input':10,'output':8},'cost':0.001}},
+    ])
+    parsed=pf._parse_opencode_ndjson(stream)
+    assert parsed['text'].startswith(d.HYPOTHESIS_LABEL)
+    assert 'PRIVATE' not in parsed['text'] and parsed['tokens_in']==10
+    assert d.draft_diagnostics(parsed['text'])['label_at_start'] is True

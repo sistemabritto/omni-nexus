@@ -814,7 +814,17 @@ def _query_payload(row, query, *, include_work=True, exclude_event=None):
         if _owned(row['id']) is None:
             raise ContinuityDenied()
         receipts = _persist_file_results(row, terms, files.get('results', []), documents.get('results', []))
-        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents, 'files': files, 'fileReceipts': receipts,
+        from skill_capability_dispatch import dispatch_query, persist_receipt, fit_context_budget
+        try:
+            capabilities = dispatch_query(query, root=WORKSPACE, row=row, read_files=_query_files,
+                verify_scope=lambda: _owned(row['id']) is not None and _guard() is None)
+        except PermissionError:
+            raise ContinuityDenied()
+        with _store() as conn:
+            persist_receipt(conn, row, capabilities)
+        capabilities = fit_context_budget({'memory': memories, 'documents': documents, 'files': files,
+            'work': work, 'fileReceipts': receipts}, capabilities)
+        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents, 'files': files, 'fileReceipts': receipts, 'capabilities': capabilities,
                        'work': work, 'coverage': ['owned_live_conversations', 'authorized_recording_scripts', 'explicit_workspace_files'] + (['authorized_company_tickets'] if include_work else []),
                        'excluded': ['unowned_mempalace_index', 'private_dot_history', 'arbitrary_mcp_execution'],
                        'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600, 'documents': 3, 'files': 3}}

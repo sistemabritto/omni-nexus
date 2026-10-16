@@ -40,3 +40,9 @@ Toda retomada conserva dedupe, histórico, orçamento e efeito externo. Auto-rec
 2. Seleção local bounded por query + leitura de skill real + adaptador read-only existente, com testes de contexto e nenhuma inferência.
 3. Registrar chamada local real separada de fixture simulada e de chamada externa real. Não chamar provider para provar catálogo.
 4. Atualizar esta matriz com commit, teste, resultado, limite e owner; integrar somente pelo responsável. Spec coordena e não substitui código/execução.
+
+## Evidência incremental — descoberta local
+
+Revisão2: implementação local `skill_capability_dispatch.py` conectada ao `_query_payload` existente. [Auditoria por entrada e limites](query-skill-capability-audit-2026-10-16.md) é fonte do inventário: duas rotas curadas de thumbnail/brandreview, leitura de skill/cookbook autoral com hashes, adaptador existente de arquivos explicitamente vinculados, receiptSQLite owned e dedupe. No_tools, orçamento de transporte, segredo e revogação permanecem bloqueantes.45testes combinados passaram (11novos+regressões incluindo2HTTPlocalhost), com dependências já instaladas. Não declarar descoberta universal, frontend/harness/toolloop externos ou rollout concluídos.
+
+Leitura externa real mínima autorizada: clientegh conectado GET/user→authenticated:true, sem dados de identidade ou segredo no output. Não é prova de ferramenta fornecida ao modelo. SDKdashboard não temtoken no processo local; conectividade/ACL do contêiner e MCP tools/list continuam não atestados. Gappróximo: ownerruntime resolver chatHTTPsemtools e descobertaOpenCode sem catálogo inteiro, mantendo política compatível; ninguém nesta fatia mudou provider/default/grant.

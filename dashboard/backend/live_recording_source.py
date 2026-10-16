@@ -1,5 +1,6 @@
 """Read-only adapter for existing recording scripts and their canonical ACL."""
 import hashlib
+from live_file_sources import source_text_allowed
 from sqlalchemy import or_
 from werkzeug.exceptions import HTTPException
 
@@ -25,7 +26,7 @@ def search_current_scripts(company_id, terms):
         if recording is None or recording.script_revision != script.number:
             continue
         # A broken digest is not silently presented as a verified current version.
-        if hashlib.sha256(script.text.encode()).hexdigest() != script.sha256:
+        if not source_text_allowed(script.text) or hashlib.sha256(script.text.encode()).hexdigest() != script.sha256:
             continue
         positions = [script.text.lower().find(term.lower()) for term in terms]
         position = min((p for p in positions if p >= 0), default=0)

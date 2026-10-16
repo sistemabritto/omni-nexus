@@ -532,6 +532,17 @@ def _authorized_work_record(row, record_type, record_id):
     from models import Ticket, MediaJob
     if not isinstance(record_id, str) or not _ID.fullmatch(record_id):
         raise PermissionError()
+    if record_type == 'file_result':
+        from live_file_receipts import resolve
+        from live_file_sources import FileSourceDenied
+        try:
+            with _store() as conn:
+                receipt = resolve(conn, row, record_id)
+            return 'result', {'recordType': record_type, 'recordId': record_id, 'reference': receipt['reference'],
+                'text': receipt['text'], 'status': 'available', 'updatedAt': receipt['createdAt'],
+                'revision': receipt['sha256'], 'links': [{'label': 'Abrir arquivo', 'url': receipt['reference']}]}
+        except FileSourceDenied:
+            raise PermissionError() from None
     if record_type == 'live_task':
         from live_task_dispatch import owned, payload, TaskDenied
         try:
@@ -586,7 +597,7 @@ def _visible_event(row, item):
     try:
         stored = json.loads(item['text'])
         _, current = _authorized_work_record(row, stored['recordType'], stored['recordId'])
-        item.update(text=stored['text'], links=current['links'], reference=stored['reference'],
+        item.update(text=current['text'] if stored['recordType']=='file_result' else stored['text'], links=current['links'], reference=stored['reference'],
                     recordRevision=stored['revision'], recordUpdatedAt=stored['updatedAt'])
     except (ValueError, KeyError, TypeError, PermissionError):
         # Reference was moved/revoked/deleted: never replay cached content/links.
@@ -802,7 +813,8 @@ def _query_payload(row, query, *, include_work=True, exclude_event=None):
         documents = search_current_scripts(row['company_id'], terms)
         if _owned(row['id']) is None:
             raise ContinuityDenied()
-        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents, 'files': files,
+        receipts = _persist_file_results(row, terms, files.get('results', []), documents.get('results', []))
+        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents, 'files': files, 'fileReceipts': receipts,
                        'work': work, 'coverage': ['owned_live_conversations', 'authorized_recording_scripts', 'explicit_workspace_files'] + (['authorized_company_tickets'] if include_work else []),
                        'excluded': ['unowned_mempalace_index', 'private_dot_history', 'arbitrary_mcp_execution'],
                        'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600, 'documents': 3, 'files': 3}}
@@ -943,3 +955,47 @@ def manage_company_file_sources(company_id, action):
         return _reply({'error': 'scope_denied'}, 403)
     row = {'user_id': int(current_user.get_id()), 'company_id': company_id}
     return _file_source_operation(row, action, request.get_json(silent=True), available)
+
+
+
+def _persist_file_results(row, terms, files, documents):
+    if not files and not documents:
+        return []
+    from live_file_receipts import create
+    cid = _continuity_id(row)
+    with _store() as conn:
+        receipts = create(conn, row, cid, terms, files=files, documents=documents)
+    store, principal = _continuity_store(row)
+    for receipt in receipts:
+        # Receipt metadata is persisted; source content is reauthorized/rebuilt on read.
+        record = {'recordType': 'file_result', 'recordId': receipt['id'],
+                  'reference': receipt['reference'], 'text': 'Arquivo localizado',
+                  'revision': receipt['sha256'], 'updatedAt': receipt['createdAt']}
+        store.record(principal, cid, kind='result', text=json.dumps(record, ensure_ascii=False),
+                     source=receipt['reference'], verified=False, request_key='file-result:'+receipt['id'])
+    return receipts
+
+
+@bp.get('/api/live/file-results/<string:receipt_id>')
+def read_file_result(receipt_id):
+    from live_file_receipts import resolve
+    from live_file_sources import FileSourceDenied
+    denied = _guard()
+    if denied is not None:
+        return denied
+    if not _ID.fullmatch(receipt_id):
+        return _reply({'error': 'file_result_unavailable'}, 404)
+    try:
+        with _store() as conn:
+            receipt = conn.execute('SELECT user_id,company_id FROM live_file_receipts WHERE id=? AND user_id=?',
+                                   (receipt_id, int(current_user.get_id()))).fetchone()
+            if receipt is None or Company.query.filter_by(id=receipt['company_id'], status='active').first() is None:
+                raise FileSourceDenied()
+            current = resolve(conn, receipt, receipt_id)
+        response = current_app.response_class(current['content'], mimetype='text/plain')
+        response.headers['Cache-Control'] = 'no-store'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Content-Security-Policy'] = "default-src 'none'; sandbox"
+        return response
+    except (FileSourceDenied, sqlite3.Error, ValueError, KeyError):
+        return _reply({'error': 'file_result_unavailable'}, 404)

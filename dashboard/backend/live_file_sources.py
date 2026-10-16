@@ -29,6 +29,10 @@ class FileSourceConflict(Exception):
     pass
 
 
+def source_text_allowed(text):
+    return isinstance(text, str) and len(text.encode('utf-8')) <= MAX_BYTES and '\x00' not in text and not _SECRET.search(text)
+
+
 def _permission():
     if not current_user.is_authenticated or not has_permission(current_user.role, 'workspace', 'view'):
         raise FileSourceDenied()
@@ -71,7 +75,7 @@ def _read(path):
         finally:
             os.close(parent)
         text = raw.decode('utf-8')
-        if '\x00' in text or _SECRET.search(text):
+        if not source_text_allowed(text):
             raise FileSourceDenied()
         return {'path': path, 'sha256': hashlib.sha256(raw).hexdigest(), 'size': len(raw),
                 'mtimeNs': after.st_mtime_ns, 'text': text}
@@ -154,6 +158,7 @@ def search(conn, row, terms):
     _table(conn)
     bindings = conn.execute('SELECT * FROM live_file_sources WHERE user_id=? AND company_id=? AND active=1 ORDER BY updated_at DESC,id LIMIT ?', (user, company, MAX_BINDINGS)).fetchall()
     candidates = []
+    catalog = bool(terms) and set(terms) <= {'arquivo', 'documento'}
     available = 0
     for binding in bindings:
         try:
@@ -164,6 +169,8 @@ def search(conn, row, terms):
             continue
         available += 1
         score = sum(term.casefold() in (file['path']+' '+file['text']).casefold() for term in terms)
+        if catalog:
+            score = max(score, 1)
         if score:
             candidates.append((score, binding, file))
     results = []
@@ -186,6 +193,8 @@ def search(conn, row, terms):
     return {'status': 'available', 'source': 'explicit_workspace_files', 'results': results,
             'bindingCount': len(bindings), 'availableCount': available,
             'unavailableCount': len(bindings)-available, 'limit': 3,
+            'selection': 'authorized_catalog' if catalog else 'lexical',
+            'moreAvailable': catalog and available > 3,
             'policy': 'explicit_user_company_digest_and_current_workspace_acl'}
 
 
@@ -202,3 +211,17 @@ def list_bindings(conn, row):
             pass
         items.append(item)
     return {'source': 'explicit_workspace_files', 'bindings': items, 'limit': MAX_BINDINGS}
+
+
+def resolve_binding(conn, row, ident, sha256, revision):
+    """Resolve an existing authorization, never a caller-supplied filesystem path."""
+    user, company = _identity(row)
+    _table(conn)
+    binding = conn.execute('SELECT * FROM live_file_sources WHERE id=? AND user_id=? AND company_id=? AND active=1 AND sha256=? AND revision=?',
+                           (ident, user, company, sha256, revision)).fetchone()
+    if binding is None:
+        raise FileSourceDenied()
+    file = _read(binding['path'])
+    if file['sha256'] != binding['sha256']:
+        raise FileSourceDenied()
+    return file

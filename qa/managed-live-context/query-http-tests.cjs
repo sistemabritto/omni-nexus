@@ -23,6 +23,25 @@ const tick=()=>new Promise(resolve=>setTimeout(resolve,10));
   await session.start(7,'Company A fixture','agent-a');assert.equal(session.snapshot().phase,'connected');
   for(let n=0;n<100&&!requests.some(r=>r.url.endsWith('/tool-audit')&&r.body.stage==='instrumented');n++)await tick();
   assert(requests.some(r=>r.url.endsWith('/tool-audit')&&r.body.stage==='instrumented'));
+  if(fixture.voiceFileLookup){
+    const {safeWorkLink}=load(path.resolve('dashboard/frontend/src/live/continuity-session.ts'));
+    const {isFileLookupRequest}=load(path.resolve('dashboard/frontend/src/live/file-lookup.ts'));
+    assert.equal(isFileLookupRequest('Mostre o arquivo Zephyr roteiro'),true);assert.equal(isFileLookupRequest('Crie um roteiro'),false);
+    socket.emit({type:'user_transcript',user_transcription_event:{user_transcript:'Mostre o arquivo Zephyr roteiro'}});
+    for(let n=0;n<1000&&!session.snapshot().continuity?.events.some(e=>e.links?.some(l=>l.url.startsWith('/api/live/file-results/')));n++)await tick();
+    const results=session.snapshot().continuity.events.filter(e=>e.kind==='result');assert.equal(results.length,1);
+    const link=results[0].links[0].url;assert.equal(safeWorkLink(link),link);assert.ok(results[0].text.includes('Zephyr roteiro aprovado'));
+    assert.ok(!JSON.stringify(results).includes('SECRET unbound file'));
+    const response=await fetch(link);assert.equal(response.status,200);assert.ok((await response.text()).includes('Zephyr roteiro aprovado'));
+    assert.equal((await nativeFetch(fixture.base+link)).status,401);
+    assert.equal(socket.messages.filter(m=>m.type==='client_tool_result').length,0); // no provider tool call was needed
+    const queries=requests.filter(r=>r.url.endsWith('/query')).length;
+    socket.emit({type:'agent_response',agent_response_event:{agent_response:'Mostre o arquivo Zephyr roteiro'}});
+    await new Promise(resolve=>setTimeout(resolve,100));assert.equal(requests.filter(r=>r.url.endsWith('/query')).length,queries);
+    assert.equal(socket.messages.filter(m=>m.type==='contextual_update').length,1); // bootstrap only, no extra model input
+    assert.equal(safeWorkLink('https://external.invalid/file'),null);
+    console.log('PASS actual HTTP voice file receipt; authenticated link, source ACL, no remote model invocation');return;
+  }
   session.send('Zephyr');
   async function tool(name,parameters,id){socket.emit({type:'client_tool_call',client_tool_call:{tool_name:name,parameters,tool_call_id:id}});for(let n=0;n<400;n++){const m=socket.messages.find(m=>m.type==='client_tool_result'&&m.tool_call_id===id);if(m)return m;await tick()}throw Error('tool timeout')}
   const query=await tool('search_omni_context',{query:'Zephyr'},'query-http');assert.equal(query.is_error,false);

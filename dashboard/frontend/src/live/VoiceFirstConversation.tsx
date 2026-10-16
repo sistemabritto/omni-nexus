@@ -41,7 +41,7 @@ export default function VoiceFirstConversation(props:VoiceFirstProps){
       <h3>Resultados e materiais</h3>
       {useful.length?useful.map(event=><article key={event.event_id}>
         <strong>{event.kind==='result'?'Resultado':'Andamento'}</strong><p>{event.text}</p>
-        {event.links?.map((link,index)=>{const href=props.safeHref(link.url);return href?<a key={index} href={href}>{link.label}</a>:null})}
+        {event.links?.map((link,index)=>{const href=props.safeHref(link.url);return href?<a key={index} href={href} target={href.startsWith('/api/live/file-results/')?'_blank':undefined} rel={href.startsWith('/api/live/file-results/')?'noopener noreferrer':undefined}>{link.label}</a>:null})}
         <button type="button" onClick={()=>void copy(event.text)}>Copiar texto</button>
         <details><summary>Fonte do registro</summary><small>{event.source} · revisão {event.revision} · {event.verified?'Registro verificado':'Declaração não verificada'}</small></details>
       </article>):<p>Links e resultados disponibilizados pelas ferramentas aparecerão aqui.</p>}

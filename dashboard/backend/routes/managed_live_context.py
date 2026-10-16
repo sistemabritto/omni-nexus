@@ -186,8 +186,8 @@ def read_context(context_id):
         payload = {'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
         if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True:
             query_result = _query_for_current_turn(row)
-            while query_result['memory'] and len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
-                query_result['memory'].pop()
+            while (query_result['memory'] or query_result.get('documents', {}).get('results')) and len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
+                (query_result['memory'] or query_result['documents']['results']).pop()
             if len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
                 query_result = {'memory': [], 'coverage': 'context_budget_exhausted'}
             payload['queryResult'] = query_result
@@ -794,10 +794,14 @@ def _query_payload(row, query, *, include_work=True):
             work = {'status': 'denied', 'results': []}
         if _owned(row['id']) is None:
             raise ContinuityDenied()
-        return {'kind': 'untrusted_reference_data', 'memory': memories,
-                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_company_tickets'],
+        from live_recording_source import search_current_scripts
+        documents = search_current_scripts(row['company_id'], terms)
+        if _owned(row['id']) is None:
+            raise ContinuityDenied()
+        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents,
+                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_company_tickets', 'authorized_recording_scripts'],
                        'excluded': ['unowned_mempalace_index', 'private_dot_history', 'arbitrary_mcp_execution'],
-                       'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600}}
+                       'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600, 'documents': 3}}
     except ContinuityDenied:
         raise
 
@@ -810,6 +814,6 @@ def _query_for_current_turn(row):
     query = next((e['text'][:200] for e in reversed(snap['current_context'])
                   if e['kind'] == 'transcript' and e['source'].startswith('browser:user:')), '')
     result = _query_payload(row, query, include_work=False)
-    while result['memory'] and len(json.dumps(result, ensure_ascii=False)) > 4000:
-        result['memory'].pop()
+    while (result['memory'] or result.get('documents', {}).get('results')) and len(json.dumps(result, ensure_ascii=False)) > 4000:
+        (result['memory'] or result['documents']['results']).pop()
     return result

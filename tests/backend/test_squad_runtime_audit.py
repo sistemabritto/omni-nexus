@@ -78,3 +78,21 @@ def test_offline_audit_provenance_and_catalog_coverage():
         assert not item['local_links_missing']
         assert item['script_candidates'] == []
         assert item['operational_status'] == 'not_verified'
+
+
+def test_looping_symlink_is_missing_evidence_not_endpoint_failure(tmp_path):
+    target = tmp_path / '.claude/skills/example/SKILL.md'
+    target.parent.mkdir(parents=True)
+    target.symlink_to(target.name)
+    refs = reference_documents('.claude/skills/example/SKILL.md', tmp_path)
+    assert refs[0]['document_present'] is False
+    assert refs[0]['operational_status'] == 'not_verified'
+
+
+def test_frontmatter_and_memory_do_not_become_read_instructions(tmp_path):
+    source = ('---\nexample: .claude/skills/front/SKILL.md\n---\n'
+              'Read .claude/skills/visible/check.md\n'
+              '## MEMORY.md\n.claude/skills/private/SKILL.md')
+    refs = reference_documents(source, tmp_path)
+    assert [item['path'] for item in refs] == ['.claude/skills/visible/check.md']
+    assert refs[0]['document_present'] is False

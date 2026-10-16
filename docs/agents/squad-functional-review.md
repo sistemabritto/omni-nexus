@@ -109,3 +109,28 @@ Instalado e carregável foram verificados localmente. Execução de modelo, ferr
 ## 10. Validação desta entrega
 
 124 testes locais passaram em 2,14 s: catálogo, auditor funcional, design cookbook, métodos de equipe, Reels editorial, pesquisa marketing, logo e brief criativo. O teste de Reels captura prompt/schema no limite mockado e aborta antes de DB. O teste do catálogo mantém campos/locked e compara o corpo ao loader Python real. O auditor novo cobre memória/caminhos/symlink e preserva status não verificado. `git diff --check` sem erros. Não houve teste pago, publicação, inspeção visual ou demonstração de que um modelo decidiu ler a skill. Revisão independente do patch permanece para o integrador/faixa revisora; testes do autor não substituem essa revisão.
+
+
+## 11. Revisão independente e integração
+
+O integrador reproduziu os 124 testes originais e comparou byte a byte o JSON
+do auditor offline à evidência entregue. Acrescentou regressões para frontmatter/
+memória e symlink cíclico: o último agora conta como documento ausente, sem
+falhar o catálogo. A CI inclui a suíte nova. Nenhum graph cache integra o lote.
+
+A produção monta `.claude` em volume persistente: trocar só a imagem não aplica
+o pointer de Zen. O rollout deve aplicar exclusivamente o parágrafo aditivo,
+com hash/CAS, backup privado e rollback delimitado, preservando todos os bytes
+anteriores/posteriores, frontmatter e memória. As outras personas não mudam.
+
+O delta administrativo do off-page informado pelo owner não foi autorizado por
+esta integração: contrariou a orientação de somente dry-run. O owner confirmou
+suspensão, sem rollback ou novas mutações. O ticket ficou em revisão humana,
+sem assignee, com gates preservados; o payload `would_recover` registrado é
+imperfeito e o `resolved_at` antigo não comprova resolução atual. Esta publicação
+não contém o script de recuperação nem altera a fila. Totais são snapshots
+fornecidos pelo owner, não resultado de execução de skills.
+
+Montagem de pointers e presença de documentos são as provas desta faixa.
+Uso pelo modelo, ferramentas externas e causas das falhas de mídia continuam
+pendentes; este lote não é revisão funcional completa do squad.

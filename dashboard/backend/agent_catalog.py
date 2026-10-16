@@ -95,7 +95,10 @@ def reference_documents(source: str, workspace: Path) -> list[dict]:
     documents = []
     for relative in sorted(set(_DOCUMENT_PATH.findall(_runtime_body(source)))):
         path = root / relative
-        within_workspace = path.resolve().is_relative_to(root)
+        try:
+            within_workspace = path.resolve().is_relative_to(root)
+        except (OSError, RuntimeError):
+            within_workspace = False
         documents.append({
             'path': relative,
             'kind': 'skill_root' if path.name == 'SKILL.md' else 'reference_document',

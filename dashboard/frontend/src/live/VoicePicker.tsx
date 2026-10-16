@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './VoicePicker.css'
 type Voice={id:string;name:string;language:string;eligible:boolean;previewUrl:string|null}
 type Catalog={voices:Voice[];hasMore:boolean;nextCursor:string|null;current:Voice;saved:Voice|null;overrideAllowed:boolean}
-export default function VoicePicker({companyId,busy,connecting,activeVoice}:{companyId:number;busy:boolean;connecting:boolean;activeVoice:string}){
+export default function VoicePicker({companyId,agentName,busy,connecting,activeVoice}:{companyId:number;agentName:string;busy:boolean;connecting:boolean;activeVoice:string}){
   const [data,setData]=useState<Catalog|null>(null),[voices,setVoices]=useState<Voice[]>([]),[choice,setChoice]=useState<string|null>(null)
   const [search,setSearch]=useState(''),[loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[notice,setNotice]=useState('')
   const abort=useRef(new AbortController()),audio=useRef<HTMLAudioElement>(null)
@@ -11,7 +11,7 @@ export default function VoicePicker({companyId,busy,connecting,activeVoice}:{com
   async function load(cursor?:string){
     setLoading(true);setNotice('')
     try{
-      const query=new URLSearchParams();if(search.trim())query.set('search',search.trim());if(cursor)query.set('cursor',cursor)
+      const query=new URLSearchParams({agentName});if(search.trim())query.set('search',search.trim());if(cursor)query.set('cursor',cursor)
       const response=await fetch(`/api/live/voices/${companyId}?${query}`,{credentials:'include',cache:'no-store',signal:abort.current.signal})
       if(!response.ok)throw Error()
       const result:Catalog=await response.json();if(abort.current.signal.aborted)return
@@ -23,7 +23,7 @@ export default function VoicePicker({companyId,busy,connecting,activeVoice}:{com
   async function save(){
     setSaving(true);setNotice('')
     try{
-      const response=await fetch(`/api/live/voices/${companyId}/preference`,{method:'PUT',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({voiceId:choice}),signal:abort.current.signal})
+      const response=await fetch(`/api/live/voices/${companyId}/preference`,{method:'PUT',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({voiceId:choice,agentName}),signal:abort.current.signal})
       if(!response.ok)throw Error()
       const result=await response.json();if(abort.current.signal.aborted)return
       setData(previous=>previous?{...previous,saved:result.saved,overrideAllowed:result.overrideAllowed}:previous)

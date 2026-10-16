@@ -5,7 +5,7 @@ import requests
 from flask import Blueprint, current_app, request, Response
 from flask_login import current_user
 from models import Company
-from routes.managed_live_context import _guard, _reply, _store, _ID
+from routes.managed_live_context import _guard, _reply, _store, _ID, _scope
 
 bp = Blueprint('live_voices', __name__)
 _API = 'https://api.elevenlabs.io'
@@ -40,16 +40,34 @@ def _company(company_id):
     return Company.query.filter_by(id=company_id, status='active').first()
 
 
-def _preference(company_id, value=None, save=False):
+def _preference(company_id, value=None, save=False, agent_name=None):
     agent_id = _agent_id()
     with _store() as conn:
         conn.execute('''CREATE TABLE IF NOT EXISTS voice_preferences (
             user_id INTEGER NOT NULL, company_id INTEGER NOT NULL, agent_id TEXT NOT NULL,
             voice_id TEXT NOT NULL, PRIMARY KEY(user_id,company_id,agent_id))''')
         owner = (int(current_user.get_id()), company_id, agent_id)
-        if save and value is None:
+        if agent_name is not None:
+            # Additive scope: retain legacy preferences and provider-agent isolation.
+            # A stored NULL means this persona explicitly chose the provider default.
+            conn.execute('''CREATE TABLE IF NOT EXISTS persona_voice_preferences (
+                user_id INTEGER NOT NULL, company_id INTEGER NOT NULL,
+                agent_id TEXT NOT NULL, agent_name TEXT NOT NULL, voice_id TEXT,
+                PRIMARY KEY(user_id,company_id,agent_id,agent_name))''')
+            local_owner = (*owner, agent_name)
+            if save:
+                conn.execute('INSERT INTO persona_voice_preferences VALUES(?,?,?,?,?) '
+                    'ON CONFLICT(user_id,company_id,agent_id,agent_name) '
+                    'DO UPDATE SET voice_id=excluded.voice_id', (*local_owner, value))
+            local = conn.execute('SELECT voice_id FROM persona_voice_preferences '
+                'WHERE user_id=? AND company_id=? AND agent_id=? AND agent_name=?', local_owner).fetchone()
+            if local is not None:
+                return local['voice_id']
+            # Existing user/company/provider preference remains the baseline until
+            # an explicit persona choice; never copy it into other persona rows.
+        if save and agent_name is None and value is None:
             conn.execute('DELETE FROM voice_preferences WHERE user_id=? AND company_id=? AND agent_id=?', owner)
-        elif save:
+        elif save and agent_name is None:
             conn.execute('INSERT INTO voice_preferences VALUES(?,?,?,?) ON CONFLICT(user_id,company_id,agent_id) DO UPDATE SET voice_id=excluded.voice_id', (*owner, value))
         row = conn.execute('SELECT voice_id FROM voice_preferences WHERE user_id=? AND company_id=? AND agent_id=?', owner).fetchone()
         return row['voice_id'] if row else None
@@ -118,9 +136,9 @@ def _safe(voice, company_id, model):
             'previewUrl': f'/api/live/voices/{company_id}/{voice["voice_id"]}/preview' if _preview_url(voice) else None}
 
 
-def session_voice(company_id):
+def session_voice(company_id, agent_name=None):
     """Called only on a new authorized start. No preference = no new API dependency."""
-    selected = _preference(company_id)
+    selected = _preference(company_id, agent_name=agent_name)
     if not selected:
         return {}
     tts, override = _agent()
@@ -137,8 +155,11 @@ def catalog(company_id):
         return denied
     if _company(company_id) is None:
         return _reply({'error': 'scope_denied'}, 403)
-    if set(request.args) - {'cursor', 'search'} or len(request.args.get('cursor', '')) > 2048 or len(request.args.get('search', '')) > 100:
+    if set(request.args) - {'cursor', 'search', 'agentName'} or len(request.args.get('cursor', '')) > 2048 or len(request.args.get('search', '')) > 100:
         return _reply({'error': 'invalid_query'}, 400)
+    agent_name = request.args.get('agentName')
+    if agent_name is not None and _scope(company_id, agent_name) is None:
+        return _reply({'error': 'scope_denied'}, 403)
     try:
         tts, override = _agent()
         params = {'page_size': 25, 'include_total_count': False}
@@ -152,7 +173,7 @@ def catalog(company_id):
         if data.get('has_more') is True and (not isinstance(token, str) or not token or len(token) > 2048):
             raise VoiceUnavailable()
         current = _get('/v1/voices/' + tts['voice_id'])
-        selected = _preference(company_id)
+        selected = _preference(company_id, agent_name=agent_name)
         try:
             saved = _get('/v1/voices/' + selected) if selected else None
         except VoiceUnavailable:
@@ -173,13 +194,16 @@ def save_preference(company_id):
     if _company(company_id) is None:
         return _reply({'error': 'scope_denied'}, 403)
     data = request.get_json(silent=True)
-    if not isinstance(data, dict) or set(data) != {'voiceId'}:
+    if not isinstance(data, dict) or set(data) not in ({'voiceId'}, {'voiceId', 'agentName'}):
         return _reply({'error': 'invalid_preference'}, 400)
+    agent_name = data.get('agentName')
+    if 'agentName' in data and _scope(company_id, agent_name) is None:
+        return _reply({'error': 'scope_denied'}, 403)
     try:
         tts, override = _agent()
         voice = _voice(data['voiceId'], tts['model_id']) if data['voiceId'] is not None else None
         # Saving a next-call preference does not alter any existing conversation.
-        _preference(company_id, voice['voice_id'] if voice else None, save=True)
+        _preference(company_id, voice['voice_id'] if voice else None, save=True, agent_name=agent_name)
         return _reply({'saved': _safe(voice, company_id, tts['model_id']) if voice else None, 'overrideAllowed': override,
             'applies': 'next_conversation' if override else 'requires_agent_permission'})
     except VoiceUnavailable:

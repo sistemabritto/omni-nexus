@@ -7,6 +7,7 @@ from tests.backend.test_managed_live_context import setup, create, ORIGIN
 def voices(setup,monkeypatch):
     app,client,login,context,_,_=setup
     import routes.live_voices as mod
+    monkeypatch.setattr(mod, '_scope', context._scope)
     app.register_blueprint(mod.bp)
     app.config['NEXUS_LIVE_AGENT_ID']='agent_fixture'
     monkeypatch.setenv('ELEVENLABS_API_KEY','fixture-only')

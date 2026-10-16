@@ -3,7 +3,8 @@
 Manages:
 - interval: APScheduler jobs per heartbeat
 - manual: triggered by POST /api/heartbeats/{id}/run
-- new_task / mention / approval_decision: stubs (F1.2/F1.3)
+- mention / new_task: transactional, versioned ticket outbox (opt-in)
+- approval_decision: existing approval event integration
 
 Debounce: same heartbeat cannot trigger twice within 30s.
 """
@@ -112,6 +113,11 @@ def dispatch(heartbeat_id: str, trigger_type: str, payload: dict | None = None) 
     Returns (dispatched, run_id).
     Returns (False, None) if debounced or disabled.
     """
+    if trigger_type in ("mention", "new_task"):
+        # Ticket events need an authenticated, committed source event, not a
+        # caller-provided payload passed straight to the executor.
+        return False, None
+
     # Check if heartbeat is enabled in DB
     conn = _get_db()
     try:
@@ -430,77 +436,193 @@ def on_approval_decision(heartbeat_id: str, approval_id: str, decision: str):
 _EVENT_TRIGGER_TYPES = ("mention", "new_task", "approval_decision")
 
 
-def _pending_event_triggers(limit: int = 20):
-    """Oldest-first pending event triggers not yet consumed or coalesced."""
+def _pending_event_triggers(limit: int = 200):
+    """Bounded scan; disabled events do not monopolize the first twenty slots."""
+    from ticket_wake_contract import enabled
     conn = _get_db()
     try:
-        placeholders = ",".join("?" for _ in _EVENT_TRIGGER_TYPES)
-        rows = conn.execute(
-            f"""SELECT id, heartbeat_id, trigger_type, payload, created_at
-                FROM heartbeat_triggers
-                WHERE consumed_at IS NULL AND coalesced_into IS NULL
-                  AND trigger_type IN ({placeholders})
-                ORDER BY created_at ASC
-                LIMIT ?""",
-            (*_EVENT_TRIGGER_TYPES, limit),
-        ).fetchall()
+        rows = conn.execute("""SELECT t.* FROM heartbeat_triggers t
+            JOIN heartbeats h ON h.id=t.heartbeat_id
+            WHERE t.consumed_at IS NULL AND t.coalesced_into IS NULL AND h.enabled=1
+              AND t.trigger_type IN ('mention','new_task','approval_decision')
+              AND (t.trigger_type='approval_decision' OR ?=1)
+            ORDER BY t.created_at,t.id LIMIT ?""", (int(enabled()), limit)).fetchall()
         return [dict(r) for r in rows]
     finally:
         conn.close()
 
 
-def _claim_trigger(trigger_id: str) -> bool:
-    """Atomically claim a pending trigger (single writer wins). Crash-safe."""
+def _claim_event(row):
+    """Reserve durable run + event atomically, across dispatcher processes."""
+    from ticket_wake_contract import MAX_ATTEMPTS, MAX_IN_FLIGHT, validate
     conn = _get_db()
     try:
-        cur = conn.execute(
-            "UPDATE heartbeat_triggers SET consumed_at = ? WHERE id = ? AND consumed_at IS NULL",
-            (_now_iso(), trigger_id),
-        )
+        conn.execute("BEGIN IMMEDIATE")
+        trigger = conn.execute("SELECT * FROM heartbeat_triggers WHERE id=? AND consumed_at IS NULL AND coalesced_into IS NULL", (row['id'],)).fetchone()
+        hb = conn.execute("SELECT * FROM heartbeats WHERE id=?", (row['heartbeat_id'],)).fetchone()
+        if not trigger or not hb or not hb['enabled'] or row['trigger_type'] not in json.loads(hb['wake_triggers'] or '[]'):
+            return None
+        try:
+            payload = json.loads(trigger['payload'] or '{}')
+            if not isinstance(payload, dict):
+                raise ValueError()
+            retry = payload.get('_dispatcher_retry', {})
+            if not isinstance(retry, dict) or type(retry.get('attempts', 0)) is not int or not 0 <= retry.get('attempts', 0) <= MAX_ATTEMPTS or not isinstance(retry.get('next_at', ''), str):
+                raise ValueError()
+        except (ValueError, TypeError):
+            conn.execute('UPDATE heartbeat_triggers SET consumed_at=?,payload=? WHERE id=?',
+                         (_now_iso(), json.dumps({'_dispatcher_rejection':'invalid_event_payload'}), row['id']))
+            conn.commit()
+            return None
+        if retry.get('next_at', '') > _now_iso():
+            return None
+        if row['trigger_type'] in ('mention', 'new_task'):
+            if 'handler' in hb.keys() and hb['handler']:
+                return None
+            try:
+                validate(conn, payload, hb['agent'], row['trigger_type'])
+                if payload['event_id'] != row['id']:
+                    raise ValueError('event_identity_mismatch')
+            except ValueError as exc:
+                # Retain an explicit terminal diagnostic, never silently infer legacy authority.
+                payload['_dispatcher_rejection'] = str(exc)
+                conn.execute('UPDATE heartbeat_triggers SET consumed_at=?,payload=? WHERE id=?', (_now_iso(), json.dumps(payload), row['id']))
+                conn.commit()
+                return None
+        if retry.get('attempts', 0) >= MAX_ATTEMPTS:
+            return None
+        busy = conn.execute("""SELECT count(*) FROM heartbeat_runs r
+            JOIN heartbeats h ON h.id=r.heartbeat_id
+            WHERE r.status='running' AND h.agent=?""", (hb['agent'],)).fetchone()[0]
+        total = conn.execute("SELECT count(*) FROM heartbeat_runs WHERE status='running'").fetchone()[0]
+        if busy or total >= MAX_IN_FLIGHT:
+            return None
+        run_id = str(uuid.uuid5(uuid.NAMESPACE_URL, 'heartbeat-event:' + row['id']))
+        existing = conn.execute('SELECT status FROM heartbeat_runs WHERE run_id=?', (run_id,)).fetchone()
+        if existing:
+            # An uncertain/final prior execution must never be inferred again.
+            conn.execute('UPDATE heartbeat_triggers SET consumed_at=? WHERE id=?', (_now_iso(), row['id']))
+            conn.commit()
+            return None
+        conn.execute("""INSERT INTO heartbeat_runs(run_id,heartbeat_id,trigger_id,started_at,status,triggered_by,prompt_preview)
+            VALUES(?,?,?,?,'running',?,'[event reserved]')""", (run_id, hb['id'], row['id'], _now_iso(), row['trigger_type']))
+        conn.execute('UPDATE heartbeat_triggers SET consumed_at=? WHERE id=?', (_now_iso(), row['id']))
         conn.commit()
-        return cur.rowcount == 1
+        return run_id
     finally:
+        conn.rollback()
+        conn.close()
+
+
+def _return_unstarted_event(row, run_id):
+    """Only before invocation: release reservation with durable bounded backoff."""
+    from ticket_wake_contract import MAX_ATTEMPTS
+    conn = _get_db()
+    try:
+        conn.execute('BEGIN IMMEDIATE')
+        deleted = conn.execute("DELETE FROM heartbeat_runs WHERE run_id=? AND status='running' AND prompt_preview='[event reserved]'", (run_id,)).rowcount
+        if not deleted:
+            return
+        payload = json.loads(conn.execute('SELECT payload FROM heartbeat_triggers WHERE id=?', (row['id'],)).fetchone()[0])
+        attempts = payload.get('_dispatcher_retry', {}).get('attempts', 0) + 1
+        delay = 30 * (2 ** (attempts - 1))
+        payload['_dispatcher_retry'] = {'attempts': attempts, 'reason': 'executor_unavailable',
+            'next_at': (datetime.now(timezone.utc) + timedelta(seconds=delay)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')}
+        conn.execute('UPDATE heartbeat_triggers SET consumed_at=?,payload=? WHERE id=?',
+                     (_now_iso() if attempts >= MAX_ATTEMPTS else None, json.dumps(payload), row['id']))
+        conn.commit()
+    finally:
+        conn.rollback()
+        conn.close()
+
+
+def reconcile_event_reservations():
+    """Recover only expired pre-invocation reservations. Never replay uncertain work."""
+    conn = _get_db()
+    try:
+        cutoff = (datetime.now(timezone.utc) - timedelta(seconds=60)).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        rows = [dict(r) for r in conn.execute("""SELECT t.*,r.run_id FROM heartbeat_runs r
+            JOIN heartbeat_triggers t ON t.id=r.trigger_id
+            WHERE r.status='running' AND r.prompt_preview='[event reserved]' AND r.started_at<?""", (cutoff,))]
+    finally:
+        conn.close()
+    for row in rows:
+        _return_unstarted_event(row, row['run_id'])
+    return len(rows)
+
+
+def _start_event(row, run_id):
+    """CAS marks invocation boundary; a stale queued callback cannot start work."""
+    conn = _get_db()
+    try:
+        conn.execute('BEGIN IMMEDIATE')
+        hb = conn.execute('SELECT * FROM heartbeats WHERE id=?', (row['heartbeat_id'],)).fetchone()
+        current = conn.execute('SELECT payload FROM heartbeat_triggers WHERE id=?', (row['id'],)).fetchone()
+        reason = None
+        if not hb or not hb['enabled'] or row['trigger_type'] not in json.loads(hb['wake_triggers'] or '[]'):
+            reason = 'heartbeat_disabled_before_start'
+        elif row['trigger_type'] in ('mention', 'new_task'):
+            if 'handler' in hb.keys() and hb['handler']:
+                reason = 'ticket_event_handler_not_supported'
+            from ticket_wake_contract import validate
+            try:
+                validate(conn, json.loads(current['payload']), hb['agent'], row['trigger_type'])
+            except ValueError as exc:
+                reason = str(exc)
+        if reason:
+            conn.execute("UPDATE heartbeat_runs SET status='fail',ended_at=?,error=? WHERE run_id=? AND prompt_preview='[event reserved]'", (_now_iso(), reason, run_id))
+            conn.commit()
+            return False
+        changed = conn.execute("UPDATE heartbeat_runs SET prompt_preview='[event executing]' WHERE run_id=? AND status='running' AND prompt_preview='[event reserved]'", (run_id,)).rowcount
+        conn.commit()
+        return changed == 1
+    finally:
+        conn.rollback()
         conn.close()
 
 
 def drain_event_triggers() -> int:
-    """One pass: claim pending event triggers and run their heartbeats.
-
-    Returns how many triggers were dispatched this pass. Idempotent & safe:
-    a row is claimed (consumed_at set) before its run is submitted, so a
-    restart never re-runs the same mention twice. Runs reuse the same worker
-    pool and per-heartbeat execution lock as interval dispatches, so two
-    events to one agent never overlap and a heartbeat already running skips
-    the row (it stays pending and is retried on the next pass).
-    """
+    """Admit bounded, authorized events; reconcile reservations, not entire inboxes."""
+    reconcile_event_reservations()
     dispatched = 0
     for row in _pending_event_triggers():
-        hb_id = row["heartbeat_id"]
+        hb_id = row['heartbeat_id']
         with _running_lock:
-            if hb_id in _running:
+            if hb_id in _running or len(_running) >= 4:
                 continue
             _running.add(hb_id)
-        if not _claim_trigger(row["id"]):
+        try:
+            run_id = _claim_event(row)
+            if run_id is None:
+                with _running_lock:
+                    _running.discard(hb_id)
+                continue
+        except Exception:
             with _running_lock:
                 _running.discard(hb_id)
-            continue
+            raise
 
-        def _run(hb_id=hb_id, trigger_id=row["id"], ttype=row["trigger_type"]):
+        def _run(row=row, hb_id=hb_id, run_id=run_id):
             try:
                 from heartbeat_runner import run_heartbeat
-                run_heartbeat(
-                    heartbeat_id=hb_id,
-                    triggered_by=ttype,
-                    trigger_id=trigger_id,
-                    run_id=str(uuid.uuid4()),
-                )
+                if _start_event(row, run_id):
+                    run_heartbeat(heartbeat_id=hb_id, triggered_by=row['trigger_type'],
+                                  trigger_id=row['id'], run_id=run_id)
             except Exception as exc:
-                print(f"[dispatcher] event-trigger run ERROR hb={hb_id}: {exc}", flush=True)
+                # Outcome unknown after invocation: retain durable running reservation;
+                # reconciliation must not silently repeat a tool-enabled execution.
+                print(f"[dispatcher] event run requires reconciliation hb={hb_id}: {type(exc).__name__}", flush=True)
             finally:
                 with _running_lock:
                     _running.discard(hb_id)
-
-        _executor.submit(_run)
-        print(f"[dispatcher] drained event trigger {row['trigger_type']} -> {hb_id} (trigger={row['id'][:8]})", flush=True)
+        try:
+            _executor.submit(_run)
+        except Exception:
+            try:
+                _return_unstarted_event(row, run_id)
+            finally:
+                with _running_lock:
+                    _running.discard(hb_id)
+            continue
         dispatched += 1
     return dispatched

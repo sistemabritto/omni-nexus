@@ -65,10 +65,17 @@ def _log_activity(ticket_id: str, actor: str, action: str, payload: dict | None 
 
 
 def _parse_mentions(body: str) -> list[str]:
-    """Extract @agent-slug mentions from comment body. Max MAX_MENTIONS_PER_COMMENT."""
-    raw = re.findall(r"@([a-z0-9][a-z0-9-]{1,50})", body)
-    seen: list[str] = []
-    for slug in raw:
+    """Canonical slugs or approved display aliases; no emails/partial matches."""
+    from agent_catalog import DISPLAY_NAMES
+    aliases = {label.casefold(): slug for slug, label in DISPLAY_NAMES.items()}
+    raw = re.findall(r"(?<![\w@])@([\w-]{2,51})(?![\w-])", body)
+    seen = []
+    for value in raw:
+        slug = aliases.get(value.casefold())
+        if slug is None:
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,50}", value):
+                continue
+            slug = value
         if slug not in seen:
             seen.append(slug)
         if len(seen) >= MAX_MENTIONS_PER_COMMENT:
@@ -96,39 +103,54 @@ def _validated_assignee(value):
     return agent
 
 
-def _fire_mention_triggers(ticket_id: str, comment_id: str, mentions: list[str], author: str):
-    """Insert heartbeat_triggers rows for each mentioned agent (F1.1 integration stub).
+def _queue_ticket_wake(ticket, recipient, kind, source_id):
+    """Transactional outbox: authenticated browser admin only, no agent impersonation."""
+    from ticket_wake_contract import enabled, context, envelope
+    if not enabled() or getattr(g, "auth_via_api_token", False):
+        return None
+    if not current_user.is_authenticated or not current_user.is_active or current_user.role != "admin":
+        return None
+    if recipient not in _get_agent_slugs():
+        return None
+    # Require an explicitly supported event and an unambiguous heartbeat.
+    candidates = Heartbeat.query.filter_by(agent=recipient, enabled=True).all()
+    candidates = [hb for hb in candidates if not hb.handler and kind in json.loads(hb.wake_triggers or "[]")]
+    if len(candidates) != 1:
+        return None
+    db.session.flush()
+    conn = db.session.connection().connection.driver_connection
+    # sqlite's connection normally returns tuples under SQLAlchemy.
+    import sqlite3
+    prior = conn.row_factory
+    conn.row_factory = sqlite3.Row
+    try:
+        ctx = context(conn, ticket.id)
+    except ValueError:
+        return None
+    finally:
+        conn.row_factory = prior
+    if ticket.status in ("blocked", "resolved", "closed") or ticket.requires_human_approval or ticket.approval_id:
+        return None
+    if kind == "new_task" and (ticket.status not in ("open", "in_progress") or ticket.locked_by or ticket.locked_at):
+        return None
+    from internal_ticket_draft import is_restricted
+    if is_restricted(ticket.id):
+        return None
+    payload = envelope(ctx, actor_user_id=current_user.id, recipient=recipient,
+                       kind=kind, source_id=source_id)
+    db.session.execute(db.text(
+        "INSERT OR IGNORE INTO heartbeat_triggers "
+        "(id,heartbeat_id,trigger_type,payload,created_at) VALUES(:id,:hb,:kind,:payload,:now)"),
+        {"id": payload["event_id"], "hb": candidates[0].id, "kind": kind,
+         "payload": json.dumps(payload), "now": _now()})
+    return payload["event_id"]
 
-    Requires F1.1 (heartbeat_triggers table) to be merged.
-    If the table doesn't exist yet, logs and skips gracefully.
-    """
-    known_agents = _get_agent_slugs()
-    for slug in mentions:
-        if slug not in known_agents:
-            print(f"[tickets] mention @{slug} skipped — not a known agent slug", flush=True)
-            continue
-        # Find enabled heartbeat for this agent
-        hb = Heartbeat.query.filter_by(agent=slug, enabled=True).first()
-        if not hb:
-            print(f"[tickets] mention @{slug} skipped — no active heartbeat", flush=True)
-            continue
-        try:
-            trigger_id = str(uuid.uuid4())
-            payload = json.dumps({
-                "ticket_id": ticket_id,
-                "comment_id": comment_id,
-                "mentioner": author,
-            })
-            db.session.execute(
-                db.text(
-                    "INSERT INTO heartbeat_triggers (id, heartbeat_id, trigger_type, payload, created_at) "
-                    "VALUES (:id, :hb_id, 'mention', :payload, :now)"
-                ),
-                {"id": trigger_id, "hb_id": hb.id, "payload": payload, "now": _now()},
-            )
-        except Exception as exc:
-            # heartbeat_triggers table may not exist (F1.1 not merged yet)
-            print(f"[tickets] WARNING: could not insert mention trigger for @{slug}: {exc}", flush=True)
+
+def _fire_mention_triggers(ticket_id, comment_id, mentions, author):
+    # `author` is display text supplied by the caller, never authorization.
+    ticket = db.session.get(Ticket, ticket_id)
+    return [event for slug in mentions
+            if (event := _queue_ticket_wake(ticket, slug, "mention", comment_id))]
 
 
 # --------------- List ---------------
@@ -330,6 +352,8 @@ def create_ticket():
     if invalid_assignee:
         activity_payload["invalid_assignee_agent"] = invalid_assignee
     _log_activity(ticket.id, current_user.username, "created", activity_payload)
+    if ticket.assignee_agent:
+        _queue_ticket_wake(ticket, ticket.assignee_agent, "new_task", ticket.id)
     db.session.commit()
 
     audit(current_user, "create", "tickets", f"created ticket {ticket.id}: {title}")
@@ -345,6 +369,7 @@ def update_ticket(ticket_id: str):
         return denied
 
     ticket = Ticket.query.get_or_404(ticket_id)
+    old_event_owner, old_event_status = ticket.assignee_agent, ticket.status
     data = request.get_json() or {}
     if "assignee_agent" in data:
         try:
@@ -413,6 +438,8 @@ def update_ticket(ticket_id: str):
 
     ticket.updated_at = _now()
     _log_activity(ticket_id, current_user.username, "status_changed" if "status" in changes else "updated", changes)
+    if ticket.assignee_agent and (ticket.assignee_agent != old_event_owner or ticket.status != old_event_status):
+        _queue_ticket_wake(ticket, ticket.assignee_agent, "new_task", ticket.updated_at)
     db.session.commit()
 
     # Recompute the linked goal's current_value — same single source of truth
@@ -589,7 +616,7 @@ def release_ticket(ticket_id: str):
                         "pelo checkout; forçar exige sessão de navegador admin",
                 "locked_by": ticket.locked_by,
             }), 403
-        if not current_user.is_authenticated or current_user.role != "admin":
+        if not current_user.is_authenticated or not current_user.is_active or current_user.role != "admin":
             return jsonify({
                 "error": "invalid_lock_token",
                 "hint": "envie o lock_token devolvido pelo checkout",
@@ -630,29 +657,66 @@ def add_comment(ticket_id: str):
     if not body:
         return jsonify({"error": "body is required"}), 400
 
-    author = data.get("author") or current_user.username
+    idempotency_key = request.headers.get("Idempotency-Key")
+    comment_id = str(uuid.uuid4())
+    if idempotency_key:
+        if not re.fullmatch(r"[A-Za-z0-9_.:-]{1,128}", idempotency_key):
+            return jsonify({"error": "invalid_idempotency_key"}), 400
+        comment_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"ticket-comment:{ticket_id}:{current_user.id}:{idempotency_key}"))
+        existing = db.session.get(TicketComment, comment_id)
+        if existing:
+            if existing.body != body:
+                return jsonify({"error": "idempotency_conflict"}), 409
+            return jsonify(existing.to_dict()), 200
+
+    expected_version = request.headers.get("X-Ticket-Version")
+    if expected_version is not None and expected_version != ticket.updated_at:
+        return jsonify({"error": "ticket_version_conflict"}), 409
+
+    declared_author = data.get("author")
+    author = ("service:" if getattr(g, "auth_via_api_token", False) else "human:") + current_user.username
     mentions = _parse_mentions(body)
     now = _now()
 
+    if expected_version is not None:
+        changed = db.session.execute(db.text(
+            "UPDATE tickets SET updated_at=:now WHERE id=:id AND updated_at=:expected"),
+            {"now": now, "id": ticket.id, "expected": expected_version}).rowcount
+        if changed != 1:
+            db.session.rollback()
+            existing = db.session.get(TicketComment, comment_id) if idempotency_key else None
+            if existing and existing.body == body:
+                return jsonify(existing.to_dict()), 200
+            return jsonify({"error": "ticket_version_conflict"}), 409
     ticket.updated_at = now
     comment = TicketComment(
-        id=str(uuid.uuid4()),
+        id=comment_id,
         ticket_id=ticket_id,
         author=author,
         body=body,
         created_at=now,
     )
     comment.mentions_list = mentions
-    db.session.add(comment)
-    _log_activity(ticket_id, author, "commented", {"comment_id": comment.id, "mentions": mentions})
-    db.session.commit()
-
-    # Fire mention triggers (F1.1 integration — gracefully skipped if not merged)
-    if mentions:
-        _fire_mention_triggers(ticket_id, comment.id, mentions, author)
+    from sqlalchemy.exc import IntegrityError
+    try:
+        db.session.add(comment)
+        _log_activity(ticket_id, author, "commented", {"comment_id": comment.id, "mentions": mentions, "actor_user_id": current_user.id,
+            "declared_author": declared_author,
+            "wake_event_id": idempotency_key[5:] if idempotency_key and idempotency_key.startswith("wake:") else None,
+            "auth_source": "shared_service_token" if getattr(g, "auth_via_api_token", False) else "browser"})
+        wake_events = _fire_mention_triggers(ticket_id, comment.id, mentions, author) if mentions else []
         db.session.commit()
-
-    return jsonify(comment.to_dict()), 201
+    except IntegrityError:
+        db.session.rollback()
+        existing = db.session.get(TicketComment, comment_id) if idempotency_key else None
+        if not existing:
+            raise
+        if existing.body != body:
+            return jsonify({"error": "idempotency_conflict"}), 409
+        return jsonify(existing.to_dict()), 200
+    result = comment.to_dict()
+    result["wake_events"] = wake_events
+    return jsonify(result), 201
 
 
 # --------------- Bulk actions ---------------

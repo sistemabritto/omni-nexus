@@ -68,7 +68,7 @@ def test_existing_endpoint_adds_catalog_without_changing_acl_or_description(monk
     assert items['mako-marketing']['locked'] is True
     assert items['mako-marketing']['description'] == 'Original description'
     assert items['mako-marketing']['model'] == 'sonnet'
-    assert items['mako-marketing']['catalog']['display_name'] == 'Mako'
+    assert items['mako-marketing']['catalog']['display_name'] == 'Orion'
     assert items['custom-existing']['locked'] is False
     assert items['custom-existing']['description'] == 'Custom unchanged'
     assert (persona_dir / 'mako-marketing.md').read_text() == source

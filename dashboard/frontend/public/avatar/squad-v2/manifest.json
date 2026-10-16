@@ -1,0 +1,78 @@
+{
+  "generation": "supplied_by_parent_GPT_Image_no_generation_here",
+  "conversion": "FFmpeg libwebp q90 512x512; no crop or generative edit",
+  "portraits": [
+    {
+      "slug": "clawdia-assistant",
+      "version": "v2",
+      "library_file_id": "libfile_9f492a22b1048191984b4ef6d163354c",
+      "source_sha256": "3dacd78e1c862855e418ab5f205bb277cf8c2b8b48348840b1f23d4aba9bec26",
+      "asset": "/avatar/squad-v2/clawdia-v2-3dacd78e1c.webp",
+      "asset_sha256": "c24460a90d51b961969088ec5a21afea186e730aca61928dba7800fea56c5c65",
+      "width": 512,
+      "height": 512,
+      "object_position": "50% 35%",
+      "bytes": 50186
+    },
+    {
+      "slug": "mako-marketing",
+      "version": "v2",
+      "library_file_id": "libfile_70851031126881919f1f0e55651237f2",
+      "source_sha256": "d3c6741afecd26915470d2e688e0462cdc84182540d11ab31ab15ff9b03d0abe",
+      "asset": "/avatar/squad-v2/mako-v2-d3c6741afe.webp",
+      "asset_sha256": "e8ab1740d070307a863ca2e79ac3260ebfd34afb621edbbbd82d3230ba64fcd1",
+      "width": 512,
+      "height": 512,
+      "object_position": "50% 35%",
+      "bytes": 57546
+    },
+    {
+      "slug": "pixel-social-media",
+      "version": "v2",
+      "library_file_id": "libfile_d04a37f115448191a9bd411931bb3aca",
+      "source_sha256": "13c68f3f29bb8584cf6992ed869a316b128220fe475462386a3cf6ad039a7c9b",
+      "asset": "/avatar/squad-v2/pixel-v2-13c68f3f29.webp",
+      "asset_sha256": "6b1911a8e89ba71d6e8a6634a27f56bbc077141836da69f2d498f1d03ef7dce9",
+      "width": 512,
+      "height": 512,
+      "object_position": "50% 35%",
+      "bytes": 68344
+    },
+    {
+      "slug": "canvas-designer",
+      "version": "v3",
+      "library_file_id": "libfile_a8692c39476081918cbd0b29a66f3db0",
+      "source_sha256": "ce2d7cc3ed7bc55f74c44b9f25188d33dbbca658dc47600d446dd4654b2c51d4",
+      "asset": "/avatar/squad-v2/canvas-v3-ce2d7cc3ed.webp",
+      "asset_sha256": "92db9adb97b226310ecc7f1753b11f2183b0a8cb3e43bdfcb10004454506cc6e",
+      "width": 512,
+      "height": 512,
+      "object_position": "50% 35%",
+      "bytes": 60232
+    },
+    {
+      "slug": "bolt-executor",
+      "version": "v2",
+      "library_file_id": "libfile_376fc9c9a15c8191878fb29490768efd",
+      "source_sha256": "3befa51dc0189d2cc0750b56514b48fb2fbe4f45bf84d124280014ac1de030d4",
+      "asset": "/avatar/squad-v2/bolt-v2-3befa51dc0.webp",
+      "asset_sha256": "ddc5a2d272b6872d10ca375d2ebbfa5be3d065fca2a38d32856fdb90d5d11528",
+      "width": 512,
+      "height": 512,
+      "object_position": "50% 35%",
+      "bytes": 65810
+    },
+    {
+      "slug": "oath-verifier",
+      "version": "v2",
+      "library_file_id": "libfile_e3ba214d1d708191a98dbb52096ac900",
+      "source_sha256": "ce8b7a3df231e46cec552cad69c71cd8b888ef9549b95efccae1c03096bf5309",
+      "asset": "/avatar/squad-v2/oath-v2-ce8b7a3df2.webp",
+      "asset_sha256": "943423ce8f93249e8f22322e56ae9dbbe91c7a66f20a669acef8ac9950489405",
+      "width": 512,
+      "height": 512,
+      "object_position": "50% 35%",
+      "bytes": 56290
+    }
+  ]
+}

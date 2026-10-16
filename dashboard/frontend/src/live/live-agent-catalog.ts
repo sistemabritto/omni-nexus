@@ -17,12 +17,12 @@ export function matchesAgent(choice:AgentChoice,query:string){return fold(`${cho
 
 // Shared entry points for Agents and Live. Presentation only, never ACL/dispatch.
 export const squadEntrances:Record<string,{function:string;nickname:string;delivery:string;assistant:string;reviewer:string}>={
-  'clawdia-assistant':{function:'Operação',nickname:'Clawdia',delivery:'Organiza próximos passos, responsáveis e bloqueios.',assistant:'Atlas',reviewer:'Oath'},
-  'mako-marketing':{function:'Estratégia',nickname:'Mako',delivery:'Transforma fontes e hipóteses em um brief claro.',assistant:'Sage',reviewer:'Raven'},
-  'pixel-social-media':{function:'Conteúdo',nickname:'Pixel',delivery:'Responde por roteiro e adaptação de conteúdo por canal.',assistant:'Mako',reviewer:'Oath'},
-  'canvas-designer':{function:'Direção visual',nickname:'Canvas',delivery:'Define identidade, composição e direção de movimento.',assistant:'Bolt',reviewer:'Oath'},
-  'bolt-executor':{function:'Engenharia',nickname:'Bolt',delivery:'Implementa mudanças delimitadas e apresenta validação.',assistant:'Hawk',reviewer:'Lens'},
-  'oath-verifier':{function:'Qualidade',nickname:'Oath',delivery:'Revisa a entrega com critérios e evidências independentes.',assistant:'Probe',reviewer:'Raven'},
+  'clawdia-assistant':{function:'Operação',nickname:'Hera',delivery:'Organiza próximos passos, responsáveis e bloqueios.',assistant:'Atlas',reviewer:'Argos'},
+  'mako-marketing':{function:'Estratégia',nickname:'Orion',delivery:'Transforma fontes e hipóteses em um brief claro.',assistant:'Sage',reviewer:'Raven'},
+  'pixel-social-media':{function:'Conteúdo',nickname:'Dante',delivery:'Responde por roteiro e adaptação de conteúdo por canal.',assistant:'Orion',reviewer:'Argos'},
+  'canvas-designer':{function:'Direção visual',nickname:'Íris',delivery:'Define identidade, composição e direção de movimento.',assistant:'Vulcano',reviewer:'Argos'},
+  'bolt-executor':{function:'Engenharia',nickname:'Vulcano',delivery:'Implementa mudanças delimitadas e apresenta validação.',assistant:'Hawk',reviewer:'Lens'},
+  'oath-verifier':{function:'Qualidade',nickname:'Argos',delivery:'Revisa a entrega com critérios e evidências independentes.',assistant:'Probe',reviewer:'Raven'},
 }
 export const squadEntryLabel=(slug:string,fallback:string)=>{
   const entry=squadEntrances[slug]

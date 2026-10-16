@@ -20,5 +20,6 @@ export const workspaceAreas = [
   ['/costs', 'Custos', 'Uso e consumo'], ['/topics', 'Pautas', 'Discussões e tickets'], ['/tickets', 'Ticket', 'Autoria, estado e histórico'],
 ] as const
 export function getWorkspaceArea(path: string) {
+  if (path === '/agentes') path = '/agents'
   return [...workspaceAreas].sort((a,b) => b[0].length-a[0].length).find(([prefix]) => path === prefix || (prefix !== '/' && path.startsWith(`${prefix}/`))) || ['/', 'Workspace', 'OmniNexus Live']
 }

@@ -1,0 +1,9 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),path=require('path'),crypto=require('crypto');
+const ts=require(path.resolve('dashboard/frontend/node_modules/typescript'));
+function compile(file,requireFn){const m={exports:{}};const code=ts.transpileModule(fs.readFileSync(file,'utf8').replaceAll('import.meta.env.DEV','false'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{module:m,exports:m.exports,require:requireFn,fetch:async()=>({ok:true,json:async()=>({'clawdia-assistant':{avatar_url:'/avatar/avatar_clawdia.webp'},'plugin-fixture':{label:'Plugin',avatar_url:'/plugin-fixture.webp'}})})});return m.exports}
+const portraits=compile('dashboard/frontend/src/lib/squad-portraits.ts',()=>{}),manifest=JSON.parse(fs.readFileSync('dashboard/frontend/public/avatar/squad-v2/manifest.json'));
+const meta=compile('dashboard/frontend/src/lib/agent-meta.ts',name=>name==='./squad-portraits'?portraits:new Proxy({},{get:()=>()=>null}));
+(async()=>{assert.equal(manifest.portraits.length,6);for(const row of manifest.portraits){assert.equal(meta.getAgentMeta(row.slug).avatar,row.asset);const bytes=fs.readFileSync('dashboard/frontend/public'+row.asset);assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),row.asset_sha256)}
+assert.equal(manifest.portraits.find(r=>r.slug==='canvas-designer').library_file_id,'libfile_a8692c39476081918cbd0b29a66f3db0');
+const legacy=meta.getAgentMeta('nex-sales').avatar;await meta.hydrateAgentMeta(true);for(const row of manifest.portraits)assert.equal(meta.getAgentMeta(row.slug).avatar,row.asset);
+assert.equal(meta.getAgentMeta('nex-sales').avatar,legacy);assert.equal(meta.getAgentMeta('plugin-fixture').avatar,'/plugin-fixture.webp');console.log('PASS six portrait hashes, Canvas v3, stale hydration cannot revert, other natives and plugin overrides preserved');})().catch(e=>{console.error(e);process.exit(1)});

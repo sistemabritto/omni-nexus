@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { AgentAvatar } from '../components/AgentAvatar'
 import { agentChoices, matchesAgent, partitionSquad, squadEntryLabel, type CatalogAgent } from './live-agent-catalog'
 export default function LiveAgentSelector({allowed,agents,legacyGroups,selected,disabled,loading,unavailable,onSelect,onRetry}:{allowed:string[];agents:CatalogAgent[];legacyGroups:Record<string,string[]>;selected:string;disabled:boolean;loading:boolean;unavailable:boolean;onSelect:(slug:string)=>void;onRetry:()=>void}){
   const [query,setQuery]=useState(''),[expanded,setExpanded]=useState(false),id=useId()
@@ -8,6 +9,7 @@ export default function LiveAgentSelector({allowed,agents,legacyGroups,selected,
   const visibleSpecialists=query.trim()||expanded?specialists:[]
   const selectedCollapsed=choices.find(choice=>choice.slug===selected&&!principal.some(match=>match.slug===selected)&&!visibleSpecialists.some(match=>match.slug===selected)&&!selectedOutside)
   return <div className="live-agent-selector">
+    {choices.some(choice=>choice.slug===selected)&&<div className="live-selected-portrait"><AgentAvatar name={selected} size={48}/><span>{squadEntryLabel(selected,choices.find(choice=>choice.slug===selected)!.name)}</span></div>}
     <label htmlFor={`${id}-search`}>Buscar no squad<input id={`${id}-search`} type="search" value={query} disabled={disabled} onChange={e=>setQuery(e.target.value)} placeholder="Nome, função ou setor"/></label>
     <label htmlFor={`${id}-select`}>Responsável ou especialista da conversa<select id={`${id}-select`} aria-label="Agente da conversa" aria-describedby={`${id}-help`} disabled={disabled||!choices.length} value={selected} onChange={e=>{if(e.target.value!==selected)onSelect(e.target.value)}}>
       <option value="">{loading&&!choices.length?'Carregando agentes…':choices.length?'Selecione um agente':'Nenhum agente autorizado disponível'}</option>

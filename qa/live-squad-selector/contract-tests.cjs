@@ -15,6 +15,6 @@ const full=Object.keys(m.exports.squadEntrances).map(slug=>({slug}));
 const split=partitionSquad([...full,{slug:'dex-data'},{slug:'custom-existing'}]);
 assert.equal(split.principal.length,6);assert.equal(split.specialists.length,2);
 assert.equal(partitionSquad([{slug:'dex-data'}]).principal.length,0);
-assert.equal(squadEntryLabel('pixel-social-media','Pixel'),'Conteúdo · Pixel');
+assert.equal(squadEntryLabel('pixel-social-media','Pixel'),'Conteúdo · Dante');
 assert.equal(squadEntryLabel('custom-existing','Meu agente'),'Meu agente');
 console.log('PASS same six entry points, specialist preservation, missing principal never synthesized, stable slugs');

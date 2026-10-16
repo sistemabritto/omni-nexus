@@ -1,3 +1,4 @@
+import { AgentAvatar } from '../components/AgentAvatar'
 import LiveFileSources from './LiveFileSources'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Send } from 'lucide-react'
@@ -45,7 +46,7 @@ export default function ManagedNexusLive(){
   const bindings=voiceFirstBindings(managedSession,company?{companyId:company.id,company:company.name,agent:selected}:null,true)
   return <main className="live-immersive managed-live voice-first-page" data-voice-state={state.mic?'listening':'idle'}>
     <header className="live-heading"><div><span className="live-eyebrow">SISTEMA BRITTO</span><h1>OmniNexus Live</h1></div><span className="live-prototype">{state.phase==='connected'?'Conectado':state.phase==='connecting'?'Conectando…':'Desconectado'}</span></header>
-    <details className="live-context-disclosure" open={!selected||undefined}><summary>{selected?`Contexto · ${selectedChoice.name}`:"Escolher agente"}</summary><section className="managed-context" aria-label="Contexto da conversa">
+    <details className="live-context-disclosure" open={!selected||undefined}><summary>{selected&&<AgentAvatar name={selected} size={32} className="inline-block align-middle mr-2"/>}{selected?`Contexto · ${selectedChoice.name}`:"Escolher agente"}</summary><section className="managed-context" aria-label="Contexto da conversa">
       <div className="managed-current-company"><span>Empresa do menu global</span><p>{activeCompany?.name||'Selecione uma empresa no menu global'}</p>{activeCompany&&options&&!company&&<small>Empresa selecionada indisponível para esta conversa.</small>}</div>
       <LiveAgentSelector allowed={available} agents={agents} legacyGroups={groups} selected={selected} disabled={busy} loading={catalogLoading} unavailable={catalogUnavailable} onSelect={setAgent} onRetry={()=>{setCatalogLoading(true);setRetry(value=>value+1)}}/>
       <small>Setores e funções são informações de apresentação; não habilitam ferramentas. <Link to="/inteligencia">Consultar agentes em Inteligência</Link>.</small>

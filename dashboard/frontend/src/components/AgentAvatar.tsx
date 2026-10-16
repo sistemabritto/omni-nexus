@@ -1,3 +1,4 @@
+import { squadEntryLabel } from '../live/live-agent-catalog'
 import { getAgentMeta } from '../lib/agent-meta'
 
 interface AgentAvatarProps {
@@ -14,11 +15,11 @@ export function AgentAvatar({ name, size = 48, className = '' }: AgentAvatarProp
     return (
       <img
         src={meta.avatar}
-        alt={name}
+        alt={squadEntryLabel(name,name)}
         width={size}
         height={size}
         className={`rounded-full object-cover flex-shrink-0 ${className}`}
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, objectPosition: meta.avatar.startsWith('/avatar/squad-v2/') ? '50% 35%' : undefined }}
       />
     )
   }

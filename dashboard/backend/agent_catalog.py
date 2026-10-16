@@ -68,6 +68,15 @@ NATIVE_CATALOG = {
     for slug, name, role in members
 }
 
+# Approved display aliases only. Persona filenames, commands and owners stay stable.
+DISPLAY_NAMES = {
+    'clawdia-assistant': 'Hera', 'mako-marketing': 'Orion',
+    'pixel-social-media': 'Dante', 'canvas-designer': 'Íris',
+    'bolt-executor': 'Vulcano', 'oath-verifier': 'Argos',
+}
+for _slug, _display_name in DISPLAY_NAMES.items():
+    NATIVE_CATALOG[_slug]['display_name'] = _display_name
+
 # Audited textual modules proposed in earlier work. Presence is checked, not assumed.
 EXPECTED_KNOWLEDGE = {
     'mako-marketing': ['mkt-creative-brief', 'mkt-research-pipeline', 'dev-team-methods'],

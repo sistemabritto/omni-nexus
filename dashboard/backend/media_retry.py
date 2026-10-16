@@ -15,6 +15,7 @@ def permanent_error(error: str) -> bool:
         "manifesto inválido", "manifesto não encontrado", "publication_manifest.json inválido",
         "binary not found", "não encontrado no path", "permission denied",
         "read-only file system", "unauthorized", "forbidden", "invalid api key",
+        "skill de produção indisponível",
     ))
 
 

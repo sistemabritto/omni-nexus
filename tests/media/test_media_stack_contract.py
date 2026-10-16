@@ -23,7 +23,7 @@ def test_dashboard_and_worker_share_writable_media_workspace():
     assert "evonexus_media" in stack["volumes"]
 
 
-def test_manifest_handoff_through_approval_and_schedule(admin_client, monkeypatch):
+def test_manifest_handoff_through_approval_and_schedule(admin_client, monkeypatch, tmp_path):
     """Simulate the agent/render and Postiz; exercise the real API/state machine."""
     import json
     import hashlib
@@ -32,6 +32,9 @@ def test_manifest_handoff_through_approval_and_schedule(admin_client, monkeypatc
 
     import media_executor
     import routes.media_jobs as routes
+
+    # Do not inherit a host catalog symlink: fixtures write only under tmp_path.
+    monkeypatch.setenv("MEDIA_SKILLS_DIR", str(tmp_path / "unmounted-fixture-catalog"))
 
     postiz = Mock()
     postiz.upload_file.return_value = {"id": "media-1", "path": "https://media.invalid/final.mp4", "name": "final.mp4"}
@@ -48,6 +51,14 @@ def test_manifest_handoff_through_approval_and_schedule(admin_client, monkeypatc
     assert created.status_code == 201
     job = created.get_json()
     base = Path(job["workspace_path"])
+    # This simulated worker still needs the real scoped instruction documents.
+    root = Path(__file__).resolve().parents[2]
+    for relative in media_executor.REQUIRED_SKILL_DOCUMENTS:
+        name = Path(relative).parts[-2]
+        source = root / '.claude' / ('skills' if name == 'social-media-production' else 'skills-media') / name / 'SKILL.md'
+        target = base / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(source.read_bytes())
     url = f"/api/media/jobs/{job['id']}"
 
     def agent(**kwargs):

@@ -17,6 +17,7 @@ is getting the agent to produce ./project (the composition) and
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 
 from provider_fallback import invoke_with_fallback
@@ -25,6 +26,36 @@ from provider_fallback import invoke_with_fallback
 # governs the whole job (composition + render + validation + upload); the
 # composition step alone must leave room for the rest.
 MAX_COMPOSITION_TIMEOUT_SECONDS = 1800
+REQUIRED_SKILL_DOCUMENTS = (
+    '.claude/skills/social-media-production/SKILL.md',
+    '.claude/skills/hyperframes/SKILL.md',
+)
+
+
+def _skill_preflight(job_workspace: Path) -> dict:
+    """Verify the scoped read pointers before any potentially paid invocation.
+
+    The existing scaffold deliberately links this catalog outside the job.
+    Read only these fixed documents; never install/fetch a missing skill or
+    claim that availability proves the model read/applied its instructions.
+    """
+    documents = []
+    for relative in REQUIRED_SKILL_DOCUMENTS:
+        try:
+            with (job_workspace / relative).open('rb') as stream:
+                data = stream.read(131073)
+            text = data.decode('utf-8')
+            if not text.strip() or len(data) > 131072:
+                raise ValueError('empty or oversized document')
+        except (OSError, UnicodeError, ValueError) as exc:
+            raise MediaExecutionError(
+                f'Skill de produção indisponível: {relative}',
+                result={'status': 'fail', 'stage': 'skill_preflight',
+                        'document': relative, 'model_invoked': False},
+            ) from exc
+        documents.append({'path': relative, 'sha256': hashlib.sha256(data).hexdigest()})
+    return {'status': 'documents_available', 'documents': documents,
+            'model_read_status': 'not_verified', 'application_status': 'not_verified'}
 
 
 class MediaExecutionError(Exception):
@@ -49,7 +80,11 @@ def build_composition_prompt(manifest_relpath: str) -> str:
         "Você está operando dentro do workspace isolado deste job de produção de mídia social. "
         f"Leia o manifesto de entrada em '{manifest_relpath}' (caminho relativo ao seu diretório de "
         "trabalho atual — não é um caminho absoluto do host).\n\n"
-        "Siga a skill 'social-media-production' do início ao fim:\n"
+        "Leia '.claude/skills/social-media-production/SKILL.md' do início ao fim; "
+        "esse é o contrato local deste job. Para selecionar o workflow, leia "
+        "'.claude/skills/hyperframes/SKILL.md' e os documentos locais pertinentes. "
+        "Se não puder ler uma referência necessária, reporte a lacuna sem instalar nada "
+        "ou alegar aplicação da skill.\n"
         "1. Leia o manifesto do job e o contexto de projeto/campanha nele referenciado.\n"
         "2. Leia a identidade visual disponível em './input/brand/' (se houver).\n"
         "3. Selecione a skill HyperFrames apropriada para o formato/plataforma pedidos.\n"
@@ -95,6 +130,7 @@ def run_opencode_media_job(
         raise MediaExecutionError(f"Manifesto de entrada inválido: {exc}") from exc
 
     effective_timeout = min(int(timeout_seconds), MAX_COMPOSITION_TIMEOUT_SECONDS)
+    skill_evidence = _skill_preflight(job_workspace)
     prompt = build_composition_prompt(manifest_relpath)
 
     result = invoke_with_fallback(
@@ -105,6 +141,7 @@ def run_opencode_media_job(
         force_model=force_model,
         cwd=job_workspace,
     )
+    result = {**result, 'skill_preflight': skill_evidence}
 
     status = result.get("status")
     if status != "success":

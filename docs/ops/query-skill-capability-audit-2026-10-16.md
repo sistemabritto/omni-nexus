@@ -46,3 +46,5 @@ Regressões iniciais:42passaram;2falharam só por socket localhost bloqueado no 
 ## Leitura externa real separada
 
 Cliente GitHub `gh` já conectado: GET /user retornou apenas `{authenticated:true}` via filtro, sem imprimir usuário/token/dados privados. É prova real de autenticação/rede desse cliente local nesta execução; NÃO prova passagem de tools ao modelo, sessão no contêiner, execução do novo dispatcher ou qualquer MCP. Não foi ativada ferramenta nova, escrito recurso remoto ou feita inferência. O SDKdashboard continua sem token neste processo; não extrapolar GitHub para outras integrações.
+
+Recheck final do incremento:11novos testes passaram novamente, incluindo query→transcript→read_current_omni_session sem argumentos→pacote com skill selecionada<24k. Orçamento checado com contexto externo; bloqueio explícito preserva dados existentes em vez de truncar documento.

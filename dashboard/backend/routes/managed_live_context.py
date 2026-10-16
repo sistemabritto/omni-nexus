@@ -188,6 +188,11 @@ def read_context(context_id):
         payload = {'authenticatedUser': authenticated_user, 'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
         if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True:
             query_result = _query_for_current_turn(row)
+            if query_result.get('capabilities'):
+                from skill_capability_dispatch import fit_context_budget
+                query_result['capabilities'] = fit_context_budget(
+                    {'outer': payload, 'query': {k:v for k,v in query_result.items() if k != 'capabilities'}},
+                    query_result['capabilities'], max_chars=23000)
             while (query_result['memory'] or query_result.get('documents', {}).get('results') or query_result.get('files', {}).get('results')) and len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:
                 (query_result['memory'] or query_result.get('documents', {}).get('results') or query_result['files']['results']).pop()
             if len(json.dumps({**payload, 'queryResult': query_result}, ensure_ascii=False)) > 23500:

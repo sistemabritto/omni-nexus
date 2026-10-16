@@ -78,6 +78,13 @@ def test_real_query_route_uses_existing_file_adapter_and_owned_company(files,mon
     assert cap['status']=='context_ready'
     assert cap['references'][0]['sha256']==hashlib.sha256(file.read_bytes()).hexdigest()
     assert cap['execution']['status']=='completed'
+    from tests.backend.test_managed_live_context import read
+    import json
+    post(c,ctx,'transcript',eventId='thumbnail-question',role='user',text='Quero criar uma thumbnail')
+    delivered=read(c,ctx['contextId'],'provider-a')
+    assert delivered.status_code==200,delivered.json
+    assert delivered.json['queryResult']['capabilities']['selected']=='creative-brand-context'
+    assert len(json.dumps(delivered.json,ensure_ascii=False))<24000
     digest=cap['execution']['receipt_sha256']
     with sqlite3.connect(app.config['NEXUS_LIVE_CONTEXT_DB']) as conn:
         row=conn.execute('SELECT user_id,company_id,adapter FROM skill_capability_receipts WHERE id=?',(digest,)).fetchone()

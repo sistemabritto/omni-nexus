@@ -30,7 +30,8 @@ def test_role_profile_reaches_real_loader_and_live_without_truncation(slug,monke
     for path in profile['methods']:
         assert path in prompt and (ROOT/path).is_file()
     for role in profile['roles']:
-        assert role['reviewer'] in prompt and role['responsible'] in prompt
+        assert role['responsible'] in prompt
+    assert profile['work_policies'] and all(p['assignment']=='per_work_not_fixed_trio' for p in profile['work_policies'])
     source=(ROOT/'.claude/agents'/f'{slug}.md').read_text()
     assert catalog_entry(slug,source,ROOT)['delivery_profile']==profile
 

@@ -1,7 +1,9 @@
 """Executable handoff contract. No dispatch, grants, ownership writes or approval."""
 import re
 from pathlib import Path
+from squad_work_policy import work_policy
 
+# Compatibility v1 candidate suggestions, never a fixed staffing/dispatch matrix.
 FRONTS = {
     'operations': ('Operação', 'clawdia-assistant', 'atlas-project', 'oath-verifier'),
     'strategy': ('Estratégia', 'mako-marketing', 'sage-strategy', 'raven-critic'),
@@ -25,7 +27,8 @@ _SHA = re.compile(r'[a-f0-9]{64}')
 def agent_delivery_roles(slug):
     return [dict(front=front, label=label, role=role,
                  responsible=owner, assistant=assistant, reviewer=reviewer,
-                 methods=list(METHODS[front]))
+                 methods=list(METHODS[front]), assignment="legacy_suggestion_not_assigned",
+                 quality_coordinator="oath-verifier")
             for front, (label, owner, assistant, reviewer) in FRONTS.items()
             for role, actor in [('responsible', owner), ('assistant', assistant), ('reviewer', reviewer)]
             if actor == slug]
@@ -84,7 +87,9 @@ def validate_handoff(data):
             'blockers': blockers, 'criticality': data['criticality'],
             'acceptance': list(data['acceptance']), 'requiredMethods': list(METHODS[data['front']]),
             'acknowledgement': 'not_recorded', 'evidenceStatus': 'declared_not_verified',
-            'dispatchAllowed': False, 'publicationApproved': False}
+            'dispatchAllowed': False, 'publicationApproved': False,
+            'assignmentStatus': 'legacy_suggestion_not_assigned',
+            'workPolicy': work_policy(data['front'])}
 
 
 def unavailable_methods(workspace, references):
@@ -102,3 +107,4 @@ def unavailable_methods(workspace, references):
         except (OSError, RuntimeError, ValueError, UnicodeError):
             unavailable.append(reference)
     return unavailable
+

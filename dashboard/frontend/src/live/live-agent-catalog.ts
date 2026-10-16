@@ -17,12 +17,12 @@ export function matchesAgent(choice:AgentChoice,query:string){return fold(`${cho
 
 // Shared entry points for Agents and Live. Presentation only, never ACL/dispatch.
 export const squadEntrances:Record<string,{function:string;nickname:string;delivery:string;assistant:string;reviewer:string}>={
-  'clawdia-assistant':{function:'Operação',nickname:'Hera',delivery:'Organiza próximos passos, responsáveis e bloqueios.',assistant:'Atlas',reviewer:'Argos'},
-  'mako-marketing':{function:'Estratégia',nickname:'Orion',delivery:'Transforma fontes e hipóteses em um brief claro.',assistant:'Sage',reviewer:'Raven'},
-  'pixel-social-media':{function:'Conteúdo',nickname:'Dante',delivery:'Responde por roteiro e adaptação de conteúdo por canal.',assistant:'Orion',reviewer:'Argos'},
-  'canvas-designer':{function:'Direção visual',nickname:'Íris',delivery:'Define identidade, composição e direção de movimento.',assistant:'Vulcano',reviewer:'Argos'},
-  'bolt-executor':{function:'Engenharia',nickname:'Vulcano',delivery:'Implementa mudanças delimitadas e apresenta validação.',assistant:'Hawk',reviewer:'Lens'},
-  'oath-verifier':{function:'Qualidade',nickname:'Argos',delivery:'Revisa a entrega com critérios e evidências independentes.',assistant:'Probe',reviewer:'Raven'},
+  'clawdia-assistant':{function:'Operação',nickname:'Hera',delivery:'Organiza próximos passos, responsáveis e bloqueios.',assistant:'Atlas',reviewer:'Argos · pool independente'},
+  'mako-marketing':{function:'Estratégia',nickname:'Orion',delivery:'Transforma fontes e hipóteses em um brief claro.',assistant:'Sage',reviewer:'Argos · pool independente'},
+  'pixel-social-media':{function:'Conteúdo',nickname:'Dante',delivery:'Responde por roteiro e adaptação de conteúdo por canal.',assistant:'Orion',reviewer:'Argos · pool independente'},
+  'canvas-designer':{function:'Direção visual',nickname:'Íris',delivery:'Define identidade, composição e direção de movimento.',assistant:'Vulcano',reviewer:'Argos · pool independente'},
+  'bolt-executor':{function:'Engenharia',nickname:'Vulcano',delivery:'Implementa mudanças delimitadas e apresenta validação.',assistant:'Hawk',reviewer:'Argos · pool independente'},
+  'oath-verifier':{function:'Qualidade',nickname:'Argos',delivery:'Coordena revisores independentes por domínio, capacidade e versão.',assistant:'Probe',reviewer:'Argos · pool independente'},
 }
 export const squadSupport:Record<string,{function:string;nickname:string}>={
   'atlas-project':{function:'Projetos',nickname:'Atlas'},

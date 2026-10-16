@@ -16,3 +16,9 @@ Por papel:
 - Oath: verificação independente com evidência própria e limites; Lens: revisão de código. Não aprovar o próprio trabalho como se fosse segundo revisor.
 
 Cenários de aceite a verificar no processo real: destinatário indisponível mantém dono atual; recusa registra motivo/pendência; versão antiga exige identificar delta; entrega duplicada referencia mesmo ID sem duplicar tarefa; timeout de comunicação é aceite desconhecido, não confirmado. São critérios textuais de processo, não implementação de scheduler ou testes operacionais executados.
+
+## Contrato executável local do squad
+
+`dashboard/backend/squad_delivery_contract.py` define papéis por entrega com slugs existentes, criticidade P0/P1/P2 e critérios mínimos. `/api/agents` expõe `catalog.delivery_roles` e `display_label` aditivos; não são grants nem assignees de tickets. A validação pessoal autorizada `POST /api/agents/delivery-contract/validate` apenas confere o candidato, ACL dos participantes e documentos locais. Não solicitar novo acesso para chamar essa rota: se indisponível, registrar bloqueio.
+
+O pacote deve identificar empresa, frente, tarefa, dono atual, versão, objetivo/limites, inputs com origem, output, critérios de aceite, evidências ligadas à mesma versão, dependências, próxima ação, participantes reais da autoria, criticidade e estado das ferramentas com referência de diagnóstico. Revisor que contribuiu ou é dono autoral não passa como independente. Os valores de ferramentas/evidência são declarados, não prova de observação. `candidate_complete` significa formato completo; `dispatchAllowed=false`, aceite não registrado e dono preservado continuam valendo. Nenhuma liberação de fila, publicação ou aprovação é concedida por essa validação.

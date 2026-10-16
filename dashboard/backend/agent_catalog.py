@@ -1,6 +1,7 @@
 """Additive squad metadata and read-only evidence; never dispatches agents/tools."""
 from pathlib import Path
 import re
+from squad_delivery_contract import agent_delivery_roles
 
 # Presentation sectors do not replace ACLs, ownership, commands or business/dev layers.
 SECTORS = {
@@ -126,6 +127,9 @@ def catalog_entry(name: str, source: str, workspace: Path) -> dict:
         'display_name': name, 'function': 'Função definida na persona existente',
         'sector_id': 'custom', 'sector': 'Personalizados e plugins',
     }))
+    entry['delivery_roles'] = agent_delivery_roles(name)
+    primary = next((r for r in entry['delivery_roles'] if r['role'] == 'responsible'), None)
+    entry['display_label'] = (primary['label'] + ' · ' if primary else '') + entry['display_name']
     body = _runtime_body(source)
     referenced = {(layer, slug) for layer, slug in _PATH.findall(body)}
     candidates = referenced | {('skills', slug) for slug in EXPECTED_KNOWLEDGE.get(name, [])}

@@ -1,6 +1,6 @@
 """Agents endpoint — list agents, their config and memory."""
 
-from flask import Blueprint, jsonify, abort, Response
+from flask import Blueprint, jsonify, abort, Response, request
 from flask_login import login_required, current_user
 from routes._helpers import WORKSPACE, safe_read, parse_frontmatter, file_info
 from models import has_agent_access
@@ -89,3 +89,29 @@ def get_agent_memory_file(name, file):
         abort(500, description="Could not read file")
     mime = "text/markdown" if path.suffix.lower() == ".md" else "text/plain"
     return Response(content, mimetype=mime)
+
+
+@bp.post('/api/agents/delivery-contract/validate')
+def validate_delivery_contract():
+    """Validate only: no queue writes, invocation or implicit handoff acceptance."""
+    from routes.managed_live_context import _guard, _scope, _reply
+    from squad_delivery_contract import validate_handoff
+    denied = _guard(write=True)
+    if denied is not None:
+        return denied
+    if request.content_length is not None and request.content_length > 65536:
+        return _reply({'error': 'handoff_too_large'}, 413)
+    data = request.get_json(silent=True)
+    try:
+        result = validate_handoff(data)
+    except (ValueError, TypeError):
+        return _reply({'error': 'invalid_handoff'}, 400)
+    actors = {result['responsible'], result['assistant'], result['reviewer'],
+              result['currentOwner'], *data['contributors']}
+    if any(_scope(data['companyId'], actor) is None for actor in actors):
+        return _reply({'error': 'scope_denied'}, 403)
+    missing = [path for path in result['requiredMethods'] if not (WORKSPACE / path).is_file()]
+    if missing:
+        result['status'] = 'blocked'
+        result['blockers'].extend('method_missing:' + path for path in missing)
+    return _reply(result)

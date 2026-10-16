@@ -733,3 +733,86 @@ def test_comment_refreshes_last_movement_for_stale_sweep(client, app):
         with sqlite3.connect(db.engine.url.database) as conn:
             conn.row_factory = sqlite3.Row
             assert _stale_in_progress(conn, 60) == []
+
+
+@pytest.mark.parametrize('bulk', [False, True])
+def test_reassignment_rejects_unknown_owner_without_changing_blocked_ticket(client, app, monkeypatch, bulk):
+    import routes.tickets as routes
+    from models import db, Ticket, TicketActivity
+    monkeypatch.setattr(routes, '_get_agent_slugs', lambda: {'bolt-executor'})
+    tid = TestAtomicCheckout()._ticket_livre(app)
+    with app.app_context():
+        t = db.session.get(Ticket, tid)
+        t.status = 'blocked'
+        t.blocked_reason = 'external_dependency'
+        db.session.commit()
+    response = (client.post('/api/tickets/bulk', json={'ids': [tid], 'action': 'reassign', 'payload': {'assignee_agent': 'invented-agent'}})
+                if bulk else client.patch(f'/api/tickets/{tid}', json={'assignee_agent': 'invented-agent'}))
+    assert response.status_code == 400
+    with app.app_context():
+        t = db.session.get(Ticket, tid)
+        assert (t.assignee_agent, t.status, t.blocked_reason) == (None, 'blocked', 'external_dependency')
+        assert TicketActivity.query.filter_by(ticket_id=tid).count() == 0
+
+
+@pytest.mark.parametrize('bulk', [False, True])
+def test_reassignment_retry_is_idempotent_and_preserves_gate(client, app, monkeypatch, bulk):
+    import routes.tickets as routes
+    from models import db, Ticket, TicketActivity
+    monkeypatch.setattr(routes, '_get_agent_slugs', lambda: {'bolt-executor'})
+    tid = TestAtomicCheckout()._ticket_livre(app)
+    with app.app_context():
+        t = db.session.get(Ticket, tid)
+        t.status = 'blocked'
+        t.requires_human_approval = 1
+        t.blocked_reason = 'pending_human_approval'
+        db.session.commit()
+    def assign():
+        if bulk:
+            return client.post('/api/tickets/bulk', json={'ids': [tid, tid], 'action': 'reassign', 'payload': {'assignee_agent': ' bolt-executor '}})
+        return client.patch(f'/api/tickets/{tid}', json={'assignee_agent': ' bolt-executor '})
+    assert assign().status_code == 200
+    with app.app_context():
+        count = TicketActivity.query.filter_by(ticket_id=tid).count()
+        before = db.session.get(Ticket, tid).updated_at
+    assert assign().status_code == 200
+    with app.app_context():
+        t = db.session.get(Ticket, tid)
+        assert t.assignee_agent == 'bolt-executor'
+        assert (t.status, t.requires_human_approval, t.blocked_reason) == ('blocked', 1, 'pending_human_approval')
+        assert t.updated_at == before
+        assert TicketActivity.query.filter_by(ticket_id=tid).count() == count == 1
+
+
+def test_bulk_reassignment_prevalidates_thread_owners_before_any_write(client, app, monkeypatch):
+    import routes.tickets as routes
+    from models import db, Ticket, TicketActivity
+    monkeypatch.setattr(routes, '_get_agent_slugs', lambda: {'bolt-executor', 'pixel-social-media'})
+    ordinary = TestAtomicCheckout()._ticket_livre(app)
+    thread = TestAtomicCheckout()._ticket_livre(app)
+    with app.app_context():
+        t = db.session.get(Ticket, thread)
+        t.assignee_agent = 'pixel-social-media'
+        t.memory_md_path = 'workspace/thread.md'
+        db.session.commit()
+    response = client.post('/api/tickets/bulk', json={'ids': [ordinary, thread], 'action': 'reassign', 'payload': {'assignee_agent': 'bolt-executor'}})
+    assert response.status_code == 409
+    with app.app_context():
+        assert db.session.get(Ticket, ordinary).assignee_agent is None
+        assert db.session.get(Ticket, thread).assignee_agent == 'pixel-social-media'
+        assert TicketActivity.query.filter(TicketActivity.ticket_id.in_([ordinary, thread])).count() == 0
+
+
+@pytest.mark.parametrize('value', [None, '', '   '])
+def test_explicit_unassignment_remains_supported(client, app, monkeypatch, value):
+    import routes.tickets as routes
+    from models import db, Ticket
+    monkeypatch.setattr(routes, '_get_agent_slugs', lambda: set())
+    tid = TestAtomicCheckout()._ticket_livre(app)
+    with app.app_context():
+        t = db.session.get(Ticket, tid)
+        t.assignee_agent = 'old-agent'
+        db.session.commit()
+    assert client.patch(f'/api/tickets/{tid}', json={'assignee_agent': value}).status_code == 200
+    with app.app_context():
+        assert db.session.get(Ticket, tid).assignee_agent is None

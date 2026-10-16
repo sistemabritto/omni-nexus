@@ -7,6 +7,8 @@ let phase='idle';
 const Component=(()=>{const module={exports:{}};vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText,{module,exports:module.exports,require:name=>{
  if(name.endsWith('.css'))return {};
  if(name==='react')return {...React,useEffect:()=>{},useSyncExternalStore:()=>({phase,agent:'oracle',company:'Empresa fixture',companyId:7,mic:false,messages:[],status:'Fixture'}),useState:value=>{const index=stateCalls++;return[index===0?{companies:[{id:7,name:'Empresa fixture'}],agents:['oracle'],consumptionApproved:true}:index===2?selected:value,()=>{}]}};
+ // Host layout fixture isolates the shared avatar (portrait hashes/hydration have their own real contract).
+ if(name.endsWith('/AgentAvatar'))return{AgentAvatar:({name,size})=>React.createElement('img',{alt:name,width:size,height:size})};
  if(name==='react/jsx-runtime')return require(deps+name);
  if(name.endsWith('/AuthContext'))return{useAuth:()=>({user:{role},hasAgentAccess:()=>true})};
  if(name.endsWith('/CompanyContext'))return{useCompanies:()=>({activeCompanyId:7,activeCompany:{id:7,name:'Empresa fixture'}})};

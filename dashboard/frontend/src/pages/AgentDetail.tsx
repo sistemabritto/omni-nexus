@@ -8,6 +8,7 @@ import AgentTerminal from '../components/AgentTerminal'
 import AgentChat from '../components/AgentChat'
 import ChatSessionList, { type ChatSession } from '../components/ChatSessionList'
 import { getAgentMeta } from '../lib/agent-meta'
+import { squadEntryLabel } from '../live/live-agent-catalog'
 import { trackAgentVisit } from '../lib/agent-visits'
 import { AgentAvatar } from '../components/AgentAvatar'
 import { useAuth } from '../context/AuthContext'
@@ -413,7 +414,7 @@ export default function AgentDetail() {
 
         <div className="flex flex-col gap-0.5 min-w-0">
           <h1 className="text-[16px] font-semibold text-[color:var(--text-primary)] tracking-tight truncate">
-            {formatName(name)}
+            {squadEntryLabel(name, formatName(name))}
           </h1>
           <code
             className="font-mono text-[11px] tracking-tight"
@@ -478,7 +479,7 @@ export default function AgentDetail() {
             >
               <div className="flex items-center justify-between px-4 h-10 border-b border-[color:var(--border)]">
                 <span className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
-                  {formatName(name)}
+                  {squadEntryLabel(name, formatName(name))}
                 </span>
                 <button
                   onClick={() => setRailOpen(false)}

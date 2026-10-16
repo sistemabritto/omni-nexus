@@ -9,3 +9,7 @@ Validation:70 targeted backend tests, two Node contracts, frontend TypeScript/bu
 Dashboard-only publication by exact SHA/digest, offline image boot, fresh idle check, private backups and compatible rollback to7cdb79d; no worker/core/ENV changes, no queue execution, no canary retry. Compare data to a fresh baseline: the natural Ghost polling created two independent approval tickets during this phase; do not treat them as rollout mutations or alter their states. Preserve EDIT07 review artifact and hash.
 
 Production checks must verify OCI revision, six asset hashes/served bytes, approved aliases in catalog/bundles, custom/persona/ACL/voice/session/ticket preservation and unchanged execution modules. Personal authenticated browser access is currently unavailable (login screen), so fixture QA must not be described as authenticated production visual acceptance. No auto-approval/publication of social content accompanies this release.
+
+First remote CI38935190310 found an obsolete host SSR mock: new named AgentAvatar import was answered by a default-only fallback. The layout fixture now supplies the named presentation stub; integrated-flow loads the actual avatar/metadata modules and substitutes Vite DEV at compile time, as other Node fixtures do. No runtime/audio/auth logic changed. Full Node CI selection rerun before publication.
+
+Integration also uses the shared approved display label in the AgentDetail heading, so a new portrait does not open under an obsolete alias. Command and persona content remain untouched; all other actors use the existing fallback.

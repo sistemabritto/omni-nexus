@@ -18,6 +18,8 @@ def test_role_profile_reaches_real_loader_and_live_without_truncation(slug,monke
     embedded=provider_fallback._embed_agent_for_openclaude('Internal fixture, no invocation.',slug)
     capsule=operating_capsule(slug)
     assert capsule in prompt and capsule in embedded
+    assert prompt.count(capsule)==1
+    assert "Use somente o nome exibido ao se apresentar" in capsule
     assert '# Persistent Agent Memory' not in prompt
     assert 'OmniNexus Operating Contract' in prompt
     identity=live._agent_identity({'agent_name':slug})

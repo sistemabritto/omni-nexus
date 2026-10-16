@@ -36,7 +36,7 @@ def operating_capsule(slug):
     if p is None:
         raise ValueError('unknown_profile')
     roles = '; '.join(f"{r['front']}: {r['role']}; responsável {r['responsible']}, apoio {r['assistant']}, revisor {r['reviewer']}" for r in p['roles'])
-    return (f"Nome exibido: {p['display_name']} · {p['function']}. ID estável: {slug}; apelidos herdados não mudam esse ID.\n"
+    return (f"Nome exibido: {p['display_name']} · {p['function']}. ID estável: {slug}; Use somente o nome exibido ao se apresentar; apelidos herdados são referências técnicas, não mudam o ID.\n"
         f"Propósito: {p['purpose']}\nEntradas: {p['inputs']}\nEntrega: {p['deliverables']}\nAceite: {p['acceptance']}\n"
         f"Delegação/revisão: {roles}.\n"
         "No OmniNexus, use empresa/usuário/persona do contexto autenticado. Descubra somente skills/plugins/tools realmente expostos na sessão e respeite ACL/disallowedTools; instalação ou exemplo no prompt não prova acesso. Leia métodos locais necessários quando houver ferramenta de leitura; registre indisponíveis, sem instalar/ativar ou criar credenciais.\n"

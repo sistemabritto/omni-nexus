@@ -57,7 +57,7 @@ Cada referência textual registra separadamente: `document_present` (SKILL.md en
 
 ## Lacunas verificadas e próximos passos
 
-Os módulos auditados propostos nos PRs anteriores (`logo-design`, `mkt-creative-brief`, `design-quality`, `dev-team-methods`, `mkt-research-pipeline`, `social-reels-editorial`) não existem nesta base publicada consultada. Isso significa “ausente nesta revisão”, não “nunca integrado” nem “ausente em todo container”. O catálogo checa o arquivo a cada resposta, portanto após integração passa a refletir presença e referência sem hardcode de status aprovado. Integrador deve conferir seu HEAD e imagem efetivos.
+Os módulos auditados propostos nos PRs anteriores (`logo-design`, `mkt-creative-brief`, `design-quality`, `dev-team-methods`, `mkt-research-pipeline`, `social-reels-editorial`) não existem na revisão histórica b1f28d4 consultada pelo autor. Isso significa “ausente nesta revisão”, não “nunca integrado” nem “ausente em todo container”. O catálogo checa o arquivo a cada resposta, portanto após integração passa a refletir presença e referência sem hardcode de status aprovado. Integrador deve conferir seu HEAD e imagem efetivos.
 
 Reels é exceção importante: `generate_reel` nesta base usa `agent=""`; persona não prova orientação incluída no prompt in-process. Preservar o carregamento explícito e os testes do PR64 ao integrar. `/api/skills` descobre `.claude/skills`; o catálogo também reconhece caminho explícito `.claude/skills-media`, sem alegar que esse diretório está listado no endpoint original de skills. Não alterar loader só para fazer inventário parecer completo.
 
@@ -80,3 +80,7 @@ Nenhuma fonte upstream foi copiada nesta entrega: descrições/setores são meta
 ## Validação
 
 46 testes locais: cobertura das 42 personas; recorte de prompt comparado ao loader real; arquivo versus referência pós-memória; fallback custom; endpoint aditivo preservando descrição/model/locked e arquivo original. Sem simulação de comportamento de modelo, teste de serviço externo ou alteração de produção. `git diff --check` sem erros.
+
+## Revalidação na integração produtiva
+
+Integração sobre ac5e6f5: todos os seis módulos citados acima estão presentes. Os 42 testes por persona comparam o recorte ao loader real nessa base, sem alegar leitura pelo modelo. O incremento continua somente na API; nenhum seletor visual consome catalog neste lote. Reels preserva a leitura explícita da skill já integrada; a nota do catálogo permanece cautelosa sobre o handler in-process.

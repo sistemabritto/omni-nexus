@@ -22,7 +22,7 @@ function MessageComposer({disabled}:{disabled:boolean}){
   return <form onSubmit={e=>{e.preventDefault();send()}}><label className="sr-only" htmlFor="live-message">Mensagem</label><textarea id="live-message" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Escreva para Nexus Live…" disabled={disabled} rows={2}/><button aria-label="Enviar mensagem" disabled={disabled||!draft.trim()}><Send size={18}/></button></form>
 }
 export default function ManagedNexusLive(){
-  const {hasAgentAccess}=useAuth()
+  const {hasAgentAccess,user}=useAuth()
   const {activeCompanyId,activeCompany}=useCompanies()
   const state=useSyncExternalStore(managedSession.subscribe,managedSession.snapshot)
   const [options,setOptions]=useState<Options|null>(null),[agents,setAgents]=useState<Agent[]>([])
@@ -44,24 +44,26 @@ export default function ManagedNexusLive(){
   const canStart=!!(!pendingWrite&&activeCompany&&company&&available.includes(selected)&&options?.consumptionApproved)
   const bindings=voiceFirstBindings(managedSession,company?{companyId:company.id,company:company.name,agent:selected}:null,true)
   return <main className="live-immersive managed-live voice-first-page" data-voice-state={state.mic?'listening':'idle'}>
-    <header className="live-heading"><div><span className="live-eyebrow">SISTEMA BRITTO</span><h1>OmniNexus Live</h1><p>Converse por voz. Encontre suas entregas aqui.</p></div><span className="live-prototype">{state.phase==='connected'?'Conectado':'Acesso pessoal'}</span></header>
-    <section className="managed-context" aria-label="Contexto da conversa">
+    <header className="live-heading"><div><span className="live-eyebrow">SISTEMA BRITTO</span><h1>OmniNexus Live</h1></div><span className="live-prototype">{state.phase==='connected'?'Conectado':state.phase==='connecting'?'Conectando…':'Desconectado'}</span></header>
+    <details className="live-context-disclosure" open={!selected||undefined}><summary>{selected?`Contexto · ${selectedChoice.name}`:"Escolher agente"}</summary><section className="managed-context" aria-label="Contexto da conversa">
       <div className="managed-current-company"><span>Empresa do menu global</span><p>{activeCompany?.name||'Selecione uma empresa no menu global'}</p>{activeCompany&&options&&!company&&<small>Empresa selecionada indisponível para esta conversa.</small>}</div>
       <LiveAgentSelector allowed={available} agents={agents} legacyGroups={groups} selected={selected} disabled={busy} loading={catalogLoading} unavailable={catalogUnavailable} onSelect={setAgent} onRetry={()=>{setCatalogLoading(true);setRetry(value=>value+1)}}/>
       <small>Setores e funções são informações de apresentação; não habilitam ferramentas. <Link to="/inteligencia">Consultar agentes em Inteligência</Link>.</small>
       {selected&&<p className="managed-agent"><strong>{selectedChoice.name}</strong><span>{selectedChoice.role}</span><small>{selectedChoice.sector} · Identidade: {selected} · Respostas: Nexus Live. O agente selecionado define o contexto. Pedidos internos dependem de autorização.</small></p>}
-    </section>
-    {!busy&&<section className="live-status" aria-label="Condições para iniciar"><p>{!options?access:!activeCompany?'Selecione uma empresa no menu global.':!company?'A empresa global não está disponível para esta conversa.':!available.includes(selected)?'Selecione um agente do squad.':!options.consumptionApproved?'O consumo da conversa ainda não foi liberado no servidor.':'Empresa e agente selecionados. A conexão será validada ao iniciar.'}</p>{(!options||!options.consumptionApproved)&&<button type="button" className="px-3 py-3 underline disabled:opacity-40" disabled={checking} onClick={()=>{setChecking(true);setOptions(null);setAccess('Verificando acesso pessoal…');setCatalogLoading(true);setRetry(value=>value+1)}}>{checking?'Verificando acesso…':'Verificar acesso novamente'}</button>}</section>}
+    </section></details>
+    {!busy&&(!options||!canStart)&&<section className="live-status" aria-label="Condições para iniciar"><p>{!options?access:!activeCompany?'Selecione uma empresa no menu global.':!company?'A empresa global não está disponível para esta conversa.':!available.includes(selected)?'Selecione um agente do squad.':!options.consumptionApproved?'O consumo da conversa ainda não foi liberado no servidor.':''}</p>{(!options||!options.consumptionApproved)&&<button type="button" className="px-3 py-3 underline disabled:opacity-40" disabled={checking} onClick={()=>{setChecking(true);setOptions(null);setAccess('Verificando acesso pessoal…');setCatalogLoading(true);setRetry(value=>value+1)}}>{checking?'Verificando acesso…':'Verificar acesso novamente'}</button>}</section>}
     <VoiceFirstConversation key={`${activeCompanyId??'none'}:${selected}`}
       phase={state.phase} mic={state.mic} canStart={canStart}
       status={busy||state.company||state.contextChanged?state.status:access}
-      contextLabel={`${busy?state.company:activeCompany?.name||'Escolha uma empresa'} · ${selected?selectedChoice.name:'Escolha um agente'}`}
+      contextLabel={`${busy?state.company:activeCompany?.name||'Escolha uma empresa'} · Contexto: ${selected?selectedChoice.name:'Escolha um agente'}`}
       saveStatus={state.continuity?.writeStatus||'idle'} events={state.continuity?.events||[]} messages={state.messages}
       {...bindings} safeHref={safeWorkLink} copyText={text=>copyConversationText(text,navigator.clipboard)}
     ><MessageComposer key={activeCompanyId??'no-company'} disabled={state.phase!=='connected'}/></VoiceFirstConversation>
-    <p className="live-privacy">Microfone somente ao ativar. Com continuidade habilitada, transcrições finais são salvas no OmniNexus. Tarefas internas dependem de autorização do servidor. Gravação do provedor e retenção seguem a configuração do agente ElevenLabs.</p>
-    {company&&<VoicePicker key={company.id} companyId={company.id} busy={busy} connecting={state.phase==='connecting'} activeVoice={state.voiceName}/>}
-    {company&&<LiveFileSources key={`files:${company.id}`} companyId={company.id} company={company.name}/>}
-    <nav className="managed-links" aria-label="Contexto operacional"><Link to="/cockpit">Sessões, jobs e memória</Link><Link to="/live/gemini">Protótipo Gemini</Link></nav>
+    <details className="live-preferences"><summary>Voz e configurações</summary>
+      {company&&<VoicePicker key={company.id} companyId={company.id} busy={busy} connecting={state.phase==='connecting'} activeVoice={state.voiceName}/>}
+      <p className="live-privacy">Microfone somente ao ativar. Com continuidade habilitada, transcrições finais são salvas no OmniNexus. Tarefas internas dependem de autorização do servidor. Gravação do provedor e retenção seguem a configuração do agente ElevenLabs.</p>
+      <nav className="managed-links" aria-label="Contexto operacional"><Link to="/cockpit">Sessões, jobs e memória</Link><Link to="/live/gemini">Protótipo Gemini</Link></nav>
+    </details>
+    {user?.role==='admin'&&company&&<details className="live-admin-files"><summary>Arquivos · administração</summary><LiveFileSources key={`files:${company.id}`} companyId={company.id} company={company.name}/></details>}
   </main>
 }

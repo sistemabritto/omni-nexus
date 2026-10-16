@@ -696,7 +696,8 @@ function detectCreatedTicketId(text) {
 }
 
 class ChatBridge {
-  constructor() {
+  constructor({ openCodeReadTransport = null } = {}) {
+    this.openCodeReadTransport = openCodeReadTransport;
     this.sessions = new Map(); // sessionId -> { query, abortController, active, sdkSessionId }
     // Rate limiting state for OpenAI-compatible providers
     this._lastRequestTime = 0;
@@ -963,6 +964,33 @@ class ChatBridge {
     return { sessionId, sdkSessionId: null, capabilities };
   }
 
+  async _startOpenCodeReadSession(sessionId, options, providerConfig) {
+    if (this.sessions.has(sessionId)) await this.stopSession(sessionId);
+    const abortController = new AbortController();
+    const session = { active: true, abortController, sdkSessionId: null };
+    this.sessions.set(sessionId, session);
+    // No fallback/replay: a timeout or revocation must not produce another run.
+    (async () => {
+      try {
+        const output = await this.openCodeReadTransport.run(sessionId, options, providerConfig, abortController.signal);
+        if (!session.active || abortController.signal.aborted) return;
+        options.onMessage?.({ type: 'message_start' });
+        options.onMessage?.({ type: 'runtime_capabilities', ...output.capabilities });
+        options.onMessage?.({ type: 'text_start' });
+        options.onMessage?.({ type: 'text_delta', text: output.text });
+        options.onMessage?.({ type: 'message_stop' });
+        options.onMessage?.({ type: 'result', subtype: 'success', isError: false, mode: 'opencode_owned_read', receipt: output.receipt });
+        options.onComplete?.({ sdkSessionId: null, receipt: output.receipt });
+      } catch (error) {
+        if (session.active) options.onError?.(error);
+      } finally {
+        session.active = false;
+        if (this.sessions.get(sessionId) === session) this.sessions.delete(sessionId);
+      }
+    })();
+    return { sessionId, sdkSessionId: null, mode: 'opencode_owned_read' };
+  }
+
   async startSession(sessionId, options = {}) {
     const {
       agentName,
@@ -985,6 +1013,9 @@ class ChatBridge {
       // chat-completion-only models keep the plain REST path.
       if (getProviderMode(providerConfig) !== 'code') {
         return this._startOpenAICompatibleSession(sessionId, options, providerConfig);
+      }
+      if (providerConfig.cli_command === 'opencode' && this.openCodeReadTransport) {
+        return this._startOpenCodeReadSession(sessionId, options, providerConfig);
       }
       if (SDK_COMPATIBLE_CLI.has(providerConfig.cli_command)) {
         externalCliPath = resolveCliBinary(providerConfig.cli_command || 'openclaude');

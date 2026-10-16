@@ -1,0 +1,33 @@
+{
+  "proof": "actual_chatbridge_opencode_native_read",
+  "upstream": "local_fake_no_paid_inference",
+  "company_admission": "fixture_not_production",
+  "selected_skill": "mkt-creative-brief",
+  "tools_list": [
+    "read"
+  ],
+  "native_reads": [
+    {
+      "name": "skill.md",
+      "sourceSha256": "bdf8b4a658890c24751a9c49ef7e10b7387791241b4c3c538b9c400a79b6a957",
+      "outputSha256": "00468fac6d06e94cfb280fa26d462253b3c45056689b38aa7254f2f89b5e2573"
+    },
+    {
+      "name": "brand.md",
+      "sourceSha256": "494a6427c34abe4a01ea472b9f1ffa6124838566e00a6967ae1bed8fa5deaa7d",
+      "outputSha256": "a2d75bb9cee2f2ab88d476349e79579619906c368e09f896f441fbce33ba6cf1"
+    }
+  ],
+  "receipt_sha256": "804d3640f4f5ac256a7d2e890c5f762c4b90bc43f551b4c18c1afff67800fb61",
+  "result_sha256": "e9a7ba6bb83eede3882ef355dd9e01f06aacb3549ea75cba3172ff17469b36a6",
+  "request_schemas_sha256": "77edfe40f049586e8a98748cef0a9ee8ad55ec3c9d37fc65a9cdf97c6a25363d",
+  "received_brand_marker": true,
+  "binary_sha256": "bb71f45b564f9234a97f54d6252a4a41d2f4388ae4b078918f691824cc3b3e54",
+  "external_calls": 0,
+  "codex_activated": false,
+  "negative_proof": {
+    "outside_snapshot_read": "denied_by_actual_native_tool",
+    "success_receipt_created": false,
+    "upstream": "local_fake_no_paid_inference"
+  }
+}

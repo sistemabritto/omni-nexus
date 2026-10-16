@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "clawdia-assistant",
+    "original_sha256": "cde1b6df1e0a8ed13e5d66157fa8511ff10417fd8b195d1c885c914e285e6bf4",
+    "live_capsule_chars": 1677,
+    "original_live_heading": true
+  },
+  {
+    "slug": "mako-marketing",
+    "original_sha256": "b83475c8a6e9c1f4248cfba96587c7e1e4b6d8bfb5c9e637ba1584ac387a0f9e",
+    "live_capsule_chars": 1772,
+    "original_live_heading": false
+  },
+  {
+    "slug": "pixel-social-media",
+    "original_sha256": "81f87697cdf3e289bceb52b655f221f2038613b26d8c0a083136a4f77a9d25d4",
+    "live_capsule_chars": 1730,
+    "original_live_heading": false
+  },
+  {
+    "slug": "canvas-designer",
+    "original_sha256": "514787c027637aa06e7f822ef4ed9df7daa170c2a522f57dd7c923fdec229860",
+    "live_capsule_chars": 1715,
+    "original_live_heading": false
+  },
+  {
+    "slug": "bolt-executor",
+    "original_sha256": "291676e8319d522dbb3e408a77f4257218d3a206a54bd0c257fac1738e0a01b4",
+    "live_capsule_chars": 1803,
+    "original_live_heading": false
+  },
+  {
+    "slug": "oath-verifier",
+    "original_sha256": "ac7b3abe6aec277959f4582204b5a65d8d9e69af2aceccdca4c9ceac251a66d8",
+    "live_capsule_chars": 1976,
+    "original_live_heading": false
+  },
+  {
+    "slug": "atlas-project",
+    "original_sha256": "bbd21b431b80017bc1d39bc3bd9f9fbe0d9737c76847c1feed54ec6b38ce7a63",
+    "live_capsule_chars": 1648,
+    "original_live_heading": false
+  },
+  {
+    "slug": "sage-strategy",
+    "original_sha256": "70d65a3ca559a2f7042caa1d23134bfaa113ae32ad7632f028ccdb7e6286de2b",
+    "live_capsule_chars": 1652,
+    "original_live_heading": false
+  },
+  {
+    "slug": "raven-critic",
+    "original_sha256": "307e560a9f8a3e6f31e7011a6d1b912c4e51208d2a1c4d9cabf961e867cdfdd7",
+    "live_capsule_chars": 1756,
+    "original_live_heading": false
+  },
+  {
+    "slug": "hawk-debugger",
+    "original_sha256": "97db1f842dee63b6f851e0531d76fe104515ae692694ea71daab0842dc74f2df",
+    "live_capsule_chars": 1663,
+    "original_live_heading": false
+  },
+  {
+    "slug": "lens-reviewer",
+    "original_sha256": "773c1adc3a3e4be77c25bcbb23eee2ad0e3535bcaee64c9257ad6eeecb876baa",
+    "live_capsule_chars": 1643,
+    "original_live_heading": false
+  },
+  {
+    "slug": "probe-qa",
+    "original_sha256": "dcb750d4d0c33d7f73dbc7d9bcd2792ba053bee40ffa41269813ba4afbf11589",
+    "live_capsule_chars": 1670,
+    "original_live_heading": false
+  }
+]

@@ -2,6 +2,7 @@
 from pathlib import Path
 import re
 from squad_delivery_contract import agent_delivery_roles
+from squad_operating_profiles import operating_profile
 
 # Presentation sectors do not replace ACLs, ownership, commands or business/dev layers.
 SECTORS = {
@@ -137,6 +138,7 @@ def catalog_entry(name: str, source: str, workspace: Path) -> dict:
         'sector_id': 'custom', 'sector': 'Personalizados e plugins',
     }))
     entry['delivery_roles'] = agent_delivery_roles(name)
+    entry['delivery_profile'] = operating_profile(name)
     primary = next((r for r in entry['delivery_roles'] if r['role'] == 'responsible'), None)
     entry['display_label'] = (primary['label'] + ' · ' if primary else '') + entry['display_name']
     body = _runtime_body(source)

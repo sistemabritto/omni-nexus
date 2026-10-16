@@ -1,0 +1,11 @@
+# Prompts operacionais — delta independente dos retratos
+
+12 personas dos trios recebem cápsula operacional e referência de método ANTES do corte de memória. Nada é removido: hashes em qa/squad-operating/prompt-preservation.json e teste de reconstrução verificam frontmatter, corpo autoral e memórias originais byte a byte. Nenhum arquivo custom/plugin nem outro especialista é modificado. Catálogo custom em produção ainda requer inspeção sanitizada; ausência no checkout rastreado não prova ausência em produção.
+
+squad_operating_profiles.py é o perfil estruturado também exposto em catalog.delivery_profile: propósito, entradas, entregas, aceite, papéis, métodos e limites. As cápsulas incluem nome exibido/ID estável, descoberta de ferramentas realmente expostas, respeito à ACL/disallowedTools, empresa autenticada, contexto Live/no_tools, handoff sem transferência silenciosa e retorno à revisão. Identidade Live continua seção explicitamente curada; texto autoral original não é promovido automaticamente a contexto remoto.
+
+76 testes locais passaram: 12 loaders Python e embeddings OpenCode/OpenClaude reais, 12 identidades Live disponíveis/sem truncamento no limite2500, ponteiros locais, papéis/contrato, reconstrução dos originais e custom sem override. Não houve chamada ao modelo, serviço externo ou fila: leitura/aplicação pelo modelo continua não verificada. Claude/SDK e demais runtimes não são considerados equivalentes automaticamente.
+
+A cápsula recebida em no_tools contém instrução operacional suficiente para preparar pedido e relatar limite; não finge abrir cookbooks. O contrato de handoff segue validação de candidato, não dispatch global. Integração e conferência no runtime publicado ficam com integrador único; não desbloquear fila como efeito deste commit.
+
+Fontes upstream já adaptadas: Agency Agents/Superpowers→dev-team-methods; Taste/Ponytail→design-critique; MarketingSkills→mkt-research-pipeline; Anti-Slop→design-quality; instagram-agent-skill→social-reels-editorial/hookReels. Presença/pointer/teste de contrato não instala plugin upstream nem prova execução. UIUXProMax está disponível no filtro de design; não confirma a palavra transcrita “LPUís”. Trail-Code/codebase-memory são estudo; Orca não foi instalado; SeeCut não foi incorporado. Sem instalação para preencher contagem.

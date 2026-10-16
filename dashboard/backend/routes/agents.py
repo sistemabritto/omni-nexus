@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, abort, Response
 from flask_login import login_required, current_user
 from routes._helpers import WORKSPACE, safe_read, parse_frontmatter, file_info
 from models import has_agent_access
+from agent_catalog import catalog_entry
 
 bp = Blueprint("agents", __name__)
 
@@ -36,6 +37,7 @@ def list_agents():
                 "memory_count": _count_memory(name),
                 "custom": name.startswith("custom-"),
                 "locked": not has_agent_access(role, name),
+                "catalog": catalog_entry(name, content, WORKSPACE),
             }
             if fm.get("color"):
                 entry["color"] = fm["color"]

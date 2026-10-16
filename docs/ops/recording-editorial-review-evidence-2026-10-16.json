@@ -1,0 +1,52 @@
+{
+  "render_count": 1,
+  "synthetic_only": true,
+  "duration_seconds": 0.621333,
+  "expected_seconds": 0.6,
+  "time_map": [
+    {
+      "asset_id": "voiced",
+      "source_start": 0.1,
+      "source_end": 0.3,
+      "edited_start": 0.0,
+      "edited_end": 0.2
+    },
+    {
+      "asset_id": "voiced",
+      "source_start": 0.6,
+      "source_end": 0.8,
+      "edited_start": 0.2,
+      "edited_end": 0.4
+    },
+    {
+      "asset_id": "silent",
+      "source_start": 0.1,
+      "source_end": 0.3,
+      "edited_start": 0.4,
+      "edited_end": 0.6000000000000001
+    }
+  ],
+  "pixels_rgb": [
+    [
+      254,
+      0,
+      0
+    ],
+    [
+      0,
+      255,
+      1
+    ],
+    [
+      254,
+      0,
+      0
+    ]
+  ],
+  "rms": [
+    2023.8733770412357,
+    2034.1052239912563,
+    0.0
+  ],
+  "sha256": "2592122398493cebfa37d3493260639ebea48dd752feaf40011b29c16922358f"
+}

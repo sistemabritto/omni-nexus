@@ -319,6 +319,10 @@ def list_media_jobs():
     # Old service workers must never route an unknown recording_batch to social_clip.
     if getattr(g, "auth_via_api_token", False) and request.args.get("recording_batch") != "v1":
         query = query.filter(MediaJob.job_type != "recording_batch")
+    if getattr(g, "auth_via_api_token", False) and request.args.get("recording_edits") != "v2":
+        import models as m
+        advanced=db.select(m.RecordingVersion.job_id).where(m.RecordingVersion.snapshot_json.like('%"edit_plan_version": 2%'))
+        query=query.filter(~MediaJob.id.in_(advanced))
     # Legacy jobs retain existing policy; private Gravações never leak through this list.
     if current_user.role != "admin":
         import models as m

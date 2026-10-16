@@ -1793,3 +1793,13 @@ class RecordingFeedback(db.Model):
     audio_mime = db.Column(db.String(100), nullable=True)
     audio_sha256 = db.Column(db.String(64), nullable=True)
     created_at = db.Column(db.String(30), nullable=False)
+
+
+class RecordingRejection(db.Model):
+    """Immutable human rejection of one rendered version; re-edit creates another version."""
+    __tablename__ = "recording_rejections"
+    version_id = db.Column(db.String(36), db.ForeignKey("recording_versions.id"), primary_key=True)
+    render_sha256 = db.Column(db.String(64), nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    rejected_by = db.Column(db.String(100), nullable=False)
+    rejected_at = db.Column(db.String(30), nullable=False)

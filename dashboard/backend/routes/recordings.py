@@ -83,9 +83,10 @@ def version_dict(version):
     if release:
         try: assert_current(job,release)
         except ReleaseError as exc: delivery.update(approval_valid=False,invalidated_reason=str(exc))
-    return {'id':version.id,'number':version.number,'batch':version.batch,'script_revision':version.script_revision,
+    rejected=m.db.session.get(m.RecordingRejection,version.id)
+    return {'rejection':{'reason':rejected.reason,'by':rejected.rejected_by,'at':rejected.rejected_at,'render_sha256':rejected.render_sha256} if rejected else None,'id':version.id,'number':version.number,'batch':version.batch,'script_revision':version.script_revision,
             'snapshot':json.loads(version.snapshot_json),'created_at':version.created_at,
-            'qa_valid':bool(version.qa_sha256 and version.qa_sha256==job.render_sha256),'qa_by':version.qa_by,
+            'qa_valid':bool(not rejected and version.qa_sha256 and version.qa_sha256==job.render_sha256),'qa_by':version.qa_by,
             'job':job.to_dict(),'release':delivery}
 
 
@@ -94,6 +95,7 @@ def state_for(row,uploads,versions):
     if not row.closed:
         return 'receiving_raw' if uploads else 'ready_to_record'
     if not current: return 'ready_to_edit'
+    if current.get('rejection'):return 'changes_requested'
     job,release = current['job'],current['release']
     if job['status'] in ('failed','retryable_failure','cancelled'): return 'editing_attention'
     if job['status'] in ('queued','preparing'): return 'ready_to_edit'
@@ -329,7 +331,7 @@ def close_batch(recording_id):
     snapshot={'recording_id':row.id,'version_id':version_id,'script_revision':row.script_revision,'script_sha256':script.sha256,
         'close_revision':expected,'close_signature':signature,'photo_seconds':seconds,
         'assets':[{'id':i.id,'path':i.storage_path,'kind':i.kind,'sha256':i.sha256,'photo_seconds':seconds,**({'trim':edits[i.id]} if i.id in edits else {})} for i in items],
-        'edit_plan_version':1,'stage':'rough_assembly','automatic_transcription':False,'feedback_applied':False}
+        'edit_plan_version':2 if any('keep_segments' in edit for edit in edits.values()) else 1,'stage':'rough_assembly','automatic_transcription':False,'feedback_applied':False}
     job=m.MediaJob(id=job_id,company_id=row.company_id,created_by=current_user.username,job_type='recording_batch',
         title=row.title,brief='Montagem inicial dos arquivos na ordem aprovada; sem IA, transcrição, memes ou publicação.',
         caption='',platform='instagram',width=720,height=1280,fps=30,duration_seconds=0,publication_mode='draft',
@@ -424,6 +426,7 @@ def qa_recording(recording_id,version_id):
     version=m.RecordingVersion.query.filter_by(id=version_id,recording_id=row.id).first_or_404()
     latest=m.RecordingVersion.query.filter_by(recording_id=row.id).order_by(m.RecordingVersion.number.desc()).first()
     if version.id!=latest.id or version.batch!=row.batch or version.script_revision!=row.script_revision or not row.closed:abort(409,description='version_superseded')
+    if m.db.session.get(m.RecordingRejection,version.id):abort(409,description='version_rejected_create_new_preview')
     data=body();checks=data.get('checks')
     if not isinstance(checks,dict) or not all(checks.get(k) is True for k in ('audio','captions','face','safe_zones','rights')):abort(400,description='qa_checks_required')
     job=m.db.session.get(m.MediaJob,version.job_id)
@@ -434,3 +437,37 @@ def qa_recording(recording_id,version_id):
     touch(row,require_open=False)
     version.qa_sha256=job.render_sha256;version.qa_by=current_user.username;version.qa_at=now()
     m.db.session.commit();return jsonify(detail(row))
+
+
+@bp.route('/api/recordings/<recording_id>/versions/<version_id>/reject',methods=['POST'])
+def reject_recording(recording_id,version_id):
+    row=record(recording_id,True)
+    if getattr(g,'auth_via_api_token',False) or not m.has_permission(current_user.role,'media_jobs','manage'):abort(403)
+    version=m.RecordingVersion.query.filter_by(id=version_id,recording_id=row.id).first_or_404()
+    data=body();reason=text(data.get('reason'),'rejection_reason',2000).strip()
+    previous=m.db.session.get(m.RecordingRejection,version.id)
+    if previous:
+        if previous.reason==reason and previous.render_sha256==data.get('render_sha256') and previous.rejected_by==current_user.username:return jsonify(detail(row))
+        abort(409,description='rejection_already_recorded')
+    latest=m.RecordingVersion.query.filter_by(recording_id=row.id).order_by(m.RecordingVersion.number.desc()).first()
+    if version.id!=latest.id or version.batch!=row.batch or version.script_revision!=row.script_revision or not row.closed:abort(409,description='version_superseded')
+    job=m.db.session.get(m.MediaJob,version.job_id)
+    if job.status not in ('ready_for_review','approved') or data.get('render_sha256')!=job.render_sha256:abort(409,description='render_not_current')
+    from media_release import render_binding
+    try:render_binding(job)
+    except ReleaseError:abort(409,description='render_changed')
+    release=m.db.session.get(m.MediaRelease,job.id)
+    if release and any(channel.get('post_id') or channel.get('state') not in (None,'pending') for channel in release.to_dict()['progress'].get('channels',{}).values()):
+        abort(409,description='distribution_started_review_remote_posts')
+    touch(row,require_open=False,expected=integer(data.get('expected_revision'),'expected_revision'))
+    m.db.session.add(m.RecordingRejection(version_id=version.id,render_sha256=job.render_sha256,reason=reason,rejected_by=current_user.username,rejected_at=now()))
+    version.qa_sha256=None;version.qa_by=None;version.qa_at=None
+    if release:
+        changed=m.db.session.execute(m.db.update(m.MediaRelease).where(m.MediaRelease.job_id==job.id,m.MediaRelease.busy.is_(False)).values(approved_digest=None,invalidated_reason='recording_version_rejected').execution_options(synchronize_session=False))
+        if changed.rowcount!=1:m.db.session.rollback();abort(409,description='release_busy')
+        m.db.session.refresh(release)
+    from media_state_machine import assert_transition
+    assert_transition(job.status,'cancelled');job.status='cancelled';job.reject_reason=reason
+    m.db.session.commit()
+    m.audit(current_user,'execute','media_jobs',f'rejected recording version {version.id}')
+    return jsonify(detail(row)),201

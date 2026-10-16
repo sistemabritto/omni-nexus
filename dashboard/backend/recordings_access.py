@@ -32,6 +32,9 @@ def require_recording_job_access(job_id):
         data = request.get_json(silent=True)
         if not isinstance(data, dict) or data.get("recording_batch") != "v1":
             abort(409, description="recording_worker_upgrade_required")
+        import json
+        if json.loads(version.snapshot_json).get('edit_plan_version',1)>1 and data.get('recording_edits')!='v2':
+            abort(409,description='recording_segments_worker_upgrade_required')
     if request.method == "PATCH":
         data = request.get_json(silent=True) or {}
         if not isinstance(data, dict):
@@ -60,6 +63,7 @@ def release_readiness_error(job):
     latest=m.RecordingVersion.query.filter_by(recording_id=row.id).order_by(m.RecordingVersion.number.desc()).first()
     if version.id!=latest.id or version.batch!=row.batch or version.script_revision!=row.script_revision or not row.closed:
         return 'recording_version_superseded'
+    if m.db.session.get(m.RecordingRejection,version.id):return 'recording_version_rejected'
     if not version.qa_sha256 or version.qa_sha256!=job.render_sha256:
         return 'recording_requires_human_audio_caption_rights_qa'
     return None

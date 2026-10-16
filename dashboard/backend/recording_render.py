@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from recordings_storage import hash_file, private_path
 from media_validation import extract_metadata
-from recording_edits import video_trim
+from recording_edits import video_trim, video_segments
 
 
 class RecordingRenderError(ValueError): pass
@@ -22,7 +22,15 @@ def assemble_recording(snapshot, output, work, *, width=720, height=1280, timeou
         try: result=subprocess.run(command,capture_output=True,text=True,timeout=remaining)
         except (subprocess.TimeoutExpired,FileNotFoundError) as exc:raise RecordingRenderError(type(exc).__name__) from None
         if result.returncode:raise RecordingRenderError((result.stderr or '')[-1600:])
-    for index,asset in enumerate(assets):
+    expanded=[]
+    for asset in assets:
+        try: cuts=video_segments(asset.get('trim',{})) if asset.get('kind')=='video' else [None]
+        except ValueError as exc:raise RecordingRenderError(str(exc)) from None
+        if asset.get('kind')!='video' and 'trim' in asset:raise RecordingRenderError('corte exige vídeo')
+        for cut in cuts:
+            expanded.append({**asset,**({'trim':cut} if cut is not None else {})})
+        if len(expanded)>200:raise RecordingRenderError('lote excedeu 200 segmentos')
+    for index,asset in enumerate(expanded):
         source=private_path(asset['path'])
         if not source.is_file() or hash_file(source)!=asset.get('sha256'):raise RecordingRenderError('bruto mudou após fechar o lote')
         segment=work/f'{index:05d}.mp4'

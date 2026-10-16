@@ -39,3 +39,7 @@ A mesma trilha serve modos combináveis e VSL/mini-VSL motion. Fonte, método,
 rights/brand e QA pertencem à versão, não a um selo genérico do agente. Exemplo
 sintético em `evidence/creative-review-fixture.json`: demonstra estrutura e não
 comprova que vídeo real foi revisado.
+
+A checagem de arquivo/hash do frame não basta: a evidência precisa ser derivada
+do render dessa versão, no diretório/manifest de QA vinculado pelo servidor. Não
+aceitar frame/áudio de outra revisão só porque o digest do arquivo confere.

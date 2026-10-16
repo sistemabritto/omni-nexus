@@ -77,3 +77,9 @@ leitura desta skill.
 ## Qualidade criativa independente
 
 Na revisão de vídeo/motion solicitado, ler `.claude/skills/design-quality/video-review.md` e os métodos locais por ele indicados. Pixel mantém o editorial, Canvas a direção visual, Bolt a implementação e Probe a evidência técnica; Oath registra crítica independente do render por versão/hash antes da aprovação humana. Zen atua somente no código. Uma etapa de revisão declarada no plano não prova observação audiovisual nem torna render aprovado.
+
+O worker isolado de composição não é a sessão de revisão do Oath: seu catálogo
+scoped pode não conter o cookbook de qualidade. Não buscar fora do job nem
+instalar referências para preencher essa ausência. Devolver composição/evidência
+e pendências ao fluxo existente; a revisão independente ocorre onde o render e
+os documentos autorizados estão disponíveis, antes do gate humano.

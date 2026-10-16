@@ -8,6 +8,8 @@ A sessão usa row.agent_name do contexto owned, nunca um slug enviado no início
 
 Testes: metadados/IDs totalmente sintéticos, requests provider mockados; isolamento entre personas/empresas/providers, preferência legada preservada, reset local durável, ACL antes de requests, sessão vinculada ao contexto e override negado. Nenhum áudio novo ou ID real usado. Os19testes simulados passaram na rodada conjunta; um teste HTTP real do terminal foi impedido pelo sandbox (listen127.0.0.1 EPERM), não falhou por contrato de voz.
 
+TypeScript (tsconfig.app) e ESLint dos dois componentes passaram usando dependências existentes do checkout task-6/live-file-search; cache TypeScript em /tmp. Sem instalação/build/deploy. Graphify AST atualizado sem LLM, arquivos gerados excluídos do commit.
+
 Validação após integração pelo publicador único:
 1. Confirmar diff sobre HEAD corrente, testes e backup normal do arquivo de contexto antes do rollout habitual; nenhuma publicação concorrente.
 2. Abrir duas personas autorizadas na mesma empresa. Conferir preferências legadas preservadas e controles independentes após uma escolha explícita. Testar troca rápida e retorno sem catálogo/preview da persona anterior.

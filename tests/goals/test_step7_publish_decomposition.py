@@ -459,7 +459,7 @@ def test_publish_target_invalid_blocks_without_approval(conn):
 
     row = conn.execute("SELECT status, blocked_reason FROM tickets WHERE id = ?", (tid,)).fetchone()
     assert row["status"] == "blocked"
-    assert row["blocked_reason"] == "agent_blocked"
+    assert row["blocked_reason"] == "publish_context_missing"
     count = conn.execute("SELECT COUNT(*) FROM pending_approvals").fetchone()[0]
     assert count == 0
 

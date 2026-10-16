@@ -40,7 +40,7 @@ export default function VoicePicker({companyId,agentName,busy,connecting,activeV
     <summary>Voz e prévias existentes</summary>
     <div>
       <p>Ouça gravações já disponíveis na conta. Não gera áudio de teste e ouvir não salva uma escolha.</p>
-      {data&&<dl><dt>Voz configurada no agente</dt><dd>{data.current.name}</dd><dt>Preferência salva nesta empresa</dt><dd>{data.saved?.name||'Usar a voz padrão do agente'}</dd>{busy&&<><dt>Voz solicitada na conversa atual</dt><dd>{activeVoice||'Voz padrão do agente'}</dd></>}</dl>}
+      {data&&<dl><dt>Voz configurada no agente</dt><dd>{data.current.name}</dd><dt>Preferência salva nesta persona e empresa</dt><dd>{data.saved?.name||'Usar a voz padrão do agente'}</dd>{busy&&<><dt>Voz solicitada na conversa atual</dt><dd>{activeVoice||'Voz padrão do agente'}</dd></>}</dl>}
       {data&&!data.overrideAllowed&&<p>A troca de voz por conversa não está habilitada no agente. Salvar uma preferência não habilita essa permissão.</p>}
       {busy&&<p>A conversa atual não será reiniciada. As prévias ficam pausadas durante a chamada; sua escolha vale para a próxima.</p>}
       <form onSubmit={e=>{e.preventDefault();void load()}}><label htmlFor="voice-search">Buscar vozes na conta</label><div className="voice-search"><input id="voice-search" value={search} onChange={e=>setSearch(e.target.value)} maxLength={100}/><button disabled={loading||saving}>Buscar</button></div></form>

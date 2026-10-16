@@ -30,7 +30,7 @@ export default function LiveFileSources({companyId,company}:{companyId:number;co
       <form onSubmit={e=>{e.preventDefault();void run(inspect)}}>
         <label htmlFor="live-file-path">Caminho do arquivo no Workspace</label>
         <input id="live-file-path" value={path} onChange={e=>{setPath(e.target.value);setPreview(null);setConfirmed(false);setNotice('')}} placeholder="workspace/pasta/roteiro.md" disabled={busy} autoComplete="off" spellCheck={false} aria-describedby="live-file-help"/>
-        <small id="live-file-help">Formatos: .md, .txt e .html; até 128 KiB. Arquivos sensíveis e links simbólicos são recusados.</small>
+        <small id="live-file-help">Formatos: .md, .txt e .html; até 128 KiB. Padrões conhecidos de credenciais e links simbólicos são recusados.</small>
         <button type="submit" disabled={busy||!path.trim()}>Conferir arquivo</button>
       </form>
       {preview&&<div className="live-file-confirm">

@@ -22,6 +22,7 @@ async function fetch(url,options){
  else if(url.endsWith('/signed-session'))data={signedUrl:'never-used'};
  else if(url.endsWith('/continuity'))data={logicalConversationId:'logical-fixture'};
  else if(url.endsWith('/events'))data={logicalConversationId:'logical-fixture',events:[],next:0,hasMore:false};
+ else if(url.endsWith('/tool-audit'))data={recorded:true};
  else if(url.endsWith('/read'))data=scoped;
  else if(url.endsWith('/transcript'))data={saved:true};
  else if(!url.endsWith('/conversation'))throw Error('Unexpected fixture HTTP '+url);

@@ -47,6 +47,12 @@ export function createManagedContextTools(contextId:number) {
       return binding
     },
     disconnect() { closed=true },
+    async recordToolAudit(toolCallId:string,toolName:string,stage:string){
+      if(!binding||!conversationId)throw Error('Conversa não vinculada.')
+      await binding
+      const response=await call(`/api/live/omni-context/${contextId}/tool-audit`,{conversationId,toolCallId,toolName,stage})
+      if(response?.recorded!==true)throw Error('Auditoria não confirmada.')
+    },
     async runInternalTask(name:string,parameters:Record<string,unknown>,toolCallId:string) {
       if(closed||!binding||!conversationId)throw Error('Conversa não vinculada.')
       await binding

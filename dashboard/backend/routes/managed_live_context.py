@@ -817,3 +817,50 @@ def _query_for_current_turn(row):
     while (result['memory'] or result.get('documents', {}).get('results')) and len(json.dumps(result, ensure_ascii=False)) > 4000:
         (result['memory'] or result['documents']['results']).pop()
     return result
+
+
+def _tool_audit_request(context_id):
+    denied = _guard(write=True)
+    if denied is not None:
+        return None, None, denied
+    row = _owned(context_id)
+    data = request.get_json(silent=True)
+    if (row is None or not isinstance(data, dict) or not row['conversation_id']
+            or data.get('conversationId') != row['conversation_id']):
+        return None, None, _reply({'error': 'scope_denied'}, 403)
+    return row, data, None
+
+
+@bp.post('/api/live/omni-context/<int:context_id>/tool-audit')
+def append_tool_audit(context_id):
+    row, data, denied = _tool_audit_request(context_id)
+    if denied is not None:
+        return denied
+    from live_tool_audit import append
+    try:
+        with _store() as conn:
+            append(conn, row, data)
+        return _reply({'recorded': True})
+    except ValueError:
+        return _reply({'error': 'invalid_audit_metadata'}, 400)
+    except sqlite3.Error:
+        return _reply({'error': 'audit_unavailable'}, 503)
+
+
+@bp.post('/api/live/omni-context/<int:context_id>/tool-audit/read')
+def read_tool_audit(context_id):
+    row, data, denied = _tool_audit_request(context_id)
+    if denied is not None:
+        return denied
+    if set(data) not in ({'conversationId'}, {'conversationId', 'toolCallId'}):
+        return _reply({'error': 'invalid_audit_metadata'}, 400)
+    from live_tool_audit import read
+    try:
+        with _store() as conn:
+            events = read(conn, row, data.get('toolCallId'))
+        return _reply({'events': events, 'limit': 200,
+                       'deliveryEvidence': 'browser_reported_sdk_send_not_provider_ack'})
+    except ValueError:
+        return _reply({'error': 'invalid_audit_metadata'}, 400)
+    except sqlite3.Error:
+        return _reply({'error': 'audit_unavailable'}, 503)

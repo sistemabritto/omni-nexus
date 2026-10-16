@@ -109,6 +109,11 @@ function resolveProviderModel(providerConfig) {
   const active = providerConfig?.active || 'anthropic';
   const fromEnv = (env.OPENAI_MODEL || '').trim();
   if (fromEnv) return fromEnv;
+  // Legacy OpenCode cards persisted default_model but omitted OPENAI_MODEL.
+  // Honor that existing explicit default; never guess from another provider.
+  if (active === 'opencode' && typeof providerConfig?.default_model === 'string') {
+    return providerConfig.default_model.trim();
+  }
   if (active === 'codex_auth') return 'codexplan';
   if (active === 'openai') return 'gpt-4.1';
   return '';
@@ -232,6 +237,7 @@ function loadProviderConfig() {
         env_vars: pEnv,
         active: id,
         provider_name: p.name || id,
+        default_model: typeof p.default_model === 'string' ? p.default_model : null,
         mode: ALLOWED_MODES.has(p.mode) ? p.mode : null,
         fallback_models: Array.isArray(p.fallback_models)
           ? p.fallback_models.filter((m) => typeof m === 'string' && m.trim()).map((m) => m.trim())
@@ -259,6 +265,7 @@ function loadProviderConfig() {
       env_vars: envVars,
       active,
       provider_name: provider.name || active,
+      default_model: typeof provider.default_model === 'string' ? provider.default_model : null,
       mode: ALLOWED_MODES.has(provider.mode) ? provider.mode : null,
       fallback_models: fallbackModels,
       fallback_providers: fallbackProviders,

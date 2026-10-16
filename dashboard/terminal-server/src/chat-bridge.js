@@ -987,7 +987,8 @@ class ChatBridge {
           return this._startOpenAICompatibleSession(sessionId, options, providerConfig);
         }
       } else {
-        console.warn(`[chat-bridge] Active provider "${providerConfig.active}" uses cli_command "${providerConfig.cli_command}", which doesn't speak the Agent SDK protocol — Chat will use its fallback_providers instead`);
+        console.warn(`[chat-bridge] Active provider "${providerConfig.active}" uses cli_command "${providerConfig.cli_command}", which doesn't speak the Agent SDK protocol — Chat will use the selected HTTP endpoint without CLI tools`);
+        return this._startOpenAICompatibleSession(sessionId, options, providerConfig);
       }
     }
 

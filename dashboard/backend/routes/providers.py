@@ -293,6 +293,14 @@ def _terminate_codex_device_process():
 # ── Endpoints ──────────────────────────────────────────────
 
 
+def _editable_provider_env(provider_id: str, provider: dict) -> dict:
+    """Expose the model input for legacy OpenCode entries without writing defaults."""
+    env = dict(provider.get("env_vars", {}))
+    if provider_id == "opencode" and provider.get("cli_command") == "opencode":
+        env.setdefault("OPENAI_MODEL", provider.get("default_model") or "")
+    return env
+
+
 @bp.route("/api/providers")
 @login_required
 def list_providers():
@@ -319,7 +327,7 @@ def list_providers():
         cli_status = cli_status_by_command.get(cli, claude_status)
 
         # Mask env var values for API response
-        env_vars = prov.get("env_vars", {})
+        env_vars = _editable_provider_env(key, prov)
         masked_vars = {}
         for var_name, var_value in env_vars.items():
             if "KEY" in var_name or "SECRET" in var_name or "TOKEN" in var_name:
@@ -404,7 +412,7 @@ def get_provider_config(provider_id):
     if not provider:
         return jsonify({"error": f"Unknown provider: {provider_id}"}), 400
 
-    env_vars = provider.get("env_vars", {})
+    env_vars = _editable_provider_env(provider_id, provider)
     masked = {}
     for k, v in env_vars.items():
         if "KEY" in k or "SECRET" in k or "TOKEN" in k:
@@ -437,7 +445,10 @@ def update_provider_config(provider_id):
     for key, value in new_env_vars.items():
         if key not in ALLOWED_ENV_VARS:
             continue
-        if key not in existing:
+        if key not in existing and not (
+            provider_id == "opencode" and provider.get("cli_command") == "opencode"
+            and key == "OPENAI_MODEL"
+        ):
             continue
         # Skip if value looks masked (contains ****)
         if "****" in str(value):

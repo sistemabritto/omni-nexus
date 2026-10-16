@@ -24,7 +24,9 @@ SAFE_ERRORS = frozenset({
     'restricted_hypothesis_label_missing', 'restricted_completion_conflict',
     'restricted_adapter_unsupported', 'restricted_managed_config_present',
     'restricted_ancestor_config_present', 'restricted_explicit_provider_required',
-    'restricted_text_result_required',
+    'restricted_text_result_required', 'restricted_squad_role_mismatch',
+    'restricted_squad_method_unavailable', 'restricted_squad_handoff_invalid',
+    'restricted_squad_changed',
 })
 
 
@@ -149,8 +151,14 @@ credenciais. Retorne somente o texto Markdown do rascunho, sem ações ou JSON.'
     result = {}
     artifact = None
     diagnostics = {'contract': CONTRACT_VERSION, 'output_type': 'not_returned'}
-    stage = 'provider_call'
+    stage = 'squad_preflight'
     try:
+        from restricted_squad_contract import preflight_contract, artifact_handoff
+        squad = preflight_contract(agent)
+        _activity(conn, PILOT_ID, 'internal_draft_contract_validated',
+                  {'run_id': run_id, 'squad': squad, 'tool_policy': 'no_tools'})
+        conn.commit()
+        stage = 'provider_call'
         if invoke is None:
             from provider_fallback import invoke_with_fallback
             invoke = invoke_with_fallback
@@ -186,15 +194,23 @@ credenciais. Retorne somente o texto Markdown do rascunho, sem ações ou JSON.'
                 or row['assignee_agent'] != agent or row['updated_at'] != ticket['updated_at']
                 or row['description'] != ticket['description']):
             raise RuntimeError('restricted_completion_conflict')
+        stage = 'squad_revalidation'
+        if preflight_contract(agent) != squad:
+            raise ValueError('restricted_squad_changed')
         stage = 'controlled_persistence'
         artifact = _save_draft(root, PILOT_ID, run_id, text)
         sha = hashlib.sha256(text.encode('utf-8')).hexdigest()
+        stage = 'squad_handoff'
+        handoff = artifact_handoff(squad, ticket_id=PILOT_ID, run_id=run_id,
+                                   artifact=artifact, sha256=sha)
         conn.execute("UPDATE tickets SET status='review',blocked_reason=NULL,locked_at=NULL,locked_by=NULL,updated_at=? WHERE id=?", (_now(), PILOT_ID))
         _activity(conn, PILOT_ID, 'internal_draft_ready', {'run_id': run_id, 'artifact': artifact,
             'sha256': sha, 'bytes': len(text.encode('utf-8')), 'tool_policy': 'no_tools',
-            'human_publication_approval': False, 'diagnostics': diagnostics})
+            'human_publication_approval': False, 'diagnostics': diagnostics, 'squad': squad,
+            'delivery_handoff': handoff})
         conn.commit()
-        return {**result, 'output': '', 'agent': agent, 'internal_draft': artifact, 'sha256': sha}
+        return {**result, 'output': '', 'agent': agent, 'internal_draft': artifact, 'sha256': sha,
+                'squad': squad, 'delivery_handoff': handoff}
     except Exception as exc:
         diagnostics['failure_stage'] = stage
         reason = str(exc) if str(exc) in SAFE_ERRORS else 'restricted_execution_error'

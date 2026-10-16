@@ -88,7 +88,7 @@ def test_model_action_json_is_inert_text_never_applied(db,tmp_path):
     assert result['status']=='success'
     assert db.execute('SELECT status FROM tickets').fetchone()[0]=='review'
     assert (tmp_path/result['internal_draft']).read_text()==dangerous
-    assert [r[0] for r in db.execute('SELECT action FROM ticket_activity')]==['checkout','internal_draft_ready']
+    assert [r[0] for r in db.execute('SELECT action FROM ticket_activity')]==['checkout','internal_draft_contract_validated','internal_draft_ready']
 
 
 def test_ticket_prompt_injection_not_forwarded(db,tmp_path):

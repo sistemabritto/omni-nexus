@@ -1,6 +1,22 @@
 """Documented nullable provider metadata, no provider calls or permission changes."""
+import ast
+import re
+import types
+from pathlib import Path
 import pytest
-from routes.live_voices import _eligible
+
+# Compile the real pure functions without importing routes/models at collection.
+# Other integration fixtures rebuild SQLAlchemy registries; holding an old route
+# module here keeps stale weak-reference mappers alive in the combined suite.
+_source = Path(__file__).resolve().parents[2] / 'dashboard/backend/routes/live_voices.py'
+_nodes = [node for node in ast.parse(_source.read_text()).body
+          if isinstance(node, (ast.FunctionDef, ast.ClassDef))
+          and node.name in {'VoiceUnavailable', '_eligible', '_voice'}]
+mod = types.ModuleType('real_voice_metadata_functions')
+mod._ID = re.compile(r'^[A-Za-z0-9_-]{1,128}$')
+mod._get = lambda *_args, **_kwargs: None
+exec(compile(ast.Module(body=_nodes, type_ignores=[]), str(_source), 'exec'), mod.__dict__)
+_eligible = mod._eligible
 
 @pytest.mark.parametrize('category,access', [('premade', {}),('cloned', {'is_owner':True}),('generated', {'permission_on_resource':'viewer'})])
 @pytest.mark.parametrize('safety', [None,'NONE'])
@@ -22,7 +38,6 @@ def test_nullable_safety_does_not_grant_access_or_skip_verification_or_fine_tuni
 
 
 def test_detail_can_use_verified_same_account_listing_permission(monkeypatch):
-    import routes.live_voices as mod
     listing=dict(voice_id='shared_fixture',category='professional',permission_on_resource='viewer',is_owner=False,safety_control=None,fine_tuning={'state':{'fixture-model':'fine_tuned'}})
     detail={**listing,'permission_on_resource':None,'is_owner':None}
     def get(path,**kw):return {'voices':[listing]} if path=='/v2/voices' else detail
@@ -41,7 +56,6 @@ def test_detail_can_use_verified_same_account_listing_permission(monkeypatch):
 
 
 def test_detail_still_requires_own_model_training(monkeypatch):
-    import routes.live_voices as mod
     listing=dict(voice_id='shared_fixture',category='professional',permission_on_resource='admin',safety_control=None,fine_tuning={'state':{'fixture-model':'fine_tuned'}})
     detail={**listing,'permission_on_resource':None,'fine_tuning':{'state':{'other-model':'fine_tuned'}}}
     monkeypatch.setattr(mod,'_get',lambda path,**kw:{'voices':[listing]} if path=='/v2/voices' else detail)

@@ -89,7 +89,7 @@ jobs:
           tests/backend/test_image_workflow_architecture.py
           tests/backend/test_live_task_dispatch.py tests/backend/test_live_cli_isolation.py tests/backend/test_orchestration_jobs.py
           tests/backend/test_live_continuity_endpoints.py tests/backend/test_live_memory_bootstrap.py tests/backend/test_live_conversation_store.py tests/backend/test_live_memory_contract.py
-          tests/backend/test_execution_catalog.py tests/backend/test_execution_runtime.py tests/backend/test_provider_explorer_contract.py tests/backend/test_live_playback_regressions.py tests/backend/test_live_query_tools.py tests/backend/test_live_recording_source.py
+          tests/backend/test_execution_catalog.py tests/backend/test_execution_runtime.py tests/backend/test_provider_explorer_contract.py tests/backend/test_live_playback_regressions.py tests/backend/test_live_query_tools.py tests/backend/test_live_recording_source.py tests/backend/test_live_tool_audit.py
           tests/backend/test_provider_fallback_config_errors.py tests/media/test_provider_fallback_cwd.py
           tests/backend/test_design_cookbook.py tests/backend/test_marketing_research_skill.py
           tests/backend/test_team_methods_skill.py tests/backend/test_reels_editorial_skill.py

@@ -187,3 +187,22 @@ def test_footage_audio_contract_is_explicit_and_offline(tmp_path,monkeypatch,pol
     renderer.build_composition({'production':normalized,'assets':[asset]},tmp_path/'project',width=320,height=568)
     html=(tmp_path/'project/index.html').read_text()
     assert expected in html and '</video>' in html and 'crossorigin' not in html
+
+
+@pytest.mark.parametrize('policy',['source','provided'])
+def test_missing_required_audio_never_becomes_silence(tmp_path,monkeypatch,policy):
+    import video_project_render as renderer
+    output=tmp_path/'output/final.mp4';output.parent.mkdir();output.write_bytes(b'fixture')
+    work=tmp_path/'work';work.mkdir()
+    monkeypatch.setattr(renderer,'build_composition',lambda *a,**k:work)
+    monkeypatch.setattr(renderer,'_resolve_hyperframes_bin',lambda *a:'fixture-hyperframes')
+    monkeypatch.setattr(renderer,'render_composition',lambda *a,**k:None)
+    monkeypatch.setattr(renderer,'extract_metadata',lambda *a:SimpleNamespace(has_audio=False))
+    calls=[]
+    def run(args,**kwargs):
+        calls.append(args)
+        return SimpleNamespace(stdout='0.7.64')
+    monkeypatch.setattr(renderer.subprocess,'run',run)
+    with pytest.raises(ValueError,match='required_project_audio_missing'):
+        renderer.render_project({'production':{'duration':1,'audio_policy':policy}},output,work)
+    assert not any(call[0]=='ffmpeg' for call in calls)

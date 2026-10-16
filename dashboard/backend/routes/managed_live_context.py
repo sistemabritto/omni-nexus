@@ -452,8 +452,8 @@ def _work_payload(row, query):
     from routes.tickets import read_company_ticket_page
     from models import TicketComment
     from live_query_excerpt import matching_excerpt
-    stop = {'qual', 'quais', 'sobre', 'anterior', 'anteriores', 'trabalho', 'trabalhos', 'feito', 'fizemos', 'lembra', 'voce', 'você', 'para', 'como', 'está', 'esta'}
-    terms = [t for t in re.findall(r'[^\W_]+(?:-[^\W_]+)*', query.lower()) if len(t) >= 4 and t not in stop][:4]
+    from live_query_terms import query_terms
+    terms = query_terms(query)
     tickets = {}
     if not terms:
         # A fresh logical conversation has no user query yet. Show a bounded,
@@ -773,18 +773,17 @@ def query_authorized_context(context_id):
         return _reply({'error': 'continuity_unavailable'}, 503)
 
 
-def _query_payload(row, query, *, include_work=True):
+def _query_payload(row, query, *, include_work=True, exclude_event=None):
     from live_query_excerpt import matching_excerpt
+    from live_query_terms import query_terms
     query = query.strip()[:200]
-    terms = list(dict.fromkeys(re.findall(r'[^\W_]+(?:-[^\W_]+)*', query.lower())))
-    stop = {'qual','quais','sobre','anterior','anteriores','lembra','voce','você','para','como','que','uma','dos','das'}
-    terms = [t for t in terms if len(t) >= 3 and t not in stop][:4]
+    terms = query_terms(query)
     if not terms:
         return {'kind': 'untrusted_reference_data', 'memory': [], 'work': {'results': []}, 'coverage': 'query_too_broad'}
     try:
         store, principal = _continuity_store(row)
         memories = []
-        for hit in store.search(principal, terms, limit=5):
+        for hit in store.search(principal, terms, limit=5, exclude_event=exclude_event):
             hit = _visible_event(row, hit)
             if hit.get('retracted'):
                 continue
@@ -815,9 +814,11 @@ def _query_for_current_turn(row):
     cid = _continuity_id(row)
     store, principal = _continuity_store(row)
     snap = store.snapshot(principal, cid, history_limit=30)
-    query = next((e['text'][:200] for e in reversed(snap['current_context'])
-                  if e['kind'] == 'transcript' and e['source'].startswith('browser:user:')), '')
-    result = _query_payload(row, query, include_work=False)
+    question = next((e for e in reversed(snap['current_context'])
+                     if e['kind'] == 'transcript' and e['source'].startswith('browser:user:')), None)
+    query = question['text'][:200] if question else ''
+    exclude_event = (cid, question['event_id']) if question else None
+    result = _query_payload(row, query, include_work=False, exclude_event=exclude_event)
     while (result['memory'] or result.get('documents', {}).get('results')) and len(json.dumps(result, ensure_ascii=False)) > 4000:
         (result['memory'] or result['documents']['results']).pop()
     return result

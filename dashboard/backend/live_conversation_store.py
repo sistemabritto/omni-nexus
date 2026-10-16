@@ -202,7 +202,7 @@ class ConversationStore:
             self._guard(p, cid)
             return [dict(r) for r in rows]
 
-    def search(self, p, terms, *, limit=5):
+    def search(self, p, terms, *, limit=5, exclude_event=None):
         """Query current revisions in this user's/company's persisted Live history.
 
         No vector index, imported transcript, schema change or new memory store.
@@ -214,15 +214,24 @@ class ConversationStore:
                 or any(not isinstance(t, str) or not 1 <= len(t) <= 200 for t in terms)
                 or type(limit) is not int or not 1 <= limit <= 5):
             raise ValueError('invalid_query')
+        if exclude_event is not None and (not isinstance(exclude_event, tuple)
+                or len(exclude_event) != 2
+                or any(not isinstance(x, str) or not 1 <= len(x) <= 128 for x in exclude_event)):
+            raise ValueError('invalid_excluded_event')
+        excluded = exclude_event or ('', '')
         with self._db() as db:
             match = ' OR '.join('instr(lower(e.text),lower(?))>0' for _ in terms)
-            rows = db.execute('''SELECT e.*, c.id AS logical_id FROM events e
-                JOIN conversations c ON c.id=e.conversation_id
+            score = ' + '.join('(instr(lower(e.text),lower(?))>0)' for _ in terms)
+            rows = db.execute('''SELECT e.*, c.id AS logical_id, (''' + score + ''') AS relevance
+                FROM events e JOIN conversations c ON c.id=e.conversation_id
                 WHERE c.user_id=? AND c.company_id=? AND e.retracted=0
+                AND NOT (e.conversation_id=? AND e.event_id=?)
                 AND NOT EXISTS (SELECT 1 FROM events n WHERE n.conversation_id=e.conversation_id
                     AND n.event_id=e.event_id AND n.revision>e.revision)
-                AND (''' + match + ') ORDER BY e.seq DESC LIMIT 100',
-                (p.user_id,p.company_id,*terms)).fetchall()
+                AND (''' + match + ''') ORDER BY relevance DESC, e.verified DESC,
+                    CASE WHEN e.source LIKE 'browser:user:%' THEN 0 ELSE 1 END,
+                    e.seq DESC LIMIT 100''',
+                (*terms,p.user_id,p.company_id,*excluded,*terms)).fetchall()
             selected = []
             for row in rows:
                 if self.allowed(p, row['logical_id']):

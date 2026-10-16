@@ -148,3 +148,54 @@ def test_matching_excerpt_handles_literal_terms_unicode_and_absent_matches():
     assert matching_excerpt('x'*800+'a.b literal',['a.b']).endswith('a.b literal')
     assert matching_excerpt('safe prefix',[])=='safe prefix'
     assert matching_excerpt(None,['term'])==''
+
+
+def test_derived_query_retains_subject_instead_of_question_and_greetings(enabled):
+    import re
+    from live_query_terms import query_terms
+    query='Eu gostaria de saber se você pode me mostrar os últimos roteiros de vídeos para hoje.'
+    # Comparative baseline from the released extractor: scaffolding fills all slots.
+    old_stop={'qual','quais','sobre','anterior','anteriores','lembra','voce','você','para','como','que','uma','dos','das'}
+    old_terms=[t for t in dict.fromkeys(re.findall(r'[^\W_]+(?:-[^\W_]+)*',query.lower())) if len(t)>=3 and t not in old_stop][:4]
+    assert not any('roteiro' in t for t in old_terms)
+    assert query_terms(query)==['roteiro','vídeo']
+    app,c,_,_,_,_=enabled
+    current=prepare_history(enabled)
+    decision=post(c,current,'notes','current-provider',requestId='script-old',kind='decision',text='roteiro vídeo OBSOLETE',confirmed=True).json
+    revised=post(c,current,'notes','current-provider',requestId='script-current',kind='decision',text='roteiro vídeo APROVADO',confirmed=True,eventId=decision['event_id'],expectedRevision=1).json
+    removed=post(c,current,'notes','current-provider',requestId='script-remove',kind='fact',text='roteiro vídeo RETRACTED',confirmed=True).json
+    post(c,current,'notes','current-provider',requestId='script-retract',kind='fact',text='roteiro vídeo RETRACTED',confirmed=True,eventId=removed['event_id'],expectedRevision=1,retract=True)
+    for i in range(4):
+        post(c,current,'transcript','current-provider',eventId=f'greeting-{i}',role='assistant',text='Gostaria de saber? Pode mostrar. Olá, estou aqui para ajudar.')
+    question=post(c,current,'transcript','current-provider',eventId='script-question',role='user',text=query).json
+    result=read(c,current['contextId'],'current-provider')
+    assert result.status_code==200
+    memory=result.json['queryResult']['memory']
+    assert memory[0]['eventId']==revised['event_id'] and memory[0]['revision']==2
+    assert memory[0]['text']=='roteiro vídeo APROVADO'
+    assert all(m['eventId']!=question['event_id'] for m in memory)
+    assert all('Olá' not in m['text'] and 'OBSOLETE' not in m['text'] and 'RETRACTED' not in m['text'] for m in memory)
+    assert result.json['previousWork']['results'][0]['reference']=='/api/tickets/ticket-3'
+    assert result.json['queryResult']['documents']['results']==[]
+    # Source absence is kept honest; ticket evidence is not relabelled as a script.
+    assert result.json['previousWork']['source']=='authorized_company_tickets'
+
+
+def test_query_terms_are_bounded_shared_and_do_not_expand_unknown_words():
+    from live_query_terms import query_terms
+    assert query_terms('Você consegue encontrar meus arquivos e roteiros?')==['arquivo','roteiro']
+    assert query_terms('quais vídeos?')==['vídeo']
+    assert query_terms('Olá Zephyr custom-slug')==['olá','zephyr','custom-slug']
+    assert query_terms('hoje agora por favor')==[]
+    assert len(query_terms('alpha beta gamma delta epsilon'))==4
+
+
+def test_question_alone_does_not_create_false_history_hit(enabled):
+    _,c,_,_,_,_=enabled
+    current=bound(c)
+    post(c,current,'transcript',eventId='greeting-only',role='assistant',text='Gostaria de saber? Posso ajudar.')
+    post(c,current,'transcript',eventId='question-only',role='user',text='Gostaria de saber qual o último roteiro de vídeo para hoje')
+    result=read(c,current['contextId'],'provider-a')
+    assert result.status_code==200
+    assert result.json['queryResult']['memory']==[]
+    assert result.json['queryResult']['documents']['results']==[]

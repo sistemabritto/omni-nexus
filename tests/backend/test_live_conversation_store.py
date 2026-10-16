@@ -130,6 +130,33 @@ class ContinuityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.store.snapshot(self.a, cid, history_limit=999)
 
+    def test_search_ranks_coverage_excludes_exact_question_and_preserves_acl(self):
+        cid = self.store.create_explicit(self.a)
+        verified = self.record(cid, 'roteiro video aprovado', verified=True)
+        for i in range(105):
+            self.store.record(self.a, cid, kind='transcript', text='roteiro saudação',
+                              source='browser:assistant:fixture')
+        question = self.store.record(self.a, cid, kind='transcript', text='roteiro video pergunta',
+                                     source='browser:user:fixture')
+        foreign = self.store.create_explicit(self.other)
+        self.store.record(self.other, foreign, kind='decision', text='roteiro video SECRET', source='fixture', verified=True)
+        denied = self.store.create_explicit(self.a)
+        self.record(denied, 'roteiro video REVOKED', verified=True)
+        self.revoked.add(denied)
+        hits = self.store.search(self.a, ['roteiro', 'video'], exclude_event=(cid, question['event_id']))
+        self.assertEqual(hits[0]['event_id'], verified['event_id'])
+        self.assertEqual(len(hits), 5)
+        self.assertNotIn(question['event_id'], [h['event_id'] for h in hits])
+        self.assertNotIn('SECRET', str(hits))
+        self.assertNotIn('REVOKED', str(hits))
+        # An event ID in another logical conversation must not be excluded by ID alone.
+        other = self.store.create_explicit(self.a)
+        record = self.record(other, 'roteiro video outro', verified=True)
+        self.assertIn(record['event_id'], [h['event_id'] for h in self.store.search(
+            self.a, ['roteiro', 'video'], exclude_event=(cid, record['event_id']))])
+        with self.assertRaises(ValueError):
+            self.store.search(self.a, ['roteiro'], exclude_event=('invalid',))
+
 
 if __name__ == '__main__':
     unittest.main()

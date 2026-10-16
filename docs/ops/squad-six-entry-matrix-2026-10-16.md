@@ -43,3 +43,9 @@ Existing sanitized account snapshot: user1/company1 observed context, eleven_v4_
 | Argos | Pending | — | Same gap; do not reuse an ID and claim six distinct voices |
 
 User delegated initial selection and the supported voice_id override; no new generic approval is needed for that leaf. Unique integrator can apply it with current-branch snapshot/readback while preserving TTS/LLM/tools/auth. Personal preference endpoint still requires legitimate session; no cookie fabrication, direct DB shortcut or broadened grants. No model switch, clone creation, paid qualification or unlimited preview is authorized by this casting table. Catalog is not proof that the six personas actually speak with these voices; per-persona signed-session/readback remains required.
+
+## Authorized override readback — integrator17:22:25UTC
+
+Integrator confirmed supported PATCH changed only voice_id override false→true. Private backup `/workspace/backups/voice-override-20261016`; sanitized evidence `live-harness-proof/voice-override-result.jsonl` in integrator BASE. conversation_config/platform_settings/workflow/name/tags/access_info comparison preserved all other fields, eleven_v4_turbo and default voice. Zero synthesis, conversations or other agent changes. API has no ETag: optimistic precheck and readback, not atomic CAS. This supersedes the override-false historical snapshot above; it does not prove per-persona preferences applied.
+
+Integrator combined support portraits and previous prompt/voice commits in2696a03 with153tests/Node/TS/lint passing. Publication was still pending at that confirmation; d2ba04f is the separate six-entry policy delta, not silently part of2696a03. Personal-session requirement and two additional qualified masculine PT-BR voices remain exact casting blockers.

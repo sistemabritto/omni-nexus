@@ -1,0 +1,9 @@
+# Vozes: duas diferenças de metadados, sem ampliar grants
+
+Fonteprod sanitizada16:43/16:49: voice-eligibility-flags-20261016.json e voice-casting-metadata-20261016.json do integrador.107/107 vozes retornaram safety_control=null; o código aceitava somente stringNONE. A API documenta safety_control enum ou null: https://elevenlabs.io/docs/api-reference/voices/get . Além disso, v2lista relata permission_on_resource=admin para compartilhadas, enquanto v1detalhe retorna null. Exigir o mesmo campo em v1 descartava a autorização observada no catálogo autenticado.
+
+Correção: null/NONE significam ausência de controle ativo. BAN/CAPTCHA/ENTERPRISE_* e desconhecidos continuam rejeitados. Fine-tuning ausente/nulo não passa para professional. _voice exige listagem no MESMOaccount/ID elegível, relê detalhe e carrega SOMENTE permission/is_owner ausentes/nulos da listagem autenticada; não sobrescreve negação explícita, safety, verificação ou treinamento. Detalhe incompatível continua bloqueado. Catálogo de preferência salva usa esse mesmo resolvedor, sem mutação.
+
+23 testes simulados passaram; zero chamadas externas de testes. Null não concede propriedade, acesso, verificação ou fine-tuning. Scope user/company/provider/persona e _guard permanecem iguais. Nenhuma credencial, ACL, preferência ou configuração remota alterada por este commit.
+
+Estado observado: TTSmodel eleven_v4_turbo existe no catálogo retornado; LLM não é alterado. Após correção,9vozes professionalPT-BR têm fine_tuning exato desse TTSmodel (duas masculinas declaradas); demais não viram compatíveis por desejo de completar casting.5clones existentes precisam qualificação de idioma/qualidade, não inferir pelo nome. Overridevoice_id estava false; Felipe autorizou correção desse campo suportado, em lote separado pelo integrador, após snapshot e readback. Nenhum aumento de permissão de tools/auth como efeito.

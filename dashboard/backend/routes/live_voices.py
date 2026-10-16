@@ -103,7 +103,7 @@ def _preview_url(voice):
 
 
 def _eligible(voice, model):
-    if voice.get('safety_control', 'NONE') != 'NONE':
+    if voice.get('safety_control', 'NONE') not in (None, 'NONE'):
         return False
     verification = voice.get('voice_verification') or {}
     if verification.get('requires_verification') and not verification.get('is_verified'):
@@ -112,7 +112,8 @@ def _eligible(voice, model):
         return False
     category = voice.get('category')
     if category == 'professional':
-        return (voice.get('fine_tuning') or {}).get('state', {}).get(model) == 'fine_tuned'
+        state = (voice.get('fine_tuning') or {}).get('state')
+        return isinstance(state, dict) and state.get(model) == 'fine_tuned'
     return category in ('premade', 'cloned', 'generated')
 
 
@@ -121,10 +122,20 @@ def _voice(voice_id, model):
         raise VoiceUnavailable()
     # Search scoped to the authenticated provider account, then re-read the detail.
     found = _get('/v2/voices', voice_ids=voice_id, page_size=1, include_total_count=False)
-    if not any(v.get('voice_id') == voice_id for v in found.get('voices', [])):
+    listing = next((v for v in found.get('voices', []) if isinstance(v, dict) and v.get('voice_id') == voice_id), None)
+    if listing is None or not _eligible(listing, model):
         raise VoiceUnavailable()
     voice = _get('/v1/voices/' + voice_id)
-    if voice.get('voice_id') != voice_id or not _eligible(voice, model):
+    if voice.get('voice_id') != voice_id:
+        raise VoiceUnavailable()
+    # v1 detail can omit/null account access that v2 explicitly reports. Carry
+    # only that verified account evidence for the SAME id; never overwrite an
+    # explicit denial, safety/verification control or fine-tuning metadata.
+    voice = dict(voice)
+    for field in ('permission_on_resource', 'is_owner'):
+        if voice.get(field) is None and listing.get(field) is not None:
+            voice[field] = listing[field]
+    if not _eligible(voice, model):
         raise VoiceUnavailable()
     return voice
 
@@ -175,7 +186,7 @@ def catalog(company_id):
         current = _get('/v1/voices/' + tts['voice_id'])
         selected = _preference(company_id, agent_name=agent_name)
         try:
-            saved = _get('/v1/voices/' + selected) if selected else None
+            saved = _voice(selected, tts['model_id']) if selected else None
         except VoiceUnavailable:
             saved = {'voice_id': selected, 'name': 'Preferência indisponível; escolha outra voz ou o padrão', 'category': 'unavailable'}
         return _reply({'voices': voices, 'hasMore': data.get('has_more') is True,

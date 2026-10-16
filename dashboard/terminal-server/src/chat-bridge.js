@@ -1004,7 +1004,21 @@ class ChatBridge {
       onComplete,
     } = options;
 
+    // Owned bootstrap is a containment boundary, never a legacy fallback.
+    if (this.openCodeReadTransport && options.toolPolicy === 'no_tools') {
+      throw Object.assign(new Error('intentional_no_tools'),{code:'intentional_no_tools'});
+    }
     const providerConfig = loadProviderConfig();
+    if (this.openCodeReadTransport) {
+      const selected=providerConfig.providers?.[providerConfig.active];
+      if (!providerConfig.active || providerConfig.active==='anthropic' ||
+          providerConfig.mode!=='code' || providerConfig.cli_command!=='opencode' ||
+          (selected?.mode && selected.mode!=='code') ||
+          (selected?.cli_command && selected.cli_command!=='opencode')) {
+        throw Object.assign(new Error('owned_read_provider_incompatible'),{code:'owned_read_provider_incompatible'});
+      }
+      return this._startOpenCodeReadSession(sessionId,options,structuredClone(providerConfig));
+    }
     const isExternalProvider = !!providerConfig.active && providerConfig.active !== 'anthropic';
     let externalCliPath = null;
     if (isExternalProvider) {
@@ -1013,9 +1027,6 @@ class ChatBridge {
       // chat-completion-only models keep the plain REST path.
       if (getProviderMode(providerConfig) !== 'code') {
         return this._startOpenAICompatibleSession(sessionId, options, providerConfig);
-      }
-      if (providerConfig.cli_command === 'opencode' && this.openCodeReadTransport) {
-        return this._startOpenCodeReadSession(sessionId, options, providerConfig);
       }
       if (SDK_COMPATIBLE_CLI.has(providerConfig.cli_command)) {
         externalCliPath = resolveCliBinary(providerConfig.cli_command || 'openclaude');

@@ -115,5 +115,14 @@
       "bootstrap": "TerminalServer_constructor_and_WS_chat_send",
       "upstream": "local_fake_no_paid_inference"
     }
-  ]
+  ],
+  "review_correction": {
+    "node_tests_passed": 42,
+    "new_routing_tests": 8,
+    "new_turn_tests": 5,
+    "e2e_rechecks_passed": 7,
+    "sdk_import_instrumented_in_routing_tests": true,
+    "paid_inference": false,
+    "production_enabled": false
+  }
 }

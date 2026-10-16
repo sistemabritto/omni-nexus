@@ -749,7 +749,7 @@ class TerminalServer {
 
     if (this.dev) console.log(`New WebSocket connection: ${wsId}`);
 
-    const wsInfo = { id: wsId, ws, claudeSessionId: null, created: new Date() };
+    const wsInfo = { id: wsId, ws, claudeSessionId: null, bindingRevision:0, created: new Date() };
     this.webSocketConnections.set(wsId, wsInfo);
     // Retain only for this live connection; never persist or emit cookies.
     if (req.headers?.cookie) this.ownedReadConnections.set(wsInfo, {cookie:req.headers.cookie,origin:req.headers.origin});
@@ -852,14 +852,34 @@ class TerminalServer {
         break;
 
       case 'chat_send':
+        const turnSessionId=wsInfo.claudeSessionId;
+        const turnBindingRevision=wsInfo.bindingRevision;
         // Legacy subscriptions do not authorize owned responses.
         const emitChat = (payload) => this.ownedReadResolver
-          ? this.sendToWebSocket(wsInfo.ws,payload)
-          : this.broadcastToSession(wsInfo.claudeSessionId,payload);
+          ? (wsInfo.claudeSessionId===turnSessionId && wsInfo.bindingRevision===turnBindingRevision ? this.sendToWebSocket(wsInfo.ws,payload) : undefined)
+          : this.broadcastToSession(turnSessionId,payload);
         // Send a chat message via Agent SDK
-        if (wsInfo.claudeSessionId) {
-          const chatSession = this.claudeSessions.get(wsInfo.claudeSessionId);
+        if (turnSessionId) {
+          const chatSession = this.claudeSessions.get(turnSessionId);
           if (chatSession && data.prompt) {
+            const readConnection={
+              ...this.ownedReadConnections.get(wsInfo),agentName:chatSession.agentName,
+              active:()=>this.webSocketConnections.get(wsId)===wsInfo && wsInfo.claudeSessionId===turnSessionId &&
+                wsInfo.bindingRevision===turnBindingRevision && this.claudeSessions.get(turnSessionId)===chatSession && wsInfo.ws.readyState===WebSocket.OPEN,
+            };
+            if (this.ownedReadResolver) {
+              if (data.rewindFromUuid || data.toolPolicy==='no_tools') {
+                emitChat({type:'chat_error',message:data.rewindFromUuid?'owned_read_rewind_unsupported':'intentional_no_tools'});
+                break;
+              }
+              try {
+                await this.ownedReadResolver.authorize(turnSessionId,readConnection);
+                if(!readConnection.active())throw Error('connection_changed');
+              } catch {
+                emitChat({type:'chat_error',message:'owned_read_context_required'});
+                break;
+              }
+            }
             chatSession.mode = 'chat';
             chatSession.active = true;
             chatSession.lastActivity = new Date();
@@ -874,7 +894,7 @@ class TerminalServer {
 
               // Fall back to JSONL scan if cache is cold or uuid not found
               if (cutIdx === -1 && chatSession.agentName) {
-                const fromLog = this.chatLogger.read(chatSession.agentName, wsInfo.claudeSessionId);
+                const fromLog = this.chatLogger.read(chatSession.agentName, turnSessionId);
                 cutIdx = fromLog.findIndex(m => m.uuid === rewindUuid);
                 if (cutIdx !== -1) {
                   // Sync cache from JSONL
@@ -894,8 +914,8 @@ class TerminalServer {
               }
 
               // 1. If a turn is streaming, stop it first
-              if (this.chatBridge.isActive(wsInfo.claudeSessionId)) {
-                await this.chatBridge.stopSession(wsInfo.claudeSessionId);
+              if (this.chatBridge.isActive(turnSessionId)) {
+                await this.chatBridge.stopSession(turnSessionId);
               }
 
               // 2. Null out sdkSessionId so the next turn starts fresh
@@ -906,7 +926,7 @@ class TerminalServer {
               chatSession.chatHistory = chatSession.chatHistory.slice(0, cutIdx);
 
               // 4. Append rewind marker to JSONL
-              this.chatLogger.appendRewindMarker(chatSession.agentName, wsInfo.claudeSessionId, rewindUuid);
+              this.chatLogger.appendRewindMarker(chatSession.agentName, turnSessionId, rewindUuid);
             }
             // --- End rewind handling ---
 
@@ -919,7 +939,7 @@ class TerminalServer {
             };
             if (!this.ownedReadResolver) {
               chatSession.chatHistory.push(userMsg);
-              this.chatLogger.append(chatSession.agentName, wsInfo.claudeSessionId, userMsg);
+              this.chatLogger.append(chatSession.agentName, turnSessionId, userMsg);
             }
 
             // Accumulate assistant response for history
@@ -927,12 +947,9 @@ class TerminalServer {
             let isStreaming = false;
 
             try {
-              await this.chatBridge.startSession(wsInfo.claudeSessionId, {
+              await this.chatBridge.startSession(turnSessionId, {
                 agentName: chatSession.agentName,
-                [OWNED_READ_CONNECTION]: {
-                  ...this.ownedReadConnections.get(wsInfo),agentName:chatSession.agentName,
-                  active:()=>this.webSocketConnections.get(wsId)===wsInfo && this.claudeSessions.get(wsInfo.claudeSessionId)===chatSession && wsInfo.ws.readyState===WebSocket.OPEN,
-                },
+                [OWNED_READ_CONNECTION]: readConnection,
                 workingDir: chatSession.workingDir,
                 prompt: data.prompt,
                 toolPolicy:data.toolPolicy==='no_tools'?'no_tools':'read_only',
@@ -950,7 +967,7 @@ class TerminalServer {
                   if (msg.type === 'permission_request') {
                     const permPayload = {
                       type: 'permission_request',
-                      sessionId: wsInfo.claudeSessionId,
+                      sessionId: turnSessionId,
                       requestId: msg.requestId,
                       toolName: msg.toolName,
                       input: msg.input,
@@ -965,14 +982,14 @@ class TerminalServer {
                       : undefined;
                     this.broadcastToGlobalSubscribers({
                       type: 'notification',
-                      id: `agent_awaiting-${wsInfo.claudeSessionId}-${msg.requestId}`,
+                      id: `agent_awaiting-${turnSessionId}-${msg.requestId}`,
                       event: 'agent_awaiting',
-                      sessionId: wsInfo.claudeSessionId,
+                      sessionId: turnSessionId,
                       agentName: chatSession.agentName || '',
                       toolName: msg.toolName,
                       inputPreview,
                       createdAt,
-                    }, wsInfo.claudeSessionId);
+                    }, turnSessionId);
                     return;
                   }
 
@@ -1050,7 +1067,7 @@ class TerminalServer {
                       streaming: false,
                     };
                     chatSession.chatHistory.push(assistantMsg);
-                    this.chatLogger.append(chatSession.agentName, wsInfo.claudeSessionId, assistantMsg);
+                    this.chatLogger.append(chatSession.agentName, turnSessionId, assistantMsg);
                   }
                   this.saveSessionsToDisk();
                   emitChat({ type: 'chat_complete' });
@@ -1059,12 +1076,12 @@ class TerminalServer {
                   if (!hasWatcher) {
                     this.broadcastToGlobalSubscribers({
                       type: 'notification',
-                      id: `agent_finished-${wsInfo.claudeSessionId}-${Date.now()}`,
+                      id: `agent_finished-${turnSessionId}-${Date.now()}`,
                       event: 'agent_finished',
-                      sessionId: wsInfo.claudeSessionId,
+                      sessionId: turnSessionId,
                       agentName: chatSession.agentName || '',
                       createdAt: Date.now(),
-                    }, wsInfo.claudeSessionId);
+                    }, turnSessionId);
                   }
                 },
               });
@@ -1142,6 +1159,7 @@ class TerminalServer {
     }
     if (wsInfo.claudeSessionId) await this.leaveClaudeSession(wsId);
 
+    wsInfo.bindingRevision=(wsInfo.bindingRevision||0)+1;
     wsInfo.claudeSessionId = claudeSessionId;
     session.connections.add(wsId);
     session.lastActivity = new Date();
@@ -1186,6 +1204,7 @@ class TerminalServer {
       session.lastActivity = new Date();
     }
 
+    wsInfo.bindingRevision=(wsInfo.bindingRevision||0)+1;
     wsInfo.claudeSessionId = null;
     this.sendToWebSocket(wsInfo.ws, { type: 'session_left' });
   }

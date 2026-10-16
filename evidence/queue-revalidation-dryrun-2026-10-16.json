@@ -1,0 +1,227 @@
+{
+  "mode": "read_only_dry_run",
+  "apply_supported": false,
+  "proposals": [
+    {
+      "ticket_id": "de0fac29-7efa-44e1-9466-9b165d466163",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "nex-sales",
+        "blocked_reason": null,
+        "updated_at": "2026-08-03T02:41:29.051820Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "needs_current_funnel_evidence"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "enabled_heartbeat": true,
+        "latest_comment_reports_offline": true,
+        "delivery_proven": false
+      },
+      "decision": "offline_premise_obsolete"
+    },
+    {
+      "ticket_id": "8aa7bb62-8e0e-4a1a-846d-b6dab588143f",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "nex-sales",
+        "blocked_reason": null,
+        "updated_at": "2026-08-09T12:26:05.393087Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "needs_current_funnel_evidence"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "enabled_heartbeat": true,
+        "latest_comment_reports_offline": true,
+        "delivery_proven": false
+      },
+      "decision": "offline_premise_obsolete"
+    },
+    {
+      "ticket_id": "c9ce0445-31a0-4abc-bc95-58cc2c6cd487",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "nex-sales",
+        "blocked_reason": null,
+        "updated_at": "2026-08-23T01:41:32.732363Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "needs_current_funnel_evidence"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "enabled_heartbeat": true,
+        "latest_comment_reports_offline": true,
+        "delivery_proven": false
+      },
+      "decision": "offline_premise_obsolete"
+    },
+    {
+      "ticket_id": "6651faa4-5e26-411e-a2a7-685b7672c80b",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "nex-sales",
+        "blocked_reason": null,
+        "updated_at": "2026-08-27T06:01:00.186900Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "needs_current_funnel_evidence"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "enabled_heartbeat": true,
+        "latest_comment_reports_offline": true,
+        "delivery_proven": false
+      },
+      "decision": "offline_premise_obsolete"
+    },
+    {
+      "ticket_id": "689037b5-3a76-42a7-947c-14ce012fba84",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "nex-sales",
+        "blocked_reason": null,
+        "updated_at": "2026-09-10T22:47:17.381427Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "needs_current_funnel_evidence"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "enabled_heartbeat": true,
+        "latest_comment_reports_offline": true,
+        "delivery_proven": false
+      },
+      "decision": "offline_premise_obsolete"
+    },
+    {
+      "ticket_id": "c6851c4a-3400-497c-9549-48b185b843eb",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "bolt-executor",
+        "blocked_reason": "Sem avanço desde in_progress (zumbi detectado pelo sweep)",
+        "updated_at": "2026-09-19T23:28:10.711241Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "scope_review_required"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "decomposition_rejected": true,
+        "deployment_or_acceptance_proven": false
+      },
+      "decision": "scope_decision_before_code_execution"
+    },
+    {
+      "ticket_id": "e16320ff-4ee8-4931-a3af-187b58ee4d0f",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "bolt-executor",
+        "blocked_reason": "Sem avanço desde in_progress (zumbi detectado pelo sweep)",
+        "updated_at": "2026-09-19T23:28:10.713660Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "scope_review_required"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "decomposition_rejected": true,
+        "deployment_or_acceptance_proven": false
+      },
+      "decision": "scope_decision_before_code_execution"
+    },
+    {
+      "ticket_id": "8717ebe0-daca-4e19-a404-58b377d04511",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "bolt-executor",
+        "blocked_reason": null,
+        "updated_at": "2026-10-12T13:57:42.177043Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "scope_review_required"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "decomposition_rejected": true,
+        "deployment_or_acceptance_proven": false
+      },
+      "decision": "scope_decision_before_code_execution"
+    },
+    {
+      "ticket_id": "e63b4871-8127-4531-a3d2-82c1bb6e43e4",
+      "expected": {
+        "status": "blocked",
+        "assignee_agent": "mako-marketing",
+        "blocked_reason": "agent_blocked",
+        "updated_at": "2026-10-07T05:41:34.533493Z",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": {
+        "blocked_reason": "commercial_decision_required"
+      },
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {
+        "internal_artifact_exists": true,
+        "sha256": "8f19fb4b5414729d035fd44f7d1b723b90643801c0886d1d68974a5e4631eb34",
+        "business_decisions_pending": true
+      },
+      "decision": "commercial_decision_not_publication_retry"
+    },
+    {
+      "ticket_id": "5de37020-be52-4c42-9e95-3ec45173f9d4",
+      "expected": {
+        "status": "review",
+        "assignee_agent": null,
+        "blocked_reason": null,
+        "updated_at": "2026-10-16T07:57:04.150148+00:00",
+        "requires_human_approval": 0,
+        "approval_id": null,
+        "locked_at": null
+      },
+      "proposed": null,
+      "job_restart": false,
+      "manual_review_required": true,
+      "evidence": {},
+      "decision": "protected_explicit_decision_only"
+    }
+  ]
+}

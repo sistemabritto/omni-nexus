@@ -779,11 +779,11 @@ def _maybe_park_for_publish(ticket_id: str, agent: str, outcome: dict, title: st
     target = outcome.get("publish_target")
     if target not in PUBLISH_CHANNELS:
         reason = f"publish_target inválido: {target!r}"
-        conn.execute("UPDATE tickets SET blocked_reason = 'agent_blocked' WHERE id = ?", (ticket_id,))
+        conn.execute("UPDATE tickets SET blocked_reason = 'publish_context_missing' WHERE id = ?", (ticket_id,))
         _move_ticket(ticket_id, "blocked", agent, reason, conn)
         return {
             "kind": "blocked", "agent": agent, "ticket_id": ticket_id, "ticket_title": title,
-            "reason": reason, "needs": "Revisar manualmente.",
+            "reason": reason, "needs": "Revisar intenção/canal: entrega interna exige publish_intent=false explícito; publicação exige canal válido e aprovação humana. Não publicar nem reexecutar automaticamente.",
         }
 
     # Idempotency key scoped by attempt (Vault V7) — a prior rejected/expired

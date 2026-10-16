@@ -82,3 +82,16 @@ def test_available_documents_do_not_turn_missing_output_into_delivery(tmp_path, 
     monkeypatch.setattr(executor, 'invoke_with_fallback', lambda **_: {'status': 'success'})
     with pytest.raises(executor.MediaExecutionError, match='não produziu'):
         executor.run_opencode_media_job(base)
+
+
+def test_missing_second_document_also_stops_before_provider(tmp_path, monkeypatch):
+    base = job(tmp_path)
+    source = catalog(tmp_path)
+    (source / "hyperframes/SKILL.md").unlink()
+    (base / ".claude").mkdir()
+    (base / ".claude/skills").symlink_to(source, target_is_directory=True)
+    monkeypatch.setattr(executor, "invoke_with_fallback", lambda **_: pytest.fail("model forbidden"))
+    with pytest.raises(executor.MediaExecutionError) as error:
+        executor.run_opencode_media_job(base)
+    assert error.value.result["document"] == executor.REQUIRED_SKILL_DOCUMENTS[1]
+    assert error.value.result["model_invoked"] is False

@@ -157,3 +157,11 @@ confirm particular paths/company in the new panel; this delivery does not infer
 those choices or mutate production data. No queue/skills/audio handlers changed.
 Future automatic artifact attachment must carry canonical company/user ownership
 and content revision at creation; legacy project/share pointers are not enough.
+
+Final visual review caught a React sibling-key collision between the file panel
+and VoicePicker (both originally keyed by company ID). The follow-up prefixes
+the file panel key with files:, preserving remount on company change without
+colliding with the voice control. Browser QA was rerun at both widths and now
+asserts zero duplicate-key warnings and exactly one file panel/voice picker.
+Both passed with zero provider/microphone calls; the new mobile screenshot was
+inspected. Integrator must include this follow-up with the initial feature commit.

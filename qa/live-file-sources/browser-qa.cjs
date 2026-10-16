@@ -4,6 +4,7 @@ const fixture=require('../global-ui/fixture.cjs');
 try{for(const width of [375,1440]){
  const page=await browser.newPage({viewport:{width,height:950},reducedMotion:'reduce'});await fixture(page);await page.routeWebSocket('ws://127.0.0.1:5207/**',ws=>ws.connectToServer());await page.route('https://**',r=>r.abort());
  await page.addInitScript(()=>{localStorage.setItem('evo:active_company','7');window.__mic=0;navigator.mediaDevices.getUserMedia=async()=>{window.__mic++;throw Error('forbidden')}});
+ const duplicateKeys=[];page.on('console',message=>{if(message.text().includes('Encountered two children with the same key'))duplicateKeys.push(message.text())});
  const companies=[{id:7,name:'Empresa Alfa QA',slug:'alfa',status:'active'},{id:8,name:'Empresa Beta QA',slug:'beta',status:'active'}];let bindings=[],mutations=[],provider=0,failPreview=false;
  const fulfill=(r,data,status=200)=>r.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
  await page.route('**/api/companies',r=>fulfill(r,companies));
@@ -29,7 +30,7 @@ try{for(const width of [375,1440]){
  await inspect.click();await confirmation.waitFor();await confirmation.check();
  if(width<1024)await page.getByRole('button',{name:'Abrir menu de navegação',exact:true}).click();await page.getByRole('button',{name:'Selecionar empresa',exact:true}).click();await page.getByRole('menuitemradio',{name:/Empresa Beta QA/}).click();if(width<1024)await page.getByRole('button',{name:'Fechar menu de navegação',exact:true}).click();
  await page.locator('.live-file-sources summary').filter({hasText:'Empresa Beta QA'}).waitFor();assert.equal(await page.locator('.live-file-confirm').count(),0);
- await page.locator('.live-file-sources summary').click();assert.equal(await input.inputValue(),'');assert.equal(provider,0);assert.equal(await page.evaluate(()=>window.__mic),0);
+ await page.locator('.live-file-sources summary').click();assert.equal(await input.inputValue(),'');assert.equal(provider,0);assert.equal(await page.evaluate(()=>window.__mic),0);assert.equal(duplicateKeys.length,0);assert.equal(await page.locator('.live-file-sources').count(),1);assert.equal(await page.locator('.live-voices').count(),1);
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert((await input.boundingBox()).height>=44);
  fs.mkdirSync('/tmp/live-file-source-ui',{recursive:true});await page.screenshot({path:`/tmp/live-file-source-ui/files-${width}.png`,fullPage:true});
  results.push({width,explicitCompanyConfirmation:true,previewNoMutation:true,bindRevoke:true,inlineDenied:true,companySwitchClearsConfirmation:true,providerCalls:provider,microphoneCalls:0});await page.close();

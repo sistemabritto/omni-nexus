@@ -61,7 +61,7 @@ export default function ManagedNexusLive(){
     ><MessageComposer key={activeCompanyId??'no-company'} disabled={state.phase!=='connected'}/></VoiceFirstConversation>
     <p className="live-privacy">Microfone somente ao ativar. Com continuidade habilitada, transcrições finais são salvas no OmniNexus. Tarefas internas dependem de autorização do servidor. Gravação do provedor e retenção seguem a configuração do agente ElevenLabs.</p>
     {company&&<VoicePicker key={company.id} companyId={company.id} busy={busy} connecting={state.phase==='connecting'} activeVoice={state.voiceName}/>}
-    {company&&<LiveFileSources key={company.id} companyId={company.id} company={company.name}/>}
+    {company&&<LiveFileSources key={`files:${company.id}`} companyId={company.id} company={company.name}/>}
     <nav className="managed-links" aria-label="Contexto operacional"><Link to="/cockpit">Sessões, jobs e memória</Link><Link to="/live/gemini">Protótipo Gemini</Link></nav>
   </main>
 }

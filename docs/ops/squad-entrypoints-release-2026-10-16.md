@@ -1,0 +1,9 @@
+# Squad entry points release
+
+Base: 277e023. Integrates only the UI delta from 76bd9a5. `/agents` and `/agentes` show six responsible entry points with existing aliases and avatars; specialists are disclosed on demand and universally searchable. Locked agents remain visible without navigation. Live uses the same six-entry helper, only over server-authorized slugs, and preserves a selected specialist when collapsing the list. Historical URLs, visits, backend actors, delivery contract, no-tools controller, voice preferences, ACL, worker, and task gates are unchanged.
+
+Integration retains published catalog display_label for custom/specialist entries while applying shared six-entry labels. Both generations of selector assertions are retained and run in CI. AgentDetail changes only the visit-helper import; existing lint debt there is outside this change.
+
+Validation: 120 targeted backend/TS-contract tests passed; frontend TypeScript/build and scoped ESLint passed. Supplier browser fixtures at 375 and 1440 show six cards, all 42 native plus one locked custom actor, authorized Live selection, search, keyboard disclosure, preserved selection, no overflow and zero mutation requests. Mobile screenshot inspected independently at integration. These are fixture evidence, not production screenshots. No paid model, voice, or generation calls.
+
+Deployment: dashboard image only via exact-SHA GitHub Actions, fresh idle checks, consistent database/private-config/session backup, digest/OCI verification, compatible rollback to 277e023. Preserve ENV and all data; no queue execution or canary retry. Verify served assets and existing authenticated API after rollout. A personal authenticated browser check requires an existing session; never fabricate a production session. Definitive avatars/voices and visual acceptance remain pending. The EDIT07 draft remains in review with changes required and no automatic approval.

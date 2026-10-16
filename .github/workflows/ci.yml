@@ -159,6 +159,7 @@ jobs:
 
       - name: Test managed Live client tool and single simulated session
         run: |
+          node qa/live-squad-selector/contract-tests.cjs
           node qa/managed-live-context/client-tests.cjs
           node qa/managed-live-context/access-client-tests.cjs
           node qa/managed-live-context/session-tests.cjs

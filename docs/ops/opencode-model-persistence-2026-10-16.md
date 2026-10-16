@@ -30,3 +30,21 @@ Publication still requires CI/image verification and a deployment window with
 fresh configuration preservation, because Felipe is editing provider settings.
 Do not restore any historical providers.json or overwrite his URL/key/model.
 Local graph extraction is deferred while CPU/swap are saturated.
+
+## Broader terminal regression diagnosis
+
+The original server health test failed on both this patch and untouched 96f735f:
+ENOENT creating /home/sistemabritto/.claude-code-web. TerminalServer constructs
+SessionStore against os.homedir before the test replaces storageDir, so it touches
+real user storage. The test now mocks os.homedir to its temporary directory before
+construction, automatically restored by the Node test context. No server runtime
+code or permissions changed. With existing dependencies supplied via NODE_PATH,
+all three terminal test suites pass. Without that dependency path this independent
+checkout lacks express; no packages were installed. Targeted Python remains
+12 passed. Source baseline was extracted with git archive after a temporary shared
+clone encountered the pre-existing nested Git alternates limit.
+
+Publication attempt was rejected by automatic approval review; no retry, remote CI,
+image publication or rollout followed. The final commit includes this isolated
+test repair and requires a new exact-SHA publication approval. Live file receipt
+handlers and c348235 are untouched.

@@ -50,8 +50,10 @@ test('SessionStore drops stale sessions when loading', async () => {
   assert.equal(sessions.has('stale'), false);
 });
 
-test('TerminalServer purges stale sessions and reports health', async () => {
+test('TerminalServer purges stale sessions and reports health', async (t) => {
   const tempDir = makeTempDir('evonexus-terminal-server-');
+  // Isolate constructor storage before it loads or writes any user sessions.
+  t.mock.method(os, 'homedir', () => tempDir);
   const sessionsFile = path.join(tempDir, 'sessions.json');
   fs.writeFileSync(
     sessionsFile,

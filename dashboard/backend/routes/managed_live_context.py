@@ -56,6 +56,9 @@ def _scope(company_id, agent_name):
         return None
     company = Company.query.filter_by(id=company_id, status='active').first()
     path = AGENTS_DIR / (agent_name + '.md')
+    if not path.is_file():
+        from agent_roster import agent_path
+        path = agent_path(WORKSPACE, agent_name)
     if company is None or not path.is_file() or not has_agent_access(current_user.role, agent_name):
         return None
     return company
@@ -199,7 +202,22 @@ def read_context(context_id):
         display_name = str(current_user.display_name or '').strip()[:120]
         authenticated_user = {'displayName': display_name or None, 'nameAvailable': bool(display_name), 'source': 'authenticated_profile'}
         payload = {'authenticatedUser': authenticated_user, 'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
+        from live_capabilities import catalog
+        payload['capabilityCatalog'] = catalog(WORKSPACE)
+        from agent_roster import retirements
+        payload['migratedResponsibilities'] = [{'role':old,'documentName':'squad-role-library/'+old} for old,owner in retirements(WORKSPACE).items() if owner==row['agent_name']]
+        imported=Path(WORKSPACE)/'.claude/agent-memory'/row['agent_name']/'imported-roles'
+        payload['importedMemoryReferences'] = [str(p.relative_to(imported.parent)) for p in sorted(imported.glob('*/*.md')) if p.is_file() and not p.is_symlink()][:15] if imported.is_dir() and not imported.is_symlink() else []
         if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True:
+            from routes.live_experience import assets
+            payload['sharedAssets'] = assets(row)
+            # Leave room for continuity, tickets and identity in the provider tool result.
+            while len(json.dumps(payload, ensure_ascii=False)) > 17000:
+                lists = [payload['sharedAssets']['media'], payload['sharedAssets']['artifacts'], payload['capabilityCatalog']['skills']['items'], payload['capabilityCatalog']['integrations']['items']]
+                candidates = [items for items in lists if items]
+                if not candidates: break
+                max(candidates, key=lambda items: len(json.dumps(items, ensure_ascii=False))).pop()
+                payload['discoveryTruncated'] = True
             query_result = _query_for_current_turn(row)
             if query_result.get('capabilities'):
                 from skill_capability_dispatch import fit_context_budget
@@ -520,7 +538,12 @@ def _work_payload(row, query):
 def _agent_identity(row):
     """Publish only an explicitly curated Live identity, never the raw persona."""
     root = AGENTS_DIR.resolve()
-    path = (root / (row['agent_name'] + '.md')).resolve()
+    path = root / (row['agent_name'] + '.md')
+    if not path.is_file():
+        from agent_roster import agent_path
+        path = agent_path(WORKSPACE, row['agent_name'])
+        root = Path(WORKSPACE).resolve()
+    path = path.resolve()
     if not path.is_relative_to(root) or not path.is_file():
         raise ContinuityDenied('agent_identity_unavailable')
     text = path.read_text(encoding='utf-8')
@@ -618,6 +641,15 @@ def _existing_artifact(job):
 
 
 def _visible_event(row, item):
+    if re.fullmatch(r'/api/live/artifacts/[a-f0-9]{32}', item.get('source', '')):
+        from routes.live_experience import artifact_record
+        try:
+            artifact = artifact_record(row, item['source'].rsplit('/', 1)[1])
+            status=artifact.get('status','ready')
+            labels={'processing':'Imagem em criação','uncertain':'Resultado da imagem incerto; confirme antes de tentar novamente','failed':'A criação da imagem falhou'}
+            return {**item, 'kind':'result' if status=='ready' else 'progress', 'text':artifact['title'] if status=='ready' else labels.get(status,'Aguardando resultado')+': '+artifact['title'], 'links':[{'label':'Baixar '+artifact['title'],'url':item['source']}] if status=='ready' else []}
+        except PermissionError:
+            return {**item, 'retracted': True, 'links': []}
     if item['kind'] not in ('progress', 'result'):
         return item
     try:

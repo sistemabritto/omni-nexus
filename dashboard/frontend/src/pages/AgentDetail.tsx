@@ -1,3 +1,4 @@
+import { agentSlug, agentHref } from '../lib/agent-routes'
 // Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
@@ -52,7 +53,8 @@ function formatName(slug: string): string {
 }
 
 export default function AgentDetail() {
-  const { name } = useParams()
+  const { name: publicName } = useParams()
+  const name = agentSlug(publicName || '')
   const { hasAgentAccess } = useAuth()
   const [content, setContent] = useState<string | null>(null)
   const [memories, setMemories] = useState<MemoryFile[]>([])
@@ -65,7 +67,7 @@ export default function AgentDetail() {
   // View mode: terminal or chat
   type ViewMode = 'terminal' | 'chat'
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    try { return (localStorage.getItem('evo:agent-view-mode') as ViewMode) || 'terminal' } catch { return 'terminal' }
+    try { return (localStorage.getItem('evo:agent-view-mode') as ViewMode) || 'chat' } catch { return 'chat' }
   })
 
   // Multi-terminal tabs
@@ -399,10 +401,10 @@ export default function AgentDetail() {
           className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors"
         >
           <ArrowLeft size={12} />
-          Agents
+          Squad
         </Link>
 
-        <span className="text-[color:var(--border)]">·</span>
+        <Link to={`${agentHref(name)}/voice`} className="text-xs text-[color:var(--text-secondary)] underline">Configurar voz</Link>
 
         {/* Avatar */}
         <div

@@ -219,7 +219,8 @@ def _agent_prompt(agent: str | None) -> str:
     """Return agent persona text without YAML frontmatter."""
     if not agent:
         return ""
-    agent_file = WORKSPACE / ".claude" / "agents" / f"{agent}.md"
+    from agent_roster import agent_path
+    agent_file = agent_path(WORKSPACE, agent)
     try:
         content = agent_file.read_text(encoding="utf-8")
     except OSError:
@@ -1004,6 +1005,10 @@ def _invoke_cli_configured(
             if '--dangerously-skip-permissions' in cmd:
                 cmd.remove('--dangerously-skip-permissions')
             cmd.extend(['--tools', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--no-session-persistence'])
+        from agent_roster import retirements
+        if agent in retirements(WORKSPACE):
+            prompt = _embed_agent_for_openclaude(prompt, agent)
+            agent = ""
         if agent:
             cmd.extend(["--agent", agent])
         cmd.extend(["--", prompt])

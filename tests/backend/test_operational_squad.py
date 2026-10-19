@@ -37,7 +37,7 @@ def test_invalid_manifest_fails_closed(tmp_path, monkeypatch, data):
         operational_squad.load_operational_squad()
 
 
-def test_general_catalog_keeps_custom_historical_and_locked_agents(tmp_path, monkeypatch):
+def test_catalog_retires_known_roles_but_keeps_custom_and_locked_agents(tmp_path, monkeypatch):
     from flask import Flask
     from flask_login import LoginManager
     from routes import agents
@@ -54,13 +54,13 @@ def test_general_catalog_keeps_custom_historical_and_locked_agents(tmp_path, mon
     app.register_blueprint(agents.bp)
     client = app.test_client()
     rows = {row['name']: row for row in client.get('/api/agents').json}
-    assert set(rows) == {'mako-marketing', 'nex-sales', 'dex-data', 'custom-existing'}
+    assert set(rows) == {'mako-marketing', 'custom-existing'}
     assert rows['mako-marketing']['locked'] is True
     assert rows['mako-marketing']['operational_squad']['active'] is True
-    assert all(rows[slug]['operational_squad']['active'] is False for slug in ('nex-sales', 'dex-data', 'custom-existing'))
+    assert all(rows[slug]['operational_squad']['active'] is False for slug in ('custom-existing',))
     assert rows['custom-existing']['custom'] is True
     assert client.get('/api/agents/custom-existing').status_code == 200
     assert client.get('/api/agents/nex-sales').status_code == 200
     monkeypatch.setattr(agents, 'load_operational_squad', lambda: (_ for _ in ()).throw(ValueError()))
-    assert len(client.get('/api/agents').json) == 4
+    assert len(client.get('/api/agents').json) == 2
     assert not any(row['operational_squad']['active'] for row in client.get('/api/agents').json)

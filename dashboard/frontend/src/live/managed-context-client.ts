@@ -48,6 +48,26 @@ export function createManagedContextTools(contextId:number) {
       return binding
     },
     disconnect() { closed=true },
+    async approvals(approvalId?:string,decision?:'approve'|'reject'){
+      if(closed||!binding||!conversationId)throw Error('Conversa não vinculada.')
+      await binding
+      return call(`/api/live/omni-context/${contextId}/approvals`,{conversationId,...(approvalId?{approvalId,decision}:{})})
+    },
+    async experience(action:string,parameters:Record<string,unknown>,requestId:string){
+      if(closed||!binding||!conversationId)throw Error('Conversa não vinculada.')
+      await binding;if(closed)throw Error('Conversa encerrada.')
+      const result=await call(`/api/live/omni-context/${contextId}/experience`,{conversationId,action,parameters,requestId})
+      if(closed)throw Error('Conversa encerrada.')
+      return JSON.stringify(result)
+    },
+    async attach(file:File){
+      if(closed||!binding||!conversationId)throw Error('Conversa não vinculada.')
+      await binding
+      const body=new FormData();body.set('conversationId',conversationId);body.set('file',file)
+      const response=await fetch(`/api/live/omni-context/${contextId}/attachments`,{method:'POST',credentials:'include',body})
+      if(!response.ok)throw Error('Não foi possível anexar este arquivo.')
+      return response.json()
+    },
     async recordToolAudit(toolCallId:string,toolName:string,stage:string,signal?:AbortSignal){
       if(!binding||!conversationId)throw Error('Conversa não vinculada.')
       await binding

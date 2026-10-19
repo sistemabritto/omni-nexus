@@ -1,7 +1,7 @@
 """Metadata-only Live tool trace in the existing context SQLite database."""
 import re
 
-TOOLS = frozenset({'read_current_omni_session', 'search_omni_context', 'request_internal_task',
+TOOLS = frozenset({'administer_omni_area','read_omni_document','write_omni_document','inspect_omni_area','update_omni_area','handoff_to_agent','list_omni_capabilities','read_omni_skill','list_omni_assets','read_omni_artifact','create_omni_artifact','create_omni_image','create_omni_media','read_current_omni_session', 'search_omni_context', 'request_internal_task',
                    'read_internal_task_status', 'cancel_internal_task', 'unsupported', 'session'})
 STAGES = frozenset({'received', 'dispatch', 'response', 'error', 'send_attempt',
                     'sent_to_sdk', 'send_error', 'cancelled', 'duplicate', 'instrumented'})

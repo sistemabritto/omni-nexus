@@ -61,3 +61,15 @@ def test_signed_session_uses_owned_persona_not_client_selection(voices, monkeypa
     assert response.json['voiceId'] == 'selected_fixture'
     agent['platform_settings']['overrides']['conversation_config_override']['tts']['voice_id'] = False
     assert c.post(endpoint, json={}, headers=ORIGIN).status_code == 503
+
+
+def test_reviewed_default_never_overrides_explicit_saved_reset(voices,monkeypatch):
+    app,c,_,mod,_,_,_=voices
+    monkeypatch.setattr(mod,'_persona_default',lambda name:'selected_fixture')
+    with c:
+        c.get('/api/live/voices/7?agentName=agent-a')
+        assert mod._effective_voice(7,'agent-a')=='selected_fixture'
+    assert c.put('/api/live/voices/7/preference',json={'voiceId':None,'agentName':'agent-a'},headers=ORIGIN).status_code==200
+    with c:
+        c.get('/api/live/voices/7?agentName=agent-a')
+        assert mod._effective_voice(7,'agent-a') is None

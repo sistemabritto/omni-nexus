@@ -368,11 +368,11 @@ def get_media_job(job_id):
 
 
 @bp.route("/api/media/jobs", methods=["POST"])
-def create_media_job():
+def create_media_job(data_override=None, job_id_override=None):
     denied = _require("execute")
     if denied:
         return denied
-    data = request.get_json() or {}
+    data = data_override if data_override is not None else (request.get_json() or {})
 
     job_type = data.get("job_type", "social_clip")
     if job_type not in MEDIA_JOB_TYPES:
@@ -453,7 +453,7 @@ def create_media_job():
     if platform_settings is not None and not isinstance(platform_settings, dict):
         return jsonify({"error": "platform_settings deve ser um objeto."}), 400
 
-    job_id = new_job_id()
+    job_id = job_id_override or new_job_id()
     now = _now()
     _proj = GoalProject.query.get(data.get("project_id")) if data.get("project_id") else None
     job = MediaJob(

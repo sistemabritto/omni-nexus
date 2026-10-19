@@ -1,5 +1,7 @@
 """Account voice metadata and existing previews only; never synthesis or agent mutation."""
 import os
+import json
+from pathlib import Path
 from urllib.parse import urlsplit
 import requests
 from flask import Blueprint, current_app, request, Response
@@ -9,6 +11,17 @@ from routes.managed_live_context import _guard, _reply, _store, _ID, _scope
 
 bp = Blueprint('live_voices', __name__)
 _API = 'https://api.elevenlabs.io'
+_DEFAULTS_PATH = Path(__file__).resolve().parents[1] / 'live-agent-voices.json'
+
+def _persona_default(agent_name):
+    if not agent_name:
+        return None
+    try:
+        data = json.loads(_DEFAULTS_PATH.read_text())
+        return data.get('voices', {}).get(agent_name) if data.get('version') == 1 else None
+    except (OSError, ValueError):
+        return None
+
 
 class VoiceUnavailable(Exception):
     pass
@@ -147,9 +160,19 @@ def _safe(voice, company_id, model):
             'previewUrl': f'/api/live/voices/{company_id}/{voice["voice_id"]}/preview' if _preview_url(voice) else None}
 
 
+def _effective_voice(company_id, agent_name):
+    selected=_preference(company_id, agent_name=agent_name)
+    if selected or not agent_name:return selected
+    with _store() as conn:
+        # An explicit reset is a durable choice of the remote agent default.
+        row=conn.execute('SELECT 1 FROM persona_voice_preferences WHERE user_id=? AND company_id=? AND agent_id=? AND agent_name=?',
+            (int(current_user.get_id()),company_id,_agent_id(),agent_name)).fetchone()
+    return None if row else _persona_default(agent_name)
+
+
 def session_voice(company_id, agent_name=None):
-    """Called only on a new authorized start. No preference = no new API dependency."""
-    selected = _preference(company_id, agent_name=agent_name)
+    """Resolve a saved preference first, then the reviewed distinct persona voice."""
+    selected = _effective_voice(company_id, agent_name)
     if not selected:
         return {}
     tts, override = _agent()
@@ -183,7 +206,7 @@ def catalog(company_id):
         token = data.get('next_page_token')
         if data.get('has_more') is True and (not isinstance(token, str) or not token or len(token) > 2048):
             raise VoiceUnavailable()
-        current = _get('/v1/voices/' + tts['voice_id'])
+        current = _get('/v1/voices/' + (_effective_voice(company_id, agent_name) or tts['voice_id']))
         selected = _preference(company_id, agent_name=agent_name)
         try:
             saved = _voice(selected, tts['model_id']) if selected else None

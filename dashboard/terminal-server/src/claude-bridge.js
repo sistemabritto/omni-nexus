@@ -1,3 +1,4 @@
+const { resolveAgentFile } = require('./utils/agent-roster');
 const { spawn } = require('node-pty');
 const cp = require('child_process');
 const path = require('path');
@@ -302,9 +303,7 @@ function _ensureOpencodeProviderConfig(providerId, modelArg, providerEnvVars) {
 }
 
 function buildAgentPersona(agent, workingDir) {
-  const rootAgentFile = path.join(WORKSPACE_ROOT, '.claude', 'agents', `${agent}.md`);
-  const cwdAgentFile = path.join(workingDir, '.claude', 'agents', `${agent}.md`);
-  const agentFile = fs.existsSync(rootAgentFile) ? rootAgentFile : cwdAgentFile;
+  const agentFile = resolveAgentFile(WORKSPACE_ROOT,workingDir,agent);
   let agentPrompt = '';
   let agentTier = null;
   try {

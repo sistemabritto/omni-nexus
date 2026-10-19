@@ -6,6 +6,7 @@ from routes._helpers import WORKSPACE, safe_read, parse_frontmatter, file_info
 from models import has_agent_access
 from agent_catalog import catalog_entry
 from operational_squad import load_operational_squad
+from agent_roster import retirements, agent_path
 
 bp = Blueprint("agents", __name__)
 
@@ -26,6 +27,7 @@ def list_agents():
     if not AGENTS_DIR.is_dir():
         return jsonify([])
     agents = []
+    retired = retirements(WORKSPACE)
     try:
         squad = load_operational_squad()
     except (OSError, ValueError, TypeError):
@@ -36,6 +38,8 @@ def list_agents():
             content = safe_read(f) or ""
             fm = parse_frontmatter(content)
             name = f.stem
+            if name in retired:
+                continue
             entry = {
                 "name": name,
                 "description": fm.get("description", ""),

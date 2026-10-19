@@ -409,7 +409,7 @@ export default function Providers() {
               interruptor, não uma seção. */}
           <div className="ml-auto flex items-center gap-4 text-[11px] tracking-wide uppercase text-[color:var(--text-muted)]">
             <label className="flex items-center gap-2 cursor-pointer select-none" title="When on, agents run Write/Edit/Bash without asking for approval">
-              <span>{t('settings.tabs.trust')}</span>
+              <span>YOLO Mode</span>
               <Toggle on={!!trustMode} onChange={handleTrust} disabled={savingTrust || trustMode === null} />
             </label>
             <span>{providers.length} available</span>

@@ -53,6 +53,9 @@ class HeartbeatConfig(BaseModel):
             return v
         agents_dir = WORKSPACE / ".claude" / "agents"
         agent_file = agents_dir / f"{v}.md"
+        if not agent_file.is_file():
+            from agent_roster import agent_path
+            agent_file = agent_path(agents_dir.parent.parent, v)
         if agent_file.exists():
             return v
         # Plugin-provided agents are named `plugin-{slug}-{name}.md` and may

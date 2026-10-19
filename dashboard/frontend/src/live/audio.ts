@@ -9,7 +9,9 @@ export class Playback {
   private next = 0;
   private context: AudioContext;
   private sampleRate:number;
-  constructor(context: AudioContext, sampleRate = 24000) { this.context = context; this.sampleRate=sampleRate; }
+  private destination:AudioNode;
+  constructor(context: AudioContext, sampleRate = 24000, destination:AudioNode=context.destination) { this.context = context; this.sampleRate=sampleRate;this.destination=destination; }
+  isPlaying(){return this.nodes.size>0&&this.context.currentTime<this.next}
   play(data: string) {
     // Bound decoded allocations, without cancelling speech already scheduled.
     if (data.length > Math.ceil(this.sampleRate * 2 * 10 / 3) * 4) throw Error('Audio chunk exceeds limit');
@@ -23,7 +25,7 @@ export class Playback {
     const channel = buffer.getChannelData(0);
     for (let i = 0; i < channel.length; i++) channel[i] = view.getInt16(i * 2, true) / 32768;
     const source = this.context.createBufferSource();
-    source.buffer = buffer; source.connect(this.context.destination);
+    source.buffer = buffer; source.connect(this.destination);
     this.nodes.add(source); source.onended = () => { this.nodes.delete(source); source.disconnect(); };
     const start = Math.max(this.next, this.context.currentTime);
     source.start(start); this.next = start + buffer.duration;

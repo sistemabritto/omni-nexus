@@ -11,14 +11,18 @@ from agent_catalog import NATIVE_CATALOG, catalog_entry, _runtime_body
 
 def test_native_catalog_covers_current_personas_without_renaming():
     personas = {p.stem for p in (ROOT / '.claude/agents').glob('*.md') if not p.stem.startswith(('custom-', 'plugin-'))}
-    assert personas == set(NATIVE_CATALOG)
+    from operational_squad import load_operational_squad
+    from agent_roster import retirements
+    assert personas == set(load_operational_squad())
+    assert personas | (set(retirements(ROOT)) & set(NATIVE_CATALOG)) == set(NATIVE_CATALOG)
     assert all(v['display_name'] and v['function'] and v['sector_id'] for v in NATIVE_CATALOG.values())
 
 
 @pytest.mark.parametrize('agent', sorted(NATIVE_CATALOG))
 def test_evidence_uses_actual_runtime_body(agent):
     from provider_fallback import _agent_prompt
-    source = (ROOT / '.claude/agents' / (agent + '.md')).read_text()
+    from agent_roster import agent_path
+    source = agent_path(ROOT, agent).read_text()
     assert _runtime_body(source) == _agent_prompt(agent)
     entry = catalog_entry(agent, source, ROOT)
     assert entry['evidence_scope'] == 'files_and_explicit_persona_paths_only'

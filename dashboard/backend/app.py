@@ -1494,6 +1494,7 @@ from routes.health import bp as health_bp
 from routes.live import bp as live_bp
 from routes.managed_live_context import bp as managed_live_context_bp
 from routes.live_voices import bp as live_voices_bp
+from routes.live_experience import bp as live_experience_bp
 from routes.knowledge import bp as knowledge_bp
 from routes.knowledge_public import bp as knowledge_public_bp
 from routes.knowledge_proxy import bp as knowledge_proxy_bp
@@ -1584,6 +1585,7 @@ app.register_blueprint(health_bp)
 app.register_blueprint(live_bp)
 app.register_blueprint(managed_live_context_bp)
 app.register_blueprint(live_voices_bp)
+app.register_blueprint(live_experience_bp)
 app.register_blueprint(knowledge_bp)
 app.register_blueprint(knowledge_public_bp)
 app.register_blueprint(knowledge_proxy_bp)

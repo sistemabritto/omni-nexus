@@ -1,3 +1,4 @@
+const { resolveAgentFile } = require('./utils/agent-roster');
 /**
  * Chat Bridge — spawns Claude via Agent SDK with structured streaming events.
  * Supports conversation resume via SDK session IDs.
@@ -396,9 +397,7 @@ function pluginSkillsRuntimeBlock(workspaceRoot = WORKSPACE_ROOT) {
  */
 function loadAgentFile(agentName, cwd) {
   // Agent definitions live at the workspace root — cwd varies per ticket session.
-  const rootPath = path.join(WORKSPACE_ROOT, '.claude', 'agents', `${agentName}.md`);
-  const cwdPath = path.join(cwd, '.claude', 'agents', `${agentName}.md`);
-  const agentPath = fs.existsSync(rootPath) ? rootPath : cwdPath;
+  const agentPath = resolveAgentFile(WORKSPACE_ROOT,cwd,agentName);
   if (!fs.existsSync(agentPath)) {
     console.warn(`[chat-bridge] Agent file not found: ${agentPath}`);
     return null;

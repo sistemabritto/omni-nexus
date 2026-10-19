@@ -9,7 +9,7 @@ import CompanyListModal from './CompanyListModal'
 import NotificationBell from './NotificationBell'
 import './Sidebar.css'
 import {
-  Radio, Bot, Clock,
+  Radio, Clock,
   LogOut, Menu, X,
   ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
@@ -50,25 +50,18 @@ const navSections: NavSection[] = [
     ],
   },
    {
-    // Missões → Projetos → Metas → Tickets numa única árvore (W2, 2026-09-20 —
-    // a unificação dos zôms /projects e /goals). Ficam sem título, entre
-    // Cockpit e a seção Inteligência. Materiais vai no fim do bloco — abaixo do
-    // Kanban, logo acima do título Inteligência (decisão do dono, 20/09): é
-    // material de trabalho, não "cérebro".
+    // Trabalho da empresa; materiais e automações ficam em Inteligência.
     key: 'projetos',
     items: [
       { to: '/missions', labelKey: 'missions', icon: Target, resource: 'goals' },
       { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
-      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
     ],
   },
   {
     key: 'inteligencia',
     title: 'Inteligência',
     items: [
-      // Tudo que dá cérebro à operação: agentes + o que acorda cada um +
-      // o hub de integrações (APIs).
-      { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
+      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
       { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
       { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
       { to: '/triggers', labelKey: 'triggers', icon: Webhook, resource: 'triggers' },

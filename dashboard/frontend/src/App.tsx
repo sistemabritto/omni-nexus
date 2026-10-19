@@ -1,3 +1,5 @@
+import AgentRoute from './components/AgentRoute'
+import AgentVoiceSettings from './pages/AgentVoiceSettings'
 // Modified 2026-10-15: OmniNexus workspace entry; original EvoNexus console retained.
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
@@ -23,7 +25,6 @@ const OmniNexus = lazyDefault(() => import('./pages/OmniNexus'))
 const LiveConversation = lazyDefault(() => import('./live/LiveConversation'))
 const ManagedNexusLive = lazyDefault(() => import('./live/ManagedNexusLive'))
 const Overview = lazyDefault(() => import('./pages/Overview'))
-const Agents = lazyDefault(() => import('./pages/Agents'))
 const AgentDetail = lazyDefault(() => import('./pages/AgentDetail'))
 const Routines = lazyDefault(() => import('./pages/Routines'))
 const Skills = lazyDefault(() => import('./pages/Skills'))
@@ -118,7 +119,7 @@ interface OnboardingUser {
 
 function RedirectPreserveQuery({ to }: { to: string }) {
   const location = useLocation()
-  return <Navigate to={{ pathname: to, search: location.search }} replace />
+  return <Navigate to={{ pathname: to, search: location.search, hash: location.hash }} replace />
 }
 
 function AppContent() {
@@ -269,9 +270,10 @@ function AppContent() {
               <Route path="/live/nexus" element={<Navigate to="/live" replace />} />
               <Route path="/live/gemini" element={<LiveConversation />} />
               <Route path="/workspace/*" element={<Workspace />} />
-              <Route path="/agents" element={<Agents />} />
-              <Route path="/agentes" element={<Agents />} />
-              <Route path="/agents/:name" element={<AgentDetail />} />
+              <Route path="/agents" element={<RedirectPreserveQuery to="/live" />} />
+              <Route path="/agentes" element={<RedirectPreserveQuery to="/live" />} />
+              <Route path="/agents/:name" element={<AgentRoute><AgentDetail /></AgentRoute>} />
+              <Route path="/agents/:name/voice" element={<AgentRoute><AgentVoiceSettings /></AgentRoute>} />
               <Route path="/routines" element={<Routines />} />
               {hasPermission('scheduler', 'view') && <Route path="/activity" element={<Activity />} />}
               <Route path="/tasks" element={<Tasks />} />

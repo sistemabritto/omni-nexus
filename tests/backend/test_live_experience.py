@@ -19,6 +19,12 @@ def experience(setup,tmp_path,monkeypatch):
     monkeypatch.setattr(api,'load_operational_squad',lambda:{'agent-a':{'active':True},'agent-b':{'active':True}})
     monkeypatch.setattr(base,'WORKSPACE',tmp_path)
     (base.AGENTS_DIR/'agent-b.md').write_text('Second persona')
+    from routes import workspace
+    monkeypatch.setattr(workspace,'REPO_ROOT',tmp_path)
+    monkeypatch.setattr(workspace,'WORKSPACE_DIR',tmp_path/'workspace')
+    monkeypatch.setattr(workspace,'ADMIN_ROOTS',[tmp_path/name for name in ('.claude','config','docs')])
+    monkeypatch.setattr(workspace,'_audit',lambda *a,**kw:None)
+    app.register_blueprint(workspace.bp)
     app.register_blueprint(api.bp);login();ctx=create(c).json;link(c,ctx['contextId'])
     return app,c,login,base,ctx,api
 
@@ -42,6 +48,20 @@ def test_artifact_persists_idempotently_with_owned_download_and_live_links(exper
     assert history.status_code==200
     assert result.json['reference'] in history.text
     login(32);assert c.get(result.json['reference']).status_code==403
+
+
+def test_artifact_storage_cannot_be_read_through_general_workspace(experience):
+    _,c,login,base,ctx,api=experience
+    result=call(c,ctx,'create_artifact',{'title':'Private','format':'txt','content':'Owner only'}).json
+    filename=result['artifactId']+'.txt'
+    assert api.artifact_root()==Path(base.WORKSPACE)/'dashboard/data/live-artifacts'
+    assert c.get(result['reference']).data==b'Owner only'
+    for user in (31,32):
+        login(user)
+        for endpoint in ('download','file','tree'):
+            response=c.get('/api/workspace/'+endpoint,query_string={'path':'dashboard/data/live-artifacts/'+filename})
+            assert response.status_code==403
+        assert c.get('/api/workspace/download',query_string={'path':'workspace/live-artifacts/'+filename}).status_code==404
 
 
 @pytest.mark.parametrize('fmt,content',[('svg','<svg><script>alert(1)</script></svg>'),('svg','<!DOCTYPE svg><svg/>'),('svg','<svg><animate/></svg>'),('svg','<svg'),('json','{bad'),('md','api_key=sk-sensitive'),('html','<script/>')])

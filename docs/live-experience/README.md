@@ -9,7 +9,7 @@ Live reúne seleção dos 12 agentes, waveform circular de áudio real e convers
 ## Capacidade real
 
 - Skills/integrações: descoberta sem credenciais e leitura de documentos como referências não confiáveis. Configurada não significa saudável, nem código executado.
-- Artefatos: documentos textuais e SVG estático, com links privados ao usuário/empresa. Upload txt/md/csv/json, sem formulário de caminho de Workspace na página Live.
+- Artefatos: documentos textuais e SVG estático, com links privados ao usuário/empresa. Os arquivos ficam no volume persistente `dashboard/data/live-artifacts`, fora das raízes do gerenciador geral de Workspace. Upload txt/md/csv/json, sem formulário de caminho de Workspace na página Live.
 - Imagens: OpenAI existente, `gpt-image-2`, PNG, qualidade medium, uma saída. Reserva persistida impede repetição por requestId; processamento é assíncrono e não recupera/reenvia automaticamente após perda do worker. Timeout fica incerto. Não há geração paga durante QA.
 - Vídeo: entrada restrita na fila de mídia já existente, sempre draft; nenhuma publicação/agendamento ou mudança de worker.
 - Áreas do menu: consultas por adapters nomeados, filtragem de empresa para trabalho, metadados globais identificados como workspace; cookies da sessão humana original seguem somente para rotas fixas loopback, que reaplicam ACL nativa. Sem conta de serviço substituta.

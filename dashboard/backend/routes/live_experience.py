@@ -30,7 +30,9 @@ def ensure(conn):
 
 
 def artifact_root():
-    return Path(live.WORKSPACE)/'workspace/live-artifacts'
+    # Dedicated downloads enforce user/company ownership. Keep bytes outside
+    # every root exposed by the general Workspace file manager.
+    return Path(live.WORKSPACE)/'dashboard/data/live-artifacts'
 
 
 def artifact_record(row, artifact_id):

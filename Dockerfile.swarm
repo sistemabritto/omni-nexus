@@ -36,7 +36,8 @@ ENV PATH="/root/.local/bin:${PATH}"
 ARG CACHEBUST=1
 
 # Install Claude Code CLI (default provider)
-RUN npm install -g @anthropic-ai/claude-code
+# Preserve the deployed scheduler harness while changing roster compatibility.
+RUN npm install -g @anthropic-ai/claude-code@2.1.301
 
 # Install OpenClaude CLI — pinned to a tested version instead of @latest.
 # Floating @latest meant every Swarm redeploy could silently ship a new CLI

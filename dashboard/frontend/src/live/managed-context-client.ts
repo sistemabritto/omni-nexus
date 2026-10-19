@@ -4,6 +4,7 @@ export class LiveRequestError extends Error {
   constructor(message:string){super(message);this.name='LiveRequestError'}
 }
 const messages:Record<string,string>={
+  operational_squad_unavailable:'O squad operacional não está disponível. Tente novamente; o catálogo geral não substitui esta seleção.',
   personal_access_not_configured:'O acesso Live ainda não foi configurado no servidor para seu usuário autenticado.',
   personal_access_denied:'Sua conta autenticada ainda não está autorizada para o Live.',
   permission_denied:'Sua conta não tem as permissões necessárias para iniciar o Live.',
@@ -28,7 +29,7 @@ async function call(path:string, body?:unknown, signal?:AbortSignal) {
 }
 export async function loadManagedOptions(){
   const data=await call('/api/live/omni-context/options')
-  if(!Array.isArray(data?.companies)||!Array.isArray(data?.agents)||typeof data?.consumptionApproved!=='boolean'||!data.companies.every((item:{id:number;name:string})=>item&&Number.isInteger(item.id)&&item.id>0&&typeof item.name==='string')||!data.agents.every((name:unknown)=>typeof name==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(name)))throw new LiveRequestError('A resposta de acesso Live não é compatível com esta interface.')
+  if(data?.operationalSquadVersion!==1||!Array.isArray(data?.companies)||!Array.isArray(data?.agents)||typeof data?.consumptionApproved!=='boolean'||!data.companies.every((item:{id:number;name:string})=>item&&Number.isInteger(item.id)&&item.id>0&&typeof item.name==='string')||!data.agents.every((name:unknown)=>typeof name==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(name)))throw new LiveRequestError('A resposta de acesso Live não é compatível com esta interface.')
   return data
 }
 export async function prepareManagedContext(companyId:number,agentName:string):Promise<Context> {

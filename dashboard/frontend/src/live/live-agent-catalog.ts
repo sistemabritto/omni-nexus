@@ -1,4 +1,4 @@
-export type CatalogAgent = {name:string;description?:string;locked?:boolean;catalog?:{display_name?:string;display_label?:string;function?:string;sector?:string;sector_id?:string;delivery_profile?:{purpose?:string;inputs?:string;deliverables?:string;acceptance?:string;methods?:string[]}}}
+export type CatalogAgent = {name:string;operational_squad?:{active:boolean;group:'principal'|'support'|null;version:number};description?:string;locked?:boolean;catalog?:{display_name?:string;display_label?:string;function?:string;sector?:string;sector_id?:string;delivery_profile?:{purpose?:string;inputs?:string;deliverables?:string;acceptance?:string;methods?:string[]}}}
 export type AgentChoice = {slug:string;name:string;role:string;sector:string;catalogued:boolean}
 const text=(value:unknown,limit:number)=>typeof value==='string'?value.trim().slice(0,limit):''
 export const displayAgentSlug=(name:string)=>name.split('-').map(word=>word[0]?.toUpperCase()+word.slice(1)).join(' ')
@@ -40,4 +40,9 @@ export function partitionSquad<T extends {slug:string}>(choices:T[]){
   const bySlug=new Map(choices.map(choice=>[choice.slug,choice]))
   return {principal:Object.keys(squadEntrances).flatMap(slug=>bySlug.has(slug)?[bySlug.get(slug)!]:[]),
     specialists:choices.filter(choice=>!squadEntrances[choice.slug])}
+}
+
+// General catalog membership and operational eligibility are independent.
+export function operationalChoices<T extends {agent:CatalogAgent}>(choices:T[]){
+  return choices.filter(choice=>choice.agent.operational_squad?.version===1&&choice.agent.operational_squad.active===true&&!choice.agent.locked)
 }

@@ -5,6 +5,7 @@ from flask_login import login_required, current_user
 from routes._helpers import WORKSPACE, safe_read, parse_frontmatter, file_info
 from models import has_agent_access
 from agent_catalog import catalog_entry
+from operational_squad import load_operational_squad
 
 bp = Blueprint("agents", __name__)
 
@@ -25,6 +26,10 @@ def list_agents():
     if not AGENTS_DIR.is_dir():
         return jsonify([])
     agents = []
+    try:
+        squad = load_operational_squad()
+    except (OSError, ValueError, TypeError):
+        squad = {}  # General catalog remains readable; no operational eligibility.
     role = current_user.role if current_user.is_authenticated else "viewer"
     for f in sorted(AGENTS_DIR.iterdir()):
         if f.suffix.lower() == ".md" and f.is_file():
@@ -38,6 +43,7 @@ def list_agents():
                 "custom": name.startswith("custom-"),
                 "locked": not has_agent_access(role, name),
                 "catalog": catalog_entry(name, content, WORKSPACE),
+                "operational_squad": squad.get(name, {"active": False, "group": None, "version": 1}),
             }
             if fm.get("color"):
                 entry["color"] = fm["color"]

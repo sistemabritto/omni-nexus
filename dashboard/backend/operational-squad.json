@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "description": "Approved operational squad eligibility. Not ACL, provider readiness or evidence of execution. Names, portraits and voices remain in their existing registries.",
+  "agents": [
+    {"slug": "clawdia-assistant", "group": "principal", "active": true},
+    {"slug": "mako-marketing", "group": "principal", "active": true},
+    {"slug": "pixel-social-media", "group": "principal", "active": true},
+    {"slug": "canvas-designer", "group": "principal", "active": true},
+    {"slug": "bolt-executor", "group": "principal", "active": true},
+    {"slug": "oath-verifier", "group": "principal", "active": true},
+    {"slug": "atlas-project", "group": "support", "active": true},
+    {"slug": "sage-strategy", "group": "support", "active": true},
+    {"slug": "raven-critic", "group": "support", "active": true},
+    {"slug": "hawk-debugger", "group": "support", "active": true},
+    {"slug": "lens-reviewer", "group": "support", "active": true},
+    {"slug": "probe-qa", "group": "support", "active": true}
+  ]
+}

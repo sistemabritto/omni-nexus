@@ -32,7 +32,7 @@ export default function ManagedNexusLive(){
   const [retry,setRetry]=useState(0),[catalogUnavailable,setCatalogUnavailable]=useState(false)
   useEffect(()=>{
     let alive=true;const abort=new AbortController()
-    void loadManagedOptions().then(data=>{if(alive){setOptions(data);setAccess(data.consumptionApproved?'Acesso disponível.':'O consumo da conversa ainda não foi liberado no servidor.')}}).catch(error=>{if(alive)setAccess(error.message)}).finally(()=>{if(alive)setChecking(false)})
+    void loadManagedOptions().then(data=>{if(alive){setOptions(data);setAccess(data.consumptionApproved?'Acesso disponível.':'O consumo da conversa ainda não foi liberado no servidor.')}}).catch(error=>{if(alive){setOptions(null);setAccess(error.message)}}).finally(()=>{if(alive)setChecking(false)})
     void fetch('/api/agents',{credentials:'include',signal:abort.signal}).then(async response=>{if(!response.ok)throw Error();const data=await response.json();if(alive){const list=Array.isArray(data)?data:Array.isArray(data.agents)?data.agents:[];setAgents(list.filter((item:Agent)=>item&&typeof item.name==='string'));setCatalogUnavailable(!list.some((item:Agent)=>item&&typeof item.catalog?.display_name==='string'&&typeof item.catalog?.sector==='string'))}}).catch(()=>{if(alive){setAgents([]);setCatalogUnavailable(true)}}).finally(()=>{if(alive)setCatalogLoading(false)})
     return()=>{alive=false;abort.abort()}
   },[retry])
@@ -40,7 +40,7 @@ export default function ManagedNexusLive(){
   const company=options?.companies.find(c=>c.id===activeCompanyId)
   const busy=state.phase!=='idle',selected=busy?state.agent:agent??(state.companyId===activeCompanyId?state.agent:'')
   const groups=options?.presentationGroups||{}
-  const available=(options?.agents||agents.map(item=>item.name)).filter(name=>hasAgentAccess(name)&&!agents.find(item=>item.name===name)?.locked)
+  const available=(options?.agents||[]).filter(name=>hasAgentAccess(name)&&!agents.find(item=>item.name===name)?.locked)
   const selectedChoice=agentChoice(selected,agents,groups)
   const canStart=!!(!pendingWrite&&activeCompany&&company&&available.includes(selected)&&options?.consumptionApproved)
   const bindings=voiceFirstBindings(managedSession,company?{companyId:company.id,company:company.name,agent:selected}:null,true)
@@ -48,7 +48,7 @@ export default function ManagedNexusLive(){
     <header className="live-heading"><div><span className="live-eyebrow">SISTEMA BRITTO</span><h1>OmniNexus Live</h1></div><span className="live-prototype">{state.phase==='connected'?'Conectado':state.phase==='connecting'?'Conectando…':'Desconectado'}</span></header>
     <details className="live-context-disclosure" open={!selected||undefined}><summary>{selected&&<AgentAvatar name={selected} size={32} className="inline-block align-middle mr-2"/>}{selected?`Contexto · ${selectedChoice.name}`:"Escolher agente"}</summary><section className="managed-context" aria-label="Contexto da conversa">
       <div className="managed-current-company"><span>Empresa do menu global</span><p>{activeCompany?.name||'Selecione uma empresa no menu global'}</p>{activeCompany&&options&&!company&&<small>Empresa selecionada indisponível para esta conversa.</small>}</div>
-      <LiveAgentSelector allowed={available} agents={agents} legacyGroups={groups} selected={selected} disabled={busy} loading={catalogLoading} unavailable={catalogUnavailable} onSelect={setAgent} onRetry={()=>{setCatalogLoading(true);setRetry(value=>value+1)}}/>
+      <LiveAgentSelector allowed={available} agents={agents} legacyGroups={groups} selected={selected} disabled={busy} loading={catalogLoading} unavailable={catalogUnavailable} onSelect={setAgent} onRetry={()=>{setOptions(null);setCatalogLoading(true);setRetry(value=>value+1)}}/>
       <small>Setores e funções são informações de apresentação; não habilitam ferramentas. <Link to="/inteligencia">Consultar agentes em Inteligência</Link>.</small>
       {selected&&<p className="managed-agent"><strong>{selectedChoice.name}</strong><span>{selectedChoice.role}</span><small>{selectedChoice.sector} · Identidade: {selected} · Respostas: Nexus Live. O agente selecionado define o contexto. Pedidos internos dependem de autorização.</small></p>}
     </section></details>

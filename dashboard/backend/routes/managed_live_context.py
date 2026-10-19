@@ -15,6 +15,7 @@ from sqlalchemy import or_
 from live_conversation_store import ContinuityDenied
 from models import Company, User, TICKET_STATUSES, has_permission, has_agent_access
 from routes.agents import AGENTS_DIR
+from operational_squad import load_operational_squad
 from routes._helpers import WORKSPACE
 from routes.terminal_proxy import TERMINAL_HTTP_BASE
 
@@ -86,8 +87,12 @@ def context_options():
     if denied is not None:
         return denied
     companies = [{'id': c.id, 'name': c.name} for c in Company.query.filter_by(status='active').order_by(Company.id).all()]
-    agents = [p.stem for p in sorted(AGENTS_DIR.glob('*.md')) if _ID.fullmatch(p.stem) and has_agent_access(current_user.role, p.stem)]
-    return _reply({'companies': companies, 'agents': agents, 'consumptionApproved': _consumption_approved(), 'presentationGroups': _presentation_groups(agents)})
+    try:
+        squad = load_operational_squad()
+    except (OSError, ValueError, TypeError):
+        return _reply({'error': 'operational_squad_unavailable'}, 503)
+    agents = [slug for slug, entry in squad.items() if entry['active'] and (AGENTS_DIR / (slug + '.md')).is_file() and has_agent_access(current_user.role, slug)]
+    return _reply({'companies': companies, 'agents': agents, 'consumptionApproved': _consumption_approved(), 'presentationGroups': _presentation_groups(agents), 'operationalSquadVersion': 1})
 
 
 @bp.post('/api/live/omni-context')
@@ -98,6 +103,14 @@ def create_context():
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or set(data) != {'companyId', 'agentName'}:
         return _reply({'error': 'invalid_context'}, 400)
+    if not isinstance(data['agentName'], str) or not _ID.fullmatch(data['agentName']):
+        return _reply({'error': 'scope_denied'}, 403)
+    try:
+        eligible = load_operational_squad().get(data.get('agentName'), {}).get('active') is True
+    except (OSError, ValueError, TypeError):
+        return _reply({'error': 'operational_squad_unavailable'}, 503)
+    if not eligible:
+        return _reply({'error': 'scope_denied'}, 403)
     company = _scope(data['companyId'], data['agentName'])
     if company is None:
         return _reply({'error': 'scope_denied'}, 403)
@@ -219,6 +232,14 @@ def signed_session(context_id):
         return _reply({'error': 'scope_denied'}, 403)
     if row['conversation_id']:
         return _reply({'error': 'conversation_already_bound'}, 409)
+    # An owned historical context may still be readable after retirement, but
+    # issuing a fresh provider credential is a new operational admission.
+    try:
+        eligible = load_operational_squad().get(row['agent_name'], {}).get('active') is True
+    except (OSError, ValueError, TypeError):
+        return _reply({'error': 'operational_squad_unavailable'}, 503)
+    if not eligible:
+        return _reply({'error': 'scope_denied'}, 403)
     if not _consumption_approved():
         return _reply({'error': 'consumption_not_approved'}, 403)
     agent_id = current_app.config.get('NEXUS_LIVE_AGENT_ID') or os.environ.get('NEXUS_LIVE_AGENT_ID')

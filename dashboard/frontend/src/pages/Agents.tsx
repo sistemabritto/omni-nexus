@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Search, Lock } from 'lucide-react'
 import { api } from '../lib/api'
 import { AgentAvatar } from '../components/AgentAvatar'
-import { agentChoice, matchesAgent, partitionSquad, squadEntrances, squadEntryLabel, type CatalogAgent } from '../live/live-agent-catalog'
+import { agentChoice, matchesAgent, operationalChoices, partitionSquad, squadEntrances, squadEntryLabel, type CatalogAgent } from '../live/live-agent-catalog'
 import './SquadEntrances.css'
 
 type Agent = CatalogAgent & {memory_count?:number}
@@ -17,8 +17,10 @@ export default function Agents(){
     return()=>{alive=false}
   },[retry])
   const choices=agents.map(agent=>({...agentChoice(agent.name,agents),agent}))
-  const {principal,specialists}=partitionSquad(choices)
-  const searching=!!query.trim(),found=choices.filter(choice=>matchesAgent(choice,query)||squadEntryLabel(choice.slug,choice.name).toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')))
+  const active=operationalChoices(choices)
+  const {principal,specialists}=partitionSquad(active)
+  const catalog=choices.filter(choice=>!active.includes(choice))
+  const searching=!!query.trim(),found=active.filter(choice=>matchesAgent(choice,query)||squadEntryLabel(choice.slug,choice.name).toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')))
   function card(choice:typeof choices[number]){
     const entry=squadEntrances[choice.slug]
     const profile=choice.agent.catalog?.delivery_profile
@@ -31,11 +33,12 @@ export default function Agents(){
     </div>
   }
   return <main className="squad-home">
-    <header><p className="squad-eyebrow">SISTEMA BRITTO · OMNINEXUS</p><h1>Quem resolve o quê</h1><p>Comece pelo responsável da entrega. Apoios, revisores e especialistas continuam disponíveis quando precisar.</p></header>
+    <header><p className="squad-eyebrow">SISTEMA BRITTO · OMNINEXUS</p><h1>Quem resolve o quê</h1><p>Comece pelo responsável da entrega. Apoios e revisores do squad operacional estão abaixo. O catálogo completo permanece separado.</p></header>
     <label className="squad-search"><Search size={20}/><span className="sr-only">Buscar agente por nome ou função</span><input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por função ou nome"/></label>
     {loading?<p role="status">Carregando squad…</p>:error?<div role="alert"><p>Não foi possível carregar o squad.</p><button onClick={()=>{setLoading(true);setRetry(value=>value+1)}}>Tentar novamente</button></div>:searching?<section aria-label="Resultados da busca"><p role="status">{found.length} resultado(s)</p><div className="squad-grid">{found.map(card)}</div></section>:<>
-      <section aria-label="Responsáveis principais"><h2 className="squad-section-title">Responsáveis principais</h2><div className="squad-grid">{principal.map(card)}</div>{!principal.length&&<p>Nenhum responsável principal disponível neste catálogo. Consulte os especialistas abaixo.</p>}</section>
+      <section aria-label="Responsáveis principais"><h2 className="squad-section-title">Responsáveis principais</h2><div className="squad-grid">{principal.map(card)}</div>{!principal.length&&<p>Nenhum responsável operacional autorizado disponível. O catálogo geral permanece abaixo.</p>}</section>
       <details className="squad-specialists"><summary>Apoios, revisores e especialistas <span>{specialists.length}</span></summary><p>Escolha uma competência específica. O responsável da entrega continua com o acompanhamento; revisão exige independência de quem criou.</p><div className="squad-grid">{specialists.map(card)}</div></details>
     </>}
+    {!loading&&!error&&<details className="squad-specialists"><summary>Catálogo geral · históricos e personalizados <span>{catalog.length}</span></summary><p>Estes agentes permanecem no catálogo com seus acessos existentes. A presença aqui não habilita seleção no Live.</p><div className="squad-grid">{catalog.filter(choice=>!query.trim()||matchesAgent(choice,query)).map(card)}</div></details>}
   </main>
 }

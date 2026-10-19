@@ -38,6 +38,7 @@ def setup(tmp_path,monkeypatch):
     @app.before_request
     def api_token():g.auth_via_api_token=request.headers.get('X-Fixture-Token')=='yes'
     agents=tmp_path/'agents';agents.mkdir();(agents/'agent-a.md').write_text('fixture');monkeypatch.setattr(mod,'AGENTS_DIR',agents)
+    monkeypatch.setattr(mod,'load_operational_squad',lambda: {'agent-a': {'active': True, 'group': 'principal', 'version': 1}})
     runtime={};calls=[]
     def post(url,**kwargs):
         calls.append(('POST',url,kwargs));sid=str(uuid4());agent=kwargs['json']['agentName'];runtime[sid]={'id':sid,'name':'Runtime created in test','active':False,'workingDir':'not-returned'}
@@ -64,7 +65,7 @@ def read(client,cid,conversation='conv-fixture',**extra):
 
 def test_full_authenticated_create_link_read_uses_canonical_db_and_runtime(setup):
     app,c,login,mod,runtime,calls=setup;login()
-    opts=c.get('/api/live/omni-context/options');assert opts.json=={'companies':[{'id':7,'name':'Company A fixture'},{'id':8,'name':'Company B fixture'}],'agents':['agent-a'],'consumptionApproved':False,'presentationGroups':{}}
+    opts=c.get('/api/live/omni-context/options');assert opts.json=={'companies':[{'id':7,'name':'Company A fixture'},{'id':8,'name':'Company B fixture'}],'agents':['agent-a'],'consumptionApproved':False,'presentationGroups':{},'operationalSquadVersion':1}
     response=create(c);assert response.status_code==201;ctx=response.json;assert ctx['runtimeSessionId'] in runtime
     assert read(c,ctx['contextId']).status_code==403
     assert link(c,ctx['contextId']).status_code==200
@@ -199,3 +200,44 @@ def test_read_does_not_infer_person_name_from_username(setup):
         user=db.session.get(User,31);user.display_name='   ';db.session.commit()
     login();ctx=create(c).json;link(c,ctx['contextId'])
     assert read(c,ctx['contextId']).json['authenticatedUser']=={'displayName':None,'nameAvailable':False,'source':'authenticated_profile'}
+
+
+def test_operational_options_and_new_context_exclude_historical_inactive_and_acl_blocked(setup, monkeypatch):
+    _, c, login, mod, runtime, calls = setup
+    login()
+    for slug in ('inactive', 'historical', 'custom-existing', 'blocked', 'support'):
+        (mod.AGENTS_DIR / (slug + '.md')).write_text('fixture')
+    monkeypatch.setattr(mod, 'load_operational_squad', lambda: {
+        'agent-a': {'active': True}, 'support': {'active': True},
+        'inactive': {'active': False}, 'blocked': {'active': True}, 'missing-file': {'active': True}})
+    monkeypatch.setattr(mod, 'has_agent_access', lambda role, name: name != 'blocked')
+    response = c.get('/api/live/omni-context/options')
+    assert response.status_code == 200
+    assert response.json['agents'] == ['agent-a', 'support']
+    for slug in ('inactive', 'historical', 'custom-existing', 'blocked'):
+        assert c.post('/api/live/omni-context', json={'companyId': 7, 'agentName': slug}, headers=ORIGIN).status_code == 403
+    assert calls == []
+    assert c.post('/api/live/omni-context', json={'companyId': 7, 'agentName': 'support'}, headers=ORIGIN).status_code == 201
+
+
+def test_operational_manifest_failure_has_no_catalog_fallback(setup, monkeypatch):
+    _, c, login, mod, _, calls = setup
+    login()
+    def broken():
+        raise ValueError('invalid_operational_squad')
+    monkeypatch.setattr(mod, 'load_operational_squad', broken)
+    response = c.get('/api/live/omni-context/options')
+    assert response.status_code == 503
+    assert response.json == {'error': 'operational_squad_unavailable'}
+    assert create(c).status_code == 503
+    assert calls == []
+
+
+def test_historical_context_keeps_existing_read_scope_after_retirement(setup, monkeypatch):
+    _, c, login, mod, _, _ = setup
+    login()
+    context = create(c).json
+    assert link(c, context['contextId']).status_code == 200
+    monkeypatch.setattr(mod, 'load_operational_squad', lambda: {})
+    assert read(c, context['contextId']).status_code == 200
+    assert create(c).status_code == 403

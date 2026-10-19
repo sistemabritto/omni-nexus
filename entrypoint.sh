@@ -71,6 +71,11 @@ if [ -d "$DEFAULTS_DIR/claude" ]; then
     cp -a "$DEFAULTS_DIR/claude/." /workspace/.claude/ 2>/dev/null || true
 fi
 
+# Preserve retired roles as verified playbooks before runtime starts.
+if [ -f /workspace/scripts/migrate_squad_roster.py ]; then
+    python3 /workspace/scripts/migrate_squad_roster.py --root /workspace --apply
+fi
+
 # --- 2c. Ensure per-agent memory dirs exist ---------------------------------
 # agent-memory is its own volume and starts completely empty on first deploy
 # (or if it was created before an agent existed) — no per-agent subfolder

@@ -50,7 +50,9 @@ def _agent_prompt(agent: str | None) -> str:
     """Return agent persona text without YAML frontmatter."""
     if not agent:
         return ""
-    agent_file = WORKSPACE / ".claude" / "agents" / f"{agent}.md"
+    sys.path.insert(0, str(WORKSPACE / "dashboard" / "backend"))
+    from agent_roster import agent_path
+    agent_file = agent_path(WORKSPACE, agent)
     try:
         content = agent_file.read_text(encoding="utf-8")
     except OSError:
@@ -170,7 +172,9 @@ def _spawn_cli(cli_command: str, prompt: str, agent: str | None, provider_env: d
     a static string, satisfying semgrep/opengrep subprocess injection rules.
     """
     base_args = ["--print", "--max-turns", str(max_turns), "--dangerously-skip-permissions", "--output-format", "json"]
-    if cli_command == "openclaude":
+    sys.path.insert(0, str(WORKSPACE / "dashboard" / "backend"))
+    from agent_roster import retirements
+    if cli_command == "openclaude" or agent in retirements(WORKSPACE):
         prompt = _embed_agent_for_openclaude(prompt, agent)
         agent = None
     if agent:

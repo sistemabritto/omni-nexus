@@ -148,6 +148,9 @@ def _upsert_heartbeat_from_yaml(heartbeat_id: str) -> dict | None:
 def step1_load_identity(agent: str) -> str:
     """Read .claude/agents/{agent}.md and return persona text."""
     agent_file = AGENTS_DIR / f"{agent}.md"
+    if not agent_file.is_file():
+        from agent_roster import agent_path
+        agent_file = agent_path(WORKSPACE, agent)
     if not agent_file.exists():
         raise FileNotFoundError(f"Agent file not found: {agent_file}")
     content = agent_file.read_text(encoding="utf-8")

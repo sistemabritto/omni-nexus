@@ -9,11 +9,13 @@ import { agentHref, agentIdentity } from '../lib/agent-routes'
 import LiveAudioOrb from './LiveAudioOrb'
 import LiveChat from './LiveChat'
 import LiveApprovals from './LiveApprovals'
+import PartyMode from './PartyMode'
 import './LiveExperience.css'
-type Options={companies:{id:number;name:string}[];agents:string[];consumptionApproved:boolean}
+type Options={companies:{id:number;name:string}[];agents:string[];consumptionApproved:boolean;presentationGroups?:Record<string,string[]>}
 export default function ManagedNexusLive(){
   const {hasAgentAccess}=useAuth(),{activeCompanyId,activeCompany}=useCompanies()
   const state=useSyncExternalStore(managedSession.subscribe,managedSession.snapshot)
+  const [mode,setMode]=useState<'individual'|'party'>('individual')
   const [options,setOptions]=useState<Options|null>(null)
   const [chosen,setChosen]=useState('clawdia-assistant'),[error,setError]=useState(''),[retry,setRetry]=useState(0),[sending,setSending]=useState(false),[speaking,setSpeaking]=useState(false)
   useEffect(()=>{let alive=true;void loadManagedOptions().then(value=>{if(alive){setOptions(value);setError('')}}).catch(e=>{if(alive){setOptions(null);setError(e.message)}});return()=>{alive=false}},[retry])
@@ -32,7 +34,8 @@ export default function ManagedNexusLive(){
   }
   return <main className="live-experience" style={{'--agent-color':identity.color} as CSSProperties}>
     <header className="live-experience-header"><div><span className="live-experience-wordmark">OMNINEXUS <b>LIVE</b></span><small>{activeCompany?.name||'Sua empresa'}</small></div><span className={`live-connection-state ${connected?'is-connected':''}`}><i/>{connected?'Conectado':state.phase==='connecting'?'Conectando':'Disponível'}</span></header>
-    <div className="live-experience-layout"><section className="live-stage" aria-label="Conversa por voz">
+    <div className="live-mode-selector" role="group" aria-label="Modo de conversa"><button type="button" aria-pressed={mode==='individual'} onClick={()=>setMode('individual')}>Individual</button><button type="button" aria-pressed={mode==='party'} disabled={busy||pending} onClick={()=>setMode('party')}>Party Mode · texto</button></div>
+    {mode==='party'?<PartyMode key={activeCompanyId??'none'} companyId={company?.id??null} agents={available} groups={options?.presentationGroups||{}}/>:<div className="live-experience-layout"><section className="live-stage" aria-label="Conversa por voz">
       <div className="live-agent-picker"><label htmlFor="live-agent">Conversar com</label><div><select id="live-agent" value={selected} disabled={!available.length||state.phase==='connecting'} onChange={e=>{const value=e.target.value;setChosen(value);if(connected)void managedSession.handoff(value,'Selecionado por você')}}>{available.map(slug=><option key={slug} value={slug}>{agentIdentity(slug).name}</option>)}</select>{selected&&<Link to={`${agentHref(selected)}/voice`} aria-label={`Configurar voz de ${identity.name}`}><Settings2 size={17}/></Link>}</div></div>
       <LiveAudioOrb frame={managedSession.audioFrame} phase={state.phase} color={identity.color} onSpeaking={onSpeaking}/>
       <div className="live-stage-caption"><h1>{identity.name||'Seu squad'}</h1><p role="status">{status}</p></div>
@@ -41,6 +44,6 @@ export default function ManagedNexusLive(){
       {problem&&<div className="live-inline-notice" role="alert">{problem}<button type="button" onClick={()=>{setOptions(null);setRetry(v=>v+1)}}>Verificar novamente</button></div>}
       {state.status&&!['Pode falar. Estou ouvindo.','Conversa conectada.','Conectando…'].includes(state.status)&&(busy||state.company)&&<p className="live-inline-notice" role="status">{state.status}</p>}
       {state.continuity?.writeStatus==='error'&&<div className="live-inline-notice" role="alert">Há mensagens aguardando gravação.<button type="button" onClick={()=>void managedSession.retryWrites()?.catch(()=>{})}>Tentar salvar</button></div>}
-    </section><div className="live-conversation-column"><LiveApprovals connected={connected} companyId={activeCompanyId}/><LiveChat key={activeCompanyId??'none'} agent={selected} messages={state.messages} events={state.continuity?.events||[]} disabled={(!busy&&!canStart)||state.phase==='connecting'} sending={sending} onSend={send} onAttach={connected?file=>managedSession.attach(file):undefined}/></div></div>
+    </section><div className="live-conversation-column"><LiveApprovals connected={connected} companyId={activeCompanyId}/><LiveChat key={activeCompanyId??'none'} agent={selected} messages={state.messages} events={state.continuity?.events||[]} disabled={(!busy&&!canStart)||state.phase==='connecting'} sending={sending} onSend={send} onAttach={connected?file=>managedSession.attach(file):undefined}/></div></div>}
   </main>
 }

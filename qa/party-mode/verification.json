@@ -1,0 +1,24 @@
+{
+  "scope": "Party Mode text-only preparation",
+  "baseCommit": "beec8dfecf662122eb695540c7715e3242057d8b",
+  "checks": {
+    "backendPartyFixtures": {"status": "passed", "tests": 28, "externalExecution": "mocked"},
+    "clientLifecycleFixtures": {"status": "passed", "coverage": ["ordered speakers", "duplicate sends", "cancellation", "late responses", "company change", "failure", "uncertain outcome", "history restore", "lost creation response", "cancellation during round creation"]},
+    "existingLiveHostSSR": {"status": "passed", "includes": "individual controls and Party mode eligibility"},
+    "existingVoiceFirstRender": {"status": "passed"},
+    "frontendBuild": {"status": "passed", "warning": "existing large bundle chunk warning"},
+    "touchedFrontendLint": {"status": "passed"},
+    "pythonCompile": {"status": "passed"},
+    "diffWhitespace": {"status": "passed"},
+    "graphifyUpdate": {"status": "not_run", "reason": "graphify executable unavailable"},
+    "browserVisualQA": {"status": "pending_independent_review"},
+    "productionOrProviderCanary": {"status": "not_run", "reason": "rollout held; no provider, microphone or voice calls authorized in preparation"}
+  },
+  "release": {"enabled": false, "pushed": false, "deployed": false, "productionValidated": false},
+  "limits": [
+    "Text only; no voice orchestration or tools.",
+    "Existing execution policy can use bounded fallback inside a claimed turn; Party Mode never replays a claimed turn automatically.",
+    "Cancellation suppresses late output and later speakers, not immediate termination/refund of an already-started call.",
+    "Per-turn budget eligibility is not a new aggregate account/monthly spending cap."
+  ]
+}

@@ -6,7 +6,7 @@ import { agentIdentity } from '../lib/agent-routes'
 import type { SavedEvent } from './continuity-session'
 import { safeWorkLink } from './continuity-session'
 type Message={author:string;text:string;kind?:string;agent?:string}
-export default function LiveChat({messages,events,agent,disabled,sending,onSend,onAttach}:{messages:readonly Message[];events:readonly SavedEvent[];agent:string;disabled:boolean;sending:boolean;onSend:(text:string)=>Promise<boolean>;onAttach?:(file:File)=>Promise<string>}){
+export default function LiveChat({messages,events,agent,disabled,sending,onSend,onAttach,heading="Conversa",subtitle="Voz e texto, no mesmo contexto",emptyTitle="Uma conversa. Todo o seu squad.",emptyDescription="Fale ou escreva. Links, arquivos e resultados ficam aqui."}:{heading?:string;subtitle?:string;emptyTitle?:string;emptyDescription?:string;messages:readonly Message[];events:readonly SavedEvent[];agent:string;disabled:boolean;sending:boolean;onSend:(text:string)=>Promise<boolean>;onAttach?:(file:File)=>Promise<string>}){
   const [draft,setDraft]=useState(''),[copied,setCopied]=useState(-1),[notice,setNotice]=useState(''),[attaching,setAttaching]=useState(false)
   const scroll=useRef<HTMLDivElement>(null),file=useRef<HTMLInputElement>(null)
   useEffect(()=>{scroll.current?.scrollTo({top:scroll.current.scrollHeight,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})},[messages.length,events.length])
@@ -15,9 +15,9 @@ export default function LiveChat({messages,events,agent,disabled,sending,onSend,
   async function send(){if(!draft.trim()||disabled||sending)return;const value=draft;if(await onSend(value))setDraft(current=>current===value?'':current)}
   async function attach(value:File){if(!onAttach)return;setAttaching(true);try{setNotice(await onAttach(value))}catch{setNotice('Não foi possível anexar o arquivo. Tente novamente.')}finally{setAttaching(false);if(file.current)file.current.value=''}}
   return <section className="live-chat" aria-label="Chat da conversa">
-    <header className="live-chat-heading"><span>Conversa</span><small>Voz e texto, no mesmo contexto</small></header>
+    <header className="live-chat-heading"><span>{heading}</span><small>{subtitle}</small></header>
     <div ref={scroll} className="live-chat-scroll" role="log" aria-label="Mensagens e materiais" aria-live="polite" aria-relevant="additions">
-      {!transcript.length&&!useful.length&&<div className="live-chat-empty"><span>Uma conversa. Todo o seu squad.</span><p>Fale ou escreva. Links, arquivos e resultados ficam aqui.</p></div>}
+      {!transcript.length&&!useful.length&&<div className="live-chat-empty"><span>{emptyTitle}</span><p>{emptyDescription}</p></div>}
       {transcript.map((message,index)=>message.kind==='handoff'?<p key={index} className="live-handoff-note"><span style={{background:agentIdentity(message.agent||agent).color}}/>{message.text}</p>:<article key={index} className={`live-chat-message ${message.author.startsWith('Você')?'from-user':'from-agent'}`}>
         {!message.author.startsWith('Você')&&<AgentAvatar name={message.agent||agent} size={28}/>}
         <div className="live-chat-message-body"><header>{message.author.replace(' · texto','').replace(' · voz','')}<button type="button" aria-label="Copiar mensagem" onClick={()=>void navigator.clipboard.writeText(message.text).then(()=>setCopied(index)).catch(()=>setNotice('Selecione o texto para copiar.'))}>{copied===index?<Check size={14}/>:<Copy size={14}/>}</button></header><Markdown>{message.text}</Markdown></div>

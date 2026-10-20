@@ -306,13 +306,14 @@ def catalog(row):
     except (PermissionError,OSError,ValueError):return {'status':'scope_not_configured','items':[]}
     import os
     from skill_capability_dispatch import _BINDINGS
-    from live_self_healing import _policy
-    try:rollout_enabled=_policy().get('rollout',{}).get('enabled') is True
-    except (OSError,ValueError):rollout_enabled=False
+    from live_self_healing import diagnostics
+    pipeline=diagnostics(row)
+    rollout_enabled=pipeline['rolloutPolicyEnabled']
     return {'status':'available','scope':'workspace_administration_global; memory and materials keep their own company bindings',
             'administrativeWritesRequireHuman':True,'catalogDoesNotAuthorizeExecution':True,
             'skillExecutors':[{'name':b['skill'],'capability':b['id']} for b in _BINDINGS],
             'internet':{'configured':bool(os.environ.get('BRAVE_SEARCH_API_KEY')),'health':'not_inferred_from_credentials'},
             'productionRollout':{'policyEnabled':rollout_enabled,'executable':'requires_verified_workflow_ci_environment_and_human_approval'},
+            'autonomy':pipeline,
             'routineExecutors':policy.get('routineExecutors',[]),
             'items':[{'adapter':adapter,'operations':sorted(operations)} for adapter,operations in OPERATIONS.items()]}

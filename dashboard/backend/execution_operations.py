@@ -1,5 +1,10 @@
 """Configuration descriptors only; not an authorization/execution registry."""
 OPERATIONS = {
+    "party_turn": {
+        "label": "Responder no Party Mode", "required_capabilities": ["text_generation", "no_tools"],
+        "existing_adapter": "live_party", "side_effects": "internal_draft",
+        "requires_resource_authorization": True,
+    },
     "summarize_ticket": {
         "label": "Resumir ticket", "required_capabilities": ["text_generation", "no_tools"],
         "existing_adapter": "live_task_dispatch", "side_effects": "internal_draft",

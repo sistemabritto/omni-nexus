@@ -47,6 +47,7 @@ def _cors_allowed_origins():
 app = Flask(__name__, static_folder=None)
 # Explicit opt-ins; defaults remain off and no credentials are loaded here.
 app.config['NEXUS_LIVE_CONTINUITY_ENABLED'] = os.environ.get('NEXUS_LIVE_CONTINUITY_ENABLED') == 'true'
+app.config['NEXUS_PARTY_MODE_ENABLED'] = os.environ.get('NEXUS_PARTY_MODE_ENABLED') == 'true'
 app.config['NEXUS_LIVE_TASKS_ENABLED'] = os.environ.get('NEXUS_LIVE_TASKS_ENABLED') == 'true'
 app.config['NEXUS_EXECUTION_ROUTING_ENABLED'] = os.environ.get('NEXUS_EXECUTION_ROUTING_ENABLED') == 'true'
 
@@ -1495,6 +1496,7 @@ from routes.live import bp as live_bp
 from routes.managed_live_context import bp as managed_live_context_bp
 from routes.live_voices import bp as live_voices_bp
 from routes.live_experience import bp as live_experience_bp
+from routes.live_party import bp as live_party_bp
 from routes.knowledge import bp as knowledge_bp
 from routes.knowledge_public import bp as knowledge_public_bp
 from routes.knowledge_proxy import bp as knowledge_proxy_bp
@@ -1586,6 +1588,7 @@ app.register_blueprint(live_bp)
 app.register_blueprint(managed_live_context_bp)
 app.register_blueprint(live_voices_bp)
 app.register_blueprint(live_experience_bp)
+app.register_blueprint(live_party_bp)
 app.register_blueprint(knowledge_bp)
 app.register_blueprint(knowledge_public_bp)
 app.register_blueprint(knowledge_proxy_bp)

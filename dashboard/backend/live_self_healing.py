@@ -113,13 +113,13 @@ def prepare(row,parameters,operation,args):
                 run,_=_request('GET',f'repos/{repository}/actions/runs/{args[key]}')
                 if run.get('head_sha')!=head or run.get('conclusion')!='success' or run.get('status')!='completed' or run.get('path','').split('@')[0]!='.github/workflows/'+workflow:raise AdapterError('pipeline_ci_not_verified')
             environment,_=_request('GET','repos/'+repository+'/environments/production')
-            if not any(rule.get('type')=='required_reviewers' and rule.get('reviewers') and rule.get('prevent_self_review') is True for rule in environment.get('protection_rules',[])):raise AdapterError('pipeline_production_review_not_configured')
+            if rollout.get('requireEnvironmentReview') is True and not any(rule.get('type')=='required_reviewers' and rule.get('reviewers') for rule in environment.get('protection_rules',[])):raise AdapterError('pipeline_production_review_not_configured')
         proof['workflowSha256']=_workflow(repository,branch,name)
         if operation=='rollout':proof['executorSha256']=_verified_file(repository,branch,'scripts/ci/live_rollout.py')
     if actual!=head:raise AdapterError('github_diff_changed',409)
     return {'adapter':'github','operation':operation,'args':args,'target':proof,'method':None,'path':None,'body':None,
             'guard':digest({'parameters':parameters,'proof':proof}),'scope':'current_authenticated_company_and_user',
-            'approvalReason':'Confira repositório, branch, SHA e diff/CI. Produção exige imagem por digest, versão anterior e revisão humana independente, mesmo com YOLO ligado.'}
+            'approvalReason':'Confira repositório, branch, SHA e diff/CI. Produção exige imagem por digest, versão anterior e sua aprovação humana, mesmo com YOLO ligado.'}
 
 
 def ensure(conn):

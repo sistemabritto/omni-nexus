@@ -71,8 +71,7 @@ Brave Search em Integrações, sem enviar a chave no chat. A chave e variáveis
 
 `config/live-self-healing.json` inicia com rollout desativado. Para ativá-lo,
 o operador precisa instalar o workflow revisado `live-rollout.yml`, configurar
-o ambiente GitHub `production` com revisores obrigatórios e bloqueio de
-autorrevisão e cadastrar nos Secrets desse ambiente:
+o ambiente GitHub `production` e cadastrar nos Secrets desse ambiente:
 
 - `OMNINEXUS_VPS_HOST`
 - `OMNINEXUS_VPS_USER`
@@ -80,7 +79,10 @@ autorrevisão e cadastrar nos Secrets desse ambiente:
 - `OMNINEXUS_VPS_KNOWN_HOSTS`
 
 O adapter verifica SHA, CI/build concluídos, workflow e executor idênticos aos
-revisados, ambiente protegido, digest da imagem e versão anterior. O executor
+revisados, ambiente configurado, digest da imagem e versão anterior. A aprovação
+humana no Live é sempre obrigatória, inclusive no uso individual por Felipe.
+O operador pode habilitar `requireEnvironmentReview` para exigir também um
+revisor no ambiente GitHub; o agente não pode enfraquecer essa política. O executor
 na VPS verifica o label OCI, ausência de chamada/implementação ativa, faz
 backup e muda somente a imagem do serviço fixo. Saúde não confirmada solicita
 a imagem anterior já aprovada. Não expõe SSH/socket Docker ao agente Live.

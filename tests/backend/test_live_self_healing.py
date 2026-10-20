@@ -88,7 +88,7 @@ def test_verified_production_still_needs_human_and_returns_a_real_pending_job(pi
     reads=[]
     def request(method,path,**kwargs):
         assert method=='GET';reads.append(path)
-        if path.endswith('/environments/production'):return {'protection_rules':[{'type':'required_reviewers','reviewers':[{'type':'User','id':1}],'prevent_self_review':True}]},False
+        if path.endswith('/environments/production'):return {'protection_rules':[]},False
         return {'head_sha':BASE,'status':'completed','conclusion':'success','path':'.github/workflows/'+('ci.yml' if path.endswith('/1') else 'docker-publish-britto.yml')},False
     monkeypatch.setattr(mod,'_request',request)
     starts=[]
@@ -107,6 +107,23 @@ def test_verified_production_still_needs_human_and_returns_a_real_pending_job(pi
     assert len(starts)==1 and not effects
     state=operate(c,ctx,'github','status',{'jobId':job['jobId']},'read-job')
     assert state.status_code==200 and state.json['status']=='pending'
+
+
+def test_operator_can_require_additional_environment_review(pipeline,monkeypatch):
+    mod,(_,_,c,ctx,effects)=pipeline
+    mod.POLICY.write_text(json.dumps({'version':1,'ciWorkflows':['ci.yml'],'rollout':{
+        'enabled':True,'repository':'fixture/repo','workflow':'live-rollout.yml',
+        'environment':'production','requireEnvironmentReview':True}}))
+    def request(method,path,**kwargs):
+        assert method=='GET'
+        if path.endswith('/environments/production'):return {'protection_rules':[]},False
+        return {'head_sha':BASE,'status':'completed','conclusion':'success','path':'.github/workflows/'+('ci.yml' if path.endswith('/1') else 'docker-publish-britto.yml')},False
+    monkeypatch.setattr(mod,'_request',request)
+    result=operate(c,ctx,'github','rollout',{'repository':'fixture/repo','branch':'fix/example','headSha':BASE,
+        'image':'excarplex/evo-nexus-dashboard@sha256:'+'a'*64,
+        'previousImage':'excarplex/evo-nexus-dashboard@sha256:'+'b'*64,'ciRunId':1,'buildRunId':2})
+    assert result.status_code==400 and result.json['error']=='pipeline_production_review_not_configured'
+    assert not effects
 
 
 def test_executor_rejects_non_digest_and_revision_mismatch_without_deploy(monkeypatch):

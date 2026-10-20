@@ -41,7 +41,7 @@ const messages:Record<string,string>={
   pipeline_rollout_not_configured:'O rollout ainda não foi ativado pelo operador. Faltam a configuração do executor e a verificação do ambiente protegido; YOLO não remove esse bloqueio.',
   pipeline_workflow_not_verified:'O workflow remoto difere da versão revisada pelo executor. A operação foi bloqueada.',
   pipeline_ci_not_verified:'Não há CI e build concluídos com sucesso para o SHA exato informado. O rollout foi bloqueado.',
-  pipeline_production_review_not_configured:'O ambiente production precisa de revisores humanos independentes configurados no GitHub.',
+  pipeline_production_review_not_configured:'A política do operador exige revisores configurados no ambiente production do GitHub.',
   adapter_resource_not_found:'O recurso não foi encontrado na área informada. Consulte o índice e use o identificador exato.',
   sensitive_adapter_input:'A solicitação contém um possível segredo. Configure credenciais pelo painel e remova valores sensíveis do conteúdo enviado ao adapter.',
   native_adapter_unavailable:'A API nativa do workspace não confirmou a operação. Consulte o estado antes de repetir uma alteração.',

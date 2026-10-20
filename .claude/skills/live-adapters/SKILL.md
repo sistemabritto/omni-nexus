@@ -52,7 +52,7 @@ depois `nextPage`. Não invente um diff quando a leitura falhar.
 
 - `github/commit`: `{repository:"owner/repo", branch, headSha, message, files:[{path,content}], createBranch?}`. Vulcano ou Hawk, branch de trabalho, commit normal e arquivos textuais. Proíbe alteração da própria política/executor/workflows, force push, remoção e branches protegidas. Aprovação humana vinculada ao SHA e conteúdo.
 - `github/ci`: `{repository, branch, headSha, workflow:"ci.yml"}`. Despacha somente workflow registrado e idêntico ao executor revisado.
-- `github/rollout`: `{repository, branch, headSha, image, previousImage, ciRunId, buildRunId}`. Imagens `excarplex/evo-nexus-dashboard@sha256:<digest>`. Exige CI/build bem-sucedidos do mesmo SHA, workflow verificado, ambiente production com revisores independentes e política ativada pelo operador. YOLO não dispensa aprovação. Não há shell/SSH/Docker exposto ao agente.
+- `github/rollout`: `{repository, branch, headSha, image, previousImage, ciRunId, buildRunId}`. Imagens `excarplex/evo-nexus-dashboard@sha256:<digest>`. Exige CI/build bem-sucedidos do mesmo SHA, workflow verificado, ambiente production configurado e política ativada pelo operador. A aprovação humana no Live é obrigatória; revisores adicionais no GitHub podem ser exigidos pelo operador. YOLO não dispensa aprovação. Não há shell/SSH/Docker exposto ao agente.
 - `github/status`: `{jobId}`. Consulte o ID real retornado. Pending/running/dispatched não significam concluído. Running/uncertain após interrupção exige reconciliação; não repita para contornar erro.
 
 O rollout começa desabilitado até o operador configurar o ambiente protegido,

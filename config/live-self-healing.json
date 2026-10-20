@@ -6,8 +6,9 @@
     "repository": "sistemabritto/omni-nexus-live",
     "workflow": "live-rollout.yml",
     "environment": "production",
+    "requireEnvironmentReview": false,
     "service": "evonexus_evonexus_dashboard",
     "imageRepository": "excarplex/evo-nexus-dashboard"
   },
-  "activationNote": "Enable only after installing the reviewed workflow, configuring a protected production environment with independent required reviewers, and adding VPS credentials and known-host pin through GitHub settings. Agents cannot activate this policy."
+  "activationNote": "Enable only after installing the reviewed workflow, configuring the production environment, and adding VPS credentials and known-host pin through GitHub settings. Live human approval is always required. An operator may additionally require GitHub environment reviewers. Agents cannot activate or weaken this policy."
 }

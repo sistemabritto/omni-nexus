@@ -111,14 +111,16 @@ def create_artifact(row, parameters, request_id):
 def assets(row):
     with live._store() as conn:
         ensure(conn)
-        items=[artifact_payload(artifact_record(row,x['id'])) for x in conn.execute('SELECT * FROM live_artifacts WHERE user_id=? AND company_id=? ORDER BY created_at DESC,id DESC LIMIT 12',
+        items=[artifact_payload(artifact_record(row,x['id'])) for x in conn.execute('SELECT * FROM live_artifacts WHERE user_id=? AND company_id=? ORDER BY created_at DESC,id DESC',
                (row['user_id'],row['company_id'])).fetchall()]
     media=[]
     if has_permission(current_user.role,'media_jobs','view'):
         for job in MediaJob.query.filter_by(company_id=row['company_id']).order_by(MediaJob.created_at.desc()).limit(8).all():
             _,record=live._authorized_work_record(row,'media_job',job.id)
             media.append({'jobId':job.id,'title':str(job.title)[:160],'status':job.status,'links':record.get('links',[])})
-    return {'artifacts':items,'media':media,'scope':'current_company_and_authorized_artifacts'}
+    from live_asset_reads import shared_sources
+    return {'artifacts':items,'media':media,'sharedMaterials':shared_sources(row),
+            'scope':'current_company_and_authorized_user_sources','mediaIsRecentSample':True}
 
 
 def create_media(row, parameters, request_id):
@@ -186,22 +188,25 @@ def execute(row,action,parameters,request_id,roster):
             if set(parameters)-{'query'} or not isinstance(parameters.get('query',''),str) or len(parameters.get('query',''))>150:
                 raise ValueError('invalid_query')
             from live_capabilities import skill_catalog,integration_catalog
-            result={'skills':skill_catalog(live.WORKSPACE,parameters.get('query','')),'integrations':integration_catalog()}
+            result={'skills':skill_catalog(live.WORKSPACE,parameters.get('query','')),'integrations':integration_catalog(row)}
         elif action=='skill':
-            if set(parameters)!={'name'}:raise ValueError('invalid_skill')
+            if 'name' not in parameters or set(parameters)-{'name','offset'}:raise ValueError('invalid_skill')
             from live_capabilities import read_skill
-            result=read_skill(live.WORKSPACE,parameters['name'])
+            result=read_skill(live.WORKSPACE,parameters['name'],parameters.get('offset',0))
         elif action=='assets':
             if parameters:raise ValueError('invalid_assets')
             result=assets(row)
         elif action=='artifact':
-            if set(parameters)!={'artifactId'} or not isinstance(parameters['artifactId'],str):raise ValueError('invalid_artifact')
+            if 'artifactId' not in parameters or set(parameters)-{'artifactId','offset'} or not isinstance(parameters['artifactId'],str):raise ValueError('invalid_artifact')
+            from live_asset_reads import read_source,text_page
+            if ':' in parameters['artifactId']:return live._reply(read_source(row,parameters['artifactId'],parameters.get('offset',0)))
             item=artifact_record(row,parameters['artifactId']);path=artifact_root()/(item['id']+'.'+item['extension'])
             if path.is_symlink() or artifact_root().is_symlink():raise PermissionError()
             if item['extension']=='png':return live._reply({**artifact_payload(item),'kind':'image_metadata','contentAvailable':False})
-            with path.open(encoding='utf-8') as stream:content=stream.read(12001)
+            with path.open(encoding='utf-8') as stream:content=stream.read(128001)
+            if len(content)>128000:raise ValueError('artifact_too_large')
             if _SECRET.search(content):raise PermissionError()
-            result={**artifact_payload(item),'content':content[:12000],'truncated':len(content)>12000,'kind':'untrusted_reference_data'}
+            result={**artifact_payload(item),**text_page(content,parameters.get('offset',0)),'kind':'untrusted_reference_data'}
         elif action=='create_artifact':result=create_artifact(row,parameters,request_id)
         elif action=='create_media':result=create_media(row,parameters,request_id)
         elif action=='admin_action':

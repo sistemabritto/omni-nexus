@@ -51,7 +51,7 @@
     {
       "type": "client",
       "name": "list_omni_capabilities",
-      "description": "Consulte skills documentadas e integrações configuradas. Configurada não significa saudável ou autorizada para execução. Não exponha credenciais.",
+      "description": "Liste o índice completo de skills; query filtra os nomes e descrições. Use read_omni_skill para ler o método. Integração configurada não comprova saúde ou execução.",
       "response_timeout_secs": 30,
       "expects_response": true,
       "execution_mode": "immediate",
@@ -81,6 +81,10 @@
           "name": {
             "type": "string",
             "description": "Nome exato retornado pelo catálogo"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Continue a leitura usando o nextOffset retornado. Omitir para iniciar em zero."
           }
         },
         "required": [
@@ -91,7 +95,7 @@
     {
       "type": "client",
       "name": "list_omni_assets",
-      "description": "Consulte materiais compartilhados e os estados atuais dos vídeos da empresa. Entregue somente links reais retornados; nunca afirme conclusão de item em processamento.",
+      "description": "Liste artefatos do usuário/empresa, materiais explicitamente vinculados e roteiros correntes de Gravações. A lista de vídeos é amostra recente. Leia textos com read_omni_artifact.",
       "response_timeout_secs": 30,
       "expects_response": true,
       "execution_mode": "immediate",
@@ -115,7 +119,11 @@
         "properties": {
           "artifactId": {
             "type": "string",
-            "description": "artifactId de 32 caracteres hexadecimais retornado por list_omni_assets"
+            "description": "ID opaco retornado em artifacts ou sharedMaterials; preserve o prefixo file: ou recording: quando presente."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Continue a leitura usando o nextOffset retornado. Omitir para iniciar em zero."
           }
         },
         "required": [
@@ -241,7 +249,7 @@
     {
       "type": "client",
       "name": "inspect_omni_area",
-      "description": "Consulte uma área real do menu, incluindo Inteligência, sob as permissões da sessão humana. Dados de configuração do workspace são globais; projetos, metas e tickets são filtrados pela empresa ativa. Não expõe credenciais.",
+      "description": "Consulte áreas autorizadas. MemPalace devolve somente memórias com vínculo usuário/empresa; não é o índice global. GitHub usa o plugin configurado no painel. Skills e heartbeats retornam índices completos.",
       "response_timeout_secs": 30,
       "expects_response": true,
       "execution_mode": "immediate",
@@ -268,8 +276,17 @@
               "projects",
               "goals",
               "tickets",
-              "materials"
+              "materials",
+              "github"
             ]
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Opcional: ID do heartbeat, drawerId do índice MemPalace ou caminho GitHub repos/owner/repo/pulls/numero. Omitir para listar."
+          },
+          "page": {
+            "type": "integer",
+            "description": "Página de GitHub ou MemPalace, iniciando em 1. Continue com nextPage enquanto hasMore for verdadeiro."
           }
         },
         "required": [
@@ -280,7 +297,7 @@
     {
       "type": "client",
       "name": "update_omni_area",
-      "description": "Atualize trabalho ou automação existente quando solicitado pelo usuário. Primeiro inspecione a área e use somente os editableFields retornados. Não modifica providers/vozes/credenciais nem instala código. Não repetir resultado incerto.",
+      "description": "Atualize trabalho ou automação conforme pedido autorizado. GitHub admite escrita no escopo configurado do plugin. Não repita resultado incerto. Credenciais, exclusão e configuração de provider não são editáveis por esta ferramenta.",
       "response_timeout_secs": 30,
       "expects_response": true,
       "execution_mode": "immediate",
@@ -296,7 +313,8 @@
               "triggers",
               "projects",
               "goals",
-              "tickets"
+              "tickets",
+              "github"
             ]
           },
           "identifier": {
@@ -305,7 +323,7 @@
           },
           "changesJson": {
             "type": "string",
-            "description": "Objeto JSON apenas com campos a alterar, máximo 12000 caracteres"
+            "description": "JSON dos campos a alterar. GitHub recebe method, path e body do adapter; DELETE, administração de repositório e force push não estão disponíveis."
           }
         },
         "required": [

@@ -120,6 +120,8 @@ def tick() -> dict:
                 hc = integ.health_check
                 declared_names = {spec.name for spec in integ.env_vars}
                 resolved_url = _resolve_vars(hc.url, declared_names)
+                headers={k:_resolve_vars(v,declared_names) for k,v in hc.headers.items()}
+                if any(v is None for v in headers.values()):resolved_url=None
                 if resolved_url is None:
                     # Required var not set — record as pending, not error
                     _upsert_health(conn, plugin_slug, integ.slug, "pending",
@@ -133,7 +135,7 @@ def tick() -> dict:
 
                 try:
                     t0 = time.time()
-                    resp = _http.get(resolved_url, timeout=timeout)
+                    resp = _http.get(resolved_url, timeout=timeout,**({'headers':headers,'allow_redirects':False} if headers else {}))
                     duration_ms = round((time.time() - t0) * 1000)
                     is_ok = (resp.status_code == hc.expect_status)
                     if not is_ok:
@@ -145,7 +147,7 @@ def tick() -> dict:
                 except _http.exceptions.Timeout:
                     error_msg = f"timeout after {timeout}s"
                 except Exception as e:
-                    error_msg = str(e)
+                    error_msg = 'authenticated_health_request_failed' if headers else str(e)
 
                 _upsert_health(
                     conn, plugin_slug, integ.slug,

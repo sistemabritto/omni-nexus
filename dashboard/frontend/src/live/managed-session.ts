@@ -8,6 +8,7 @@ import { ContinuitySession, type ContinuityState } from './continuity-session'
 import { agentIdentity } from '../lib/agent-routes'
 import { requestedAgent } from './agent-transfer'
 type Connection = import('@elevenlabs/client').WebSocketConnection
+type PreparedSession = {context:Awaited<ReturnType<typeof prepareManagedContext>>;signed:Awaited<ReturnType<typeof requestManagedSignedSession>>}
 type Message = {author:string;text:string;kind?:'message'|'handoff';agent?:string}
 type State = {toolAuditDegraded:boolean;phase:'idle'|'connecting'|'connected';status:string;mic:boolean;companyId:number|null;contextChanged:boolean;company:string;agent:string;messages:Message[];runtimeSessionId:string;voiceName:string;continuity?:ContinuityState}
 const initial:State={toolAuditDegraded:false,phase:'idle',status:'Selecione empresa e agente. Microfone desligado.',mic:false,companyId:null,contextChanged:false,company:'',agent:'',messages:[],runtimeSessionId:'',voiceName:''}
@@ -32,7 +33,7 @@ export class ManagedSession {
     return {spectrum,input:inputData.length?inputData.reduce((sum,v)=>sum+v,0)/inputData.length/128:0,speaking:this.playback?.isPlaying()||false}
   }
   startVoice(companyId:number,company:string,agent:string,newConversation=false){return this.start(companyId,company,agent,newConversation,true)}
-  async start(companyId:number,company:string,agent:string,newConversation=false,voice=false,carry:Message[]=[]){
+  async start(companyId:number,company:string,agent:string,newConversation=false,voice=false,carry:Message[]=[],prepared?:PreparedSession){
     if(this.state.phase!=='idle'||this.state.continuity?.writeStatus==='saving'||this.state.continuity?.writeStatus==='error')return
     const generation=++this.generation;this.patch({toolAuditDegraded:false,phase:'connecting',status:'Conectando…',companyId,contextChanged:false,company,agent,messages:carry,runtimeSessionId:'',voiceName:'',continuity:undefined})
     try {
@@ -45,8 +46,8 @@ export class ManagedSession {
           this.stream=stream
         }catch{if(generation!==this.generation)return;this.patch({status:'Microfone indisponível. Você pode continuar por texto.'})}
       }
-      const context=await prepareManagedContext(companyId,agent);if(generation!==this.generation)return
-      const signed=await requestManagedSignedSession(context.contextId);if(generation!==this.generation)return
+      const context=prepared?.context||await prepareManagedContext(companyId,agent);if(generation!==this.generation)return
+      const signed=prepared?.signed||await requestManagedSignedSession(context.contextId);if(generation!==this.generation)return
       const tools=createManagedContextTools(context.contextId);this.tools=tools
       const connection=await this.connect(signed.signedUrl,signed.voiceId)
       if(generation!==this.generation){connection.close();return}
@@ -200,18 +201,26 @@ export class ManagedSession {
     const generation=this.generation
     try{
       const approved=JSON.parse(await this.tools.experience('handoff',{agentName:agent,reason},crypto.randomUUID()))
+      if(approved.authorized!==true||approved.agentName!==agent)throw Error('invalid_handoff_response')
       await this.continuity?.flush()
       if(generation!==this.generation)return
-      const {companyId,company,messages}=this.state;if(companyId===null)return
+      const {companyId,company}=this.state;if(companyId===null)return
       const name=agentIdentity(approved.agentName).name
-      const carry=[...messages,{author:'Squad',text:`${name} assume a conversa. ${reason}`,kind:'handoff' as const,agent:approved.agentName}]
+      this.patch({status:`Preparando a voz de ${name}…`})
+      // Resolve the destination and its saved voice while the current socket is
+      // still usable. Failed metadata/signing must not hang up the current call.
+      const context=await prepareManagedContext(companyId,approved.agentName)
+      if(generation!==this.generation)return
+      const signed=await requestManagedSignedSession(context.contextId)
+      if(generation!==this.generation)return
+      const carry=[...this.state.messages,{author:'Squad',text:`Conectando ${name}. ${reason}`,kind:'handoff' as const,agent:approved.agentName}]
       const stream=this.stream,audio=this.audio,wasMic=this.state.mic
       this.processor?.disconnect();this.processor=null;this.inputSource?.disconnect();this.inputSource=null;this.stream=null;this.audio=null
       this.end(`Conectando ${name}…`)
       this.audio=audio;this.stream=wasMic?stream:null;if(!wasMic)stream?.getTracks().forEach(track=>track.stop())
-      await this.start(companyId,company,approved.agentName,false,false,carry)
+      await this.start(companyId,company,approved.agentName,false,false,carry,{context,signed})
       if(this.state.phase==='connected')this.connection?.sendMessage({type:'contextual_update',text:JSON.stringify({handoff:{to:name,reason,automatic},instruction:'Retome o pedido e o histórico autorizado já fornecidos, apresentando-se brevemente como o responsável atual.'})})
-    }catch{this.patch({status:'Não foi possível trocar de agente. A conversa atual foi preservada.'})}
+    }catch(error){if(generation===this.generation)this.patch({status:'Não foi possível trocar de agente. A conversa atual foi preservada.'+(error instanceof Error&&error.name==='LiveRequestError'?' '+error.message:'')})}
     finally{this.switching=false}
   }
   continuityGateway(){return this.state.phase==='connected'&&this.state.continuity?.logicalId?this.continuity?.gateway:undefined}

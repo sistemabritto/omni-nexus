@@ -11,7 +11,8 @@ class FakeAudioContext{
  async resume(){}async close(){}
  createBuffer(_channels,length,rate){const data=new Float32Array(length);return{duration:length/rate,getChannelData(){return data}}}
  createBufferSource(){const node={buffer:null,stops:0,starts:[],connect(){},disconnect(){},start(t){this.starts.push(t)},stop(){this.stops++}};this.nodes.push(node);return node}
- createMediaStreamSource(){return{connect(){}}}
+ createAnalyser(){return{connect(){},disconnect(){},frequencyBinCount:128,getByteFrequencyData(){}}}
+ createMediaStreamSource(){return{connect(){},disconnect(){}}}
  createScriptProcessor(){return{connect(){},disconnect(){}}}
 }
 const chunk=Buffer.alloc(24000*2).toString('base64'); // exactly one second of PCM silence

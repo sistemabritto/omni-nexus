@@ -276,7 +276,11 @@ def signed_session(context_id):
         if parsed is None or parsed.scheme != 'wss' or parsed.hostname != 'api.elevenlabs.io' or parsed.path != '/v1/convai/conversation':
             raise ValueError()
         return _reply({'signedUrl': signed_url, **voice})
-    except (requests.RequestException, ValueError, TypeError, AttributeError, VoiceUnavailable, sqlite3.Error, ContinuityDenied):
+    except VoiceUnavailable as exc:
+        current_app.logger.warning('live_session_prepare_failed context=%s agent=%s stage=voice reason=%s',row['id'],row['agent_name'],exc.code)
+        return _reply({'error':exc.code},503)
+    except (requests.RequestException, ValueError, TypeError, AttributeError, sqlite3.Error, ContinuityDenied):
+        current_app.logger.warning('live_session_prepare_failed context=%s agent=%s stage=signed_session',row['id'],row['agent_name'])
         return _reply({'error': 'provider_or_saved_voice_unavailable'}, 503)
 
 
@@ -869,6 +873,8 @@ def _query_payload(row, query, *, include_work=True, exclude_event=None):
             raise ContinuityDenied()
         from live_recording_source import search_current_scripts
         documents = search_current_scripts(row['company_id'], terms)
+        from live_mempalace import search as search_mempalace
+        palace=search_mempalace(row,terms)
         if _owned(row['id']) is None:
             raise ContinuityDenied()
         receipts = _persist_file_results(row, terms, files.get('results', []), documents.get('results', []))
@@ -880,10 +886,10 @@ def _query_payload(row, query, *, include_work=True, exclude_event=None):
             raise ContinuityDenied()
         with _store() as conn:
             persist_receipt(conn, row, capabilities)
-        capabilities = fit_context_budget({'memory': memories, 'documents': documents, 'files': files,
+        capabilities = fit_context_budget({'memory': memories, 'mempalace':palace,'documents': documents, 'files': files,
             'work': work, 'fileReceipts': receipts}, capabilities)
-        return {'kind': 'untrusted_reference_data', 'memory': memories, 'documents': documents, 'files': files, 'fileReceipts': receipts, 'capabilities': capabilities,
-                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_recording_scripts', 'explicit_workspace_files'] + (['authorized_company_tickets'] if include_work else []),
+        return {'kind': 'untrusted_reference_data', 'memory': memories, 'mempalace':palace,'documents': documents, 'files': files, 'fileReceipts': receipts, 'capabilities': capabilities,
+                       'work': work, 'coverage': ['owned_live_conversations', 'authorized_recording_scripts', 'explicit_workspace_files'] + (['reviewed_scoped_mempalace_drawers'] if palace.get('status')=='available' else []) + (['authorized_company_tickets'] if include_work else []),
                        'excluded': ['unowned_mempalace_index', 'private_dot_history', 'arbitrary_mcp_execution'],
                        'limits': {'memory': 5, 'work': 3, 'excerptCharacters': 600, 'documents': 3, 'files': 3}}
     except ContinuityDenied:
@@ -900,8 +906,8 @@ def _query_for_current_turn(row):
     query = question['text'][:200] if question else ''
     exclude_event = (cid, question['event_id']) if question else None
     result = _query_payload(row, query, include_work=False, exclude_event=exclude_event)
-    while (result['memory'] or result.get('documents', {}).get('results') or result.get('files', {}).get('results')) and len(json.dumps(result, ensure_ascii=False)) > 4000:
-        (result['memory'] or result.get('documents', {}).get('results') or result['files']['results']).pop()
+    while (result['memory'] or result.get('mempalace',{}).get('results') or result.get('documents', {}).get('results') or result.get('files', {}).get('results')) and len(json.dumps(result, ensure_ascii=False)) > 4000:
+        (result['memory'] or result.get('mempalace',{}).get('results') or result.get('documents', {}).get('results') or result['files']['results']).pop()
     return result
 
 

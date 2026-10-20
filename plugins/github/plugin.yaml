@@ -1,0 +1,31 @@
+id: github
+name: GitHub
+version: 1.0.0
+description: Acesso dos agentes aos repositórios GitHub autorizados, com leitura, escrita auditada e exclusão bloqueada pelo adapter.
+author: Sistema Britto
+license: MIT
+min_evonexus_version: 0.33.0
+tier: essential
+capabilities:
+  - skills
+env_vars_needed:
+  - GITHUB_PLUGIN_TOKEN
+conflicts: {}
+dependencies: {}
+integrations:
+  - slug: github
+    label: GitHub
+    category: productivity
+    env_vars:
+      - name: GITHUB_PLUGIN_TOKEN
+        description: Token GitHub da conta autorizada. Cadastre aqui; o token fica no servidor e não é enviado aos agentes.
+        required: true
+        secret: true
+    health_check:
+      type: http
+      url: https://api.github.com/user
+      headers:
+        Authorization: Bearer ${GITHUB_PLUGIN_TOKEN}
+        Accept: application/vnd.github+json
+      expect_status: 200
+      timeout_seconds: 10

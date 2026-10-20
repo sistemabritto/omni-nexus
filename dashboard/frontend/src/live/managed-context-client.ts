@@ -17,6 +17,11 @@ const messages:Record<string,string>={
   runtime_context_unavailable:'Não foi possível preparar a sessão do agente. Tente novamente.',
   provider_unavailable:'O provedor de voz não está disponível. Nenhuma conversa foi iniciada.',
   provider_or_saved_voice_unavailable:'O provedor ou a preferência de voz não está disponível. Verifique a configuração antes de iniciar.',
+  voice_metadata_unavailable:'Não foi possível consultar a configuração da voz do destino. Tente novamente.',
+  voice_not_in_account:'A voz do destino não está disponível na conta de voz configurada.',
+  voice_not_compatible:'A voz do destino não está liberada ou compatível com o modelo de áudio configurado.',
+  voice_override_disabled:'O agente de voz não permite selecionar a voz do destino.',
+  voice_live_moderation_unsupported:'A voz do destino tem moderação ao vivo e não pode ser usada em Agents. Selecione outra voz compatível.',
   origin_forbidden:'A origem desta solicitação não foi aceita pelo servidor.',
 }
 async function call(path:string, body?:unknown, signal?:AbortSignal) {

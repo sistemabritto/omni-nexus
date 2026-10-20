@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "bindings": [
+    {"companyId": 1, "companySlug": "sistema-britto", "userId": 1,
+     "owner": "sistemabritto", "repositories": "*", "write": true, "delete": false}
+  ]
+}

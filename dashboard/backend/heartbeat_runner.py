@@ -499,7 +499,7 @@ def _step7_invoke_claude_native(
         except Exception:
             # provider_fallback unavailable — apply the same denylist inline
             # rather than let this fallback become the leak V10 closed.
-            _denylist_exact = {"APPROVAL_BRIDGE_TOKEN", "POSTIZ_API_KEY"}
+            _denylist_exact = {"APPROVAL_BRIDGE_TOKEN", "POSTIZ_API_KEY", "GITHUB_PLUGIN_TOKEN"}
             _denylist_prefixes = ("SOCIAL_", "INSTAGRAM_", "LINKEDIN_", "TWITTER_", "DISCORD_")
             agent_env = {
                 k: v for k, v in os.environ.items()

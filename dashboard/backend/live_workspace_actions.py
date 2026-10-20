@@ -13,11 +13,12 @@ from skill_capability_dispatch import _SECRET as _BASE_SECRET
 _SECRET=re.compile(_BASE_SECRET.pattern+r"|(?:senha|password|secret|token|api[_ -]?key)\s*[:=]\s*\S+",re.I)
 
 AREAS={
+ 'github':('', 'integrations'),
  'heartbeats':('/api/heartbeats','heartbeats'), 'routines':('/api/settings/routines','config'),
  'triggers':('/api/triggers','triggers'), 'integrations':('/api/integrations','integrations'),
  'skills':('/api/skills','skills'), 'mcp':('/api/mcp-servers','config'),
  'plugins':('/api/plugins','plugins'), 'knowledge':('/api/knowledge/connections','knowledge'),
- 'memory':('/api/memory','memory'), 'mempalace':('/api/mempalace/status','memory'),
+ 'memory':('/api/memory','memory'), 'mempalace':('/api/mempalace/status','mempalace'),
  'costs':('/api/costs','costs'), 'providers':('/api/providers','config'),
  'missions':('/api/missions','goals'), 'projects':('/api/projects','goals'),
  'goals':('/api/goals','goals'), 'tickets':('/api/tickets','tickets'),
@@ -54,9 +55,43 @@ def native(method,path,body=None,params=None):
 
 
 def inspect(row,parameters):
-    if set(parameters)!={'area'} or parameters['area'] not in AREAS:raise ValueError('unsupported_area')
+    if 'area' not in parameters or set(parameters)-{'area','identifier','page'} or parameters['area'] not in AREAS:raise ValueError('unsupported_area')
     area=parameters['area'];path,resource=AREAS[area]
     if not has_permission(__import__('flask_login').current_user.role,resource,'view'):raise PermissionError()
+    if area=='github':
+        from live_github import read
+        return read(row,parameters.get('identifier'),parameters.get('page',1))
+    if area=='mempalace':
+        from live_mempalace import inspect as inspect_memory
+        return inspect_memory(row,parameters.get('identifier'),parameters.get('page',1))
+    if 'page' in parameters:raise ValueError('unsupported_page')
+    if area=='skills':
+        from live_capabilities import skill_catalog
+        if 'identifier' in parameters:raise ValueError('use_read_omni_skill')
+        return {'area':area,'scope':'workspace','data':skill_catalog(__import__('routes.live_experience',fromlist=['live']).live.WORKSPACE)}
+    if area=='materials':
+        from live_asset_reads import shared_sources
+        if 'identifier' in parameters:raise ValueError('use_read_omni_artifact')
+        return {'area':area,'scope':'active_company_and_user','data':shared_sources(row)}
+    if area=='heartbeats':
+        identifier=parameters.get('identifier')
+        if identifier is not None:
+            if not isinstance(identifier,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}',identifier):raise ValueError('invalid_identifier')
+            data=clean(native('GET',path+'/'+identifier),row['company_id'])
+        else:
+            from operational_squad import load_operational_squad
+            roster=load_operational_squad()
+            raw=native('GET',path)
+            # Project only summary fields BEFORE the generic sanitizer's list cap.
+            fields=('id','agent','enabled','interval_seconds','last_run_at','last_status','goal_id')
+            items=[{**clean({k:item[k] for k in fields if k in item},row['company_id']),
+                    'legacy':not roster.get(item.get('agent'),{}).get('active',False)}
+                   for item in raw['heartbeats'] if item.get('company_id') in (None,row['company_id'])]
+            data={'heartbeats':items,'total':len(items),'truncated':False,
+                  'detailTool':'inspect_omni_area(area=heartbeats, identifier=<id>)'}
+        return {'area':area,'scope':'workspace_authorized_by_native_route','data':data,
+                'editableFields':sorted(FIELDS[area]),'credentialFieldsExposed':False}
+    if 'identifier' in parameters:raise ValueError('unsupported_identifier')
     params={'company_id':row['company_id']} if area in ('projects','goals','tickets') else {'path':'workspace'} if area=='materials' else None
     data=clean(native('GET',path,params=params),row['company_id'])
     # Mission records are global; their project children remain company filtered.
@@ -72,6 +107,12 @@ def update(row,parameters,request_id):
     from routes import live_experience as api
     if set(parameters)!={'area','identifier','changesJson'}:raise ValueError('invalid_workspace_update')
     area,identifier,raw=(parameters[k] for k in ('area','identifier','changesJson'))
+    if area=='github':
+        if not isinstance(raw,str) or len(raw)>128000:raise ValueError('invalid_github_write')
+        from live_github import write
+        change=json.loads(raw)
+        if not isinstance(change,dict) or not isinstance(identifier,str) or identifier!='/'.join(str(change.get('path','')).split('/')[1:3]):raise ValueError('github_identifier_mismatch')
+        return write(row,change,request_id)
     if area not in FIELDS or not isinstance(identifier,str) or not isinstance(raw,str) or len(raw)>12000 or _SECRET.search(raw):raise ValueError('unsupported_workspace_update')
     body=json.loads(raw)
     if not isinstance(body,dict) or not body or set(body)-FIELDS[area]:raise ValueError('unsupported_fields')

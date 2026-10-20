@@ -81,7 +81,7 @@ for _slug, _display_name in DISPLAY_NAMES.items():
 # Audited textual modules proposed in earlier work. Presence is checked, not assumed.
 EXPECTED_KNOWLEDGE = {
     'mako-marketing': ['mkt-creative-brief', 'mkt-research-pipeline', 'dev-team-methods'],
-    'pixel-social-media': ['mkt-creative-brief', 'mkt-research-pipeline', 'social-reels-editorial'],
+    'pixel-social-media': ['mkt-creative-brief', 'mkt-research-pipeline', 'social-reels-editorial', 'video-editorial-pipeline'],
     'canvas-designer': ['logo-design', 'mkt-creative-brief', 'design-quality', 'dev-team-methods'],
     'reels-copilot': ['social-reels-editorial'],
     'nex-sales': ['mkt-research-pipeline', 'dev-team-methods'],

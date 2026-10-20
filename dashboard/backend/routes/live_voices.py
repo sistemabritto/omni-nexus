@@ -24,7 +24,9 @@ def _persona_default(agent_name):
 
 
 class VoiceUnavailable(Exception):
-    pass
+    def __init__(self, code='voice_metadata_unavailable'):
+        self.code=code if code in ('voice_metadata_unavailable','voice_not_in_account','voice_not_compatible','voice_override_disabled','voice_live_moderation_unsupported') else 'voice_metadata_unavailable'
+        super().__init__(self.code)
 
 
 def _agent_id():
@@ -116,6 +118,9 @@ def _preview_url(voice):
 
 
 def _eligible(voice, model):
+    sharing=voice.get('sharing') or {}
+    if not isinstance(sharing,dict) or sharing.get('live_moderation_enabled') not in (None,False):
+        return False
     if voice.get('safety_control', 'NONE') not in (None, 'NONE'):
         return False
     verification = voice.get('voice_verification') or {}
@@ -136,8 +141,12 @@ def _voice(voice_id, model):
     # Search scoped to the authenticated provider account, then re-read the detail.
     found = _get('/v2/voices', voice_ids=voice_id, page_size=1, include_total_count=False)
     listing = next((v for v in found.get('voices', []) if isinstance(v, dict) and v.get('voice_id') == voice_id), None)
-    if listing is None or not _eligible(listing, model):
-        raise VoiceUnavailable()
+    if listing is None:
+        raise VoiceUnavailable('voice_not_in_account')
+    if (listing.get('sharing') or {}).get('live_moderation_enabled') is True:
+        raise VoiceUnavailable('voice_live_moderation_unsupported')
+    if not _eligible(listing, model):
+        raise VoiceUnavailable('voice_not_compatible')
     voice = _get('/v1/voices/' + voice_id)
     if voice.get('voice_id') != voice_id:
         raise VoiceUnavailable()
@@ -145,11 +154,13 @@ def _voice(voice_id, model):
     # only that verified account evidence for the SAME id; never overwrite an
     # explicit denial, safety/verification control or fine-tuning metadata.
     voice = dict(voice)
+    if (voice.get('sharing') or {}).get('live_moderation_enabled') is True:
+        raise VoiceUnavailable('voice_live_moderation_unsupported')
     for field in ('permission_on_resource', 'is_owner'):
         if voice.get(field) is None and listing.get(field) is not None:
             voice[field] = listing[field]
     if not _eligible(voice, model):
-        raise VoiceUnavailable()
+        raise VoiceUnavailable('voice_not_compatible')
     return voice
 
 
@@ -178,7 +189,7 @@ def session_voice(company_id, agent_name=None):
     tts, override = _agent()
     voice = _voice(selected, tts['model_id'])
     if not override:
-        raise VoiceUnavailable()  # Never silently start with the wrong saved voice.
+        raise VoiceUnavailable('voice_override_disabled')  # Never silently start with the wrong saved voice.
     return {'voiceId': voice['voice_id'], 'voiceName': str(voice.get('name') or '')[:160]}
 
 

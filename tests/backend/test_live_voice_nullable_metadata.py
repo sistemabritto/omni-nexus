@@ -37,6 +37,21 @@ def test_nullable_safety_does_not_grant_access_or_skip_verification_or_fine_tuni
     assert _eligible({**base,'fine_tuning':{'state':{'fixture-model':'fine_tuned'}}},'fixture-model')
 
 
+def test_agents_reject_live_moderation_in_listing_or_detail(monkeypatch):
+    listing=dict(voice_id='shared_fixture',category='professional',permission_on_resource='admin',
+                 safety_control=None,fine_tuning={'state':{'fixture-model':'fine_tuned'}},
+                 sharing={'live_moderation_enabled':False})
+    detail={**listing,'sharing':{'live_moderation_enabled':True}}
+    monkeypatch.setattr(mod,'_get',lambda path,**_kw:{'voices':[listing]} if path=='/v2/voices' else detail)
+    assert _eligible(listing,'fixture-model')
+    assert not _eligible(detail,'fixture-model')
+    with pytest.raises(mod.VoiceUnavailable,match='voice_live_moderation_unsupported'):
+        mod._voice('shared_fixture','fixture-model')
+    listing['sharing']={'live_moderation_enabled':True};detail['sharing']={'live_moderation_enabled':False}
+    with pytest.raises(mod.VoiceUnavailable,match='voice_live_moderation_unsupported'):
+        mod._voice('shared_fixture','fixture-model')
+
+
 def test_detail_can_use_verified_same_account_listing_permission(monkeypatch):
     listing=dict(voice_id='shared_fixture',category='professional',permission_on_resource='viewer',is_owner=False,safety_control=None,fine_tuning={'state':{'fixture-model':'fine_tuned'}})
     detail={**listing,'permission_on_resource':None,'is_owner':None}

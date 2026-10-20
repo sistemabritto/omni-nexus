@@ -17,6 +17,7 @@ from flask_login import current_user
 
 from models import audit
 from routes.knowledge import _require_xhr
+from routes.auth_routes import require_permission
 
 bp = Blueprint("integrations", __name__)
 
@@ -268,6 +269,8 @@ def _scan_custom_integrations() -> list:
                     ui_status = "not_configured"
                 elif last_health and last_health.get("last_status") == "error":
                     ui_status = "error"
+                elif plugin_slug=='github' and (not last_health or last_health.get('last_status')!='ok'):
+                    ui_status = 'pending'
                 else:
                     ui_status = "connected" if all_required_set else "pending"
 
@@ -595,6 +598,7 @@ def delete_custom_integration(slug: str):
 
 
 @bp.route("/api/integrations/plugin/<path:global_slug>", methods=["POST"])
+@require_permission('integrations','manage')
 def configure_plugin_integration(global_slug: str):
     """Save env vars for a plugin integration.
 
@@ -669,6 +673,13 @@ def configure_plugin_integration(global_slug: str):
 
     env_path = WORKSPACE / ".env"
     _upsert_env_vars(env_path, env_vars, section_comment=f"plugin-{plugin_slug}")
+    if plugin_slug=='github':
+        # A previous token's successful test is not evidence for a new token.
+        try:
+            with sqlite3.connect(str(DB_PATH)) as conn:
+                conn.execute('DELETE FROM integration_health_cache WHERE plugin_slug=? AND integration_slug=?',(plugin_slug,integration_slug))
+        except sqlite3.Error:
+            pass
 
     # Reload dotenv in-process so heartbeats/health-checks pick up new values immediately
     try:
@@ -691,6 +702,7 @@ def configure_plugin_integration(global_slug: str):
 
 
 @bp.route("/api/integrations/plugin/<path:global_slug>/test", methods=["POST"])
+@require_permission('integrations','manage')
 def test_plugin_integration(global_slug: str):
     """Run the declared HTTP health check for a plugin integration.
 
@@ -766,7 +778,11 @@ def test_plugin_integration(global_slug: str):
     error_msg = None
     ok = False
     try:
-        resp = http.get(url, timeout=timeout)
+        from plugin_integration_health import _resolve_vars
+        health_headers={k:_resolve_vars(v,declared_names) for k,v in hc.headers.items()}
+        if any(v is None for v in health_headers.values()):
+            raise ValueError('required credential not configured')
+        resp = http.get(url, timeout=timeout,**({'headers':health_headers,'allow_redirects':False} if health_headers else {}))
         status_code = resp.status_code
         ok = (status_code == hc.expect_status)
         if not ok:
@@ -774,7 +790,7 @@ def test_plugin_integration(global_slug: str):
     except http.exceptions.Timeout:
         error_msg = f"request timed out after {timeout}s"
     except Exception as exc:
-        error_msg = str(exc)
+        error_msg = 'authenticated_health_request_failed' if hc.headers else str(exc)
 
     duration_ms = round((time.time() - t0) * 1000)
 

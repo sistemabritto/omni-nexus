@@ -171,6 +171,14 @@ class HealthCheckSpec(BaseModel):
     url: Annotated[str, Field(min_length=1, max_length=2000)]
     expect_status: int = 200
     timeout_seconds: int = 5
+    headers: dict[str,str] = Field(default_factory=dict)
+
+    @field_validator('headers')
+    @classmethod
+    def safe_headers(cls,values):
+        if len(values)>10 or any(not re.fullmatch(r'[A-Za-z0-9-]{1,80}',k) or '\r' in v or '\n' in v for k,v in values.items()):
+            raise ValueError('Invalid health check headers')
+        return values
 
     @field_validator("timeout_seconds")
     @classmethod
@@ -234,7 +242,7 @@ class PluginIntegration(BaseModel):
             return self
         declared_names = {spec.name for spec in self.env_vars}
         # Find all ${VAR} tokens in the URL
-        var_refs = re.findall(r"\$\{([^}]+)\}", self.health_check.url)
+        var_refs = re.findall(r"\$\{([^}]+)\}", self.health_check.url+' '.join(self.health_check.headers.values()))
         for ref in var_refs:
             if ref not in declared_names:
                 raise ValueError(

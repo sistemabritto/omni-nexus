@@ -34,8 +34,19 @@ def apply(root,backup,confirm=False):
     workflow=before.get('workflow') or {};assert all(node.get('type')=='start' for node in workflow.get('nodes',{}).values()),'Node-scoped workflow requires separate review'
     names={x['tool_config']['name']:x for x in inventory['tools']}
     assert len(names)==len(inventory['tools']),'Ambiguous tool names'
-    result={'agentId':EXPECTED_AGENT,'newTools':[x['name'] for x in desired if x['name'] not in names],'promptSha256':hashlib.sha256(prompt.encode()).hexdigest(),'applied':False}
+    changed=[]
+    for config in desired:
+        if config['name'] not in names:continue
+        actual=names[config['name']]['tool_config']
+        fields=('type','name','description','expects_response','execution_mode','response_timeout_secs')
+        if (any(actual.get(k)!=config.get(k) for k in fields)
+                or actual.get('parameters',{}).get('properties',{})!=config['parameters'].get('properties',{})
+                or actual.get('parameters',{}).get('required',[])!=config['parameters'].get('required',[])):
+            changed.append(config['name'])
+    result={'agentId':EXPECTED_AGENT,'newTools':[x['name'] for x in desired if x['name'] not in names],
+            'changedTools':changed,'promptSha256':hashlib.sha256(prompt.encode()).hexdigest(),'applied':False}
     if not confirm:return result
+    assert not changed,'Existing schemas require a reviewed tool-version migration; no provider write performed: '+','.join(changed)
     backup.mkdir(mode=0o700,parents=True,exist_ok=False)
     def save(name,data):
         path=backup/name;path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n');path.chmod(0o600)

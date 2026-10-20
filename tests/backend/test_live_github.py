@@ -21,15 +21,35 @@ def test_all_repositories_paginated_and_cross_owner_denied(experience,tmp_path,m
     github,c,ctx=configure(experience,tmp_path,monkeypatch)
     calls=[]
     def request(method,path,**kw):
-        calls.append((method,path,kw));return [{'full_name':'fixture-owner/any-repo','patch':'a'*5000}],True
+        calls.append((method,path,kw));return [
+            {'full_name':'fixture-owner/any-repo','private':True,'patch':'a'*5000},
+            {'full_name':'other/hidden-repo','private':True},
+            {'full_name':'fixture-owner/any-repo/pulls'},
+        ],True
     monkeypatch.setattr(github,'_request',request)
     response=call(c,ctx,'inspect_area',{'area':'github','page':2})
     assert response.status_code==200 and response.json['nextPage']==3
-    assert calls[0][1]=='users/fixture-owner/repos'
+    assert calls[0][1]=='user/repos'
+    assert calls[0][2]['params']=={'per_page':50,'page':2,'affiliation':'owner','visibility':'all'}
+    assert len(response.json['data'])==1 and response.json['data'][0]['private'] is True
     assert len(response.json['data'][0]['patch'])==5000
     for path in ('repos/other/repo/pulls','repos/fixture-owner/../pulls','https://evil.invalid'):
         assert call(c,ctx,'inspect_area',{'area':'github','identifier':path}).status_code==403
     assert len(calls)==1
+
+
+def test_repository_index_rechecks_repository_allowlist(experience,tmp_path,monkeypatch):
+    github,c,ctx=configure(experience,tmp_path,monkeypatch)
+    policy=json.loads(github.POLICY.read_text());policy['bindings'][0]['repositories']=['allowed']
+    github.POLICY.write_text(json.dumps(policy))
+    monkeypatch.setattr(github,'_request',lambda *a,**kw:([
+        {'full_name':'fixture-owner/allowed','private':True},
+        {'full_name':'fixture-owner/forbidden','private':True},
+        {'full_name':'other/allowed','private':True},
+    ],False))
+    response=call(c,ctx,'inspect_area',{'area':'github'})
+    assert response.status_code==200
+    assert [x['full_name'] for x in response.json['data']]==['fixture-owner/allowed']
 
 
 def test_no_delete_admin_force_or_ambiguous_write_retry(experience,tmp_path,monkeypatch):

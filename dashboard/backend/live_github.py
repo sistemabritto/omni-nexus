@@ -59,9 +59,24 @@ def _path(policy,path,write=False):
 def read(row,path=None,page=1):
     policy=binding(row)
     if type(page) is not int or not 1<=page<=10000:raise ValueError('invalid_github_page')
-    if path is None:path='users/'+policy['owner']+'/repos'
+    repository_index=path is None
+    params={'per_page':50,'page':page}
+    if repository_index:
+        # /users/{owner}/repos lists public repositories only. The authenticated
+        # index includes private repositories covered by the configured token.
+        path='user/repos';params.update(affiliation='owner',visibility='all')
     else:_path(policy,path)
-    result,more=_request('GET',path,params={'per_page':50,'page':page})
+    result,more=_request('GET',path,params=params)
+    if repository_index:
+        if not isinstance(result,list):raise ValueError('invalid_github_repository_index')
+        authorized=[]
+        for item in result:
+            name=item.get('full_name') if isinstance(item,dict) else None
+            if not isinstance(name,str) or not re.fullmatch(rf'{NAME}/{NAME}',name):continue
+            try:_path(policy,'repos/'+name)
+            except PermissionError:continue
+            authorized.append(item)
+        result=authorized
     audit(current_user,'live_github_read','integrations',path)
     # Diffs must not be shortened by the Workspace preview sanitizer.
     from live_workspace_actions import _SECRET

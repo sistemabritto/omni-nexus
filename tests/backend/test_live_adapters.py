@@ -143,3 +143,12 @@ def test_skill_executor_uses_registered_read_adapter_and_receipt(adapters,tmp_pa
     assert calls and result.json['data']['execution']['adapter']=='authorized_brand_references'
     assert result.json['data']['execution']['status']=='completed'
     assert operate(c,ctx,'skills','execute',{'name':'arbitrary','capability':'shell','input':{'query':'run script'}},'bad-skill').status_code==400
+
+
+def test_provider_client_parameters_have_an_explicit_value_source():
+    """ElevenLabs rejects properties without description or another value source."""
+    from pathlib import Path
+    contract=json.loads((Path(__file__).resolve().parents[2]/'config/live-experience/client-tools.json').read_text())
+    for tool in contract['tools']:
+        for name,parameter in tool.get('parameters',{}).get('properties',{}).items():
+            assert parameter.get('description') or parameter.get('dynamic_variable') or parameter.get('is_system_provided') or 'constant_value' in parameter or parameter.get('is_omitted'),(tool['name'],name)

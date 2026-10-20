@@ -451,6 +451,7 @@
         "properties": {
           "adapter": {
             "type": "string",
+            "description": "Adapter retornado em capabilityCatalog.adapters para a operação pedida pelo usuário.",
             "enum": [
               "skills",
               "materials",

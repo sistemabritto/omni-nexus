@@ -473,6 +473,11 @@ def _matches_filter(event_data: dict, filter_config: dict) -> bool:
     """Check if event data matches the trigger's filter configuration."""
     if not filter_config:
         return True
+    if '$condition' in filter_config:
+        from live_trigger_conditions import matches
+        if set(filter_config)!={'$condition'}:return False
+        try:return matches(event_data,filter_config['$condition'])
+        except (ValueError,TypeError,KeyError):return False
 
     for key, expected in filter_config.items():
         actual = event_data.get(key)

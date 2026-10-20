@@ -269,7 +269,7 @@ def _scan_custom_integrations() -> list:
                     ui_status = "not_configured"
                 elif last_health and last_health.get("last_status") == "error":
                     ui_status = "error"
-                elif plugin_slug=='github' and (not last_health or last_health.get('last_status')!='ok'):
+                elif plugin_slug in ('github','web-research') and (not last_health or last_health.get('last_status')!='ok'):
                     ui_status = 'pending'
                 else:
                     ui_status = "connected" if all_required_set else "pending"

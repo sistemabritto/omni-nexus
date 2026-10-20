@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "ciWorkflows": ["ci.yml"],
+  "rollout": {
+    "enabled": false,
+    "repository": "sistemabritto/omni-nexus-live",
+    "workflow": "live-rollout.yml",
+    "environment": "production",
+    "service": "evonexus_evonexus_dashboard",
+    "imageRepository": "excarplex/evo-nexus-dashboard"
+  },
+  "activationNote": "Enable only after installing the reviewed workflow, configuring a protected production environment with independent required reviewers, and adding VPS credentials and known-host pin through GitHub settings. Agents cannot activate this policy."
+}

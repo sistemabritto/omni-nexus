@@ -53,7 +53,7 @@ if [ -d "$DEFAULTS_DIR" ]; then
             touch "$CONFIG_DIR/.env"
         fi
     fi
-    for f in providers.example.json heartbeats.example.yaml; do
+    for f in providers.example.json heartbeats.example.yaml live-adapters-access.json live-self-healing.json; do
         if [ -f "$DEFAULTS_DIR/config/$f" ] && [ ! -f "$CONFIG_DIR/$f" ]; then
             cp -n "$DEFAULTS_DIR/config/$f" "$CONFIG_DIR/$f"
         fi

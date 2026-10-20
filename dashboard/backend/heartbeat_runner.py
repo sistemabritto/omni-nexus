@@ -499,8 +499,8 @@ def _step7_invoke_claude_native(
         except Exception:
             # provider_fallback unavailable — apply the same denylist inline
             # rather than let this fallback become the leak V10 closed.
-            _denylist_exact = {"APPROVAL_BRIDGE_TOKEN", "POSTIZ_API_KEY", "GITHUB_PLUGIN_TOKEN"}
-            _denylist_prefixes = ("SOCIAL_", "INSTAGRAM_", "LINKEDIN_", "TWITTER_", "DISCORD_")
+            _denylist_exact = {"APPROVAL_BRIDGE_TOKEN", "POSTIZ_API_KEY", "GITHUB_PLUGIN_TOKEN", "BRAVE_SEARCH_API_KEY"}
+            _denylist_prefixes = ("SOCIAL_", "INSTAGRAM_", "LINKEDIN_", "TWITTER_", "DISCORD_", "CUSTOM_")
             agent_env = {
                 k: v for k, v in os.environ.items()
                 if k not in _denylist_exact and not k.startswith(_denylist_prefixes)
@@ -673,6 +673,8 @@ def step_alert_on_failure(heartbeat_id: str, result: dict) -> bool:
         return False
 
     category = _classify_failure(result)
+    from live_heartbeat_alerts import reserve
+    if not reserve(heartbeat_id,category):return False
     agent = result.get("agent", heartbeat_id)
     duration_s = ""
     if result.get("duration_ms"):

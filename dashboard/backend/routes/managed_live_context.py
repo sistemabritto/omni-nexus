@@ -203,7 +203,7 @@ def read_context(context_id):
         authenticated_user = {'displayName': display_name or None, 'nameAvailable': bool(display_name), 'source': 'authenticated_profile'}
         payload = {'authenticatedUser': authenticated_user, 'company': {'id': company.id, 'name': company.name}, 'agentName': row['agent_name'], 'runtimeSessionId': row['runtime_session_id'], 'sessionName': str(runtime.get('name', ''))[:200], 'active': runtime.get('active') is True, 'tasks': tasks, **({'agentIdentity': _agent_identity(row), 'continuity': _continuity_payload(row), 'previousWork': _previous_work_for_context(row)} if current_app.config.get('NEXUS_LIVE_CONTINUITY_ENABLED') is True else {})}
         from live_capabilities import catalog
-        payload['capabilityCatalog'] = catalog(WORKSPACE)
+        payload['capabilityCatalog'] = catalog(WORKSPACE,row)
         from agent_roster import retirements
         payload['migratedResponsibilities'] = [{'role':old,'documentName':'squad-role-library/'+old} for old,owner in retirements(WORKSPACE).items() if owner==row['agent_name']]
         imported=Path(WORKSPACE)/'.claude/agent-memory'/row['agent_name']/'imported-roles'

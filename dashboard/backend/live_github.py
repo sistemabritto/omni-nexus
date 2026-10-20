@@ -6,6 +6,7 @@ from pathlib import Path
 import requests
 from flask_login import current_user
 from models import Company,db,has_permission,audit
+from live_adapter_errors import AdapterError
 
 POLICY=Path(__file__).resolve().parents[2]/'config/live-github-access.json'
 NAME=r'[A-Za-z0-9_.-]+'
@@ -14,6 +15,7 @@ WRITE=re.compile(rf'repos/({NAME})/({NAME})/(issues(?:/\d+(?:/comments)?)?|pulls
 
 
 def binding(row):
+    from models import Company,db,has_permission
     if int(current_user.get_id())!=row['user_id'] or not has_permission(current_user.role,'integrations','view'):
         raise PermissionError()
     company=db.session.get(Company,row['company_id'])
@@ -34,19 +36,24 @@ def metadata(row=None):
     configured=bool(os.environ.get('GITHUB_PLUGIN_TOKEN')) and policy is not None
     return {'name':'GitHub','configured':configured,
             'status':('connected' if checked.get('last_status')=='ok' else 'error' if checked.get('last_status')=='error' else 'pending') if configured else 'not_configured',
-            'category':'development','deleteAllowed':False,'health':checked.get('last_status','not_checked')}
+            'category':'development','deleteAllowed':False,'health':checked.get('last_status','not_checked'),
+            'owner':policy['owner'] if policy else None}
 
 
 def _request(method,path,*,body=None,params=None):
     key=os.environ.get('GITHUB_PLUGIN_TOKEN')
-    if not key:raise ValueError('github_credential_not_configured')
+    if not key:raise AdapterError('github_credential_not_configured')
     # Errors are deliberately static; provider bodies/headers never become logs.
-    response=requests.request(method,'https://api.github.com/'+path,headers={
-        'Authorization':'Bearer '+key,'Accept':'application/vnd.github+json',
-        'X-GitHub-Api-Version':'2022-11-28'},json=body,params=params,
-        timeout=(3,20),allow_redirects=False)
-    if not 200<=response.status_code<300:raise ValueError('github_request_failed_'+str(response.status_code))
-    return response.json(),bool(response.links.get('next'))
+    try:
+        response=requests.request(method,'https://api.github.com/'+path,headers={
+            'Authorization':'Bearer '+key,'Accept':'application/vnd.github+json',
+            'X-GitHub-Api-Version':'2022-11-28'},json=body,params=params,
+            timeout=(3,20),allow_redirects=False)
+    except requests.RequestException:raise AdapterError('github_network_unavailable',503) from None
+    if not 200<=response.status_code<300:
+        code={401:'github_authentication_failed',403:'github_permission_or_rate_limit',404:'github_resource_not_found'}.get(response.status_code,'github_upstream_unavailable')
+        raise AdapterError(code,403 if response.status_code==403 else 400)
+    return ({} if response.status_code==204 else response.json()),bool(response.links.get('next'))
 
 
 def _path(policy,path,write=False):
@@ -56,16 +63,24 @@ def _path(policy,path,write=False):
     return match[2]
 
 
-def read(row,path=None,page=1):
+def read(row,path=None,page=1,offset=0):
     policy=binding(row)
     if type(page) is not int or not 1<=page<=10000:raise ValueError('invalid_github_page')
+    if type(offset) is not int or offset<0:raise ValueError('invalid_github_offset')
     repository_index=path is None
     params={'per_page':50,'page':page}
     if repository_index:
         # /users/{owner}/repos lists public repositories only. The authenticated
         # index includes private repositories covered by the configured token.
         path='user/repos';params.update(affiliation='owner',visibility='all')
-    else:_path(policy,path)
+    else:
+        # Explicit operator-declared aliases are spelling aliases, never new owners.
+        if isinstance(path,str):
+            parts=path.split('/')
+            aliases=policy.get('ownerAliases',[])
+            if len(parts)>2 and parts[0]=='repos' and isinstance(aliases,list) and any(isinstance(alias,str) and parts[1].casefold()==alias.casefold() for alias in aliases):
+                parts[1]=policy['owner'];path='/'.join(parts)
+        _path(policy,path)
     result,more=_request('GET',path,params=params)
     if repository_index:
         if not isinstance(result,list):raise ValueError('invalid_github_repository_index')
@@ -86,8 +101,19 @@ def read(row,path=None,page=1):
         if isinstance(value,dict):return {k:scrub(v) for k,v in value.items() if not re.search(r'(?i)(token|password|secret|authorization)',k)}
         if isinstance(value,str):return '[conteúdo sensível omitido]' if _SECRET.search(value) or (key and key in value) else value
         return value
-    return {'data':scrub(result),'page':page,'hasMore':more,'nextPage':page+1 if more else None,'health':'ok',
+    result=scrub(result)
+    payload={'data':result,'canonicalIdentifier':path,'page':page,'hasMore':more,'nextPage':page+1 if more else None,'health':'ok',
             'scope':'configured_company_user_and_owner','kind':'untrusted_reference_data','deleteAllowed':False}
+    encoded=json.dumps(result,ensure_ascii=False,separators=(',',':'))
+    if offset or len(json.dumps(payload,ensure_ascii=False))>22500:
+        if offset>len(encoded):raise ValueError('invalid_github_offset')
+        import hashlib
+        end=min(offset+8000,len(encoded))
+        payload.update(data=None,content=encoded[offset:end],encoding='json',offset=offset,
+            nextOffset=end if end<len(encoded) else None,totalCharacters=len(encoded),
+            sha256=hashlib.sha256(encoded.encode()).hexdigest(),
+            message='Continue offset=nextOffset nesta mesma página até nulo; só então avance nextPage. Confira sha256 ao montar o JSON.')
+    return payload
 
 
 def write(row,parameters,request_id):
@@ -97,6 +123,10 @@ def write(row,parameters,request_id):
     method,path,body=(parameters[k] for k in ('method','path','body'))
     _path(policy,path,True)
     if method not in ('POST','PATCH','PUT') or not isinstance(body,dict) or body.get('force') is True:raise PermissionError()
+    if '/contents/' in path:
+        from live_self_healing import PROTECTED
+        candidate=path.split('/contents/',1)[1]
+        if candidate.startswith(PROTECTED):raise PermissionError()
     # Only named data operations; repository settings/transfers/hooks/admin and
     # every DELETE are unreachable. Bind review decisions to the current diff.
     if path.endswith('/reviews'):

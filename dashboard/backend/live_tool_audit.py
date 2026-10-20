@@ -1,10 +1,11 @@
 """Metadata-only Live tool trace in the existing context SQLite database."""
 import re
 
-TOOLS = frozenset({'administer_omni_area','read_omni_document','write_omni_document','inspect_omni_area','update_omni_area','handoff_to_agent','list_omni_capabilities','read_omni_skill','list_omni_assets','read_omni_artifact','create_omni_artifact','create_omni_image','create_omni_media','read_current_omni_session', 'search_omni_context', 'request_internal_task',
+TOOLS = frozenset({'operate_omni_adapter','administer_omni_area','read_omni_document','write_omni_document','inspect_omni_area','update_omni_area','handoff_to_agent','list_omni_capabilities','read_omni_skill','list_omni_assets','read_omni_artifact','create_omni_artifact','create_omni_image','create_omni_media','read_current_omni_session', 'search_omni_context', 'request_internal_task',
                    'read_internal_task_status', 'cancel_internal_task', 'unsupported', 'session'})
 STAGES = frozenset({'received', 'dispatch', 'response', 'error', 'send_attempt',
-                    'sent_to_sdk', 'send_error', 'cancelled', 'duplicate', 'instrumented'})
+                    'sent_to_sdk', 'send_error', 'cancelled', 'duplicate', 'instrumented',
+                    'handoff_prepared', 'handoff_drained', 'handoff_connected', 'handoff_failed'})
 ID = re.compile(r'^[A-Za-z0-9_-]{1,128}$')
 
 
@@ -24,6 +25,8 @@ def append(conn, row, data):
             or not isinstance(data['stage'], str) or data['stage'] not in STAGES):
         raise ValueError('invalid_audit_metadata')
     if (data['toolName'] == 'session') != (data['stage'] == 'instrumented'):
+        raise ValueError('invalid_audit_metadata')
+    if data['stage'].startswith('handoff_') and data['toolName'] != 'handoff_to_agent':
         raise ValueError('invalid_audit_metadata')
     ensure(conn)
     previous = conn.execute('SELECT tool_name FROM live_tool_audit WHERE context_id=? AND conversation_id=? AND tool_call_id=? LIMIT 1',

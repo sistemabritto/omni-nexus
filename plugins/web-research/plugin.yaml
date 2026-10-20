@@ -1,0 +1,31 @@
+id: web-research
+name: Pesquisa na Internet
+version: 1.0.0
+description: Pesquisa externa via Brave com fontes e filtros. Credencial somente no painel; resultados são dados de referência.
+author: Sistema Britto
+license: MIT
+min_evonexus_version: 0.33.0
+tier: essential
+capabilities:
+  - skills
+env_vars_needed:
+  - BRAVE_SEARCH_API_KEY
+conflicts: {}
+dependencies: {}
+integrations:
+  - slug: brave
+    label: Brave Search
+    category: productivity
+    env_vars:
+      - name: BRAVE_SEARCH_API_KEY
+        description: Chave Brave Search. Configure aqui, sem enviar no chat.
+        required: true
+        secret: true
+    health_check:
+      type: http
+      url: https://api.search.brave.com/res/v1/web/search?q=OmniNexus&count=1
+      headers:
+        X-Subscription-Token: ${BRAVE_SEARCH_API_KEY}
+        Accept: application/json
+      expect_status: 200
+      timeout_seconds: 10

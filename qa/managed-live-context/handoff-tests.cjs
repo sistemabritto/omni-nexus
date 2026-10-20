@@ -3,7 +3,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const ts=require('../../dashboard/frontend/node_modules/typescript');
 const voices=JSON.parse(fs.readFileSync('dashboard/backend/live-agent-voices.json')).voices;
 const roster=JSON.parse(fs.readFileSync('dashboard/backend/operational-squad.json'));
-const moduleFixture={exports:{}};let preparedAgent,failVoice=false,failConnection=false,closed=0,permissionRequests=0,stopped=0,callbacks=[];
+const moduleFixture={exports:{}};let preparedAgent,failVoice=false,failConnection=false,closed=0,permissionRequests=0,stopped=0,callbacks=[],lateWrite=false,failDrain=false,currentContinuity;
 const selected=[];class LiveRequestError extends Error{constructor(){super('Voz do destino indisponível.');this.name='LiveRequestError'}}
 class Audio{destination={};sampleRate=16000;async resume(){}async close(){}createAnalyser(){return {connect(){},disconnect(){},frequencyBinCount:0}}createMediaStreamSource(){return {connect(){},disconnect(){}}}createScriptProcessor(){return {connect(){},disconnect(){}}}}
 const mocks={
@@ -11,11 +11,11 @@ const mocks={
  './tool-dispatch-audit':{AuditedToolDispatcher:class{async instrument(){}close(){}}},
  './managed-context-client':{
   prepareManagedContext:async(_company,agent)=>{preparedAgent=agent;return {contextId:1,runtimeSessionId:'runtime-'+agent}},
-  requestManagedSignedSession:async()=>{if(failVoice)throw new LiveRequestError();return {signedUrl:'fixture-only',voiceId:voices[preparedAgent],voiceName:'Synthetic voice'}},
+  requestManagedSignedSession:async()=>{if(failVoice)throw new LiveRequestError();if(lateWrite)currentContinuity.patch({writeStatus:'saving'});if(failDrain)currentContinuity.failNextFlush=true;return {signedUrl:'fixture-only',voiceId:voices[preparedAgent],voiceName:'Synthetic voice'}},
   createManagedContextTools:()=>({onConversationConnected:async()=>{},disconnect(){},experience:async(_action,p)=>JSON.stringify({authorized:true,agentName:p.agentName}),recordToolAudit:async()=>{}}),
  },
  './continuity-contract':{ContinuityUnavailable:class extends Error{}},
- './continuity-session':{ContinuitySession:class{state={logicalId:'same-logical-id',writeStatus:'saved'};async resume(){}async flush(){}async context(){return '{}'}async record(){}async refresh(){}}},
+ './continuity-session':{ContinuitySession:class{state={logicalId:'same-logical-id',writeStatus:'saved'};constructor(_context,_conversation,changed){this.changed=changed;currentContinuity=this}patch(value){this.state={...this.state,...value};this.changed(this.state)}async resume(){}async flush(){if(this.failNextFlush){this.failNextFlush=false;this.patch({writeStatus:'error'});throw Error('synthetic durable-write failure')}this.patch({writeStatus:'saved'})}async context(){return '{}'}async record(){}async refresh(){}}},
  '../lib/agent-routes':{agentIdentity:agent=>({name:agent})},'./agent-transfer':{requestedAgent:()=>null},
  './audio':{encodePCM:()=>'',Playback:class{stop(){}play(){}}},
 };
@@ -38,6 +38,18 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('dashboard/frontend/src/li
   callbacks[0]();assert.equal(session.snapshot().phase,'connected','old disconnect must not close destination');
  }
  assert.equal(permissionRequests,1);assert.equal(stopped,0);
+ // A final source transcript can arrive while voice metadata/signing is awaited.
+ // It must be drained before closing the source; start() must never silently skip.
+ lateWrite=true;
+ await session.handoff('mako-marketing');
+ assert.equal(session.snapshot().phase,'connected','late source write must not strand the handoff idle');
+ assert.equal(session.snapshot().agent,'mako-marketing');assert.equal(session.snapshot().mic,true);
+ lateWrite=false;
+ const sourceAgent=session.snapshot().agent,sourceClosed=closed;
+ failDrain=true;await session.handoff('atlas-project');failDrain=false;
+ assert.equal(session.snapshot().phase,'connected');assert.equal(session.snapshot().agent,sourceAgent);
+ assert.equal(session.snapshot().mic,true);assert.equal(closed,sourceClosed,'failed final write must preserve source socket');
+ await currentContinuity.flush();
  const previous=session.snapshot().agent,before=closed;
  failVoice=true;await session.handoff('pixel-social-media');
  assert.equal(session.snapshot().agent,previous);assert.equal(session.snapshot().phase,'connected');assert.equal(session.snapshot().mic,true);assert.equal(closed,before);assert(session.snapshot().status.includes('preservada'));assert(session.snapshot().status.includes('Voz do destino'));
@@ -45,5 +57,5 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('dashboard/frontend/src/li
  assert.equal(session.snapshot().phase,'idle');assert.equal(session.snapshot().mic,false);assert(!session.snapshot().status.includes('preservada'));
  session.end();
  assert(Object.keys(voices).includes('sage-strategy'));
- console.log('PASS: all '+Object.keys(voices).length+' persona voice mappings, Iris/Dante/Vulcano/Sage handoff, microphone reuse, stale disconnect, failed voice preflight preserves source, socket failure is explicit; provider calls=0');
+ console.log('PASS: all '+Object.keys(voices).length+' persona voice mappings, Iris/Dante/Vulcano/Sage handoff, late transcript drain, failed final write preserves source, microphone reuse, stale disconnect, failed voice preflight preserves source, socket failure is explicit; provider calls=0');
 })().catch(e=>{console.error(e);process.exitCode=1});

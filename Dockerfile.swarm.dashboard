@@ -134,6 +134,7 @@ COPY ADWs/            ADWs/
 # pipeline editorial, verificador do Postiz). Sem isso um trigger apontando
 # para scripts/*.py falha em produção com "No such file or directory".
 COPY scripts/         scripts/
+COPY .github/workflows/ .github/workflows/
 COPY config/          config/
 COPY docs/            docs/
 COPY Makefile         ./

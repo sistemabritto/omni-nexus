@@ -2,7 +2,7 @@
 export type ToolStage='received'|'dispatch'|'response'|'error'|'send_attempt'|'sent_to_sdk'|'send_error'|'cancelled'|'duplicate'|'instrumented'
 type Call={tool_name:string;tool_call_id:string;parameters:Record<string,unknown>}
 type Entry={name:string;signature:string;done:boolean;outcome:Promise<{result:string;is_error:boolean}|null>}
-const names=new Set(['administer_omni_area','read_omni_document','write_omni_document','inspect_omni_area','update_omni_area','handoff_to_agent','list_omni_capabilities','read_omni_skill','list_omni_assets','read_omni_artifact','create_omni_artifact','create_omni_image','create_omni_media','read_current_omni_session','search_omni_context','request_internal_task','read_internal_task_status','cancel_internal_task'])
+const names=new Set(['operate_omni_adapter','administer_omni_area','read_omni_document','write_omni_document','inspect_omni_area','update_omni_area','handoff_to_agent','list_omni_capabilities','read_omni_skill','list_omni_assets','read_omni_artifact','create_omni_artifact','create_omni_image','create_omni_media','read_current_omni_session','search_omni_context','request_internal_task','read_internal_task_status','cancel_internal_task'])
 export class AuditedToolDispatcher {
   private seen=new Map<string,Entry>();private closed=false;private auditWarned=false
   private persist:(id:string,name:string,stage:ToolStage,signal?:AbortSignal)=>Promise<void>
@@ -66,9 +66,12 @@ export class AuditedToolDispatcher {
         if(result.length>24000)throw Error('budget')
         await this.trace(id,name,'response')
         outcome={result,is_error:false}
-      }catch{
+      }catch(error){
         await this.trace(id,name,'error')
-        outcome={result:'Contexto indisponível ou não autorizado.',is_error:true}
+        // Only the HTTP client's static, localized messages can cross this boundary.
+        // Provider bodies and arbitrary exception text remain private.
+        outcome={result:error instanceof Error&&error.name==='LiveRequestError'?error.message:
+          error instanceof Error&&error.message==='budget'?'A resposta excedeu o limite desta ferramenta. Continue a leitura com paginação/offset; o conteúdo não foi entregue.':'Contexto indisponível ou não autorizado.',is_error:true}
       }
       if(!this.alive()){await this.trace(id,name,'cancelled');return null}
       return outcome

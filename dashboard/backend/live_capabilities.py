@@ -50,17 +50,19 @@ def integration_catalog(row=None):
             'meaning': 'configured means credentials are present; not a successful health check or execution permission'}
 
 
-def catalog(root):
+def catalog(root,row=None):
     from operational_squad import load_operational_squad
     from live_workspace_actions import AREAS
     from agent_catalog import NATIVE_CATALOG
     from models import has_agent_access
+    from live_adapters import catalog as adapters
     squad=[{'agentName':slug,'name':NATIVE_CATALOG.get(slug,{}).get('display_name',slug),
             'function':NATIVE_CATALOG.get(slug,{}).get('function','')[:160]}
            for slug,item in load_operational_squad().items() if item['active'] and has_agent_access(current_user.role,slug)]
-    return {'squad':squad,'skills': skill_catalog(root, limit=12), 'integrations': integration_catalog(),
+    return {'squad':squad,'skills': skill_catalog(root, limit=12), 'integrations': integration_catalog(row),
+            'adapters':adapters(row) if row is not None else {'status':'scope_not_supplied'},
             'readTools': ['list_omni_capabilities', 'read_omni_skill', 'list_omni_assets','inspect_omni_area'],
-            'writeTools': ['create_omni_artifact', 'create_omni_media','create_omni_image','update_omni_area','write_omni_document'],
+            'writeTools': ['create_omni_artifact', 'create_omni_media','create_omni_image','update_omni_area','write_omni_document','operate_omni_adapter'],
             'workspaceAreas': list(AREAS),
             'approvalPolicy': __import__('live_approval_policy').policy(),
             'scope': 'current authenticated user and company; no credentials exposed'}

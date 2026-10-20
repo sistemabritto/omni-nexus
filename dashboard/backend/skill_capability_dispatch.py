@@ -59,7 +59,7 @@ def _read_skill(root, slug, filename="SKILL.md"):
             'kind': 'untrusted_reference_data', 'loaded': True}
 
 
-def dispatch_query(query, *, root, row, read_files, verify_scope, tool_policy='read_only'):
+def dispatch_query(query, *, root, row, read_files, verify_scope, tool_policy='read_only',binding_id=None):
     """Called only after current owned-context guards, and rechecked around I/O.
 
     read_files is the application's existing scoped adapter, not a client tool
@@ -69,7 +69,7 @@ def dispatch_query(query, *, root, row, read_files, verify_scope, tool_policy='r
         raise ValueError('invalid_capability_query')
     if tool_policy not in ('read_only', 'no_tools'):
         raise ValueError('unsupported_capability_policy')
-    selected = _selected(query)
+    selected = _selected(query) if binding_id is None else next((b for b in _BINDINGS if b['id']==binding_id),None)
     base = {'schema': 'query-capability-v1', 'kind': 'untrusted_reference_data',
             'tools_list': [], 'skills': [], 'execution': None,
             'model_read_status': 'not_attested', 'external_call_status': 'not_attempted',

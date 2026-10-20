@@ -10,6 +10,7 @@ from flask_login import current_user
 from models import Company, MediaJob, db, has_permission, has_agent_access
 from operational_squad import load_operational_squad
 from skill_capability_dispatch import _SECRET
+from live_adapter_errors import AdapterError
 from routes import managed_live_context as live
 
 bp=Blueprint('live_experience', __name__)
@@ -169,13 +170,16 @@ def experience(context_id):
     except (OSError,ValueError):return live._reply({'error':'operational_squad_unavailable'},503)
     from live_approval_policy import admit
     try:approval=admit(row,action,parameters,data['requestId'])
-    except (OSError,ValueError,sqlite3.Error):return live._reply({'error':'approval_policy_unavailable'},503)
+    except AdapterError as exc:return live._reply({'error':exc.code},exc.status)
+    except PermissionError:return live._reply({'error':'scope_denied'},403)
+    except (ValueError,TypeError,KeyError):return live._reply({'error':'invalid_adapter_request'},400)
+    except (OSError,sqlite3.Error):return live._reply({'error':'approval_policy_unavailable'},503)
     return live._reply(approval) if approval is not None else execute(row,action,parameters,data['requestId'],roster)
 
 
 def execute(row,action,parameters,request_id,roster):
     try:
-        if action in ('handoff','create_artifact','create_media','create_image','update_area','write_document','admin_action') and not roster.get(row['agent_name'],{}).get('active'):
+        if action in ('handoff','create_artifact','create_media','create_image','update_area','write_document','admin_action','adapter_action') and not roster.get(row['agent_name'],{}).get('active'):
             raise PermissionError()
         if action=='handoff':
             if set(parameters)!={'agentName','reason'} or not isinstance(parameters['reason'],str) or len(parameters['reason'])>300:
@@ -188,7 +192,8 @@ def execute(row,action,parameters,request_id,roster):
             if set(parameters)-{'query'} or not isinstance(parameters.get('query',''),str) or len(parameters.get('query',''))>150:
                 raise ValueError('invalid_query')
             from live_capabilities import skill_catalog,integration_catalog
-            result={'skills':skill_catalog(live.WORKSPACE,parameters.get('query','')),'integrations':integration_catalog(row)}
+            from live_adapters import catalog as adapters
+            result={'skills':skill_catalog(live.WORKSPACE,parameters.get('query','')),'integrations':integration_catalog(row),'adapters':adapters(row)}
         elif action=='skill':
             if 'name' not in parameters or set(parameters)-{'name','offset'}:raise ValueError('invalid_skill')
             from live_capabilities import read_skill
@@ -212,6 +217,9 @@ def execute(row,action,parameters,request_id,roster):
         elif action=='admin_action':
             from live_workspace_actions import admin
             result=admin(row,parameters,request_id)
+        elif action=='adapter_action':
+            from live_adapters import operate
+            result=operate(row,parameters,request_id)
         elif action=='read_document':
             from live_workspace_actions import read_document
             result=read_document(row,parameters)
@@ -229,6 +237,9 @@ def execute(row,action,parameters,request_id,roster):
             result=create_image(row,parameters,request_id)
         else:raise ValueError('unsupported_action')
         return live._reply(result)
+    except AdapterError as exc:
+        current_app.logger.warning('live_adapter_failed context=%s agent=%s action=%s reason=%s',row['id'],row['agent_name'],action,exc.code)
+        return live._reply({'error':exc.code},exc.status)
     except PermissionError:return live._reply({'error':'scope_denied'},403)
     except (ValueError,TypeError,KeyError):return live._reply({'error':'invalid_or_unavailable_experience_request'},400)
     except (OSError,sqlite3.Error,live.requests.RequestException):return live._reply({'error':'experience_unavailable'},503)
@@ -238,7 +249,7 @@ def execute(row,action,parameters,request_id,roster):
 def approvals(context_id):
     row,data,denied=live._continuity_request(context_id)
     if denied is not None:return denied
-    from live_approval_policy import pending,policy,ensure,unpack
+    from live_approval_policy import pending,policy,ensure,unpack,approved_execution
     if set(data)=={'conversationId'}:return live._reply({'pending':pending(row),'policy':policy()})
     if set(data)!={'conversationId','approvalId','decision'} or not isinstance(data['approvalId'],str) or not ID.fullmatch(data['approvalId']) or data['decision'] not in ('approve','reject'):return live._reply({'error':'invalid_approval'},400)
     with live._store() as conn:
@@ -250,11 +261,25 @@ def approvals(context_id):
     try:
         roster=load_operational_squad()
         if not roster.get(item['agent_name'],{}).get('active') or live._scope(row['company_id'],item['agent_name']) is None:return live._reply({'error':'scope_denied'},403)
-        result=execute({**dict(row),'agent_name':item['agent_name']},item['action'],json.loads(unpack(item['parameters'])),item['request_id'],roster)
+        import time
+        if item['expires_at'] and item['expires_at']<time.time():
+            with live._store() as conn:conn.execute("UPDATE live_action_approvals SET status='expired' WHERE id=?",(item['id'],))
+            return live._reply({'error':'approval_expired'},409)
+        approved_row={**dict(row),'agent_name':item['agent_name']};parameters=json.loads(unpack(item['parameters']))
+        if item['action']=='adapter_action':
+            from live_adapters import prepare
+            proposal=prepare(approved_row,parameters)
+            if proposal['guard']!=item['guard']:
+                with live._store() as conn:conn.execute("UPDATE live_action_approvals SET status='stale' WHERE id=?",(item['id'],))
+                return live._reply({'error':'approval_target_changed'},409)
+        with approved_execution(approved_row,item['action'],parameters,item['guard']):
+            result=execute(approved_row,item['action'],parameters,item['request_id'],roster)
         response=result[0] if isinstance(result,tuple) else result
         status='applied' if response.status_code<300 else 'failed'
         with live._store() as conn:conn.execute('UPDATE live_action_approvals SET status=? WHERE id=?',(status,item['id']))
         return result
+    except PermissionError:return live._reply({'error':'scope_denied'},403)
+    except AdapterError as exc:return live._reply({'error':exc.code},exc.status)
     except (OSError,ValueError,sqlite3.Error):return live._reply({'error':'approval_result_uncertain'},503)
 
 

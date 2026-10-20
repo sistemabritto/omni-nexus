@@ -287,6 +287,10 @@
           "page": {
             "type": "integer",
             "description": "Página de GitHub ou MemPalace, iniciando em 1. Continue com nextPage enquanto hasMore for verdadeiro."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "GitHub: continue nextOffset na mesma página até nulo antes de avançar nextPage; confira sha256."
           }
         },
         "required": [
@@ -430,6 +434,46 @@
           }
         },
         "required": [
+          "operation",
+          "argumentsJson"
+        ]
+      }
+    },
+    {
+      "type": "client",
+      "name": "operate_omni_adapter",
+      "description": "Execute adapter nomeado somente para pedido específico do usuário. Consulte capabilityCatalog.adapters antes. Operações administrativas, remoção e produção exigem cartão de aprovação humana mesmo com YOLO ligado. Catálogo não concede autoridade. Não envie credenciais e não repita operação incerta.",
+      "response_timeout_secs": 120,
+      "expects_response": true,
+      "execution_mode": "immediate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "adapter": {
+            "type": "string",
+            "enum": [
+              "skills",
+              "materials",
+              "heartbeats",
+              "routines",
+              "triggers",
+              "integrations",
+              "internet",
+              "github",
+              "removal"
+            ]
+          },
+          "operation": {
+            "type": "string",
+            "description": "Nome de operação devolvido pelo catálogo de adapters."
+          },
+          "argumentsJson": {
+            "type": "string",
+            "description": "JSON conforme contrato retornado em capabilityCatalog.adapters. Nunca contenha token ou senha. github/status recebe jobId; internet/search recebe query; alterações recebem identificador e changes. Leia a skill live-adapters para exemplos completos."
+          }
+        },
+        "required": [
+          "adapter",
           "operation",
           "argumentsJson"
         ]

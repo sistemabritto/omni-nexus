@@ -44,23 +44,28 @@ def clean(value,company):
 
 
 def native(method,path,body=None,params=None):
+    from live_adapter_errors import AdapterError
     cookie_name=current_app.config.get('SESSION_COOKIE_NAME','session');cookie=request.cookies.get(cookie_name)
     if not cookie:raise PermissionError('human_cookie_required')
-    response=requests.request(method,'http://127.0.0.1:8080'+path,
-        headers={'Cookie':cookie_name+'='+cookie,'Origin':request.headers.get('Origin',''),'X-Requested-With':'XMLHttpRequest'},
-        json=body,params=params,timeout=(3,20),allow_redirects=False)
+    try:
+        response=requests.request(method,'http://127.0.0.1:8080'+path,
+            headers={'Cookie':cookie_name+'='+cookie,'Origin':request.headers.get('Origin',''),'X-Requested-With':'XMLHttpRequest'},
+            json=body,params=params,timeout=(3,20),allow_redirects=False)
+    except requests.RequestException:raise AdapterError('native_adapter_unavailable',503) from None
     if response.status_code in (401,403):raise PermissionError('native_permission_denied')
-    if not 200<=response.status_code<300:raise ValueError('native_operation_failed_'+str(response.status_code))
+    if not 200<=response.status_code<300:
+        raise AdapterError('native_resource_conflict' if response.status_code==409 else 'adapter_resource_not_found' if response.status_code==404 else 'native_adapter_unavailable',409 if response.status_code==409 else 404 if response.status_code==404 else 503)
     return response.json()
 
 
 def inspect(row,parameters):
-    if 'area' not in parameters or set(parameters)-{'area','identifier','page'} or parameters['area'] not in AREAS:raise ValueError('unsupported_area')
+    if 'area' not in parameters or set(parameters)-{'area','identifier','page','offset'} or parameters['area'] not in AREAS:raise ValueError('unsupported_area')
     area=parameters['area'];path,resource=AREAS[area]
     if not has_permission(__import__('flask_login').current_user.role,resource,'view'):raise PermissionError()
     if area=='github':
         from live_github import read
-        return read(row,parameters.get('identifier'),parameters.get('page',1))
+        return read(row,parameters.get('identifier'),parameters.get('page',1),parameters.get('offset',0))
+    if 'offset' in parameters:raise ValueError('unsupported_offset')
     if area=='mempalace':
         from live_mempalace import inspect as inspect_memory
         return inspect_memory(row,parameters.get('identifier'),parameters.get('page',1))

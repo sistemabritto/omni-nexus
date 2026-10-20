@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "bindings": [
+    {"companyId": 1, "companySlug": "sistema-britto", "userId": 1, "workspaceAdministration": true}
+  ],
+  "routineExecutors": ["daily_status_report.py", "weekly_review.py", "memory_lint.py"],
+  "approvalSeconds": 900,
+  "scopeNote": "Native automations and integration metadata are workspace-global administrative resources. Every new administrative mutation requires human approval, including with YOLO enabled. This binding does not grant access to another company or alter existing roles."
+}

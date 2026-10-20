@@ -1,0 +1,89 @@
+name: Live approved rollout
+run-name: Live ${{ inputs.live_request_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      live_request_id:
+        required: true
+        type: string
+      expected_sha:
+        required: true
+        type: string
+      image:
+        required: true
+        type: string
+      previous_image:
+        required: true
+        type: string
+      ci_run_id:
+        required: true
+        type: string
+      build_run_id:
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: omninexus-production-rollout
+  cancel-in-progress: false
+jobs:
+  rollout:
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate approved revision, successful CI and pinned images
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          IMAGE: ${{ inputs.image }}
+          PREVIOUS_IMAGE: ${{ inputs.previous_image }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          BUILD_RUN_ID: ${{ inputs.build_run_id }}
+        run: |
+          python3 - <<'PY'
+          import json,os,re,urllib.request
+          assert os.environ['GITHUB_REPOSITORY']=='sistemabritto/omni-nexus-live'
+          revision=os.environ['EXPECTED_SHA']
+          assert re.fullmatch('[a-f0-9]{40}',revision) and revision==os.environ['GITHUB_SHA']
+          for name in ('IMAGE','PREVIOUS_IMAGE'):
+              assert re.fullmatch(r'excarplex/evo-nexus-dashboard@sha256:[a-f0-9]{64}',os.environ[name])
+          for name,path in (('CI_RUN_ID','ci.yml'),('BUILD_RUN_ID','docker-publish-britto.yml')):
+              ident=os.environ[name];assert ident.isdecimal()
+              request=urllib.request.Request('https://api.github.com/repos/sistemabritto/omni-nexus-live/actions/runs/'+ident,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(request,timeout=20) as response:run=json.load(response)
+              assert run['head_sha']==revision and run['status']=='completed' and run['conclusion']=='success'
+              assert run['path'].split('@')[0]=='.github/workflows/'+path
+          PY
+      - name: Execute reviewed image-only rollout with host pinning
+        env:
+          VPS_HOST: ${{ secrets.OMNINEXUS_VPS_HOST }}
+          VPS_USER: ${{ secrets.OMNINEXUS_VPS_USER }}
+          VPS_KEY: ${{ secrets.OMNINEXUS_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.OMNINEXUS_VPS_KNOWN_HOSTS }}
+          IMAGE: ${{ inputs.image }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          PREVIOUS_IMAGE: ${{ inputs.previous_image }}
+        run: |
+          python3 - <<'PY'
+          import os,re,subprocess,tempfile
+          from pathlib import Path
+          host,user=os.environ['VPS_HOST'],os.environ['VPS_USER']
+          assert re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.-]*',host)
+          assert re.fullmatch(r'[a-z_][a-z0-9_-]*',user)
+          assert os.environ['VPS_KEY'] and os.environ['VPS_KNOWN_HOSTS']
+          with tempfile.TemporaryDirectory() as folder:
+              key=Path(folder)/'key';key.write_text(os.environ['VPS_KEY']);key.chmod(0o600)
+              known=Path(folder)/'known_hosts';known.write_text(os.environ['VPS_KNOWN_HOSTS']);known.chmod(0o600)
+              options=['-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','UserKnownHostsFile='+str(known),'-i',str(key)]
+              destination=user+'@'+host
+              ident=os.environ['GITHUB_RUN_ID'];assert ident.isdecimal()
+              remote='/tmp/live-rollout-'+ident+'.py'
+              subprocess.run(['scp',*options,'scripts/ci/live_rollout.py',destination+':'+remote],check=True)
+              subprocess.run(['ssh',*options,destination,'python3',remote,os.environ['IMAGE'],os.environ['EXPECTED_SHA'],os.environ['PREVIOUS_IMAGE']],check=True)
+          PY

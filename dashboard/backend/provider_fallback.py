@@ -843,8 +843,8 @@ class FallbackAttempt:
 # which stays denylisted below. Denylist, not allowlist, because most of
 # os.environ (PATH, locale, provider config, etc.) legitimately needs to
 # reach the agent.
-_AGENT_ENV_DENYLIST_EXACT = {"APPROVAL_BRIDGE_TOKEN", "POSTIZ_API_KEY", "GITHUB_PLUGIN_TOKEN"}
-_AGENT_ENV_DENYLIST_PREFIXES = ("SOCIAL_", "INSTAGRAM_", "LINKEDIN_", "TWITTER_", "DISCORD_")
+_AGENT_ENV_DENYLIST_EXACT = {"APPROVAL_BRIDGE_TOKEN", "POSTIZ_API_KEY", "GITHUB_PLUGIN_TOKEN", "BRAVE_SEARCH_API_KEY"}
+_AGENT_ENV_DENYLIST_PREFIXES = ("SOCIAL_", "INSTAGRAM_", "LINKEDIN_", "TWITTER_", "DISCORD_", "CUSTOM_")
 
 
 def _build_agent_run_env(env_overrides: dict | None = None) -> dict:
@@ -855,7 +855,7 @@ def _build_agent_run_env(env_overrides: dict | None = None) -> dict:
     }
     if env_overrides:
         for k, v in env_overrides.items():
-            if v is not None and k != 'GITHUB_PLUGIN_TOKEN':
+            if v is not None and k not in _AGENT_ENV_DENYLIST_EXACT and not k.startswith('CUSTOM_'):
                 run_env[k] = str(v)
     # Impede o CLI de se auto-migrar pro instalador nativo no meio da run
     # (mata o processo com exit 1).

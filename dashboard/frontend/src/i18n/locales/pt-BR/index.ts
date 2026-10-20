@@ -624,6 +624,8 @@ const translations = {
       subtitle: 'Serviços externos — MCPs e credenciais',
       configure: 'Configurar',
       testIntegration: 'Testar integração',
+      configuredPending: 'Configurado — teste pendente',
+      credentialsSaved: 'Credencial salva no servidor. Campos secretos ficam vazios; preencha apenas para substituir.',
       disconnect: 'Desconectar',
       category: {
         crm: 'CRM',

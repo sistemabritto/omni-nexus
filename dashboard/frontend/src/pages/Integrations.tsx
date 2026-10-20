@@ -805,14 +805,17 @@ export default function Integrations() {
 
   // env written toast
   const [envToast, setEnvToast] = useState(false)
+  const loadRequestId = useRef(0)
 
   const loadData = useCallback(() => {
-    Promise.all([
+    const requestId = ++loadRequestId.current
+    return Promise.all([
       api.get('/integrations').catch(() => ({ integrations: [] })),
       api.get('/social-accounts').catch(() => ({ platforms: [] })),
       api.get('/config/env').catch(() => ({ entries: [] })),
       api.get('/integrations/databases').catch(() => ({ flavors: [], total: 0 })),
     ]).then(([intData, socialData, envData, dbData]) => {
+      if (requestId !== loadRequestId.current) return
       const ints = (intData?.integrations || []).map((i: any) => ({
         name: i.name || '',
         type: i.type || i.category || '',
@@ -843,7 +846,9 @@ export default function Integrations() {
         }
       }
       setEnvValues(envMap)
-    }).finally(() => setLoading(false))
+    }).finally(() => {
+      if (requestId === loadRequestId.current) setLoading(false)
+    })
   }, [])
 
   useEffect(() => {
@@ -919,8 +924,9 @@ export default function Integrations() {
     setPluginIntegError(null)
     try {
       await api.post(`/integrations/plugin/${pluginIntegTarget.slug}`, { env_vars: pluginIntegValues })
+      setPluginIntegValues({})
       setPluginIntegModalOpen(false)
-      loadData()
+      await loadData()
     } catch (e: any) {
       setPluginIntegError(e?.message || 'Save failed')
     } finally {
@@ -935,6 +941,7 @@ export default function Integrations() {
     try {
       const res = await api.post(`/integrations/plugin/${pluginIntegTarget.slug}/test`, {})
       setPluginTestResult(res)
+      await loadData()
     } catch {
       setPluginTestResult({ ok: false, status_code: null, duration_ms: 0, error: 'Request failed' })
     } finally {
@@ -955,7 +962,7 @@ export default function Integrations() {
       .then((d: any) => setBrainRepoStatus(d))
       .catch(() => {/* feature may not be deployed yet */})
   }, [])
-  const connectedCount = integrations.filter((i) => i.status === 'ok').length
+  const connectedCount = integrations.filter((i) => i.status === 'ok' || i.status === 'connected').length
   const totalSocialAccounts = platforms.reduce((sum, p) => sum + p.accounts.length, 0)
   const connectedPlatformsCount = platforms.filter(p => p.has_connected).length
   const totalDbConnections = dbFlavors.reduce((sum, f) => sum + f.count, 0)
@@ -1063,6 +1070,11 @@ export default function Integrations() {
             </div>
 
             {/* Dynamic form from env_specs */}
+            {pluginIntegTarget.configured && (
+              <p className="text-xs text-[color:var(--text-muted)] mb-4" role="status">
+                {t('integrations.credentialsSaved')}
+              </p>
+            )}
             <PluginIntegrationForm
               specs={pluginIntegTarget.env_specs || []}
               values={pluginIntegValues}
@@ -1353,7 +1365,7 @@ export default function Integrations() {
                           ? 'bg-red-500/10 text-red-400 border-red-500/25'
                           : 'bg-[#FBBF24]/10 text-[#FBBF24] border-[#FBBF24]/25'
                       }`}>
-                        {isConnected ? 'Connected' : isError ? 'Error' : 'Not configured'}
+                        {isConnected ? 'Connected' : isError ? 'Error' : int.configured ? t('integrations.configuredPending') : 'Not configured'}
                       </span>
                     </div>
                     {int.last_health?.last_error && isError && (

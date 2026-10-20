@@ -1,5 +1,6 @@
 """Actual plugin discovery/configuration/health routes; fixture token and HTTP."""
 from pathlib import Path
+import sqlite3
 from unittest.mock import Mock
 import yaml
 import pytest
@@ -26,6 +27,11 @@ def test_panel_can_configure_token_and_test_without_returning_it(setup,tmp_path,
     monkeypatch.setattr(mod,'SKILLS_DIR',tmp_path/'.claude/skills')
     monkeypatch.setattr(mod,'PLUGINS_DIR',ROOT/'plugins')
     monkeypatch.setattr(mod,'DB_PATH',tmp_path/'dashboard.db')
+    with sqlite3.connect(mod.DB_PATH) as conn:
+        conn.execute('''CREATE TABLE integration_health_cache (
+            plugin_slug TEXT NOT NULL, integration_slug TEXT NOT NULL,
+            last_status TEXT, last_checked_at TEXT, last_error TEXT,
+            PRIMARY KEY(plugin_slug,integration_slug))''')
     monkeypatch.setattr(mod,'audit',lambda *_a,**_kw:None)
     monkeypatch.delenv('GITHUB_PLUGIN_TOKEN',raising=False)
     # dotenv may set this variable; register its restoration with monkeypatch.
@@ -40,6 +46,7 @@ def test_panel_can_configure_token_and_test_without_returning_it(setup,tmp_path,
     catalog=c.get('/api/integrations').json
     item=next(x for x in catalog['integrations'] if x.get('slug')=='plugin-github-github')
     assert item['kind']=='plugin' and item['configured'] and token not in str(catalog)
+    assert item['status']=='pending'
     requests=[]
     def get(url,**kw):
         requests.append((url,kw));return Mock(status_code=200)
@@ -50,6 +57,9 @@ def test_panel_can_configure_token_and_test_without_returning_it(setup,tmp_path,
     assert requests[0][0]=='https://api.github.com/user'
     assert requests[0][1]['headers']['Authorization']=='Bearer '+token
     assert requests[0][1]['allow_redirects'] is False
+    item=next(x for x in c.get('/api/integrations').json['integrations'] if x.get('slug')=='plugin-github-github')
+    assert item['configured'] is True and item['status']=='connected'
+    assert item['last_health']['last_status']=='ok' and token not in str(item)
     from models import db,User
     with app.app_context():
         db.session.get(User,32).role='viewer';db.session.commit()

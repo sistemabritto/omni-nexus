@@ -9,4 +9,13 @@ const provider=m.exports;const cfg=provider.loadProviderConfig();
 require.cache[file]={id:file,filename:file,loaded:true,exports:provider};
 const {ChatBridge}=require(path.join(root,'dashboard/terminal-server/src/chat-bridge.js'));
 let calls=[];global.fetch=async(url,request)=>{calls.push({url,request});return new Response('data: '+JSON.stringify({choices:[{delta:{content:'Fixture only'}}]})+'\n\ndata: [DONE]\n\n',{status:200,headers:{'Content-Type':'text/event-stream'}})};
-(async()=>{const bridge=new ChatBridge();await new Promise((resolve,reject)=>{bridge.startSession('fixture-model-save',{prompt:'Fixture only',workingDir:input.cwd,onComplete:resolve,onError:reject}).catch(reject)});assert.equal(calls.length,1);const sent=calls[0],body=JSON.parse(sent.request.body);assert.equal(sent.url,input.base+'/chat/completions');assert.equal(body.model,input.model);assert.equal(sent.request.headers.Authorization,'Bearer fixture-private');console.log(JSON.stringify({model:body.model,transport:'mock',provider_calls:0,transport_calls:calls.length,credential_preserved:true,active:cfg.active}));})().catch(e=>{console.error(e.message);process.exitCode=1});
+(async()=>{const bridge=new ChatBridge();
+if(input.config.providers.opencode.mode==='code'){
+  await assert.rejects(bridge.startSession('fixture-model-save',{prompt:'Fixture only',workingDir:input.cwd}),error=>error.code==='chat_code_transport_unavailable');
+  assert.equal(calls.length,0);
+  assert.equal(cfg.providers.opencode.env_vars.OPENAI_MODEL,input.model);
+  assert.equal(cfg.providers.opencode.env_vars.OPENAI_API_KEY,'fixture-private');
+  console.log(JSON.stringify({model:input.model,transport:'blocked',blocked:'chat_code_transport_unavailable',provider_calls:0,transport_calls:0,credential_preserved:true,active:cfg.active}));
+  return;
+}
+await new Promise((resolve,reject)=>{bridge.startSession('fixture-model-save',{prompt:'Fixture only',workingDir:input.cwd,onComplete:resolve,onError:reject}).catch(reject)});assert.equal(calls.length,1);const sent=calls[0],body=JSON.parse(sent.request.body);assert.equal(sent.url,input.base+'/chat/completions');assert.equal(body.model,input.model);assert.equal(sent.request.headers.Authorization,'Bearer fixture-private');console.log(JSON.stringify({model:body.model,transport:'mock',provider_calls:0,transport_calls:calls.length,credential_preserved:true,active:cfg.active}));})().catch(e=>{console.error(e.message);process.exitCode=1});

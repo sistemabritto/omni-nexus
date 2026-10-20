@@ -16,6 +16,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'dashboard/backend'))
 from agent_catalog import NATIVE_CATALOG, _runtime_body, catalog_entry
+from agent_roster import agent_path
 
 ADAPTED_MODULES = ('logo-design', 'mkt-creative-brief', 'design-quality',
                    'dev-team-methods', 'mkt-research-pipeline', 'social-reels-editorial')
@@ -49,7 +50,7 @@ def build_audit(root: Path) -> dict:
                            'operational_status': 'not_verified'})
     agents = []
     for slug in sorted(NATIVE_CATALOG):
-        path = root / '.claude/agents' / (slug + '.md')
+        path = agent_path(root, slug)
         source = path.read_text(encoding='utf-8') if path.is_file() else ''
         body = _runtime_body(source)
         catalog = catalog_entry(slug, source, root)

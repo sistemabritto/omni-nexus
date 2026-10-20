@@ -32,7 +32,11 @@ def configuration(tmp_path,monkeypatch):
 def runtime(config,model,cwd):
     result=subprocess.run(['node',str(ROOT/'qa/providers-model/config-chat-fixture.cjs')],input=json.dumps({'config':config,'model':model,'base':'https://gateway.invalid/v1','cwd':str(cwd)}),text=True,capture_output=True,timeout=10)
     assert result.returncode==0,result.stderr
-    proof=json.loads(result.stdout.splitlines()[-1]);assert proof['provider_calls']==0 and proof['transport_calls']==1
+    proof=json.loads(result.stdout.splitlines()[-1])
+    blocked=config['providers']['opencode'].get('mode')=='code'
+    assert proof['provider_calls']==0 and proof['transport_calls']==(0 if blocked else 1)
+    if blocked:
+        assert proof['blocked']=='chat_code_transport_unavailable'
     return proof
 
 
@@ -48,7 +52,7 @@ def test_legacy_opencode_default_reaches_chat_without_rewriting_config(configura
 
 
 @pytest.mark.parametrize("mode",[None,"code"])
-def test_explicit_saved_model_survives_api_roundtrip_and_reaches_transport(configuration,mode):
+def test_explicit_saved_model_survives_api_roundtrip_and_respects_transport(configuration,mode):
     c,file,original,tmp=configuration
     if mode:
         original['providers']['opencode']['mode']=mode;file.write_text(json.dumps(original))

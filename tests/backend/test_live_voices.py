@@ -101,3 +101,28 @@ def test_preview_is_existing_bounded_audio_without_credential_forwarding(voices,
     response=c.get('/api/live/voices/7/selected_fixture/preview');assert response.status_code==200;assert response.data==b'fixture-audio';assert response.headers['Cache-Control']=='no-store'
     assert 'headers' not in preview_calls[0];assert preview_calls[0]['allow_redirects'] is False
     voice['preview_url']='https://private.example.test/secret';assert c.get('/api/live/voices/7/selected_fixture/preview').status_code==503
+
+
+def test_persona_suggestion_is_review_only_and_explicit_agent_choice_wins(voices,tmp_path):
+    import json
+    app,c,login,mod,agent,voice,calls=voices
+    mapping=tmp_path/'persona-fixture.json';mapping.write_text(json.dumps({'agent-a':{'voiceId':'selected_fixture','reason':'Clareza declarada nos metadados; proposta revisável','personaSource':'fixture-contract'}}))
+    app.config['NEXUS_LIVE_AGENT_VOICES_FILE']=str(mapping)
+    response=c.get('/api/live/voices/7?agent=agent-a');assert response.status_code==200
+    assert response.json['personaSuggestion']['applied'] is False;assert response.json['saved'] is None
+    with c:
+        c.get('/api/live/voices/7?agent=agent-a')
+        assert mod.session_voice(7,'agent-a')=={}
+    assert c.put('/api/live/voices/7/preference',json={'voiceId':'selected_fixture'},headers=ORIGIN).status_code==200
+    assert c.get('/api/live/voices/7?agent=agent-a').json['preferenceSource']=='company_choice'
+    # Explicit default for this agent overrides the previous company-wide choice.
+    assert c.put('/api/live/voices/7/preference?agent=agent-a',json={'voiceId':None},headers=ORIGIN).status_code==200
+    result=c.get('/api/live/voices/7?agent=agent-a').json;assert result['saved'] is None;assert result['preferenceSource']=='agent_default'
+    assert c.get('/api/live/voices/7').json['saved']['id']=='selected_fixture'
+    assert c.put('/api/live/voices/7/preference?agent=agent-a',json={'voiceId':'selected_fixture'},headers=ORIGIN).status_code==200
+    assert c.get('/api/live/voices/7?agent=agent-a').json['preferenceSource']=='agent_choice'
+
+def test_persona_catalog_rejects_unknown_agent_before_provider(voices):
+    app,c,login,mod,agent,voice,calls=voices
+    assert c.get('/api/live/voices/7?agent=unknown-fixture').status_code==403;assert calls==[]
+    assert c.put('/api/live/voices/7/preference?agent=unknown-fixture',json={'voiceId':'selected_fixture'},headers=ORIGIN).status_code==403;assert calls==[]

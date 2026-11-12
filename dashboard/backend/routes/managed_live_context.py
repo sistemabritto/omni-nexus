@@ -211,7 +211,7 @@ def signed_session(context_id):
         return _reply({'error': 'provider_not_configured'}, 503)
     from routes.live_voices import session_voice, VoiceUnavailable
     try:
-        voice = session_voice(row['company_id'])
+        voice = session_voice(row['company_id'], row['agent_name'])
         response = requests.get('https://api.elevenlabs.io/v1/convai/conversation/get-signed-url', params={'agent_id': agent_id}, headers={'xi-api-key': key}, timeout=(3, 10), allow_redirects=False)
         response.raise_for_status()
         signed_url = response.json().get('signed_url')

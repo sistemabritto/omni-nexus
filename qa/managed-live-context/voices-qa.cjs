@@ -22,11 +22,11 @@ const fixture=require('../global-ui/fixture.cjs');
     await page.route('**/api/live/voices/**',r=>{
       const url=new URL(r.request().url());
       if(r.request().method()==='PUT'){
-        saves++;const id=r.request().postDataJSON().voiceId;saved=id===first.id?first:id===second.id?second:null;
-        return fulfill(r,{saved,overrideAllowed:true,applies:'next_conversation'});
+        saves++;assert.equal(url.searchParams.get('agent'),'fixture-agent');const id=r.request().postDataJSON().voiceId;saved=id===first.id?first:id===second.id?second:null;
+        return fulfill(r,{saved,preferenceSource:'agent_choice',overrideAllowed:true,applies:'next_conversation'});
       }
       catalogReads++;
-      return fulfill(r,{voices:url.searchParams.has('cursor')?[second]:[first],hasMore:!url.searchParams.has('cursor'),nextCursor:url.searchParams.has('cursor')?null:'fixture_cursor',current,saved,overrideAllowed:true});
+      return fulfill(r,{voices:url.searchParams.has('cursor')?[second]:[first],hasMore:!url.searchParams.has('cursor'),nextCursor:url.searchParams.has('cursor')?null:'fixture_cursor',current,saved,preferenceSource:saved?'agent_choice':'agent_default',personaSuggestion:{voice:second,reason:'Fixture: estilo claro segundo os metadados',personaSource:'fixture-contract',applied:false},overrideAllowed:true});
     });
     await page.routeWebSocket('wss://api.elevenlabs.io/**',ws=>{
       connections++;
@@ -41,9 +41,11 @@ const fixture=require('../global-ui/fixture.cjs');
     });
     await page.goto('http://127.0.0.1:5195/live',{waitUntil:'networkidle'});
     assert.equal(catalogReads,0);assert.equal(saves,0);assert.equal(connections,0);
+    await page.getByLabel('Agente da conversa').selectOption('fixture-agent');
     const picker=page.locator('.live-voices');await picker.locator('summary').click();
     await picker.getByText('Fixture A · pt',{exact:true}).waitFor();
     assert(await picker.getByText('Há mais páginas disponíveis.',{exact:false}).isVisible());
+    await picker.getByRole('button',{name:'Selecionar sugestão para revisar',exact:true}).click();assert.equal(saves,0);assert.equal(saved,null);
     await picker.getByRole('button',{name:'Carregar mais vozes',exact:true}).click();
     await picker.getByRole('button',{name:'Ouvir prévia de Fixture B',exact:true}).click();
     assert.equal(await page.evaluate(()=>window.__previews),1);assert.equal(saves,0);
@@ -52,7 +54,7 @@ const fixture=require('../global-ui/fixture.cjs');
     await picker.getByRole('button',{name:'Salvar escolha para próxima conversa',exact:true}).click();
     await picker.getByRole('status').filter({hasText:'A próxima conversa será iniciada'}).waitFor();
     assert.equal(saved.id,second.id);assert.equal(connections,0);
-    await page.reload({waitUntil:'networkidle'});await page.locator('.live-voices summary').click();
+    await page.reload({waitUntil:'networkidle'});await page.getByLabel('Agente da conversa').selectOption('fixture-agent');await page.locator('.live-voices summary').click();
     await page.locator('.live-voices dd').filter({hasText:'Fixture B'}).waitFor();
     await page.getByLabel('Agente da conversa').selectOption('fixture-agent');
     await page.getByRole('button',{name:'Iniciar conversa',exact:true}).click();

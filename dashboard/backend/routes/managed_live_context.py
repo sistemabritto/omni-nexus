@@ -492,6 +492,12 @@ def _authorized_work_record(row, record_type, record_id):
     from models import Ticket, MediaJob
     if not isinstance(record_id, str) or not _ID.fullmatch(record_id):
         raise PermissionError()
+    if record_type == 'live_task':
+        from live_task_dispatch import owned, payload, TaskDenied
+        try:
+            return payload(owned(row, record_id))
+        except TaskDenied:
+            raise PermissionError() from None
     if record_type == 'ticket' and has_permission(current_user.role, 'tickets', 'view'):
         obj = Ticket.query.filter_by(id=record_id, company_id=row['company_id']).first()
         if obj is None:
@@ -618,4 +624,71 @@ def continuity_artifact(context_id, job_id):
         response.headers['Cache-Control'] = 'no-store'
         return response
     except PermissionError:
+        return _reply({'error': 'scope_denied'}, 403)
+
+
+# Internal text-only jobs reuse the persistent orchestration queue, never shell input.
+@bp.post('/api/live/omni-context/<int:context_id>/tasks')
+def submit_internal_task(context_id):
+    from live_task_dispatch import submit, emit, payload, TaskDenied, OPERATIONS
+    row, data, denied = _continuity_request(context_id)
+    if denied is not None:
+        return denied
+    if (set(data) != {'conversationId', 'requestId', 'operation', 'ticketId'}
+            or not isinstance(data.get('requestId'), str) or not _ID.fullmatch(data['requestId'])
+            or not isinstance(data.get('ticketId'), str) or not _ID.fullmatch(data['ticketId'])
+            or not isinstance(data.get('operation'), str) or data['operation'] not in OPERATIONS):
+        return _reply({'error': 'invalid_internal_task'}, 400)
+    if not has_permission(current_user.role, 'tickets', 'view'):
+        return _reply({'error': 'scope_denied'}, 403)
+    try:
+        binding, created = submit(row, _continuity_id(row), data['requestId'], data['operation'], data['ticketId'])
+        emit(binding)
+        _, record = payload(binding)
+        return _reply({'jobId': binding.job_id, 'status': record['status'], 'reference': record['reference'],
+                       'replayed': not created, 'mode': 'internal_text_no_tools'}, 201 if created else 200)
+    except TaskDenied as exc:
+        return _reply({'error': str(exc)}, 503 if str(exc) == 'live_tasks_disabled' else 403)
+    except ValueError:
+        return _reply({'error': 'idempotency_conflict'}, 409)
+    except sqlite3.Error:
+        return _reply({'error': 'internal_task_unavailable'}, 503)
+
+
+@bp.post('/api/live/omni-context/<int:context_id>/tasks/<string:job_id>/status')
+@bp.post('/api/live/omni-context/<int:context_id>/tasks/<string:job_id>/cancel')
+def internal_task_status(context_id, job_id):
+    from live_task_dispatch import owned, payload, emit, cancel, TaskDenied
+    row, data, denied = _continuity_request(context_id)
+    if denied is not None:
+        return denied
+    if set(data) != {'conversationId'}:
+        return _reply({'error': 'invalid_internal_task'}, 400)
+    try:
+        binding = owned(row, job_id)
+        if request.path.endswith('/cancel'):
+            cancel(binding)
+        emit(binding)  # Repair a missed event, never rerun a job.
+        _, record = payload(binding)
+        return _reply({'jobId': job_id, **record})
+    except TaskDenied:
+        return _reply({'error': 'scope_denied'}, 403)
+
+
+@bp.get('/api/live/tasks/<string:job_id>')
+def internal_task_result(job_id):
+    from live_task_dispatch import payload, TaskDenied
+    from models import LiveTaskBinding
+    denied = _guard()
+    if denied is not None:
+        return denied
+    binding = LiveTaskBinding.query.filter_by(job_id=job_id, user_id=int(current_user.get_id())).first()
+    if binding is None:
+        return _reply({'error': 'scope_denied'}, 403)
+    try:
+        _, record = payload(binding)
+        from models import db, OrchestrationJob
+        job = db.session.get(OrchestrationJob, job_id)
+        return _reply({'jobId': job_id, **record, 'output': job.stage_result if job.status == 'success' else None})
+    except TaskDenied:
         return _reply({'error': 'scope_denied'}, 403)

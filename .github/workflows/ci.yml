@@ -70,6 +70,10 @@ jobs:
         working-directory: dashboard/terminal-server
         run: npm ci
 
+      - name: Install TypeScript fixture dependencies without package scripts
+        working-directory: dashboard/frontend
+        run: npm ci --ignore-scripts
+
       # tests/goals, tests/tickets e tests/heartbeats nunca rodavam em PR —
       # eram 47 dos ~50 arquivos de teste no ponto cego. Todos os defeitos da
       # auditoria de 2026-07-27 (CHECK sem 'archived', HTML não escapado no
@@ -83,6 +87,9 @@ jobs:
           uv run python -m pytest
           tests/backend/test_auth_security.py
           tests/backend/test_image_workflow_architecture.py
+          tests/backend/test_live_task_dispatch.py tests/backend/test_orchestration_jobs.py
+          tests/backend/test_live_continuity_endpoints.py tests/backend/test_live_conversation_store.py tests/backend/test_live_memory_contract.py
+          tests/backend/test_provider_fallback_config_errors.py tests/media/test_provider_fallback_cwd.py
           tests/backend/test_design_cookbook.py tests/backend/test_marketing_research_skill.py
           tests/backend/test_team_methods_skill.py tests/backend/test_reels_editorial_skill.py
           tests/backend/test_health_routes.py tests/backend/test_managed_live_context.py tests/backend/test_live_voices.py tests/backend/test_logo_design_skill.py tests/backend/test_creative_brief_skill.py tests/backend/test_live_disabled_routes.py

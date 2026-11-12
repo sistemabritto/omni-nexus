@@ -21,7 +21,7 @@ jobs when the dashboard's media volume was read-only.
 ## Rollout
 
 1. Build the branch using `docker-publish-britto.yml`, manual input
-   `media_only=true`. Branch builds do not write `latest`; use SHA-tagged images
+   `target=media`. Branch builds do not write `latest`; use SHA-tagged images
    and pin the resolved digests. Do not merge solely to obtain an image.
 2. Record the exact service image digests and replica counts. Pause only the
    media worker; inspect current claims before proceeding. Snapshot the SQLite

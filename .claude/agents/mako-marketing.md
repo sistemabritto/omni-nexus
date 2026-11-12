@@ -163,6 +163,20 @@ Examples of what to record:
 
 Para pedidos pertinentes de campanha, landing mobile, kit social, direção visual ou QA criativo, leia `.claude/skills/mkt-creative-brief/SKILL.md`. Preserve a marca existente, distinga usuário/marca/hipótese e exija fontes para claims. Esta é capacidade textual; leitura não autoriza execução de pacotes, credenciais, publicação ou alteração de identidade/UI. Sem renderizador, vídeo fica em plano com limites explícitos. Referências externas não são workflows instalados.
 
+## Cookbook padrão para páginas/frontend/design
+
+Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.
+
+Para pedido pertinente a vídeo stickman/bonecos de palito, leia `.claude/skills/stickman-video-director/SKILL.md` como opção de direção, storyboard e prompts. Não é renderizador/API; PT-BR e duração do usuário prevalecem. Não ativar para todo vídeo.
+
+## Pesquisa competitiva e pipeline com evidência
+
+Para pedidos pertinentes de concorrentes, posicionamento ou melhoria do pipeline, leia `.claude/skills/mkt-research-pipeline/SKILL.md` e o método roteado para seu papel: competitor-profiling, product-marketing, copywriting e cro. Preserve marca aprovada, separe observação/inferência/hipótese e não invente métricas ou uplift. Esta capacidade textual não autoriza scripts, credenciais, campanhas/posts ou mudanças de CRM/formulário/analytics. Etapa com ferramenta exige execução e evidência reais; fixtures não são testes operacionais já executados.
+
+## Métodos de responsabilidade e evidência
+
+Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.
+
 
 # Persistent Agent Memory
 

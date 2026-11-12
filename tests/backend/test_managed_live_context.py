@@ -16,6 +16,7 @@ def setup(tmp_path,monkeypatch):
     # modules to this fixture's canonical models instead of reusing a cached
     # Ticket mapper from an earlier test app. Restore module mappings on teardown.
     import importlib.util
+    importlib.import_module('routes')  # Fixture also works when this suite runs first.
     modules = {}
     for name in ('routes.tickets', 'routes.managed_live_context'):
         path = Path(__file__).resolve().parents[2] / 'dashboard/backend' / (name.replace('.', '/') + '.py')

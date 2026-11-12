@@ -82,7 +82,10 @@ jobs:
         run: >
           uv run python -m pytest
           tests/backend/test_auth_security.py
-          tests/backend/test_health_routes.py tests/backend/test_managed_live_context.py tests/backend/test_logo_design_skill.py tests/backend/test_creative_brief_skill.py tests/backend/test_live_disabled_routes.py
+          tests/backend/test_image_workflow_architecture.py
+          tests/backend/test_design_cookbook.py tests/backend/test_marketing_research_skill.py
+          tests/backend/test_team_methods_skill.py tests/backend/test_reels_editorial_skill.py
+          tests/backend/test_health_routes.py tests/backend/test_managed_live_context.py tests/backend/test_live_voices.py tests/backend/test_logo_design_skill.py tests/backend/test_creative_brief_skill.py tests/backend/test_live_disabled_routes.py
           tests/backend/test_live_transport.py tests/backend/test_live_model_policy.py tests/backend/test_live_socket_integration.py tests/backend/test_live_app_wiring.py
           tests/backend/test_share_publico.py
           tests/backend/test_telegram_provider_bot.py tests/backend/test_telegram_continuity.py
@@ -144,11 +147,12 @@ jobs:
       - name: Test managed Live client tool and single simulated session
         run: |
           node qa/managed-live-context/client-tests.cjs
+          node qa/managed-live-context/access-client-tests.cjs
           node qa/managed-live-context/session-tests.cjs
 
       - name: Lint managed Live company lifecycle
         working-directory: dashboard/frontend
-        run: npx --no-install eslint src/live/LiveCompanyBinding.tsx src/live/managed-session.ts src/live/ManagedNexusLive.tsx
+        run: npx --no-install eslint src/live/LiveCompanyBinding.tsx src/live/managed-session.ts src/live/managed-context-client.ts src/live/ManagedNexusLive.tsx src/live/VoicePicker.tsx
 
   image-boot-smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.image_boot_smoke

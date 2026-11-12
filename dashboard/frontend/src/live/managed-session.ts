@@ -3,26 +3,26 @@ import { createManagedContextTools, prepareManagedContext, requestManagedSignedS
 import { encodePCM, Playback } from './audio'
 type Connection = import('@elevenlabs/client').WebSocketConnection
 type Message = {author:string;text:string}
-type State = {phase:'idle'|'connecting'|'connected';status:string;mic:boolean;companyId:number|null;contextChanged:boolean;company:string;agent:string;messages:Message[];runtimeSessionId:string}
-const initial:State={phase:'idle',status:'Selecione empresa e agente. Microfone desligado.',mic:false,companyId:null,contextChanged:false,company:'',agent:'',messages:[],runtimeSessionId:''}
+type State = {phase:'idle'|'connecting'|'connected';status:string;mic:boolean;companyId:number|null;contextChanged:boolean;company:string;agent:string;messages:Message[];runtimeSessionId:string;voiceName:string}
+const initial:State={phase:'idle',status:'Selecione empresa e agente. Microfone desligado.',mic:false,companyId:null,contextChanged:false,company:'',agent:'',messages:[],runtimeSessionId:'',voiceName:''}
 export class ManagedSession {
   private state:State={...initial}; private listeners=new Set<()=>void>(); private connection:Connection|null=null
   private tools:ReturnType<typeof createManagedContextTools>|null=null; private generation=0; private micStarting=false
   private stream:MediaStream|null=null; private audio:AudioContext|null=null; private processor:ScriptProcessorNode|null=null; private playback:Playback|null=null
-  private connect:(signedUrl:string)=>Promise<Connection>
-  constructor(connect=async(signedUrl:string)=>{const sdk=await import('@elevenlabs/client');return sdk.WebSocketConnection.create({signedUrl,connectionType:'websocket',textOnly:false})}){this.connect=connect}
+  private connect:(signedUrl:string,voiceId?:string)=>Promise<Connection>
+  constructor(connect=async(signedUrl:string,voiceId?:string)=>{const sdk=await import('@elevenlabs/client');return sdk.WebSocketConnection.create({signedUrl,connectionType:'websocket',textOnly:false,...(voiceId?{overrides:{tts:{voiceId}}}:{})})}){this.connect=connect}
   subscribe=(listener:()=>void)=>{this.listeners.add(listener);return()=>{this.listeners.delete(listener)}}
   snapshot=()=>this.state
   private patch(value:Partial<State>){this.state={...this.state,...value};this.listeners.forEach(listener=>listener())}
   private message(author:string,text:string){this.patch({messages:[...this.state.messages,{author,text}]})}
   async start(companyId:number,company:string,agent:string){
     if(this.state.phase!=='idle')return
-    const generation=++this.generation;this.patch({phase:'connecting',status:'Preparando sessão autorizada…',companyId,contextChanged:false,company,agent,messages:[],runtimeSessionId:''})
+    const generation=++this.generation;this.patch({phase:'connecting',status:'Preparando sessão autorizada…',companyId,contextChanged:false,company,agent,messages:[],runtimeSessionId:'',voiceName:''})
     try {
       const context=await prepareManagedContext(companyId,agent);if(generation!==this.generation)return
       const signed=await requestManagedSignedSession(context.contextId);if(generation!==this.generation)return
       const tools=createManagedContextTools(context.contextId);this.tools=tools
-      const connection=await this.connect(signed.signedUrl)
+      const connection=await this.connect(signed.signedUrl,signed.voiceId)
       if(generation!==this.generation){connection.close();return}
       this.connection=connection
       connection.addListener(event=>{if(generation===this.generation && this.state.mic)this.playback?.play(event.audio_base_64)})
@@ -46,8 +46,8 @@ export class ManagedSession {
       })
       await binding
       if(generation!==this.generation)return
-      this.patch({phase:'connected',runtimeSessionId:context.runtimeSessionId,status:'Conectado por texto. Ative o microfone quando quiser falar.'})
-    } catch {if(generation===this.generation)this.end('Não foi possível iniciar. Verifique acesso e configuração do servidor.')}
+      this.patch({phase:'connected',runtimeSessionId:context.runtimeSessionId,voiceName:signed.voiceName||'Voz padrão do agente',status:'Conectado por texto. Ative o microfone quando quiser falar.'})
+    } catch(error) {if(generation===this.generation)this.end(error instanceof Error&&error.name==='LiveRequestError'?error.message:'Não foi possível conectar ao provedor de voz. Nenhuma conversa foi iniciada; tente novamente após verificar o servidor.')}
   }
   syncCompany(companyId:number|null){
     if(this.state.companyId===null || this.state.companyId===companyId)return

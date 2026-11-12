@@ -1,18 +1,8 @@
 name: Build & Publish (Docker Hub Sistema Britto)
 
-# Builda as imagens Swarm (evo-nexus-runtime e evo-nexus-dashboard) e publica
-# no SEU Docker Hub, a partir da SUA branch. Diferente da docker-publish.yml
-# oficial (que publica no namespace evoapicloud), esta usa o seu usuário via
-# secrets, então é seguro rodar no seu fork/branch.
-#
-# Secrets necessários no repositório (Settings → Secrets and variables → Actions):
-#   * DOCKERHUB_USERNAME  — seu usuário do Docker Hub (também vira o namespace)
-#   * DOCKERHUB_TOKEN     — Access Token do Docker Hub (Account Settings → Security)
-#
-# Triggers:
-#   * push na branch main  -> publica :latest e :sha-xxxx
-#   * push de tag vX.Y.Z ou rcNN                             -> publica :vX.Y.Z / :rcNN e :latest
-#   * disparo manual (workflow_dispatch)                     -> builda e publica
+# Single publisher for the three OmniNexus service images.
+# OmniRoute belongs to a separate stack and is excluded from this workflow.
+# Manual target selection never changes the fixed Docker Hub namespace.
 
 on:
   push:
@@ -20,36 +10,59 @@ on:
     tags: ['v*', 'rc*']
   workflow_dispatch:
     inputs:
-      dashboard_only:
-        description: Build only dashboard for a reviewed frontend integration
-        type: boolean
-        default: false
-      core_only:
-        description: Build only runtime and dashboard for Telegram and agent continuity fixes
-        type: boolean
-        default: false
-      media_only:
-        description: Build only dashboard and media worker for an isolated media hotfix
-        type: boolean
-        default: false
+      target:
+        description: OmniNexus images to publish from this exact revision
+        type: choice
+        options: [all, core, dashboard, media-worker, media]
+        default: all
+
+# Serialize publication across refs; never cancel a running image build.
+concurrency:
+  group: omninexus-image-publication
+  queue: max
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 env:
   REGISTRY: docker.io
+  NAMESPACE: excarplex
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+      revision: ${{ steps.targets.outputs.revision }}
+    steps:
+      - name: Checkout exact source revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Resolve approved image targets
+        id: targets
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SOURCE_REF: ${{ github.ref }}
+          SOURCE_SHA: ${{ github.sha }}
+          IMAGE_TARGET: ${{ inputs.target || 'all' }}
+        run: python3 scripts/ci/image_targets.py
+
   build-and-push:
     name: Build & push ${{ matrix.image }}
+    needs: prepare
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 45
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJSON(inputs.dashboard_only && '[{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"}]' || inputs.core_only && '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"}]' || inputs.media_only && '[{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"}]' || '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"},{"image":"omniroute","dockerfile":"scripts/Dockerfile.omniroute-runtime"}]') }}
-
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
-      - name: Checkout
+      - name: Checkout exact source revision
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.revision }}
 
       - name: Set up QEMU (arm64)
         uses: docker/setup-qemu-action@v3
@@ -70,9 +83,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}
+          images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image }}
           labels: |
             org.opencontainers.image.licenses=LicenseRef-EvoNexus
+            org.opencontainers.image.revision=${{ needs.prepare.outputs.revision }}
           flavor: |
             latest=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
           tags: |
@@ -82,6 +96,7 @@ jobs:
             type=sha,prefix=sha-,format=short
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -99,3 +114,11 @@ jobs:
             CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+      - name: Record immutable publication result
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          REVISION: ${{ needs.prepare.outputs.revision }}
+        run: |
+          printf '%s\n' "Image: $IMAGE@$DIGEST" "Source: $REVISION" >> "$GITHUB_STEP_SUMMARY"

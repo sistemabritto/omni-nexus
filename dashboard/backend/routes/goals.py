@@ -208,19 +208,41 @@ def delete_company(company_id: int):
     if denied:
         return denied
     c = Company.query.get_or_404(company_id)
-    # SQLite não enforce FKs por padrão — SET NULL manual nos filhos antes de apagar.
-    for table in ("projects", "goals", "media_jobs"):
-        db.session.execute(
-            db.text(f"UPDATE {table} SET company_id = NULL WHERE company_id = :cid"),
+    # Goals inherit company through projects; goals has no company_id column.
+    # Never turn owned work into globally unassigned work just to delete a company.
+    tables = ("projects", "tickets", "media_jobs")
+    linked = {
+        table: db.session.execute(
+            db.text(f"SELECT count(*) FROM {table} WHERE company_id=:cid"),
             {"cid": company_id},
-        )
-    if c.logo_path:
-        logo_file = WORKSPACE / c.logo_path
-        if logo_file.exists():
-            logo_file.unlink(missing_ok=True)
-    name = c.name
-    db.session.delete(c)
+        ).scalar()
+        for table in tables
+    }
+    if any(linked.values()):
+        return jsonify({"error": "Company has linked records. Archive it or explicitly reassign its records before deleting.", "code": "company_has_dependencies", "dependencies": linked}), 409
+    name, logo_path = c.name, c.logo_path
+    # Guard in the DELETE itself too: a concurrent insert must not orphan data.
+    guard = " AND ".join(
+        f"NOT EXISTS (SELECT 1 FROM {table} WHERE company_id=:cid)" for table in tables
+    )
+    deleted = db.session.execute(
+        db.text("DELETE FROM companies WHERE id=:cid AND " + guard),
+        {"cid": company_id},
+    )
+    if deleted.rowcount != 1:
+        db.session.rollback()
+        return jsonify({"error": "Company changed during deletion; refresh and retry.", "code": "company_delete_conflict"}), 409
     db.session.commit()
+    # Files are cleaned only after the database succeeds, within the logo directory.
+    if logo_path:
+        logo_file = (WORKSPACE / logo_path).resolve()
+        logo_root = (WORKSPACE / "workspace/assets/company-logos").resolve()
+        if logo_file.is_relative_to(logo_root):
+            try:
+                logo_file.unlink(missing_ok=True)
+            except OSError:
+                from flask import current_app
+                current_app.logger.warning("Company %s deleted; logo cleanup deferred", company_id)
     audit(current_user, "delete", "goals", f"Deleted company #{company_id}: {name}")
     return jsonify({"status": "ok"})
 

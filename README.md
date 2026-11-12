@@ -1,3 +1,4 @@
+<!-- Modified by Sistema Britto: clarify license metadata and verification scope (2026-10-15). -->
 <p align="center">
   <a href="https://evolutionfoundation.com.br">
     <img src="public/cover.webp" alt="Evolution Foundation" height="60"/>
@@ -28,7 +29,7 @@
 
 <p align="center">
   <a href="https://github.com/evolution-foundation/evo-nexus"><img src="https://img.shields.io/badge/upstream-evolution--foundation%2Fevo--nexus-00ffa7?style=for-the-badge" alt="Upstream" /></a>
-  <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache%202.0-2563eb?style=for-the-badge" alt="License: Apache 2.0" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-EvoNexus%20terms-2563eb?style=for-the-badge" alt="License: EvoNexus terms (Apache 2.0 with additional conditions)" /></a>
   <img src="https://img.shields.io/badge/testes-1.322%20automatizados-16a34a?style=for-the-badge" alt="1322 testes" />
   <img src="https://img.shields.io/badge/deploy-Docker%20Swarm-0ea5e9?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Swarm" />
 </p>
@@ -525,7 +526,9 @@ A camada de upgrade — esteira de conteúdo, gates, medição de funil, painel 
 
 Este fork mantém integralmente a licença do EvoNexus original: **Apache License 2.0 com condições adicionais de proteção de marca** — preservação de LOGO/copyright nos componentes de frontend e requisito de notificação de uso. Veja [LICENSE](LICENSE).
 
-Em conformidade com essas condições, esta distribuição **não remove nem modifica** o LOGO e as informações de copyright do EvoNexus no console e nas aplicações. Para questões de licenciamento do EvoNexus, contate **suporte@evofoundation.com.br**.
+Os textos upstream completos estão em [LICENSE](LICENSE), [NOTICE](NOTICE), [NOTICE.md](NOTICE.md) e [TRADEMARKS.md](TRADEMARKS.md). As imagens Swarm incluem esses quatro arquivos em `/workspace`; o metadado OCI usa `LicenseRef-EvoNexus` para remeter aos termos específicos de `LICENSE`, sem descrevê-los como MIT ou Apache 2.0 puro.
+
+A inclusão dos arquivos e a correção dos metadados não constituem uma declaração de conformidade integral da operação SaaS ou de cada tenant. Esta correção preserva os textos, atribuições e logos upstream e não resolve a relação entre `LICENSE` e `TRADEMARKS.md`. Para questões de licenciamento do EvoNexus, contate **suporte@evofoundation.com.br**.
 
 ## ™ Marcas
 

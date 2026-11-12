@@ -27,6 +27,10 @@ on:
         description: Reviewed dashboard sha256 digest to boot (fixed repository)
         type: string
         default: sha256:eafe5f27d9187194bd5f3ec8b857ce947ac8060661b4d99b8146b01d4773b05d
+      smoke_runtime_digest:
+        description: Optional reviewed runtime digest for offline license packaging verification
+        type: string
+        default: ""
       smoke_image_revision:
         description: Exact expected OCI application revision
         type: string
@@ -74,7 +78,7 @@ jobs:
           tests/backend/test_runtime_preflight.py tests/backend/test_approval_expiration_state.py
           tests/backend/test_openreply_draft_guard.py tests/backend/test_reels_card_ficha.py
           tests/goals tests/tickets tests/heartbeats
-          tests/media/test_media_retry_loop.py tests/media/test_routes_media_jobs.py
+          tests/media/test_media_retry_loop.py tests/media/test_routes_media_jobs.py tests/media/test_media_stack_contract.py
           -q
 
   terminal-server:
@@ -151,6 +155,19 @@ jobs:
           docker pull "$IMAGE"
           actual=$(docker image inspect "$IMAGE" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')
           test "$actual" = "$EXPECTED_REVISION"
+      - name: Verify dashboard legal files and license label offline
+        run: python3 qa/license-image-smoke/check.py "$IMAGE" "$EXPECTED_REVISION"
+      - name: Verify optional runtime legal files and license label offline
+        if: inputs.smoke_runtime_digest != ''
+        env:
+          RUNTIME_DIGEST: ${{ inputs.smoke_runtime_digest }}
+        run: |
+          python3 - <<'PYCODE'
+          import os, re
+          assert re.fullmatch(r'sha256:[a-f0-9]{64}', os.environ['RUNTIME_DIGEST'])
+          PYCODE
+          docker pull "excarplex/evo-nexus-runtime@$RUNTIME_DIGEST"
+          python3 qa/license-image-smoke/check.py "excarplex/evo-nexus-runtime@$RUNTIME_DIGEST" "$EXPECTED_REVISION"
       - name: Boot Flask with ephemeral fixture data and no external network
         run: |
           docker run -d --name live-image-smoke --network none \

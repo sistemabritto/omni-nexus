@@ -83,8 +83,9 @@ def version_dict(version):
     if release:
         try: assert_current(job,release)
         except ReleaseError as exc: delivery.update(approval_valid=False,invalidated_reason=str(exc))
+    creative=m.RecordingCreativeReview.query.filter_by(version_id=version.id,render_sha256=job.render_sha256).order_by(m.RecordingCreativeReview.created_at.desc(),m.RecordingCreativeReview.id.desc()).first()
     rejected=m.db.session.get(m.RecordingRejection,version.id)
-    return {'rejection':{'reason':rejected.reason,'by':rejected.rejected_by,'at':rejected.rejected_at,'render_sha256':rejected.render_sha256} if rejected else None,'id':version.id,'number':version.number,'batch':version.batch,'script_revision':version.script_revision,
+    return {'creative_review':{'id':creative.id,'reviewer':creative.reviewer,'eligible':creative.eligible,'payload':json.loads(creative.payload_json)} if creative else None,'rejection':{'reason':rejected.reason,'by':rejected.rejected_by,'at':rejected.rejected_at,'render_sha256':rejected.render_sha256} if rejected else None,'id':version.id,'number':version.number,'batch':version.batch,'script_revision':version.script_revision,
             'snapshot':json.loads(version.snapshot_json),'created_at':version.created_at,
             'qa_valid':bool(not rejected and version.qa_sha256 and version.qa_sha256==job.render_sha256),'qa_by':version.qa_by,
             'job':job.to_dict(),'release':delivery}
@@ -126,6 +127,16 @@ def detail(row):
         'capabilities':{'audio_feedback':True,'automatic_transcription':False,'assembly_only':True}}
 
 
+def summary_detail(row):
+    uploads=[{'id':item.id,'status':item.status} for item in m.RecordingUpload.query.filter_by(recording_id=row.id).all()]
+    latest=m.RecordingVersion.query.filter_by(recording_id=row.id).order_by(m.RecordingVersion.number.desc()).first()
+    current=[version_dict(latest)] if latest else []
+    return {'id':row.id,'company_id':row.company_id,'title':row.title,'origin_type':row.origin_type,'origin_id':row.origin_id,
+        'script_revision':row.script_revision,'batch':row.batch,'closed':row.closed,'revision':row.revision,
+        'state':state_for(row,uploads,current),'uploads':uploads,'versions':[],
+        'version_count':m.RecordingVersion.query.filter_by(recording_id=row.id).count(),'scripts':[],'feedback':[]}
+
+
 @bp.errorhandler(HTTPException)
 def api_error(exc):
     m.db.session.rollback()
@@ -159,7 +170,8 @@ def recordings():
     if not company: abort(400,description='company_required')
     require_company(company,edit=request.method=='POST')
     if request.method=='GET':
-        return jsonify([detail(r) for r in m.Recording.query.filter_by(company_id=company).order_by(m.Recording.created_at.desc()).limit(100)])
+        serialize=summary_detail if request.args.get('summary')=='true' else detail
+        return jsonify([serialize(r) for r in m.Recording.query.filter_by(company_id=company).order_by(m.Recording.created_at.desc()).limit(100)])
     origin_type=data.get('origin_type','manual')
     if origin_type not in ('manual','reel','script'):abort(400,description='invalid_origin_type')
     origin_id=text(data.get('origin_id') or uid(),'origin_id',200)
@@ -427,6 +439,10 @@ def qa_recording(recording_id,version_id):
     latest=m.RecordingVersion.query.filter_by(recording_id=row.id).order_by(m.RecordingVersion.number.desc()).first()
     if version.id!=latest.id or version.batch!=row.batch or version.script_revision!=row.script_revision or not row.closed:abort(409,description='version_superseded')
     if m.db.session.get(m.RecordingRejection,version.id):abort(409,description='version_rejected_create_new_preview')
+    job=m.db.session.get(m.MediaJob,version.job_id)
+    from recordings_access import creative_review_error
+    review_error=creative_review_error(version,job)
+    if review_error:abort(409,description=review_error)
     data=body();checks=data.get('checks')
     if not isinstance(checks,dict) or not all(checks.get(k) is True for k in ('audio','captions','face','safe_zones','rights')):abort(400,description='qa_checks_required')
     job=m.db.session.get(m.MediaJob,version.job_id)
@@ -471,3 +487,123 @@ def reject_recording(recording_id,version_id):
     m.db.session.commit()
     m.audit(current_user,'execute','media_jobs',f'rejected recording version {version.id}')
     return jsonify(detail(row)),201
+
+
+@bp.route('/api/recordings/<recording_id>/produce',methods=['POST'])
+def produce_project(recording_id):
+    from video_project_spec import normalize_project
+    row=record(recording_id,True);data=body()
+    if request.content_length and request.content_length>1024**2:abort(413)
+    if data.get('uploads_confirmed') is not True:abort(400,description='confirm_all_materials_first')
+    expected=integer(data.get('expected_revision'),'expected_revision')
+    uploads=m.RecordingUpload.query.filter_by(recording_id=row.id).order_by(m.RecordingUpload.position).all()
+    if any(item.status=='receiving' for item in uploads):abort(409,description='all_uploads_must_finish')
+    selected=data.get('upload_ids',[])
+    if not isinstance(selected,list) or not all(isinstance(key,str) for key in selected) or len(set(selected))!=len(selected):abort(400,description='select_uploaded_assets')
+    items=[item for item in uploads if item.id in selected and item.status=='complete']
+    if len(items)!=len(selected):abort(400,description='select_complete_assets')
+    assets=[{'id':item.id,'path':item.storage_path,'kind':item.kind,'sha256':item.sha256} for item in items]
+    try:spec=normalize_project(data.get('production'),{asset['id']:asset for asset in assets})
+    except (ValueError,TypeError,AttributeError) as exc:abort(400,description=str(exc))
+    shape=data.get('format','vertical')
+    dimensions={'vertical':(720,1280),'horizontal':(1280,720),'square':(1080,1080)}
+    if not isinstance(shape,str) or shape not in dimensions:abort(400,description='invalid_video_format')
+    width,height=dimensions[shape]
+    signature=hashlib.sha256(encoded({'production':spec,'upload_ids':selected,'format':shape}).encode()).hexdigest()
+    if row.closed:
+        version=m.RecordingVersion.query.filter_by(recording_id=row.id).order_by(m.RecordingVersion.number.desc()).first()
+        previous=json.loads(version.snapshot_json) if version else {}
+        if previous.get('close_revision')==expected and previous.get('close_signature')==signature:return jsonify(detail(row))
+        abort(409,description='batch_already_closed')
+    touch(row,expected=expected)
+    for asset in assets:
+        if not private_path(asset['path']).is_file() or hash_file(private_path(asset['path']))!=asset['sha256']:abort(409,description='source_changed')
+    script=m.RecordingScript.query.filter_by(recording_id=row.id,number=row.script_revision).one()
+    version_id,job_id=uid(),uid();base=ensure_job_scaffold(job_id)
+    number=(m.db.session.query(m.db.func.max(m.RecordingVersion.number)).filter_by(recording_id=row.id).scalar() or 0)+1
+    snapshot={'recording_id':row.id,'version_id':version_id,'script_revision':row.script_revision,'script_sha256':script.sha256,
+        'close_revision':expected,'close_signature':signature,'assets':assets,'production':spec,'edit_plan_version':3,'stage':'project_composition','creative_review_required':True}
+    job=m.MediaJob(id=job_id,company_id=row.company_id,created_by=current_user.username,job_type='recording_batch',title=row.title,
+        brief='Projeto misto determinístico; sem geração paga ou publicação automática.',caption='',platform='youtube' if shape=='horizontal' else 'instagram',width=width,height=height,
+        fps=30,duration_seconds=spec['duration'],publication_mode='draft',status='queued',workspace_path=str(base),result_json=encoded(snapshot),created_at=now(),updated_at=now())
+    m.db.session.add(job);m.db.session.flush()
+    m.db.session.add(m.RecordingVersion(id=version_id,recording_id=row.id,number=number,batch=row.batch,script_revision=row.script_revision,job_id=job_id,snapshot_json=encoded(snapshot),created_at=now()))
+    row.closed=True;m.db.session.commit();return jsonify(detail(row)),201
+
+
+@bp.route('/api/recordings/<recording_id>/versions/<version_id>/creative-review',methods=['GET','POST'])
+def creative_review(recording_id,version_id):
+    from media_creative_review import validate_creative_review,creative_review_eligible,CRITERIA,METHODS
+    row=record(recording_id,request.method=='POST')
+    version=m.RecordingVersion.query.filter_by(id=version_id,recording_id=row.id).first_or_404()
+    snapshot=json.loads(version.snapshot_json);job=m.db.session.get(m.MediaJob,version.job_id)
+    if not snapshot.get('production'):abort(409,description='not_a_production_project')
+    if request.method=='GET':
+        if not job.render_sha256:abort(409,description='preview_not_ready')
+        brand_source,brand_version=snapshot['production']['brand_reference'].rsplit('@',1)
+        template={'render_sha256':job.render_sha256,'version_id':version.id,'duration_seconds':job.render_duration_seconds,
+            'brand_reference':{'source':brand_source,'version':brand_version},
+            'methods':{key:{'source':source,'version':pin,'application':''} for key,(source,pin) in METHODS.items()},
+            'criteria':{key:{'status':'NOT_TESTED','observation':'','evidence':[],'reason':'Ainda não revisado nesta versão'} for key in CRITERIA},'findings':[]}
+        try:
+            guidance=[{'id':key,'source':source,'version':pin,'text':(Path(__file__).resolve().parents[3]/source).read_text(encoding='utf-8')} for key,(source,pin) in METHODS.items()]
+        except OSError:
+            abort(503,description='creative_review_guidance_unavailable')
+        return jsonify(template=template,guidance=guidance,evidence=json.loads(job.result_json or '{}').get('review_evidence',{}),
+            render_evidence={'kind':'time_range','ref':'output/final.mp4','sha256':job.render_sha256,'start':0,'end':job.render_duration_seconds},
+            instructions='Preencha observações reais, aplicação das duas referências e achados. Frame para identidade/legibilidade/composição; intervalo do render para ritmo/transições/áudio. NOT_TESTED não autoriza QA.')
+    if getattr(g,'auth_via_api_token',False) or not m.has_permission(current_user.role,'media_jobs','manage'):abort(403)
+    if job.created_by==current_user.username:abort(403,description='independent_reviewer_required')
+    latest=m.RecordingVersion.query.filter_by(recording_id=row.id).order_by(m.RecordingVersion.number.desc()).first()
+    if latest.id!=version.id or not row.closed or version.batch!=row.batch or version.script_revision!=row.script_revision:abort(409,description='version_superseded')
+    if job.status not in ('ready_for_review','approved') or m.db.session.get(m.RecordingRejection,version.id):abort(409,description='preview_not_reviewable')
+    data=body()
+    try:
+        from media_release import render_binding
+        render_binding(job)
+        review=validate_creative_review(data.get('review'),render_sha256=job.render_sha256,version_id=version.id)
+        if abs(review['duration_seconds']-job.render_duration_seconds)>.05:raise ValueError('review_duration_mismatch')
+        brand=review['brand_reference']
+        if brand['source']+'@'+brand['version']!=snapshot['production']['brand_reference']:raise ValueError('brand_reference_mismatch')
+        for criterion,required_kind in [('identity','frame'),('legibility','frame'),('composition','frame'),('rhythm','time_range'),('transitions','time_range'),('audio','audio_range')]:
+            item=review['criteria'][criterion]
+            if item['status']=='PASS' and not any(e['kind']==required_kind for e in item['evidence']):raise ValueError(criterion+'_requires_'+required_kind)
+        result=json.loads(job.result_json or '{}');manifest=result.get('review_evidence',{})
+        permitted={'output/final.mp4':job.render_sha256,**{item['ref']:item['sha256'] for item in manifest.get('frames',[])}}
+        evidence=[item for criterion in review['criteria'].values() for item in criterion['evidence']]
+        evidence.extend(item for finding in review['findings'] for item in finding.get('evidence',[]))
+        from media_workspace import job_dir,resolve_within
+        for item in evidence:
+            if permitted.get(item['ref'])!=item['sha256']:raise ValueError('evidence_not_bound_to_preview')
+            path=resolve_within(job_dir(job.id),item['ref'])
+            if not path.is_file() or hash_file(path)!=item['sha256']:raise ValueError('evidence_changed')
+        if manifest.get('render_sha256')!=job.render_sha256:raise ValueError('review_frames_not_current')
+    except (ValueError,ReleaseError,TypeError,KeyError) as exc:abort(400,description=str(exc))
+    touch(row,require_open=False,expected=integer(data.get('expected_revision'),'expected_revision'))
+    version.qa_sha256=None;version.qa_by=None;version.qa_at=None
+    release=m.db.session.get(m.MediaRelease,job.id)
+    if release:
+        if any(channel.get('post_id') for channel in release.to_dict()['progress'].get('channels',{}).values()):abort(409,description='distribution_started_review_remote_posts')
+        changed=m.db.session.execute(m.db.update(m.MediaRelease).where(m.MediaRelease.job_id==job.id,m.MediaRelease.busy.is_(False)).values(approved_digest=None,invalidated_reason='creative_review_updated').execution_options(synchronize_session=False))
+        if changed.rowcount!=1:m.db.session.rollback();abort(409,description='release_busy')
+        m.db.session.refresh(release)
+    m.db.session.add(m.RecordingCreativeReview(id=uid(),version_id=version.id,render_sha256=job.render_sha256,reviewer=current_user.username,
+        payload_json=encoded(review),eligible=creative_review_eligible(review) and (snapshot['production']['audio_policy']=='silent' or review['criteria']['audio']['status']=='PASS') and (not snapshot['production']['captions'] or review['criteria']['captions']['status']=='PASS'),created_at=now()))
+    m.db.session.commit();return jsonify(detail(row)),201
+
+
+@bp.route('/api/recordings/<recording_id>/versions/<version_id>/review-frames/<int:index>')
+def project_review_frame(recording_id,version_id,index):
+    row=record(recording_id)
+    version=m.RecordingVersion.query.filter_by(id=version_id,recording_id=row.id).first_or_404()
+    job=m.db.session.get(m.MediaJob,version.job_id)
+    result=json.loads(job.result_json or '{}');manifest=result.get('review_evidence',{})
+    if manifest.get('render_sha256')!=job.render_sha256:abort(409,description='review_frames_not_current')
+    frames=manifest.get('frames',[])
+    if not 0<=index<len(frames):abort(404)
+    from media_workspace import job_dir,resolve_within
+    frame=frames[index]
+    try:path=resolve_within(job_dir(job.id),frame['ref'])
+    except ValueError:abort(400)
+    if not path.is_file() or hash_file(path)!=frame['sha256']:abort(409,description='evidence_changed')
+    return send_file(path,mimetype='image/png')

@@ -1,7 +1,9 @@
+// Modified 2026-10-15: co-brand public viewer, preserve EvoNexus attribution and original artifact bytes.
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import Markdown from '../components/Markdown'
 import CodeView from '../components/workspace/CodeView'
+import './ShareView.css'
 
 const API_BASE = import.meta.env.DEV ? 'http://localhost:8080' : ''
 
@@ -105,13 +107,13 @@ export default function ShareView() {
   // Full-page HTML rendering — use iframe to isolate CSS
   if (state.status === 'html') {
     return (
-      <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="share-branding-frame" style={{ position: 'relative', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
         <iframe
           src={`${API_BASE}/api/shares/${token}/view`}
           style={{
             flex: 1,
             width: '100%',
-            minHeight: 'calc(100vh - 40px)',
+            minHeight: 'calc(100dvh - var(--share-footer-space))',
             border: 'none',
             background: '#0C111D',
           }}
@@ -125,8 +127,9 @@ export default function ShareView() {
 
   return (
     <div
+      className="share-branding-frame"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: 'var(--bg-primary, #0C111D)',
         color: 'var(--text-primary, #D0D5DD)',
         display: 'flex',
@@ -178,7 +181,7 @@ export default function ShareView() {
         )}
 
         {state.status === 'code' && (
-          <div style={{ padding: '24px 24px 80px', height: 'calc(100vh - 48px)' }}>
+          <div style={{ padding: '24px 24px 80px', height: 'calc(100dvh - var(--share-footer-space))' }}>
             <CodeView content={state.content} path={`.${state.extension}`} />
           </div>
         )}
@@ -253,7 +256,7 @@ export default function ShareView() {
         )}
 
         {state.status === 'pdf' && (
-          <div style={{ padding: '0', height: 'calc(100vh - 48px)' }}>
+          <div style={{ padding: '0', height: 'calc(100dvh - var(--share-footer-space))' }}>
             <iframe
               src={state.url}
               style={{ width: '100%', height: '100%', border: 'none' }}
@@ -271,32 +274,17 @@ export default function ShareView() {
 
 function PoweredByFooter() {
   return (
-    <a
-      href="https://evonexus.evolutionfoundation.com.br/"
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        background: 'rgba(10,15,26,0.92)',
-        backdropFilter: 'blur(8px)',
-        borderTop: '1px solid rgba(52,64,84,0.5)',
-        zIndex: 100,
-        textDecoration: 'none',
-        cursor: 'pointer',
-      }}
-    >
-      <img src="/EVO_NEXUS.webp" alt="EvoNexus" style={{ height: '16px', width: 'auto', opacity: 0.7 }} />
-      <span style={{ fontSize: '11px', color: 'var(--text-muted, #667085)' }}>
-        Powered by EvoNexus
-      </span>
-    </a>
+    <footer className="share-branding-footer" aria-label="Créditos do compartilhamento">
+      <a className="share-branding-sb" href="https://sistemabritto.com.br" target="_blank" rel="noopener noreferrer" aria-label="Sistema Britto — abrir site em nova aba">
+        <img src="/branding/sistema-britto.png" alt="Sistema Britto" width="1112" height="366" />
+      </a>
+      <div className="share-branding-upstream">
+        <a href="https://evonexus.evolutionfoundation.com.br/" target="_blank" rel="noopener noreferrer" aria-label="Powered by EvoNexus — abrir site em nova aba">
+          <img src="/EVO_NEXUS.webp" alt="EvoNexus" style={{ height: '16px', width: 'auto', opacity: 0.7 }} />
+          <span>Powered by EvoNexus</span>
+        </a>
+        <small>Este sistema utiliza EvoNexus · © 2026 Evolution Foundation</small>
+      </div>
+    </footer>
   )
 }

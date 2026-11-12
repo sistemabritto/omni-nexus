@@ -1,0 +1,13 @@
+/* Sistema Britto co-branding, 2026-10-15. Attribution belongs to the viewer, not file bytes. */
+.share-branding-frame{--share-footer-space:96px;padding-bottom:calc(var(--share-footer-space) + env(safe-area-inset-bottom));box-sizing:border-box}
+.share-branding-footer{position:fixed;bottom:0;left:0;right:0;z-index:100;min-height:96px;padding:8px 16px calc(8px + env(safe-area-inset-bottom));box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:16px;background:rgba(10,15,26,.97);border-top:1px solid #344054;color:#cbd5e1;font:12px/1.5 system-ui,sans-serif}
+.share-branding-footer a{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;text-decoration:none;color:#cbd5e1;border-radius:6px;transition:background .18s}
+.share-branding-footer a:hover{background:#182230}
+.share-branding-footer a:focus-visible{outline:2px solid #a3ff12;outline-offset:3px}
+.share-branding-sb{flex-shrink:0;padding:4px 8px}
+.share-branding-sb img{width:112px;height:auto;display:block;object-fit:contain}
+.share-branding-upstream{display:flex;flex-direction:column;align-items:center}
+.share-branding-upstream a{padding:0 8px;font-size:11px}
+.share-branding-upstream small{font-size:11px;text-align:center;overflow-wrap:anywhere;max-width:330px}
+@media(max-width:479px){.share-branding-footer{gap:8px;padding-inline:8px}.share-branding-sb{padding-inline:4px}.share-branding-sb img{width:96px}.share-branding-upstream{max-width:calc(100% - 112px)}.share-branding-upstream small{font-size:10px}.share-branding-upstream a{font-size:10px;gap:4px;padding:0 4px}}
+@media(prefers-reduced-motion:reduce){.share-branding-footer a{transition:none}}

@@ -57,6 +57,7 @@ jobs:
           tests/backend/test_health_routes.py
           tests/backend/test_share_publico.py
           tests/goals tests/tickets tests/heartbeats
+          tests/media/test_media_editorial.py tests/media/test_media_release.py
           -q
 
   terminal-server:

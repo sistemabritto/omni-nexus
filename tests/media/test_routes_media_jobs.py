@@ -16,7 +16,6 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "dashboard" / "backend"))
 
-from postiz_client import PostizError  # noqa: E402
 
 
 def _create_job(client, **overrides):
@@ -272,43 +271,15 @@ def _approve_job(client, job_id):
     return client.post(f"/api/media/jobs/{job_id}/approve")
 
 
-def test_create_draft_requires_render_path(admin_client):
+def test_legacy_publication_cannot_bypass_bound_approval(admin_client):
     created = _create_job(admin_client).get_json()
     _approve_job(admin_client, created["id"])
-    resp = admin_client.post(f"/api/media/jobs/{created['id']}/create-draft")
-    assert resp.status_code == 400
-    assert resp.get_json()["error"] == "render_missing"
-
-
-def test_create_draft_uploads_once_and_creates_post_once(admin_client, tmp_path, monkeypatch):
-    created = _create_job(admin_client).get_json()
-    job_id = created["id"]
-    render_path = Path(created["workspace_path"]) / "output" / "final.mp4"
-    render_path.write_bytes(b"fake-mp4")
-    admin_client.patch(f"/api/media/jobs/{job_id}", json={"render_path": str(render_path)})
-    _approve_job(admin_client, job_id)
-
-    monkeypatch.setenv("POSTIZ_URL", "https://postiz.example.com")
-    monkeypatch.setenv("POSTIZ_API_KEY", "key")
-
-    with patch("routes.media_jobs.PostizClient") as MockClient:
-        instance = MockClient.from_env.return_value
-        instance.upload_file.return_value = {"id": "media-1", "path": "https://x/final.mp4", "name": "final.mp4"}
-        instance.list_integrations.return_value = [{"id": "int-ig", "identifier": "instagram", "disabled": False}]
-        instance.select_integration.return_value = {"id": "int-ig", "identifier": "instagram"}
-        instance.create_draft.return_value = [{"postId": "post-1"}]
-
-        resp1 = admin_client.post(f"/api/media/jobs/{job_id}/create-draft")
-        assert resp1.status_code == 200
-        assert resp1.get_json()["status"] == "draft_created"
-        assert instance.upload_file.call_count == 1
-        assert instance.create_draft.call_count == 1
-
-        # Idempotent re-POST: already draft_created + postiz_post_id set -> no new calls.
-        resp2 = admin_client.post(f"/api/media/jobs/{job_id}/create-draft")
-        assert resp2.status_code == 200
-        assert instance.upload_file.call_count == 1
-        assert instance.create_draft.call_count == 1
+    with patch("routes.media_jobs.PostizClient") as client:
+        for action in ("create-draft", "schedule"):
+            response = admin_client.post(f"/api/media/jobs/{created['id']}/{action}")
+            assert response.status_code == 409
+            assert response.get_json()["error"] == "bound_release_required"
+        client.from_env.assert_not_called()
 
 
 def test_patch_to_retryable_failure_releases_lock(admin_client):
@@ -333,78 +304,6 @@ def test_patch_to_retryable_failure_releases_lock(admin_client):
     resp2 = admin_client.post(f"/api/media/jobs/{job_id}/run")
     assert resp2.status_code == 200
     assert resp2.get_json()["status"] == "preparing"
-
-
-def test_create_draft_failure_sets_retryable_and_preserves_uploaded_media_id(admin_client, monkeypatch):
-    created = _create_job(admin_client).get_json()
-    job_id = created["id"]
-    render_path = Path(created["workspace_path"]) / "output" / "final.mp4"
-    render_path.write_bytes(b"fake-mp4")
-    admin_client.patch(f"/api/media/jobs/{job_id}", json={"render_path": str(render_path)})
-    _approve_job(admin_client, job_id)
-
-    monkeypatch.setenv("POSTIZ_URL", "https://postiz.example.com")
-    monkeypatch.setenv("POSTIZ_API_KEY", "key")
-
-    with patch("routes.media_jobs.PostizClient") as MockClient:
-        instance = MockClient.from_env.return_value
-        instance.upload_file.return_value = {"id": "media-1", "path": "https://x/final.mp4", "name": "final.mp4"}
-        instance.list_integrations.side_effect = PostizError("timeout talking to Postiz")
-
-        resp = admin_client.post(f"/api/media/jobs/{job_id}/create-draft")
-        assert resp.status_code == 502
-        data = admin_client.get(f"/api/media/jobs/{job_id}").get_json()
-        assert data["status"] == "retryable_failure"
-        assert data["postiz_media_id"] == "media-1"  # upload result preserved — won't re-upload on retry
-
-        # Retry: upload must NOT happen again (idempotency).
-        instance.list_integrations.side_effect = None
-        instance.list_integrations.return_value = [{"id": "int-ig", "identifier": "instagram", "disabled": False}]
-        instance.select_integration.return_value = {"id": "int-ig", "identifier": "instagram"}
-        instance.create_draft.return_value = [{"postId": "post-1"}]
-        resp2 = admin_client.post(f"/api/media/jobs/{job_id}/create-draft")
-        assert resp2.status_code == 200
-        assert instance.upload_file.call_count == 1
-
-
-# ── schedule ──────────────────────────────────────────────────────────────
-
-def test_schedule_requires_future_date_and_draft_created(admin_client, monkeypatch):
-    future = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
-    created = _create_job(admin_client, publication_mode="schedule", scheduled_at=future).get_json()
-    job_id = created["id"]
-    resp = admin_client.post(f"/api/media/jobs/{job_id}/schedule")
-    # Never scheduled: the job never went through create-draft, so it fails
-    # the "has a postiz_post_id" precondition before the state-machine check
-    # is even reached — either error is an acceptable "not ready" signal.
-    assert resp.status_code in (400, 409)
-
-
-def test_schedule_calls_change_status_not_create_post(admin_client, monkeypatch):
-    future = (datetime.now(timezone.utc) + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S")
-    created = _create_job(admin_client, publication_mode="schedule", scheduled_at=future).get_json()
-    job_id = created["id"]
-    render_path = Path(created["workspace_path"]) / "output" / "final.mp4"
-    render_path.write_bytes(b"fake-mp4")
-    admin_client.patch(f"/api/media/jobs/{job_id}", json={"render_path": str(render_path)})
-    _approve_job(admin_client, job_id)
-
-    monkeypatch.setenv("POSTIZ_URL", "https://postiz.example.com")
-    monkeypatch.setenv("POSTIZ_API_KEY", "key")
-
-    with patch("routes.media_jobs.PostizClient") as MockClient:
-        instance = MockClient.from_env.return_value
-        instance.upload_file.return_value = {"id": "media-1", "path": "https://x/final.mp4", "name": "final.mp4"}
-        instance.list_integrations.return_value = [{"id": "int-ig", "identifier": "instagram", "disabled": False}]
-        instance.select_integration.return_value = {"id": "int-ig", "identifier": "instagram"}
-        instance.create_draft.return_value = [{"postId": "post-1"}]
-        admin_client.post(f"/api/media/jobs/{job_id}/create-draft")
-
-        resp = admin_client.post(f"/api/media/jobs/{job_id}/schedule")
-        assert resp.status_code == 200
-        assert resp.get_json()["status"] == "scheduled"
-        instance.change_status.assert_called_once_with("post-1", "schedule")
-        instance.create_draft.assert_called_once()  # never called twice — no duplicate post
 
 
 # ── video endpoint: path traversal defense ───────────────────────────────

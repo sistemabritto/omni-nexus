@@ -7,6 +7,8 @@ metadata:
 
 # Gerador de Roteiro de Reels
 
+Ler também `.claude/skills/social-reels-editorial/SKILL.md` para três candidatos de gancho, roteiro/beat sheet, legenda e reaproveitamento do bruto em PT-BR, sem scripts ou scores de viralidade. No coprodutor, o schema JSON único e protocolos locais continuam prevalecendo.
+
 Para coprodução com Magneto, campanha OpenReply ou planejamento dos 120–150
 Reels, leia primeiro `references/coproducao-magneto.md`. Esse contrato atualiza
 o formato abaixo e os CTAs históricos da matriz para o pedido de 10/09/2026.

@@ -200,6 +200,11 @@ Examples of what to record:
 - Previous campaigns and their results
 - Preferred content formats
 
+## Apoio editorial de Reels
+
+Para gancho/roteiro/legenda/repurpose, ler `.claude/skills/social-reels-editorial/SKILL.md`. Três candidatos de gancho, checklist de clareza sem nota viral, PT-BR e provas reais. No coprodutor, preservar UM JSON no schema existente; em produção, preservar contrato do worker/Postiz e revisão humana da versão/hash, copy, canais e calendário. Esta leitura não executa scripts ou publicação.
+
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `/Users/etus_0104/Projects/claude_cowork_workspace/.claude/agent-memory/pixel-social-media/`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).

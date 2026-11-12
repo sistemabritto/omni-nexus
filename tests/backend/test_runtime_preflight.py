@@ -39,3 +39,39 @@ def test_prompt_allows_actual_research_and_explicit_nonpublication():
     assert 'DECIDA AGORA' not in text
     assert 'verified runtime' in text
     assert 'publish_intent=false' in text
+
+
+def test_sdk_default_endpoint_is_not_missing_credentials(tmp_path, monkeypatch):
+    from sdk_client import EvoClient
+    monkeypatch.delenv('EVONEXUS_API_URL', raising=False)
+    monkeypatch.setenv('DASHBOARD_API_TOKEN', 'fixture-private-token')
+    monkeypatch.setenv('FLASK_PORT', '8080')
+    client = EvoClient()
+    assert client.base_url == 'http://localhost:8080'
+    assert client._session.headers.get('Authorization')
+    text = preflight.runtime_preflight(tmp_path, env={'DASHBOARD_API_TOKEN':'fixture-private-token'})
+    assert 'Nexus API configurada: True' in text
+    assert 'fixture-private-token' not in text
+    assert 'Endpoint customizado da API: False' in text
+    assert 'não prova acesso entre containers' in text
+
+
+def test_pg_defaults_and_runtime_interpreter_are_reported_without_probe(tmp_path):
+    env = {'OPENREPLY_PG_PASSWORD': 'fixture-password'}
+    with patch.object(preflight.importlib.util, 'find_spec', return_value=object()), patch('socket.socket.connect', side_effect=AssertionError('preflight must not open connections')):
+        text = preflight.runtime_preflight(tmp_path, env=env)
+    assert 'Postgres direto configurado: True' in text
+    assert 'psycopg2 neste runtime: True' in text
+    assert preflight.sys.executable in text
+    assert 'fixture-password' not in text
+    assert 'transação read-only' in text
+    assert 'não ative campanha' in text
+
+
+def test_system_python_missing_driver_does_not_hide_configured_access(tmp_path):
+    with patch.object(preflight.importlib.util, 'find_spec', return_value=None):
+        text = preflight.runtime_preflight(tmp_path, env={'OPENREPLY_DATABASE_URL':'fixture-private-dsn'})
+    assert 'Postgres direto configurado: True' in text
+    assert 'psycopg2 neste runtime: False' in text
+    assert 'fixture-private-dsn' not in text
+    assert 'python3 do sistema não comprova' in text

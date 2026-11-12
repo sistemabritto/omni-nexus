@@ -1,0 +1,188 @@
+[
+  {
+    "width": 375,
+    "height": 667,
+    "role": "admin",
+    "fit": {
+      "scrollHeight": 454,
+      "clientHeight": 454
+    },
+    "links": [
+      {
+        "href": "/",
+        "label": "OmniNexus Live",
+        "visible": true
+      },
+      {
+        "href": "/missions",
+        "label": "Missões",
+        "visible": true
+      },
+      {
+        "href": "/kanban",
+        "label": "Kanban",
+        "visible": true
+      },
+      {
+        "href": "/workspace",
+        "label": "Materiais",
+        "visible": true
+      },
+      {
+        "href": "/agents",
+        "label": "Agentes",
+        "visible": true
+      },
+      {
+        "href": "/heartbeats",
+        "label": "Heartbeats",
+        "visible": true
+      },
+      {
+        "href": "/routines",
+        "label": "Rotinas",
+        "visible": true
+      },
+      {
+        "href": "/triggers",
+        "label": "Gatilhos",
+        "visible": true
+      },
+      {
+        "href": "/inteligencia",
+        "label": "Integrações",
+        "visible": true
+      }
+    ],
+    "keyboard": true,
+    "routes": true,
+    "fixture": true
+  },
+  {
+    "width": 375,
+    "height": 667,
+    "role": "viewer",
+    "fit": {
+      "scrollHeight": 454,
+      "clientHeight": 454
+    },
+    "links": [
+      {
+        "href": "/",
+        "label": "OmniNexus Live",
+        "visible": true
+      },
+      {
+        "href": "/workspace",
+        "label": "Materiais",
+        "visible": true
+      },
+      {
+        "href": "/agents",
+        "label": "Agentes",
+        "visible": true
+      },
+      {
+        "href": "/inteligencia",
+        "label": "Integrações",
+        "visible": true
+      }
+    ],
+    "keyboard": true,
+    "routes": true,
+    "fixture": true
+  },
+  {
+    "width": 1440,
+    "height": 768,
+    "role": "admin",
+    "fit": {
+      "scrollHeight": 555,
+      "clientHeight": 555
+    },
+    "links": [
+      {
+        "href": "/",
+        "label": "OmniNexus Live",
+        "visible": true
+      },
+      {
+        "href": "/missions",
+        "label": "Missões",
+        "visible": true
+      },
+      {
+        "href": "/kanban",
+        "label": "Kanban",
+        "visible": true
+      },
+      {
+        "href": "/workspace",
+        "label": "Materiais",
+        "visible": true
+      },
+      {
+        "href": "/agents",
+        "label": "Agentes",
+        "visible": true
+      },
+      {
+        "href": "/heartbeats",
+        "label": "Heartbeats",
+        "visible": true
+      },
+      {
+        "href": "/routines",
+        "label": "Rotinas",
+        "visible": true
+      },
+      {
+        "href": "/triggers",
+        "label": "Gatilhos",
+        "visible": true
+      },
+      {
+        "href": "/inteligencia",
+        "label": "Integrações",
+        "visible": true
+      }
+    ],
+    "keyboard": true,
+    "routes": true,
+    "fixture": true
+  },
+  {
+    "width": 1440,
+    "height": 768,
+    "role": "viewer",
+    "fit": {
+      "scrollHeight": 555,
+      "clientHeight": 555
+    },
+    "links": [
+      {
+        "href": "/",
+        "label": "OmniNexus Live",
+        "visible": true
+      },
+      {
+        "href": "/workspace",
+        "label": "Materiais",
+        "visible": true
+      },
+      {
+        "href": "/agents",
+        "label": "Agentes",
+        "visible": true
+      },
+      {
+        "href": "/inteligencia",
+        "label": "Integrações",
+        "visible": true
+      }
+    ],
+    "keyboard": true,
+    "routes": true,
+    "fixture": true
+  }
+]

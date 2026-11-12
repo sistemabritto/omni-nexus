@@ -72,6 +72,7 @@ jobs:
           tests/backend/test_share_publico.py
           tests/backend/test_telegram_provider_bot.py tests/backend/test_telegram_continuity.py
           tests/backend/test_runtime_preflight.py tests/backend/test_approval_expiration_state.py
+          tests/backend/test_openreply_draft_guard.py tests/backend/test_reels_card_ficha.py
           tests/goals tests/tickets tests/heartbeats
           tests/media/test_media_retry_loop.py tests/media/test_routes_media_jobs.py
           -q
@@ -187,6 +188,8 @@ jobs:
             --mount type=volume,src=live-supervisor-data,dst=/workspace/dashboard/data,volume-nocopy \
             --mount type=volume,src=live-supervisor-config,dst=/workspace/config,volume-nocopy \
             --mount type=bind,src="$GITHUB_WORKSPACE/qa/live-image-smoke",dst=/smoke,readonly \
+            --mount type=bind,src="$GITHUB_WORKSPACE/qa/live-image-smoke/fixture-key.txt",dst=/run/secrets/smoke_fixture_key,readonly \
+            -e GEMINI_API_KEY_FILE=/run/secrets/smoke_fixture_key \
             -e UV_OFFLINE=true "$IMAGE"
       - name: Smoke real supervisor Flask and terminal routes
         run: docker exec -e SMOKE_SUPERVISOR=1 live-supervisor-smoke /workspace/.venv/bin/python /smoke/check.py

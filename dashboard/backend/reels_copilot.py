@@ -9,7 +9,7 @@ Peças:
 - `tick()` (handler in-process do heartbeat reels-copilot): garante 1 reel em voo
 - `generate_reel(theme_hint)` : chama o agente reels-copilot via invoke_with_fallback
   (combo CX-WORKHORSE pelo Bloco F), valida o JSON e grava na tabela `reels`
-- `create_openreply_campaign(row)` : INSERT no Postgres compartilhado via SSH
+- `create_openreply_campaign(row)` : rascunho inativo no Postgres compartilhado direto
   (mesmo caminho da skill custom-int-openreply; best-effort)
 - `build_card(row)` / `_send_card` : card de aprovação no Magneto (HTML)
 - `decide(reel_id, decision, feedback)` : chamado pela bridge do bot
@@ -259,8 +259,6 @@ def generate_reel(theme_hint: str | None = None) -> dict:
     finally:
         conn.close()
 
-    _write_artifact(row)
-
     # Campanha OpenReply (best-effort — falha não derruba a geração)
     camp = create_openreply_campaign(row)
     conn = _connect()
@@ -273,6 +271,9 @@ def generate_reel(theme_hint: str | None = None) -> dict:
     finally:
         conn.close()
 
+    row["openreply_status"] = camp.get("status", "failed")
+    row["openreply_campaign_id"] = camp.get("automation_id")
+    _write_artifact(row)
     sent = send_reel_card(row)
     log.info("reels_copilot gerado seq=%d status=campaign:%s card=%s", row["seq"], camp.get("status"), sent)
     return {"ok": True, "reel": row, "openreply": camp, "card_sent": sent}
@@ -296,7 +297,7 @@ def _write_artifact(row: dict) -> None:
         log.warning("reels_copilot artifact fail: %s", exc)
 
 
-# ── OpenReply (SSH → Postgres compartilhado) ─────────────────────────────────
+# ── OpenReply (Postgres direto) ─────────────────────────────────
 
 
 def _cuid_like(prefix_len: int = 25) -> str:
@@ -328,32 +329,39 @@ def _openreply_pg_connect():
 
 
 def create_openreply_campaign(row: dict) -> dict:
-    """Cria a campanha 'próximo reel' (pendingNextReel=true) — o worker do
-    OpenReply amarra sozinho ao próximo reel publicado. Best-effort: falha de DB
-    devolve status='failed' e a geração segue (não derruba o roteiro/card)."""
+    """Prepare an inactive campaign draft; link/activation need separate review.
+
+    pendingNextReel alone does not prevent sending once a reel is bound.
+    Database failure remains best-effort and never exposes credentials.
+    """
     keyword = f"{int(row['seq']):02d}"
     name = f"Reels Copilot {keyword} — próximo Reel"
     dm_message = f"Opa {{username}}! Aqui está a recompensa que você pediu: veja {row.get('bait_text') or 'o material completo'} 👇 {{link}}"
     public_reply = f"Aqui está! Confere {row.get('bait_text') or 'o guia'} que preparei p/ você 😉 @{{username}}"
     aid = _cuid_like()
 
-    sql = (
-        'INSERT INTO "Automation" ('
-        'id, "workspaceId", "instagramAccountId", name, goal, "postId", "postUrl", '
-        '"pendingNextReel", "matchAnyPost", keywords, "matchAnyWord", "dmTriggerEnabled", '
-        '"dmMessage", "openingDmEnabled", "openingDmMessage", "openingDmButtonLabel", '
-        '"linkButtonLabel", "requireFollow", "followPromptMessage", "followPromptButtonLabel", '
-        '"followUpEnabled", "followUpMessage", "followUpDelayMinutes", '
-        '"publicReplyEnabled", "publicReplyMessage", "publicReplyMessages", '
-        '"isActive", "wholeWordMatch", "reportShareSlug", "reportShareEnabled", '
-        '"createdAt", "updatedAt") '
-        'VALUES (%s,%s,%s,%s,NULL,NULL,NULL,true,false,ARRAY[%s],false,true,'
-        '%s,false,NULL,NULL,%s,'
-        'false,NULL,NULL,false,NULL,0,true,NULL,ARRAY[%s],'
-        'true,true,NULL,true,(now() AT TIME ZONE \'UTC\'),(now() AT TIME ZONE \'UTC\'))'
-    )
-    params = (aid, OPENREPLY_WORKSPACE_ID, OPENREPLY_INSTRAM_ID, name, keyword,
-              dm_message, "Abrir o guia", public_reply)
+    # A generated script is not authorization to message people. Delivery URL
+    # and activation need a separate review; never create a live {link} message
+    # before a TrackedLink exists. Existing campaigns are not modified here.
+    fields = {
+        "id": aid, "workspaceId": OPENREPLY_WORKSPACE_ID,
+        "instagramAccountId": OPENREPLY_INSTRAM_ID, "name": name,
+        "goal": None, "postId": None, "postUrl": None,
+        "pendingNextReel": True, "matchAnyPost": False, "keywords": [keyword],
+        "matchAnyWord": False, "dmTriggerEnabled": False, "dmMessage": dm_message,
+        "openingDmEnabled": False, "openingDmMessage": None,
+        "openingDmButtonLabel": None, "linkButtonLabel": "Abrir o guia",
+        "requireFollow": False, "followPromptMessage": None,
+        "followPromptButtonLabel": None, "followUpEnabled": False,
+        "followUpMessage": None, "followUpDelayMinutes": 0,
+        "publicReplyEnabled": False, "publicReplyMessage": None,
+        "publicReplyMessages": [public_reply], "isActive": False,
+        "wholeWordMatch": True, "reportShareSlug": None, "reportShareEnabled": False,
+    }
+    sql = ('INSERT INTO "Automation" (' + ','.join('"' + k + '"' for k in fields)
+           + ',"createdAt","updatedAt") VALUES (' + ','.join(['%s'] * len(fields))
+           + ",(now() AT TIME ZONE 'UTC'),(now() AT TIME ZONE 'UTC'))")
+    params = tuple(fields.values())
     try:
         conn = _openreply_pg_connect()
         if conn is None:
@@ -363,11 +371,16 @@ def create_openreply_campaign(row: dict) -> dict:
             with conn.cursor() as cur:
                 cur.execute(sql, params)
             conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
         finally:
             conn.close()
-        return {"ok": True, "status": "created", "automation_id": aid, "name": name, "keyword": keyword}
-    except Exception as exc:  # noqa: BLE001 — campanha é best-effort
-        return {"ok": False, "status": "failed", "error": str(exc)[:200]}
+        return {"ok": True, "status": "draft", "automation_id": aid, "name": name,
+                "keyword": keyword, "activation_required": True, "delivery_link_required": True}
+    except Exception as exc:  # noqa: BLE001 — campaign is best-effort, errors may contain credentials
+        log.warning("OpenReply draft creation failed: %s", type(exc).__name__)
+        return {"ok": False, "status": "failed", "error": "openreply_draft_creation_failed"}
 
 
 # ── Ficha de criativo (artefato) + card Magneto ───────────────────────────────

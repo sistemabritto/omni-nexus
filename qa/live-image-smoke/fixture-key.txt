@@ -1,0 +1,1 @@
+fixture-live-secret-file-smoke

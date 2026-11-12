@@ -125,8 +125,8 @@ def tick() -> dict:
 
     alerted = False
     if goals or tickets or stale_blocked:
-        from notifications import send_telegram_alert
-        alerted = send_telegram_alert(_build_alert(goals, tickets, stale_blocked))
+        from notifications import send_heartbeat_alert
+        alerted = send_heartbeat_alert(_build_alert(goals, tickets, stale_blocked))
 
     log.info(
         "deadline_check.tick: overdue_goals=%d overdue_tickets=%d stale_blocked=%d alerted=%s",

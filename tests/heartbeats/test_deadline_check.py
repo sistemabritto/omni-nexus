@@ -51,7 +51,7 @@ def _conn(db_file):
 
 
 def test_no_overdue_items_does_not_alert(db):
-    with patch("notifications.send_telegram_alert") as mock_alert:
+    with patch("notifications.send_heartbeat_alert") as mock_alert:
         result = deadline_check.tick()
     mock_alert.assert_not_called()
     assert result == {"overdue_goals": 0, "overdue_tickets": 0, "stale_blocked_tickets": 0, "alerted": False}
@@ -63,7 +63,7 @@ def test_overdue_goal_triggers_alert(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert", return_value=True) as mock_alert:
+    with patch("notifications.send_heartbeat_alert", return_value=True) as mock_alert:
         result = deadline_check.tick()
 
     mock_alert.assert_called_once()
@@ -79,7 +79,7 @@ def test_overdue_ticket_triggers_alert(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert", return_value=True) as mock_alert:
+    with patch("notifications.send_heartbeat_alert", return_value=True) as mock_alert:
         result = deadline_check.tick()
 
     body = mock_alert.call_args[0][0]
@@ -95,7 +95,7 @@ def test_achieved_goal_past_due_date_is_ignored(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert") as mock_alert:
+    with patch("notifications.send_heartbeat_alert") as mock_alert:
         result = deadline_check.tick()
     mock_alert.assert_not_called()
     assert result["overdue_goals"] == 0
@@ -107,7 +107,7 @@ def test_resolved_ticket_past_due_date_is_ignored(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert") as mock_alert:
+    with patch("notifications.send_heartbeat_alert") as mock_alert:
         result = deadline_check.tick()
     mock_alert.assert_not_called()
 
@@ -118,7 +118,7 @@ def test_future_due_date_does_not_alert(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert") as mock_alert:
+    with patch("notifications.send_heartbeat_alert") as mock_alert:
         deadline_check.tick()
     mock_alert.assert_not_called()
 
@@ -136,7 +136,7 @@ def test_stale_blocked_ticket_without_due_date_triggers_alert(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert", return_value=True) as mock_alert:
+    with patch("notifications.send_heartbeat_alert", return_value=True) as mock_alert:
         result = deadline_check.tick()
 
     mock_alert.assert_called_once()
@@ -156,7 +156,7 @@ def test_recently_blocked_ticket_does_not_alert(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert") as mock_alert:
+    with patch("notifications.send_heartbeat_alert") as mock_alert:
         result = deadline_check.tick()
     mock_alert.assert_not_called()
     assert result["stale_blocked_tickets"] == 0
@@ -174,7 +174,7 @@ def test_stale_blocked_ticket_with_due_date_is_not_double_counted(db):
     conn.commit()
     conn.close()
 
-    with patch("notifications.send_telegram_alert", return_value=True):
+    with patch("notifications.send_heartbeat_alert", return_value=True):
         result = deadline_check.tick()
     assert result["overdue_tickets"] == 1
     assert result["stale_blocked_tickets"] == 0

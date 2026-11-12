@@ -3,8 +3,8 @@ import { createManagedContextTools, prepareManagedContext, requestManagedSignedS
 import { encodePCM, Playback } from './audio'
 type Connection = import('@elevenlabs/client').WebSocketConnection
 type Message = {author:string;text:string}
-type State = {phase:'idle'|'connecting'|'connected';status:string;mic:boolean;company:string;agent:string;messages:Message[];runtimeSessionId:string}
-const initial:State={phase:'idle',status:'Selecione empresa e agente. Microfone desligado.',mic:false,company:'',agent:'',messages:[],runtimeSessionId:''}
+type State = {phase:'idle'|'connecting'|'connected';status:string;mic:boolean;companyId:number|null;contextChanged:boolean;company:string;agent:string;messages:Message[];runtimeSessionId:string}
+const initial:State={phase:'idle',status:'Selecione empresa e agente. Microfone desligado.',mic:false,companyId:null,contextChanged:false,company:'',agent:'',messages:[],runtimeSessionId:''}
 export class ManagedSession {
   private state:State={...initial}; private listeners=new Set<()=>void>(); private connection:Connection|null=null
   private tools:ReturnType<typeof createManagedContextTools>|null=null; private generation=0; private micStarting=false
@@ -17,7 +17,7 @@ export class ManagedSession {
   private message(author:string,text:string){this.patch({messages:[...this.state.messages,{author,text}]})}
   async start(companyId:number,company:string,agent:string){
     if(this.state.phase!=='idle')return
-    const generation=++this.generation;this.patch({phase:'connecting',status:'Preparando sessão autorizada…',company,agent,messages:[],runtimeSessionId:''})
+    const generation=++this.generation;this.patch({phase:'connecting',status:'Preparando sessão autorizada…',companyId,contextChanged:false,company,agent,messages:[],runtimeSessionId:''})
     try {
       const context=await prepareManagedContext(companyId,agent);if(generation!==this.generation)return
       const signed=await requestManagedSignedSession(context.contextId);if(generation!==this.generation)return
@@ -48,6 +48,11 @@ export class ManagedSession {
       if(generation!==this.generation)return
       this.patch({phase:'connected',runtimeSessionId:context.runtimeSessionId,status:'Conectado por texto. Ative o microfone quando quiser falar.'})
     } catch {if(generation===this.generation)this.end('Não foi possível iniciar. Verifique acesso e configuração do servidor.')}
+  }
+  syncCompany(companyId:number|null){
+    if(this.state.companyId===null || this.state.companyId===companyId)return
+    this.end()
+    this.patch({...initial,messages:[],contextChanged:true,status:'Empresa alterada no menu global. A conversa anterior foi encerrada e o microfone desligado. Inicie uma nova conversa para usar a empresa atual.'})
   }
   send(text:string){if(this.state.phase!=='connected' || !text.trim())return;this.connection?.sendMessage({type:'user_message',text:text.trim()});this.message('Você · texto',text.trim())}
   async toggleMic(){

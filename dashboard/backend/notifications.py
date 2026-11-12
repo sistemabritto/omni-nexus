@@ -189,6 +189,18 @@ def _send_telegram(text: str, *, preview: bool = False) -> bool:
     return ok
 
 
+def heartbeat_telegram_enabled() -> bool:
+    """Heartbeat delivery is opt-in; unrelated Telegram channels stay available."""
+    return os.environ.get("HEARTBEAT_TELEGRAM_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def send_heartbeat_alert(text: str) -> bool:
+    """Deliver a heartbeat operational alert only under its dedicated policy."""
+    if not heartbeat_telegram_enabled():
+        return False
+    return _send_telegram(text)
+
+
 def send_telegram_alert(text: str) -> bool:
     """Send a preformatted Telegram alert.
 
@@ -480,6 +492,8 @@ def notify_heartbeat_success(heartbeat_id: str, agent: str, duration_ms: int,
                             model: str = "", cost_usd: float = 0,
                             tokens_in: int = 0, tokens_out: int = 0) -> bool:
     """Report heartbeat success to Telegram."""
+    if not heartbeat_telegram_enabled():
+        return False
     if not _should_send("heartbeat_success", heartbeat_id):
         return False
 
@@ -501,6 +515,8 @@ def notify_heartbeat_success(heartbeat_id: str, agent: str, duration_ms: int,
 def notify_heartbeat_failure(heartbeat_id: str, agent: str, error: str,
                              duration_ms: int = 0, attempt: int = 0) -> bool:
     """Report heartbeat failure to Telegram."""
+    if not heartbeat_telegram_enabled():
+        return False
     if not _should_send("heartbeat_failure", heartbeat_id):
         return False
 

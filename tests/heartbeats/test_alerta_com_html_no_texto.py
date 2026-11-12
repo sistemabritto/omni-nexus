@@ -50,6 +50,11 @@ def _sem_html_cru(texto: str, veneno: str) -> bool:
 
 # ── heartbeat_runner: o preview do erro ──────────────────────────────────
 
+@pytest.fixture(autouse=True)
+def _opt_in_heartbeat_delivery(monkeypatch):
+    monkeypatch.setenv("HEARTBEAT_TELEGRAM_ENABLED", "1")
+
+
 @pytest.mark.parametrize("veneno", VENENOS)
 def test_preview_de_erro_vai_escapado(veneno, monkeypatch):
     import heartbeat_runner as hr

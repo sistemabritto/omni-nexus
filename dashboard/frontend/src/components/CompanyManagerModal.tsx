@@ -1,7 +1,8 @@
 // Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
-import { useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Upload, Building2 } from 'lucide-react'
+import DialogFrame from './DialogFrame'
 import { api } from '../lib/api'
 import type { Company } from '../context/CompanyContext'
 import { useCompanies } from '../context/CompanyContext'
@@ -48,6 +49,11 @@ export default function CompanyManagerModal({
   const [error, setError] = useState('')
   const [created, setCreated] = useState<Company | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const fieldId = useId()
+  const formRef = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    if (error) formRef.current?.querySelector<HTMLButtonElement>('button[type="submit"]')?.scrollIntoView({ block: 'nearest' })
+  }, [error])
 
   async function uploadLogo(file: File) {
     // Em modo criar, upload só depois de existir — salva logo_path via PATCH
@@ -126,9 +132,9 @@ export default function CompanyManagerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+    <DialogFrame label={isCreate ? t('nav.companies.newTitle') : company!.name} onClose={onClose} busy={busy} size="small">
       <div
-        className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-sm mx-4 p-5 max-h-[90vh] overflow-y-auto"
+        className="p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -138,19 +144,19 @@ export default function CompanyManagerModal({
               {isCreate ? t('nav.companies.newTitle') : company!.name}
             </h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60">
+          <button aria-label={t('common.close')} disabled={busy} onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60">
             <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={save} className="space-y-3">
+        <form ref={formRef} onSubmit={save} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
+            <label htmlFor={`${fieldId}-name`} className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.nameLabel')}
             </label>
             <input
               type="text"
-              value={name}
+              id={`${fieldId}-name`} aria-required="true" value={name}
               onChange={(e) => {
                 setName(e.target.value)
                 if (!slugTouched) setSlug(slugify(e.target.value))
@@ -163,28 +169,28 @@ export default function CompanyManagerModal({
 
           {isCreate && (
             <div>
-              <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
+              <label htmlFor={`${fieldId}-slug`} className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
                 {t('nav.companies.slugLabel')}
               </label>
               <input
                 type="text"
-                value={slug}
+                id={`${fieldId}-slug`} value={slug}
                 onChange={(e) => { setSlugTouched(true); setSlug(slugify(e.target.value)) }}
                 placeholder={t('nav.companies.slugPlaceholder')}
                 className="w-full bg-[color:var(--bg-primary)] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[color:var(--evo-green)] focus:outline-none font-mono"
               />
-              <p className="text-[10px] text-[#484f58] mt-1">{t('nav.companies.slugHint')}</p>
+              <p className="text-[10px] text-[color:var(--text-muted)] mt-1">{t('nav.companies.slugHint')}</p>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
+            <label htmlFor={`${fieldId}-cnpj`} className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.cnpjLabel')}
             </label>
             <input
               type="text"
               inputMode="numeric"
-              value={cnpj}
+              id={`${fieldId}-cnpj`} value={cnpj}
               onChange={(e) => setCnpj(formatCnpj(e.target.value))}
               placeholder={t('nav.companies.cnpjPlaceholder')}
               className="w-full bg-[color:var(--bg-primary)] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[color:var(--evo-green)] focus:outline-none"
@@ -192,12 +198,12 @@ export default function CompanyManagerModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
+            <label htmlFor={`${fieldId}-domain`} className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.domainLabel')}
             </label>
             <input
               type="text"
-              value={domain}
+              id={`${fieldId}-domain`} value={domain}
               onChange={(e) => setDomain(e.target.value)}
               placeholder={t('nav.companies.domainPlaceholder')}
               className="w-full bg-[color:var(--bg-primary)] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white placeholder-[#484f58] focus:border-[color:var(--evo-green)] focus:outline-none"
@@ -205,19 +211,21 @@ export default function CompanyManagerModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
+            <label htmlFor={`${fieldId}-logo`} className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1">
               {t('nav.companies.upload')}
             </label>
             <div className="flex items-center gap-3">
               {preview ? (
                 <img src={preview} alt="" className="h-10 w-auto max-w-[120px] object-contain" />
               ) : (
-                <div className="h-10 w-10 rounded-md bg-white/5 flex items-center justify-center text-[#484f58]">
+                <div className="h-10 w-10 rounded-md bg-white/5 flex items-center justify-center text-[color:var(--text-muted)]">
                   <Building2 size={18} />
                 </div>
               )}
               <input
                 ref={fileRef}
+                id={`${fieldId}-logo`}
+                disabled={busy || (isCreate && !created)}
                 type="file"
                 accept=".png,.webp,.jpg,.jpeg,.svg"
                 className="hidden"
@@ -247,11 +255,11 @@ export default function CompanyManagerModal({
               )}
             </div>
             {isCreate && !created && (
-              <p className="text-[10px] text-[#484f58] mt-1">{t('nav.companies.logoAfterCreate')}</p>
+              <p className="text-[10px] text-[color:var(--text-muted)] mt-1">{t('nav.companies.logoAfterCreate')}</p>
             )}
           </div>
 
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p role="alert" className="text-xs text-red-400">{error}</p>}
 
           {isCreate && created ? (
             <div className="rounded-lg bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 px-3 py-2.5 text-xs text-[color:var(--evo-green)] space-y-2">
@@ -276,6 +284,6 @@ export default function CompanyManagerModal({
           )}
         </form>
       </div>
-    </div>
+    </DialogFrame>
   )
 }

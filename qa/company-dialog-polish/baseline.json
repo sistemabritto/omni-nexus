@@ -1,0 +1,14 @@
+[
+  {
+    "viewport": 375,
+    "overlayWidth": 299,
+    "insideTransformedSidebar": true,
+    "dialogSemantic": false
+  },
+  {
+    "viewport": 1440,
+    "overlayWidth": 239,
+    "insideTransformedSidebar": true,
+    "dialogSemantic": false
+  }
+]

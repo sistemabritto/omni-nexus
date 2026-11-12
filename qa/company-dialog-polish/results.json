@@ -1,0 +1,86 @@
+[
+  {
+    "width": 375,
+    "dialogWidth": 343,
+    "left": 16,
+    "right": 359,
+    "bottom": 575,
+    "viewportHeight": 900,
+    "insideSidebar": false,
+    "nestedFocusContained": true,
+    "escapeClosesOnlyTopDialog": true,
+    "companyFocusRestored": true,
+    "deleteStagesPreserved": true,
+    "failedFormPreservesValues": true,
+    "errorActionVisible": true,
+    "labelsAssociated": true,
+    "deleteErrorVisible": true,
+    "cancelInitiallyFocused": true,
+    "deleteAttempts": [
+      "DELETE"
+    ],
+    "mutations": [
+      {
+        "name": "Studio QA",
+        "slug": "studio-qa",
+        "domain": "qa.invalid"
+      }
+    ]
+  },
+  {
+    "width": 812,
+    "dialogWidth": 448,
+    "left": 182,
+    "right": 630,
+    "bottom": 312.5,
+    "viewportHeight": 375,
+    "insideSidebar": false,
+    "nestedFocusContained": true,
+    "escapeClosesOnlyTopDialog": true,
+    "companyFocusRestored": true,
+    "deleteStagesPreserved": true,
+    "failedFormPreservesValues": true,
+    "errorActionVisible": true,
+    "labelsAssociated": true,
+    "deleteErrorVisible": true,
+    "cancelInitiallyFocused": true,
+    "deleteAttempts": [
+      "DELETE"
+    ],
+    "mutations": [
+      {
+        "name": "Studio QA",
+        "slug": "studio-qa",
+        "domain": "qa.invalid"
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "dialogWidth": 448,
+    "left": 496,
+    "right": 944,
+    "bottom": 575,
+    "viewportHeight": 900,
+    "insideSidebar": false,
+    "nestedFocusContained": true,
+    "escapeClosesOnlyTopDialog": true,
+    "companyFocusRestored": true,
+    "deleteStagesPreserved": true,
+    "failedFormPreservesValues": true,
+    "errorActionVisible": true,
+    "labelsAssociated": true,
+    "deleteErrorVisible": true,
+    "cancelInitiallyFocused": true,
+    "deleteAttempts": [
+      "DELETE"
+    ],
+    "mutations": [
+      {
+        "name": "Studio QA",
+        "slug": "studio-qa",
+        "domain": "qa.invalid"
+      }
+    ]
+  }
+]

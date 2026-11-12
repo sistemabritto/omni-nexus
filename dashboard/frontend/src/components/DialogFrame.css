@@ -1,0 +1,8 @@
+/* Top-layer modal geometry is independent of the transformed navigation drawer. */
+.omn-dialog{box-sizing:border-box;width:min(448px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto;padding:0;border:1px solid var(--border);border-radius:16px;background:var(--bg-card);color:var(--text-primary);font-family:var(--sb-font-body);overflow:auto;overscroll-behavior:contain;scroll-padding:16px;box-shadow:0 24px 80px #0008}
+.omn-dialog[data-size=small]{width:min(384px,calc(100vw - 32px))}
+.omn-dialog::backdrop{background:#000a;backdrop-filter:blur(3px)}
+body:has(dialog[data-omni-modal][open]){overflow:hidden!important}
+.omn-dialog :is(button,input:not([type=file]),select){min-height:44px}.omn-dialog button{min-width:44px}.omn-dialog :is(button,input,select,textarea):focus-visible{outline:2px solid var(--evo-green);outline-offset:2px}.omn-dialog :is(h2,h3){font-family:var(--sb-font-heading)}
+@media(max-width:639px){.omn-dialog input:not([type=file]),.omn-dialog select,.omn-dialog textarea{font-size:16px}.omn-dialog label{line-height:1.5}}
+@media(prefers-reduced-motion:reduce){.omn-dialog,.omn-dialog *{transition:none!important;animation:none!important}}

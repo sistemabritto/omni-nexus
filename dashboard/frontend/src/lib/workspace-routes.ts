@@ -1,5 +1,6 @@
 // Display metadata only; authorization remains in App routes and backend.
 export const workspaceAreas = [
+  ['/live', 'Live', 'Conversa por voz'],
   ['/', 'Conversa central', 'Conversa, autoria e sessões'], ['/omninexus', 'Conversa central', 'Conversa, autoria e sessões'],
   ['/overview', 'Painel operacional', 'Visão geral da operação'], ['/agents', 'Squad de agentes', 'Responsáveis e conversas por agente'],
   ['/missions', 'Projetos e missões', 'Objetivos, projetos e entregas'], ['/kanban', 'Quadro de trabalho', 'Tickets e revisão'],

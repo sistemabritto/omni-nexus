@@ -243,7 +243,7 @@ services:
 
   evonexus_scheduler:
     image: excarplex/evo-nexus-runtime:latest
-    command: ["uv", "run", "python", "scheduler.py"]
+    command: ["/workspace/.venv/bin/python", "/workspace/scheduler.py"]
 
     volumes:
       - evonexus_config:/workspace/config

@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, send_from_directory, request, jsonify, g
+from flask import Flask, send_from_directory, request, jsonify, g, session
 from flask_cors import CORS
 from flask_login import LoginManager, current_user, login_user
 
@@ -1355,8 +1355,17 @@ def _try_api_token_auth():
         user = User.query.filter_by(role="admin", is_active=True).order_by(User.id.asc()).first()
     if user is None:
         return False
-    # Log in for this request only (no remember cookie)
-    login_user(user, remember=False, fresh=False)
+    # login_user also writes session state. Restore the original cookie state
+    # so an API token cannot be exchanged for a human browser session, while
+    # retaining Flask-Login's current_user for this request only.
+    previous_session = dict(session)
+    was_modified = session.modified
+    try:
+        login_user(user, remember=False, fresh=False)
+    finally:
+        session.clear()
+        session.update(previous_session)
+        session.modified = was_modified
     g.auth_via_api_token = True
     return True
 
@@ -1423,6 +1432,16 @@ def auth_middleware():
     # rota confere de novo (defesa em profundidade, não depende só daqui).
     if path == "/api/alerts/site" and valid_site_alert_token(request.headers.get("Authorization")):
         return None
+
+    # Live accepts an existing person's cookie only. Never run login_user for
+    # a bearer here: it writes session state, which could otherwise let a
+    # rejected agent exchange its token for an accepted cookie on a later call.
+    if (
+        path.startswith("/api/live/")
+        and not current_user.is_authenticated
+        and request.headers.get("Authorization", "").startswith("Bearer ")
+    ):
+        return jsonify({"error": "cookie_session_required"}), 403
 
     # Try API token auth first (Bearer header) for headless agents / CLI tools
     if not current_user.is_authenticated:

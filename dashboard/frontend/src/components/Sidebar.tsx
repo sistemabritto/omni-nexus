@@ -103,14 +103,14 @@ function loadCollapsedState(): Record<string, boolean> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) return JSON.parse(stored)
-  } catch {}
+  } catch { /* Unavailable storage or invalid JSON falls back to expanded groups. */ }
   return {}
 }
 
 function saveCollapsedState(state: Record<string, boolean>) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {}
+  } catch { /* Navigation remains usable when browser storage is unavailable. */ }
 }
 
 const roleBadgeClass: Record<string, string> = {
@@ -288,6 +288,7 @@ export default function Sidebar() {
     document.body.style.overflow = 'hidden'
     drawerRef.current?.querySelector<HTMLButtonElement>('[data-close-menu]')?.focus()
     const onKey = (event: KeyboardEvent) => {
+      if (document.querySelector('dialog[data-omni-modal][open]')) return
       if (event.key === 'Escape') { setMobileOpen(false); return }
       if (event.key !== 'Tab') return
       const controls = Array.from(drawerRef.current?.querySelectorAll<HTMLElement>('a[href],button:not(:disabled),select,input,[tabindex="0"]') || []).filter(el => el.getBoundingClientRect().width > 0)

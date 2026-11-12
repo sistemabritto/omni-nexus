@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Pencil, Trash2, Building2, AlertTriangle } from 'lucide-react'
+import DialogFrame from './DialogFrame'
 import { api } from '../lib/api'
 import type { Company } from '../context/CompanyContext'
 import { useCompanies } from '../context/CompanyContext'
@@ -33,9 +34,9 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+    <DialogFrame label={t('nav.companies.manageAll')} onClose={onClose} busy={busy}>
       <div
-        className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-md mx-4 p-5 max-h-[85vh] overflow-y-auto"
+        className="p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -43,7 +44,7 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
             <Building2 size={16} className="text-[color:var(--evo-green)]" />
             <h2 className="text-sm font-semibold text-white">{t('nav.companies.manageAll')}</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60">
+          <button aria-label={t('common.close')} disabled={busy} onClick={onClose} className="p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--evo-green)]/60">
             <X size={16} />
           </button>
         </div>
@@ -55,25 +56,25 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                 {c.logo_url ? (
                   <img src={c.logo_url} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
                 ) : (
-                  <div className="h-9 w-9 rounded-lg bg-white/5 flex items-center justify-center text-[#484f58] shrink-0">
+                  <div className="h-9 w-9 rounded-lg bg-white/5 flex items-center justify-center text-[color:var(--text-muted)] shrink-0">
                     <Building2 size={16} />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white truncate">{c.name}</p>
-                  <p className="text-[11px] text-[#484f58] truncate">{c.slug}{c.cnpj ? ` · ${c.cnpj}` : ''}{c.domain ? ` · ${c.domain}` : ''}</p>
+                  <p className="text-[11px] text-[color:var(--text-muted)] truncate">{c.slug}{c.cnpj ? ` · ${c.cnpj}` : ''}{c.domain ? ` · ${c.domain}` : ''}</p>
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <button
                     onClick={() => setEditing(c)}
-                    title={t('nav.companies.edit')}
+                    aria-label={`${t('nav.companies.edit')} ${c.name}`} title={t('nav.companies.edit')}
                     className="p-1.5 rounded-lg bg-white/5 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] hover:bg-white/10 transition-colors"
                   >
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => { setDeleting(c); setConfirmDelete(false); setError('') }}
-                    title={t('nav.companies.delete')}
+                    aria-label={`${t('nav.companies.delete')} ${c.name}`} title={t('nav.companies.delete')}
                     className="p-1.5 rounded-lg bg-white/5 text-[color:var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                   >
                     <Trash2 size={14} />
@@ -84,16 +85,17 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
           ))}
 
           {companies.length === 0 && (
-            <p className="text-xs text-[#484f58] text-center py-6">{t('nav.companies.noneYet')}</p>
+            <p className="text-xs text-[color:var(--text-muted)] text-center py-6">{t('nav.companies.noneYet')}</p>
           )}
         </div>
 
-        {error && <p className="text-xs text-red-400 mt-3">{error}</p>}
+        {error && !deleting && <p role="alert" className="text-xs text-red-400 mt-3">{error}</p>}
 
         {/* 2-stage delete confirm */}
         {deleting && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setDeleting(null)}>
-            <div className="bg-[color:var(--bg-card)] border border-[color:var(--border)] rounded-xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
+          <DialogFrame label={t(confirmDelete ? 'nav.companies.deleteFinal' : 'nav.companies.deleteTitle')} onClose={() => setDeleting(null)} busy={busy} size="small" initialFocusSelector="[data-dialog-cancel]">
+            <div className="p-5" onClick={(e) => e.stopPropagation()}>
+              {error && <p role="alert" className="text-xs text-red-400 mb-3">{error}</p>}
               {!confirmDelete ? (
                 <>
                   <div className="flex items-center gap-2 mb-3">
@@ -111,7 +113,7 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                     >
                       {t('nav.companies.deleteConfirm')}
                     </button>
-                    <button
+                    <button data-dialog-cancel
                       onClick={() => setDeleting(null)}
                       className="flex-1 px-3 py-2 rounded-lg bg-white/5 text-[color:var(--text-muted)] text-xs hover:bg-white/10 transition-colors"
                     >
@@ -136,7 +138,7 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                     >
                       {busy ? t('nav.companies.deleting') : t('nav.companies.deleteGo')}
                     </button>
-                    <button
+                    <button data-dialog-cancel
                       onClick={() => setDeleting(null)}
                       disabled={busy}
                       className="flex-1 px-3 py-2 rounded-lg bg-white/5 text-[color:var(--text-muted)] text-xs hover:bg-white/10 disabled:opacity-50 transition-colors"
@@ -147,7 +149,7 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
                 </>
               )}
             </div>
-          </div>
+          </DialogFrame>
         )}
       </div>
 
@@ -157,6 +159,6 @@ export default function CompanyListModal({ onClose }: { onClose: () => void }) {
           onClose={() => { setEditing(null); reload() }}
         />
       )}
-    </div>
+    </DialogFrame>
   )
 }

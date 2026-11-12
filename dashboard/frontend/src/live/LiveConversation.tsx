@@ -54,6 +54,8 @@ export default function LiveConversation() {
             input.connect(capture); capture.connect(context.destination)
             resources.current.timer = setTimeout(() => { stop(); setStatus('Limite de teste de dois minutos atingido.') }, 120000)
           }
+          if (message.status === 'reconnect_required') { stop(); setStatus('O servidor solicitou uma nova sessão. Clique para reconectar.'); return }
+          if (message.status === 'listening') setStatus('Ouvindo — pode falar em português')
           if (message.interrupted) { playback.stop(); setStatus('Ouvindo — resposta interrompida') }
           if (message.audio) { playback.play(message.audio); setStatus('Respondendo em português — você pode interromper falando') }
           if (message.transcript) setTranscript(previous => (previous + message.transcript).slice(-4000))

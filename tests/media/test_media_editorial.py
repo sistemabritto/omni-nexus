@@ -129,3 +129,76 @@ def test_whole_word_removal_does_not_leave_stale_caption():
     plan = build_editorial_plan(data)
     assert plan["captions"] == [{"word":"ajuda","start":0,"end":1}]
     assert source_to_edited(plan["time_map"], 1) is None
+
+
+def test_editorial_skill_is_discovered_and_served_by_real_loader():
+    """Use the shipped blueprint/frontmatter parser, not a mock skill index."""
+    from flask import Flask
+    import routes.skills as loader
+
+    root = Path(__file__).resolve().parents[2]
+    assert loader.SKILLS_DIR.resolve() == root / '.claude/skills'
+    server = Flask(__name__)
+    server.register_blueprint(loader.bp)
+    client = server.test_client()
+    listed = client.get('/api/skills').get_json()
+    entry = next(skill for skill in listed['skills'] if skill['name'] == 'video-editorial-pipeline')
+    assert entry['description']
+    assert entry['prefix'] == 'video'
+    response = client.get('/api/skills/video-editorial-pipeline')
+    assert response.status_code == 200
+    assert response.mimetype == 'text/markdown'
+    assert loader.parse_frontmatter(response.get_data(as_text=True))['name'] == entry['name']
+
+
+def test_real_loader_entrypoint_links_to_packaged_references():
+    import re
+    from flask import Flask
+    import routes.skills as loader
+
+    server = Flask(__name__)
+    server.register_blueprint(loader.bp)
+    markdown = server.test_client().get('/api/skills/video-editorial-pipeline').get_data(as_text=True)
+    relative_links = re.findall(r'\]\((references/[^)]+)\)', markdown)
+    assert 'references/reference-catalog.md' in relative_links
+    directory = loader.SKILLS_DIR / 'video-editorial-pipeline'
+    for link in relative_links:
+        target = (directory / link).resolve()
+        assert directory.resolve() in target.parents
+        assert target.is_file() and target.stat().st_size > 0
+
+
+def test_worker_scaffold_exposes_editorial_catalog_through_real_skill_symlink(tmp_path, monkeypatch):
+    import shutil
+    from media_workspace import ensure_job_scaffold, new_job_id
+    from routes._helpers import parse_frontmatter
+
+    root = Path(__file__).resolve().parents[2]
+    # Same source tree copied by Dockerfile.media-worker, without Docker/model execution.
+    packaged = tmp_path / 'scoped-skills'
+    shutil.copytree(root / '.claude/skills/video-editorial-pipeline', packaged / 'video-editorial-pipeline')
+    monkeypatch.setenv('MEDIA_WORKSPACE', str(tmp_path / 'media'))
+    monkeypatch.setenv('MEDIA_SKILLS_DIR', str(packaged))
+    base = ensure_job_scaffold(new_job_id())
+    exposed = base / '.claude/skills/video-editorial-pipeline'
+    assert parse_frontmatter((exposed / 'SKILL.md').read_text())['name'] == 'video-editorial-pipeline'
+    assert (exposed / 'references/reference-catalog.md').resolve() == packaged / 'video-editorial-pipeline/references/reference-catalog.md'
+    assert (exposed / 'references/release.md').is_file()
+
+
+def test_long_video_chunk_offsets_use_existing_temporal_contract():
+    data = fixture()
+    data.update(source_duration_seconds=7210,
+                words=[{'word':'primeira','start':3601,'end':3602}, {'word':'tardia','start':7205,'end':7206}],
+                keep=[{'start':3600,'end':3603}, {'start':7204,'end':7208}],
+                beats=[{'start':0,'end':3,'speech':'primeira','sound':'voz',
+                        'elements':[{'kind':'caption','position':'safe zone','word_index':0}]},
+                       {'start':3,'end':7,'speech':'tardia','sound':'voz',
+                        'elements':[{'kind':'caption','position':'safe zone','word_index':1}]}])
+    plan = build_editorial_plan(data)
+    assert source_to_edited(plan['time_map'], 7205) == 4
+    assert source_to_edited(plan['time_map'], 7000) is None
+    assert plan['captions'][1] == {'word':'tardia','start':4,'end':5}
+    data['words'][1].update(start=0, end=1)  # a chunk reset is not a global source timestamp
+    with pytest.raises(EditorialPlanError):
+        build_editorial_plan(data)

@@ -12,7 +12,7 @@ function cspPlugin(): Plugin {
     name: 'csp-connect-src',
     transformIndexHtml(html: string, ctx: IndexHtmlTransformContext) {
       const isDev = Boolean(ctx.server)
-      const connectSrc = isDev ? "connect-src 'self' ws://localhost:5173" : "connect-src 'self'"
+      const connectSrc = isDev ? "connect-src 'self' ws://localhost:5173 wss://api.elevenlabs.io" : "connect-src 'self' wss://api.elevenlabs.io"
       const csp = [
         "default-src 'self'",
         connectSrc,

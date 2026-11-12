@@ -1,6 +1,7 @@
 // Modified 2026-10-15: OmniNexus workspace entry; original EvoNexus console retained.
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { managedSession } from './live/managed-session'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { hydrateAgentMeta } from './lib/agent-meta'
 import { hydratePluginUiRegistry } from './lib/plugin-ui-registry'
@@ -19,6 +20,7 @@ const ShareView = lazyDefault(() => import('./pages/ShareView'))
 const Docs = lazyDefault(() => import('./pages/Docs'))
 const OmniNexus = lazyDefault(() => import('./pages/OmniNexus'))
 const LiveConversation = lazyDefault(() => import('./live/LiveConversation'))
+const ManagedNexusLive = lazyDefault(() => import('./live/ManagedNexusLive'))
 const Overview = lazyDefault(() => import('./pages/Overview'))
 const Agents = lazyDefault(() => import('./pages/Agents'))
 const AgentDetail = lazyDefault(() => import('./pages/AgentDetail'))
@@ -140,6 +142,9 @@ function AppContent() {
   const isTicketDetail = /^\/tickets\/[^/]+$/.test(location.pathname)
   const isWorkspace = location.pathname === '/workspace' || location.pathname.startsWith('/workspace/')
   const { user, loading, needsSetup, hasPermission } = useAuth()
+  useEffect(() => {
+    return () => managedSession.reset()
+  }, [user?.id])
   const extUser = user as (typeof user & OnboardingUser) | null
 
   // Wave 2.0/2.1: hydrate registries once per authenticated session.
@@ -254,10 +259,13 @@ function AppContent() {
                 </Suspense>
               } />
 
-              <Route path="/" element={new URLSearchParams(location.search).has('tab') ? <RedirectPreserveQuery to="/overview" /> : <OmniNexus />} />
+              <Route path="/" element={new URLSearchParams(location.search).has('tab') ? <RedirectPreserveQuery to="/overview" /> : <Navigate to="/live" replace />} />
               <Route path="/overview" element={<Overview />} />
-              <Route path="/omninexus" element={<OmniNexus />} />
-              <Route path="/live" element={<LiveConversation />} />
+              <Route path="/omninexus" element={<Navigate to="/live" replace />} />
+              <Route path="/cockpit" element={<OmniNexus />} />
+              <Route path="/live" element={<ManagedNexusLive />} />
+              <Route path="/live/nexus" element={<Navigate to="/live" replace />} />
+              <Route path="/live/gemini" element={<LiveConversation />} />
               <Route path="/workspace/*" element={<Workspace />} />
               <Route path="/agents" element={<Agents />} />
               <Route path="/agents/:name" element={<AgentDetail />} />

@@ -59,6 +59,17 @@ jobs:
       - name: Sync Python dependencies
         run: uv sync --frozen --dev
 
+      - name: Set up Node for real runtime HTTP fixture
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/terminal-server/package-lock.json
+
+      - name: Install runtime fixture dependencies
+        working-directory: dashboard/terminal-server
+        run: npm ci
+
       # tests/goals, tests/tickets e tests/heartbeats nunca rodavam em PR —
       # eram 47 dos ~50 arquivos de teste no ponto cego. Todos os defeitos da
       # auditoria de 2026-07-27 (CHECK sem 'archived', HTML não escapado no
@@ -71,7 +82,7 @@ jobs:
         run: >
           uv run python -m pytest
           tests/backend/test_auth_security.py
-          tests/backend/test_health_routes.py tests/backend/test_live_disabled_routes.py
+          tests/backend/test_health_routes.py tests/backend/test_managed_live_context.py tests/backend/test_logo_design_skill.py tests/backend/test_creative_brief_skill.py tests/backend/test_live_disabled_routes.py
           tests/backend/test_live_transport.py tests/backend/test_live_model_policy.py tests/backend/test_live_socket_integration.py tests/backend/test_live_app_wiring.py
           tests/backend/test_share_publico.py
           tests/backend/test_telegram_provider_bot.py tests/backend/test_telegram_continuity.py
@@ -129,6 +140,11 @@ jobs:
       - name: Build frontend
         working-directory: dashboard/frontend
         run: npm run build
+
+      - name: Test managed Live client tool and single simulated session
+        run: |
+          node qa/managed-live-context/client-tests.cjs
+          node qa/managed-live-context/session-tests.cjs
 
   image-boot-smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.image_boot_smoke

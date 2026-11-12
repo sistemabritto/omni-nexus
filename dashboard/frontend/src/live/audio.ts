@@ -8,14 +8,15 @@ export class Playback {
   private nodes = new Set<AudioBufferSourceNode>();
   private next = 0;
   private context: AudioContext;
-  constructor(context: AudioContext) { this.context = context; }
+  private sampleRate:number;
+  constructor(context: AudioContext, sampleRate = 24000) { this.context = context; this.sampleRate=sampleRate; }
   play(data: string) {
     const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
     if (!bytes.length || bytes.length % 2) return;
     // Bound latency and memory if a tab stalls.
     if (this.next - this.context.currentTime > 5) this.stop();
     const view = new DataView(bytes.buffer);
-    const buffer = this.context.createBuffer(1, bytes.length / 2, 24000);
+    const buffer = this.context.createBuffer(1, bytes.length / 2, this.sampleRate);
     const channel = buffer.getChannelData(0);
     for (let i = 0; i < channel.length; i++) channel[i] = view.getInt16(i * 2, true) / 32768;
     const source = this.context.createBufferSource();

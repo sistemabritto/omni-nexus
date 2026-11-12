@@ -11,7 +11,7 @@ async function fetch(url,options){const body=options.body?JSON.parse(options.bod
  else if(url.endsWith('/work-events'))data={saved:true};
  else throw Error('Unexpected route '+url);
  return {ok:status===200,status,json:async()=>data};}
-function load(file){if(cache[file])return cache[file].exports;const module={exports:{}};cache[file]=module;const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(js,{module,exports:module.exports,require:name=>load(path.resolve(path.dirname(file),name+'.ts')),fetch,Error,Number,JSON,Map,Set,crypto,setInterval:()=>1,clearInterval:()=>{},console});return module.exports}
+function load(file){if(cache[file])return cache[file].exports;const module={exports:{}};cache[file]=module;const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(js,{module,exports:module.exports,require:name=>load(path.resolve(path.dirname(file),name+'.ts')),fetch,Error,Number,JSON,Map,Set,crypto,TextEncoder,setInterval:()=>1,clearInterval:()=>{},console});return module.exports}
 const root=path.resolve('dashboard/frontend/src/live'),{ContinuitySession,safeWorkLink}=load(root+'/continuity-session.ts'),{ManagedSession}=load(root+'/managed-session.ts');
 const tick=()=>new Promise(resolve=>setTimeout(resolve,20));
 (async()=>{

@@ -86,6 +86,16 @@ def _get_agent_slugs() -> set[str]:
     return slugs
 
 
+def _validated_assignee(value):
+    """Use the same persona inventory as ticket creation; never invent an owner."""
+    if value is not None and not isinstance(value, str):
+        raise ValueError("invalid_assignee_agent")
+    agent = (value or "").strip() or None
+    if agent and agent not in _get_agent_slugs():
+        raise ValueError("invalid_assignee_agent")
+    return agent
+
+
 def _fire_mention_triggers(ticket_id: str, comment_id: str, mentions: list[str], author: str):
     """Insert heartbeat_triggers rows for each mentioned agent (F1.1 integration stub).
 
@@ -336,6 +346,13 @@ def update_ticket(ticket_id: str):
 
     ticket = Ticket.query.get_or_404(ticket_id)
     data = request.get_json() or {}
+    if "assignee_agent" in data:
+        try:
+            data["assignee_agent"] = _validated_assignee(data["assignee_agent"])
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        if set(data) == {"assignee_agent"} and data["assignee_agent"] == ticket.assignee_agent:
+            return jsonify(ticket.to_dict())
     changes: dict = {}
     old_goal_id = ticket.goal_id
 
@@ -658,6 +675,19 @@ def bulk_action():
     if action not in ALLOWED_ACTIONS:
         return jsonify({"error": f"action must be one of {ALLOWED_ACTIONS}"}), 400
 
+    if action == "reassign":
+        try:
+            payload["assignee_agent"] = _validated_assignee(payload.get("assignee_agent"))
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        # Validate the whole batch before mutating any ticket; thread owners
+        # have the same immutability guarantee as the individual PATCH route.
+        for tid in ids:
+            candidate = Ticket.query.get(tid)
+            if (candidate and candidate.memory_md_path is not None
+                    and candidate.assignee_agent != payload["assignee_agent"]):
+                return jsonify({"error": "agent_immutable_in_thread_mode"}), 409
+
     now = _now()
     updated = 0
     goal_ids_to_recompute: set[int] = set()
@@ -692,6 +722,8 @@ def bulk_action():
                 _log_activity(tid, current_user.username, "deleted", {})
             elif action == "reassign":
                 new_agent = payload.get("assignee_agent")
+                if new_agent == ticket.assignee_agent:
+                    continue
                 ticket.assignee_agent = new_agent
                 ticket.updated_at = now
                 _log_activity(tid, current_user.username, "assigned", {"assignee_agent": new_agent})

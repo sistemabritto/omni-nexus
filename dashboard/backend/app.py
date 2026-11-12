@@ -1468,6 +1468,7 @@ from routes.media_jobs import bp as media_jobs_bp
 from routes.integrations_core_postiz import bp as integrations_core_postiz_bp
 from routes.approvals import bp as approvals_bp
 from routes.health import bp as health_bp
+from routes.live import bp as live_bp
 from routes.knowledge import bp as knowledge_bp
 from routes.knowledge_public import bp as knowledge_public_bp
 from routes.knowledge_proxy import bp as knowledge_proxy_bp
@@ -1553,6 +1554,7 @@ app.register_blueprint(media_jobs_bp)
 app.register_blueprint(integrations_core_postiz_bp)
 app.register_blueprint(approvals_bp)
 app.register_blueprint(health_bp)
+app.register_blueprint(live_bp)
 app.register_blueprint(knowledge_bp)
 app.register_blueprint(knowledge_public_bp)
 app.register_blueprint(knowledge_proxy_bp)

@@ -17,6 +17,7 @@ const Login = lazyDefault(() => import('./pages/Login'))
 const ShareView = lazyDefault(() => import('./pages/ShareView'))
 const Docs = lazyDefault(() => import('./pages/Docs'))
 const OmniNexus = lazyDefault(() => import('./pages/OmniNexus'))
+const LiveConversation = lazyDefault(() => import('./live/LiveConversation'))
 const Overview = lazyDefault(() => import('./pages/Overview'))
 const Agents = lazyDefault(() => import('./pages/Agents'))
 const AgentDetail = lazyDefault(() => import('./pages/AgentDetail'))
@@ -254,6 +255,7 @@ function AppContent() {
               <Route path="/" element={new URLSearchParams(location.search).has('tab') ? <RedirectPreserveQuery to="/overview" /> : <OmniNexus />} />
               <Route path="/overview" element={<Overview />} />
               <Route path="/omninexus" element={<OmniNexus />} />
+              <Route path="/live" element={<LiveConversation />} />
               <Route path="/workspace/*" element={<Workspace />} />
               <Route path="/agents" element={<Agents />} />
               <Route path="/agents/:name" element={<AgentDetail />} />

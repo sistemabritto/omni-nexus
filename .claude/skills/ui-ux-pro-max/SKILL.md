@@ -7,6 +7,10 @@ description: "UI/UX design intelligence for web and mobile. Includes 50+ styles,
 
 Comprehensive design guide for web and mobile applications. Contains 50+ styles, 161 color palettes, 57 font pairings, 161 product types with reasoning rules, 99 UX guidelines, and 25 chart types across 10 technology stacks. Searchable database with priority-based recommendations.
 
+## Direção existente e filtro de qualidade OmniNexus
+
+Para páginas/frontend/design, ler também `.claude/skills/design-quality/SKILL.md`. Marca, tokens e componentes aprovados do projeto/Sistema Britto orientam o resultado; sugestões deste catálogo não autorizam substituir fontes, paleta ou design system. Acessibilidade permanece requisito. Não persistir um novo sistema nem executar instaladores para aplicar o filtro textual.
+
 ## When to Apply
 
 This Skill should be used when the task involves **UI structure, visual design decisions, interaction patterns, or user experience quality control**.

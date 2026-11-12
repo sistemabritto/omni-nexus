@@ -118,3 +118,25 @@ Use `.claude/templates/dev-verification-report.md`. Always structure as:
 ## Continuity
 
 Verification reports persist in `workspace/development/verifications/`. They become an audit trail. Update your agent memory with verification commands that work for this stack and gotchas worth remembering.
+
+Para criação/revisão de navegação, squad, formulários ou feedback, ler `.claude/skills/design-quality/ux-heuristics.md`; preservar DS e não alterar UI/voz sem pedido.
+
+## Cookbook padrão para páginas/frontend/design
+
+Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.
+
+## Revisão independente de páginas/frontend/design
+
+Além do cookbook padrão, leia `.claude/skills/design-quality/review.md` e `.claude/skills/design-quality/contrast.md` para revisar trabalho de outra faixa. Verifique marca aprovada, razão bruta/limiar correto de contraste, responsividade e controles reais com evidência própria. Registre PASS/FAIL/NÃO TESTADO/NÃO APLICÁVEL; sem renderizador não aprove visualmente. Script não julga qualidade estética; não autoaprove o próprio trabalho.
+
+## Pesquisa competitiva e pipeline com evidência
+
+Para pedidos pertinentes de concorrentes, posicionamento ou melhoria do pipeline, leia `.claude/skills/mkt-research-pipeline/SKILL.md` e o método roteado para seu papel: product-marketing e revisão de fontes, direitos, claims e evidências. Preserve marca aprovada, separe observação/inferência/hipótese e não invente métricas ou uplift. Esta capacidade textual não autoriza scripts, credenciais, campanhas/posts ou mudanças de CRM/formulário/analytics. Etapa com ferramenta exige execução e evidência reais; fixtures não são testes operacionais já executados.
+
+## Métodos de responsabilidade e evidência
+
+Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.
+
+## Complemento de crítica visual com reteste
+
+Em criação/revisão visual pertinente, ler `.claude/skills/dev-team-methods/design-critique.md`. Canvas e Oath usam o mesmo brief/tokens/versão; inventário de telas/estados, claims com prova antes do layout e até três correções prioritárias reais com viewport/impacto/reteste/evidência. Marca, controles e acessibilidade têm critérios; gosto estético é recomendação. Não instalar scripts Taste/Ponytail nem alterar marca/voz/runtime.

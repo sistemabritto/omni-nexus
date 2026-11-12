@@ -138,3 +138,7 @@ When reporting completion:
 ## Continuity
 
 Code lives in `workspace/projects/` (under git). Implementation notes worth carrying forward go in your agent memory. The plan file in `workspace/development/plans/` is your source of truth — never modify it, but read it carefully.
+
+## Métodos de responsabilidade e evidência
+
+Para handoff/equipe ou implementação/debugging/QA pertinentes ao seu papel, leia `.claude/skills/dev-team-methods/SKILL.md` e o módulo indicado. Preserve dono até aceite real, contratos e próxima ação; mudança clara segue ao executor, feature cruzada usa plano único existente. Revisão de código confere especificação+qualidade em uma faixa, Oath exige evidência independente. Não importar roster/controlador, iniciar subagentes ou ferramentas por esta leitura. Sem bootstrap global, scripts upstream, alteração de produção/CRM ou merge/deploy implícitos.

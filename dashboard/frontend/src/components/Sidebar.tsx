@@ -11,7 +11,7 @@ import './Sidebar.css'
 import {
   LayoutDashboard, Bot, Clock,
   LogOut, Menu, X,
-  ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
+  ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
   Plug, FolderOpen, Settings, Building2, Settings2, Check, Plus,
 } from 'lucide-react'
@@ -21,14 +21,6 @@ import {
   type PluginSidebarGroup,
   type PluginPage,
 } from '../lib/plugin-ui-registry'
-
-interface VersionInfo {
-  current: string
-  latest: string | null
-  update_available: boolean
-  release_url: string | null
-  release_notes: string | null
-}
 
 interface NavItem {
   to: string
@@ -257,7 +249,7 @@ function CompanySwitcher({
 
 export default function Sidebar() {
   const { user, logout, hasPermission } = useAuth()
-  const { companies, activeCompanyId, activeCompany, setActiveCompanyId } = useCompanies()
+  const { companies, activeCompanyId, setActiveCompanyId } = useCompanies()
   const [manageCompany, setManageCompany] = useState<number | 'new' | null>(null)
   const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -287,18 +279,10 @@ export default function Sidebar() {
     document.addEventListener('keydown', onKey)
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; previous?.focus() }
   }, [mobileOpen])
-  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState)
   // Wave 2.1: plugin sidebar groups — refreshed after registry hydration
   const [pluginGroups, setPluginGroups] = useState<(PluginSidebarGroup & { slug: string })[]>([])
   const [pluginPages, setPluginPages] = useState<(PluginPage & { slug: string; bundle_url: string })[]>([])
-
-  useEffect(() => {
-    fetch('/api/version/check')
-      .then((r) => r.json())
-      .then((data) => setVersionInfo(data))
-      .catch(() => {})
-  }, [])
 
   // Refresh plugin sidebar groups after registry hydration (hydration is async, runs post-login)
   useEffect(() => {
@@ -357,14 +341,9 @@ export default function Sidebar() {
 
   const sidebarContent = (
     <>
-      <div className="omn-brand"><img src="/branding/sistema-britto.png" alt="Sistema Britto" width="1112" height="366" /><small>OmniNexus Live</small></div>
-      <div className="omn-upstream-logo px-5 py-6 flex items-center justify-between">
-        <img
-          src={activeCompany?.logo_url ?? '/EVO_NEXUS.webp'}
-          alt={activeCompany?.logo_url ? activeCompany.name : 'EvoNexus'}
-          className="h-8 w-auto"
-        />
-        <div className="flex items-center gap-1">
+      <div className="omn-brand flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1"><img src="/branding/sistema-britto.png" alt="Sistema Britto" width="1112" height="366" /><small>OmniNexus Live</small></div>
+        <div className="flex items-center gap-1 shrink-0">
           <NotificationBell />
           <button data-close-menu aria-label={t('shell.closeMenu')} onClick={() => setMobileOpen(false)} className="lg:hidden p-1 rounded hover:bg-white/10 text-[color:var(--text-muted)]">
             <X size={20} />
@@ -440,7 +419,7 @@ export default function Sidebar() {
       </nav>
 
       {user && (
-        <div className="px-3 py-3 border-t border-[color:var(--border)] space-y-2">
+        <div className="omn-profile px-3 py-2 border-t border-[color:var(--border)]">
           {/* W3 (2026-09-21): empresa INTEGRADA ao card do perfil — linha 2 do
               perfil (logo + nome da empresa ativa), não uma linha solta acima.
               Clicar abre o seletor; badge de role fica na linha 1, ao lado do nome. */}
@@ -504,30 +483,9 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Version indicator */}
-      {versionInfo && (
-        <div className="px-4 py-2 border-t border-[color:var(--border)]/50">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-[color:var(--text-muted)]">v{versionInfo.current}</span>
-            {versionInfo.update_available && versionInfo.release_url && (
-              <a
-                href={versionInfo.release_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[color:var(--evo-green)] hover:text-[color:var(--evo-green)]/80 transition-colors"
-                title={t('nav.updateAvailable', { version: versionInfo.latest })}
-              >
-                <ArrowUpCircle size={12} />
-                <span>v{versionInfo.latest}</span>
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Credits */}
-      <div className="px-4 py-3 border-t border-[color:var(--border)]/50">
-        {activeCompany?.logo_url && <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-4 w-auto mx-auto mb-2" />}
+      <div className="omn-credits border-t border-[color:var(--border)]/50">
+        <img src="/EVO_NEXUS.webp" alt="EvoNexus" className="h-4 w-auto mx-auto mb-2" />
         <a
           href="https://evolutionfoundation.com.br"
           target="_blank"

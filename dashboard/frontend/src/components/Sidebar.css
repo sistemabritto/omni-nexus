@@ -26,5 +26,12 @@
 @media(max-width:639px){.omn-shell main table{display:block;overflow-x:auto}}
 
 /* Restore the original compact navigation, with Sistema Britto leading the identity. */
-.omn-brand{padding:16px 20px 0;font-size:12px;letter-spacing:0}.omn-brand>img{display:block;width:168px;height:auto;max-width:100%}.omn-brand small{font-size:11px;margin-top:6px;color:var(--text-muted)}
+.omn-brand{padding:16px 20px 0;font-size:12px;letter-spacing:0}.omn-brand img{display:block;width:168px;height:auto;max-width:100%}.omn-brand small{font-size:11px;margin-top:6px;color:var(--text-muted)}
 .omn-upstream-logo{padding-top:4px!important;padding-bottom:8px!important;margin-bottom:0}.omn-nav-group{margin-bottom:0}.omn-sidebar .omn-nav-link{margin-bottom:0;padding:8px 12px;min-height:44px}
+
+/* One product brand in the header; company identity stays in the profile switcher. */
+.omn-brand{padding-bottom:12px;border-bottom:1px solid var(--border)}
+
+.omn-brand,.omn-profile,.omn-credits{flex-shrink:0}.omn-sidebar nav{min-height:0}.omn-nav-group>div:last-child{gap:0}.omn-profile>div>div{gap:8px}.omn-credits{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;min-height:44px}.omn-credits>img{width:52px;height:auto;margin:0}.omn-credits>a{min-height:44px;white-space:nowrap}
+/* Fit the nine native links on short screens without reducing touch targets. */
+.omn-brand{padding:12px 20px 8px}.omn-brand img{width:132px}.omn-nav-group>div:first-child:not(:last-child){padding:4px 12px 2px;line-height:14px}.omn-nav-group>div:last-child.mt-2{margin-top:4px}.omn-sidebar nav{padding-bottom:8px}

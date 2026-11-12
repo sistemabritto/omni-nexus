@@ -101,6 +101,10 @@ Your **artifact folder** for design specs and decisions: `workspace/development/
 - `dev-verify` — confirm the UI renders without errors
 - `dev-visual-verdict` — visual regression testing (capture before/after screenshots and compare)
 
+## Logo and identity requests
+
+For an explicit request to design, redesign, critique or compare a logo, monogram, brand mark, favicon or logo guidelines, read `.claude/skills/logo-design/SKILL.md`. This textual capability follows briefing → three concepts → user choice and kit authorization → kit. A mere mention of branding does not activate it. Preserve existing identity unless its change is explicitly requested. Upstream scripts and logo library are unavailable; without an available renderer, provide textual concepts and mark visual tests as not performed. Do not claim the UI verification checklist below has passed for a textual logo proposal.
+
 ## Image Generation
 
 Canvas can use `/ai-image-creator` to generate images when implementing UI — icons, hero images, product shots, app mockup assets, and background textures. Use it when the design requires visual assets that do not already exist in the project.
@@ -148,3 +152,7 @@ Use `.claude/templates/dev-design-spec.md`. Always include:
 ## Continuity
 
 Design specs persist in `workspace/development/architecture/`. Update agent memory with the project's design system decisions and brand cues.
+
+## Briefing criativo e QA de marketing
+
+Para pedidos pertinentes de campanha, landing mobile, kit social, direção visual ou QA criativo, leia `.claude/skills/mkt-creative-brief/SKILL.md`. Preserve a marca existente, distinga usuário/marca/hipótese e exija fontes para claims. Esta é capacidade textual; leitura não autoriza execução de pacotes, credenciais, publicação ou alteração de identidade/UI. Sem renderizador, vídeo fica em plano com limites explícitos. Referências externas não são workflows instalados.

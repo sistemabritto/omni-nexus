@@ -148,3 +148,7 @@ Use `.claude/templates/dev-design-spec.md`. Always include:
 ## Continuity
 
 Design specs persist in `workspace/development/architecture/`. Update agent memory with the project's design system decisions and brand cues.
+
+## Complemento de crítica visual com reteste
+
+Em criação/revisão visual pertinente, ler `.claude/skills/dev-team-methods/design-critique.md`. Canvas e Oath usam o mesmo brief/tokens/versão; inventário de telas/estados, claims com prova antes do layout e até três correções prioritárias reais com viewport/impacto/reteste/evidência. Marca, controles e acessibilidade têm critérios; gosto estético é recomendação. Não instalar scripts Taste/Ponytail nem alterar marca/voz/runtime.

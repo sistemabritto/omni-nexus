@@ -58,7 +58,10 @@ for hostname in ['nexus.workflowapi.com.br', 'nexus.sistemabritto.com.br']:
     origin = 'https://' + hostname
     headers = {'Cookie': cookie, 'X-Forwarded-Host': hostname, 'X-Forwarded-Proto': 'https', 'Origin': origin}
     status, response_headers, raw = request('/api/live/status', headers=headers)
-    assert status == 200 and json.loads(raw) == {'enabled': False, 'freeTierVerified': False}
+    assert status == 200
+    payload = json.loads(raw)
+    assert {k:payload[k] for k in ('enabled','freeTierVerified')} == {'enabled': False, 'freeTierVerified': False}
+    assert payload['activeModel'] is None
     assert response_headers.get('Cache-Control') == 'no-store'
     for supplied_origin, expected in [(origin, 503), ('https://evil.invalid', 403)]:
         try:

@@ -5,14 +5,15 @@ import json
 import logging
 import socket
 import os
-import re
 import sqlite3
 import time
 import threading
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from urllib.parse import urlencode
+
+from live_model_policy import (COMPATIBLE_MODELS, MAX_PROVIDER_ATTEMPTS, ProviderFailure, csv_models, provider_failure)
 
 ENDPOINT = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent'
 
@@ -23,18 +24,36 @@ class LiveConfig:
     free_verified: bool = False
     model: str = ''
     key: str = field(default='', repr=False)
+    fallback_models: tuple = ()
+    fallback_blocked_models: tuple = ()
 
     @classmethod
     def environment(cls):
         enabled = os.environ.get('GEMINI_LIVE_ENABLED') == 'true'
         verified = os.environ.get('GEMINI_FREE_TIER_VERIFIED') == 'true'
         # Disabled status never even reads the key.
-        return cls(enabled, verified, os.environ.get('GEMINI_LIVE_MODEL', ''),
-                   os.environ.get('GEMINI_API_KEY', '') if enabled and verified else '')
+        model = os.environ.get('GEMINI_LIVE_MODEL', '')
+        requested = tuple(x for x in csv_models(os.environ.get('GEMINI_LIVE_FALLBACK_MODELS', '')) if x != model)
+        quota_verified = csv_models(os.environ.get('GEMINI_LIVE_VERIFIED_MODELS', ''))
+        eligible = tuple(x for x in requested if x in quota_verified)
+        blocked = tuple(x for x in requested if x not in quota_verified)
+        return cls(enabled, verified, model,
+                   os.environ.get('GEMINI_API_KEY', '') if enabled and verified else '',
+                   eligible, blocked)
+
+    def status_payload(self):
+        model = self.model if self.model in COMPATIBLE_MODELS else None
+        return {'enabled': bool(self.ready), 'freeTierVerified': bool(self.ready),
+                'configuredModel': model, 'activeModel': None,
+                'fallbackModels': list(self.fallback_models),
+                'fallbackBlockedModels': list(self.fallback_blocked_models),
+                'maxProviderAttempts': MAX_PROVIDER_ATTEMPTS,
+                'fallbackPolicy': 'startup_model_unavailable_only',
+                'contextResumptionSupported': False}
 
     @property
     def ready(self):
-        return self.enabled and self.free_verified and bool(self.key) and bool(re.fullmatch(r'[a-zA-Z0-9._-]{1,100}', self.model))
+        return self.enabled and self.free_verified and bool(self.key) and self.model in COMPATIBLE_MODELS
 
 
 class LeaseStore:
@@ -106,8 +125,12 @@ def translate(raw):
     if not isinstance(raw, (str, bytes)) or len(raw) > 262144:
         raise ProtocolError()
     msg = json.loads(raw)
-    if not isinstance(msg, dict) or 'error' in msg or 'toolCall' in msg:
+    if not isinstance(msg, dict) or 'toolCall' in msg:
         raise ProtocolError()
+    if 'error' in msg:
+        if not isinstance(msg['error'], dict):
+            raise ProtocolError()
+        raise provider_failure(msg['error'])
     out = []
     if 'setupComplete' in msg:
         out.append({'status': 'ready'})
@@ -137,8 +160,8 @@ def translate(raw):
 def run_session(client, config, provider_factory=open_gemini, clock=time.monotonic):
     """Single handler owns both sockets; polling bounds cancellation latency.
 
-    No payloads or exception strings are logged. No automatic reconnect, tools,
-    session persistence or retries that might incur additional provider usage.
+    No payloads or exception strings are logged. No automatic reconnect, tools or session persistence. Startup fallback is
+    capped, quota-gated and limited to model-unavailable errors before readiness.
     """
     provider = None
     watchdog = None
@@ -146,13 +169,45 @@ def run_session(client, config, provider_factory=open_gemini, clock=time.monoton
     ready = False
     tokens = 64000.0
     last = start
+    models = tuple(dict.fromkeys((config.model,) + tuple(m for m in config.fallback_models if m in COMPATIBLE_MODELS)))[:MAX_PROVIDER_ATTEMPTS]
+    attempt = 0
+    active_model = None
+    logger = logging.getLogger('omninexus.live.lifecycle')
     def send(value):
         client.send(json.dumps(value))
     try:
         if not config.ready:
             send({'error': 'live_disabled'})
             return
-        provider = provider_factory(config)
+        def connect_next(reason):
+            nonlocal provider, attempt
+            while attempt < len(models):
+                previous = models[attempt-1] if attempt else None
+                if provider is not None:
+                    try:
+                        provider.close()
+                    except Exception:
+                        pass
+                    provider = None
+                model = models[attempt]
+                attempt += 1
+                if previous is not None:
+                    send({'event': 'model_switch', 'fromModel': previous, 'toModel': model,
+                          'reason': reason, 'attempt': attempt, 'maxAttempts': MAX_PROVIDER_ATTEMPTS,
+                          'contextPreserved': False})
+                send({'event': 'model_attempt', 'configuredModel': config.model, 'model': model,
+                      'attempt': attempt, 'maxAttempts': MAX_PROVIDER_ATTEMPTS,
+                      'reason': reason, 'contextPreserved': False})
+                logger.info('live_model_attempt model=%s attempt=%d reason=%s', model, attempt, reason)
+                try:
+                    provider = provider_factory(replace(config, model=model))
+                    return
+                except Exception as error:
+                    failure = provider_failure(error)
+                    if failure.category != 'provider_model_unavailable' or attempt >= len(models):
+                        raise failure from None
+                    reason = 'model_unavailable'
+        connect_next('initial')
         # Wall-clock watchdog also interrupts a blocked provider send.
         def expire():
             # Shutdown interrupts blocked socket sends without waiting for a
@@ -172,7 +227,17 @@ def run_session(client, config, provider_factory=open_gemini, clock=time.monoton
         watchdog = threading.Timer(max(0, 120 - (clock() - start)), expire)
         watchdog.daemon = True
         watchdog.start()
-        provider.send(json.dumps(setup_message(config.model)))
+        def send_setup():
+            while True:
+                try:
+                    provider.send(json.dumps(setup_message(models[attempt-1])))
+                    return
+                except Exception as error:
+                    failure = provider_failure(error)
+                    if failure.category != 'provider_model_unavailable' or attempt >= len(models):
+                        raise failure from None
+                    connect_next('model_unavailable')
+        send_setup()
         while getattr(client, 'connected', True):
             now = clock()
             if now-start >= 120 or (not ready and now-start >= 10):
@@ -196,11 +261,25 @@ def run_session(client, config, provider_factory=open_gemini, clock=time.monoton
                 incoming = provider.recv(timeout=0.02)
             except TimeoutError:
                 continue
-            for event in translate(incoming):
+            try:
+                events = translate(incoming)
+            except ProviderFailure as failure:
+                if not ready and failure.category == 'provider_model_unavailable' and attempt < len(models):
+                    connect_next('model_unavailable')
+                    send_setup()
+                    continue
+                raise
+            for event in events:
                 if event.get('status') == 'ready':
                     if ready:
                         raise ProtocolError()
                     ready = True
+                    active_model = models[attempt-1]
+                    send({'event': 'model_active', 'activeModel': active_model,
+                          'attempt': attempt, 'contextPreserved': False})
+                    logger.info('live_model_active model=%s attempt=%d', active_model, attempt)
+                if event.get('status') == 'reconnect_required':
+                    event.update(reason='go_away', activeModel=active_model, contextPreserved=False)
                 send(event)
                 if event.get('status') == 'reconnect_required':
                     return
@@ -209,9 +288,14 @@ def run_session(client, config, provider_factory=open_gemini, clock=time.monoton
             send({'error': 'invalid_audio_or_provider_protocol'})
         except Exception:
             pass
-    except Exception:
+    except Exception as error:
+        failure = provider_failure(error)
+        logger.info('live_provider_failure category=%s attempt=%d', failure.category, attempt)
         try:
-            send({'error': 'provider_unavailable'})
+            send({'error': failure.category})
+            if ready and failure.category == 'provider_network_error':
+                send({'status': 'reconnect_required', 'reason': 'network_error',
+                      'activeModel': active_model, 'contextPreserved': False})
         except Exception:
             pass
     finally:

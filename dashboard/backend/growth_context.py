@@ -3,7 +3,33 @@ import json,os
 from datetime import datetime,timezone
 from pathlib import Path
 
-def load_context() -> str:
+def _plausible_summary(data: dict, company_id: int | None) -> dict:
+    if not data:
+        return {'status':'unavailable'}
+    properties=data.get('properties')
+    if not isinstance(properties,list):
+        properties=[{'company_id':None,'site_id':'legacy_unscoped','role':'legacy','stats':data}]
+    scopes={p.get('company_id') for p in properties if isinstance(p,dict)}
+    if company_id is None and len(scopes)>1:
+        return {'status':'company_scope_required','property_count':len(properties)}
+    selected=[]
+    for prop in properties:
+        if not isinstance(prop,dict) or (company_id is not None and prop.get('company_id')!=company_id):
+            continue
+        stats=prop.get('stats') or {}
+        aggregate=stats.get('aggregate') or {}
+        values=aggregate.get('results') or {}
+        pages=(stats.get('pages') or {}).get('results') or []
+        sources=(stats.get('sources') or {}).get('results') or []
+        selected.append({'company_id':prop.get('company_id'),'site_id':prop.get('site_id'),
+                         'role':prop.get('role'),'status':prop.get('status',aggregate.get('status','ok')),
+                         'visitors':(values.get('visitors') or {}).get('value'),
+                         'pageviews':(values.get('pageviews') or {}).get('value'),
+                         'top_pages':pages[:3] if isinstance(pages,list) else [],
+                         'top_sources':sources[:3] if isinstance(sources,list) else []})
+    return {'properties':selected}
+
+def load_context(company_id: int | None = None) -> str:
     path=Path(os.environ.get('GROWTH_EVIDENCE_PATH','/workspace/workspace/reports/growth/latest.json'))
     try:
         data=json.loads(path.read_text())
@@ -13,6 +39,7 @@ def load_context() -> str:
         context={'collected_at':data['collected_at'],'start':data['start_inclusive'],'end_exclusive':data['end_exclusive'],
                  'source_status':{k:v['status'] for k,v in sources.items()},
                  'site':{k:site.get(k) for k in ['visits','bio_cohort','classroom_cohort','leads','purchases']},
+                 'plausible':_plausible_summary(sources.get('plausible',{}).get('data') or {},company_id),
                  'cakto':sources.get('cakto',{}).get('data'),
                  'crm':sources.get('crm',{}).get('data',{}).get('pipelines'),
                  'proposed_actions':data.get('proposed_actions')}

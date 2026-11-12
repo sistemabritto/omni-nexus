@@ -1,10 +1,12 @@
 // Modified 2026-10-15: OmniNexus Live global UI system; original EvoNexus attribution retained.
 import { useEffect, useState, useCallback } from 'react'
 import {
-  Video, Plus, RefreshCw, Play, X, CheckCircle2, XCircle, AlertCircle,
-  Clock, Loader2, Upload, CalendarClock, FileText, Film, Copy, Check,
+  Video, Plus, RefreshCw, Play, X, XCircle, AlertCircle,
+  Clock, Loader2, FileText, Film, Copy, Check,
 } from 'lucide-react'
 import { api } from '../lib/api'
+import MediaReleasePanel from '../components/MediaReleasePanel'
+import RecordingsQueue from '../components/RecordingsQueue'
 
 // "Mídias" — MediaJob pipeline management UI (social-media-production,
 // briefing Etapa 14). Priority: functionality + consistency with the
@@ -102,7 +104,7 @@ const emptyForm = {
   scheduled_at: '', timezone: 'America/Bahia', project_id: '',
 }
 
-export default function Media({ embedded = false }: { embedded?: boolean }) {
+function MediaJobs({ embedded = false }: { embedded?: boolean }) {
   const [jobs, setJobs] = useState<MediaJob[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -541,10 +543,7 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
             <div className="flex flex-wrap gap-2 mb-5">
               {selected.status === 'ready_for_review' && (
                 <>
-                  <button disabled={busy} onClick={() => action(selected, 'approve')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/15">
-                    <CheckCircle2 size={14} /> Aprovar
-                  </button>
+
                   <div className="flex items-center gap-1.5">
                     <input
                       value={rejectReason}
@@ -562,18 +561,6 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                   </div>
                 </>
               )}
-              {selected.status === 'approved' && (
-                <button disabled={busy} onClick={() => action(selected, 'create-draft')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#58a6ff]/10 border border-[#58a6ff]/30 text-[#58a6ff] hover:bg-[#58a6ff]/15">
-                  <Upload size={14} /> Criar draft no Postiz
-                </button>
-              )}
-              {selected.status === 'draft_created' && selected.publication_mode === 'schedule' && (
-                <button disabled={busy} onClick={() => action(selected, 'schedule')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#d29922]/10 border border-[#d29922]/30 text-[#d29922] hover:bg-[#d29922]/15">
-                  <CalendarClock size={14} /> Agendar
-                </button>
-              )}
               {['queued', 'rejected', 'retryable_failure'].includes(selected.status) && (
                 <button disabled={busy} onClick={() => action(selected, 'run')}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[color:var(--evo-green)]/10 border border-[color:var(--evo-green)]/30 text-[color:var(--evo-green)] hover:bg-[color:var(--evo-green)]/15">
@@ -587,6 +574,10 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
                 </button>
               )}
             </div>
+
+            {selected.render_path && ['ready_for_review', 'approved', 'draft_created', 'scheduled', 'published'].includes(selected.status) && (
+              <MediaReleasePanel key={selected.id} job={selected} onChange={refreshSelected} />
+            )}
 
             <div className="flex items-center gap-2 mb-2">
               <FileText size={14} className="text-[color:var(--text-muted)]" />
@@ -608,4 +599,13 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
       )}
     </div>
   )
+}
+
+
+export default function Media({ embedded = false }: { embedded?: boolean }) {
+  const [tab, setTab] = useState('recordings')
+  return <div className="space-y-4"><nav aria-label="Conteúdo" className="flex gap-2 border-b border-[#30363d] pb-3">
+    <button aria-pressed={tab === 'recordings'} className="min-h-11 rounded-lg border border-[#30363d] px-4 text-[#e6edf3] aria-pressed:bg-[#30363d]" onClick={() => setTab('recordings')}>Gravações</button>
+    <button aria-pressed={tab === 'productions'} className="min-h-11 rounded-lg border border-[#30363d] px-4 text-[#e6edf3] aria-pressed:bg-[#30363d]" onClick={() => setTab('productions')}>Produções</button>
+  </nav>{tab === 'recordings' ? <RecordingsQueue /> : <MediaJobs embedded={embedded} />}</div>
 }

@@ -1571,6 +1571,8 @@ app.register_blueprint(tickets_bp)
 app.register_blueprint(reels_bp)
 app.register_blueprint(alerts_bp)
 app.register_blueprint(media_jobs_bp)
+from routes.recordings import bp as recordings_bp
+app.register_blueprint(recordings_bp)
 app.register_blueprint(integrations_core_postiz_bp)
 app.register_blueprint(approvals_bp)
 app.register_blueprint(health_bp)

@@ -116,6 +116,8 @@ COPY dashboard/backend/sdk_client.py \
      dashboard/backend/media_executor.py \
      dashboard/backend/media_retry.py \
      dashboard/backend/media_render.py \
+     dashboard/backend/recording_render.py \
+     dashboard/backend/recordings_storage.py \
      dashboard/backend/media_validation.py \
      dashboard/backend/media_manifest.py \
      dashboard/backend/media_workspace.py \
@@ -138,6 +140,7 @@ COPY .claude/skills-media /workspace/.claude/skills-media
 # convention as every other EvoNexus skill) — copied into the worker's
 # scoped skills directory at build time rather than duplicated on disk.
 COPY .claude/skills/social-media-production /workspace/.claude/skills-media/social-media-production
+COPY .claude/skills/video-editorial-pipeline /workspace/.claude/skills-media/video-editorial-pipeline
 
 # config/.env are provided by the evonexus_config volume at runtime; these
 # empty placeholders only satisfy path checks so the build-time verification

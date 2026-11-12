@@ -90,6 +90,8 @@ jobs:
           tests/backend/test_openreply_draft_guard.py tests/backend/test_reels_card_ficha.py
           tests/goals tests/tickets tests/heartbeats
           tests/media/test_media_retry_loop.py tests/media/test_routes_media_jobs.py tests/media/test_media_stack_contract.py
+          tests/media/test_media_editorial.py tests/media/test_media_release.py
+          tests/media/test_recordings.py tests/media/test_recording_render.py tests/media/test_recording_codecs.py
           -q
 
   terminal-server:

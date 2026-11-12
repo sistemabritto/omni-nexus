@@ -9,7 +9,7 @@ import CompanyListModal from './CompanyListModal'
 import NotificationBell from './NotificationBell'
 import './Sidebar.css'
 import {
-  LayoutDashboard, Bot, Clock,
+  LayoutDashboard, Radio, Bot, Clock,
   LogOut, Menu, X,
   ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
@@ -47,6 +47,7 @@ const navSections: NavSection[] = [
     items: [
       // Os 5 domínios viraram abas da única página /?tab=. 1 link no topo.
       { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
+      { to: '/live', labelKey: 'live', icon: Radio, resource: null },
     ],
   },
    {

@@ -215,6 +215,7 @@ const translations = {
     },
 
     nav: {
+      live: 'Live',
       groups: {
         cockpit: 'Cockpit',
         proyectos: 'Projects',

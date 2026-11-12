@@ -47,7 +47,7 @@ export class ManagedSession {
       await binding
       if(generation!==this.generation)return
       this.patch({phase:'connected',runtimeSessionId:context.runtimeSessionId,status:'Conectado por texto. Ative o microfone quando quiser falar.'})
-    } catch {if(generation===this.generation)this.end('Não foi possível iniciar. Verifique acesso e configuração do servidor.')}
+    } catch(error) {if(generation===this.generation)this.end(error instanceof Error&&error.name==='LiveRequestError'?error.message:'Não foi possível conectar ao provedor de voz. Nenhuma conversa foi iniciada; tente novamente após verificar o servidor.')}
   }
   syncCompany(companyId:number|null){
     if(this.state.companyId===null || this.state.companyId===companyId)return

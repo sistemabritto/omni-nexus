@@ -1,5 +1,7 @@
 # Gemini Live — protótipo isolado
 
+Atualização: transporte Python real e gates opt-in estão descritos em `docs/ops/gemini-live-transport.md`. O restante deste documento registra o marco original do protótipo; a anomalia de formato abaixo não comprova invalidez da chave.
+
 Branch: codex/gemini-live-prototype, base bea1ced. Não modifica App.tsx, Sidebar, backend app.py, terminal server, rename ou rollout.
 
 ## Resultado da credencial

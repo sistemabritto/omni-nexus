@@ -1,0 +1,25 @@
+{
+  "legacyQueryPreserved": true,
+  "resume": true,
+  "archive": true,
+  "create": true,
+  "switchAgentClearsSession": true,
+  "voiceDisabled": true,
+  "mobileChatNoOverflow": true,
+  "mutations": [
+    {
+      "path": "/terminal/api/sessions/qa-existing",
+      "method": "PATCH",
+      "body": {
+        "archived": true
+      }
+    },
+    {
+      "path": "/terminal/api/sessions/create",
+      "method": "POST",
+      "body": {
+        "agentName": "oracle-orchestrator"
+      }
+    }
+  ]
+}

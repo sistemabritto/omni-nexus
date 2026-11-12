@@ -51,7 +51,9 @@ interface PermissionRequest {
   createdAt: number
 }
 
+// Modified for OmniNexus: optional voice capability gate; existing callers retain behavior.
 interface AgentChatProps {
+  voiceEnabled?: boolean
   agent: string
   sessionId?: string
   accentColor?: string
@@ -94,7 +96,7 @@ type AssistantBlock =
 
 type Status = 'idle' | 'connecting' | 'running' | 'error'
 
-export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', externalLoading = false, externalError = null, onPendingCountChange, onNeedsAttention, workingDir: _workingDir, threadTicketId: _threadTicketId, onTurnCompleted }: AgentChatProps) {
+export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', externalLoading = false, externalError = null, onPendingCountChange, onNeedsAttention, workingDir: _workingDir, threadTicketId: _threadTicketId, onTurnCompleted, voiceEnabled = true }: AgentChatProps) {
   const { dismissBySession } = useNotifications()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -145,6 +147,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
   }, [])
 
   async function toggleRecording() {
+    if (!voiceEnabled) return
     if (micState === 'recording') {
       mediaRecorderRef.current?.stop()
       return
@@ -1493,7 +1496,8 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
             <button
               type="button"
               onClick={toggleRecording}
-              disabled={micState === 'transcribing'}
+              disabled={!voiceEnabled || micState === 'transcribing'}
+              aria-label={voiceEnabled ? 'Gravar áudio' : 'Voz indisponível nesta central'}
               title={
                 micState === 'recording' ? 'Parar gravação' :
                 micState === 'transcribing' ? 'Transcrevendo…' : 'Gravar áudio'
@@ -1518,6 +1522,7 @@ export default function AgentChat({ agent, sessionId, accentColor = '#00FFA7', e
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
+              aria-label={`Mensagem para ${agent}`}
               placeholder={`Message @${agent}...`}
               rows={1}
               className="flex-1 resize-none bg-transparent text-sm text-[#e6edf3] placeholder:text-[#98A2B3] focus:outline-none max-h-32 disabled:cursor-not-allowed disabled:opacity-60"

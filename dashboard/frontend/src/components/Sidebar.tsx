@@ -9,7 +9,7 @@ import CompanyListModal from './CompanyListModal'
 import NotificationBell from './NotificationBell'
 import './Sidebar.css'
 import {
-  LayoutDashboard, MessageSquare, Brain, Workflow, Bot, Clock,
+  LayoutDashboard, Bot, Clock,
   LogOut, Menu, X,
   ArrowUpCircle, ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
@@ -32,10 +32,8 @@ interface VersionInfo {
 
 interface NavItem {
   to: string
-  label?: string
   labelKey: string           // i18n key under nav.*
   icon: React.ComponentType<{ size?: number }>
-  action?: 'view' | 'manage'
   resource: string | null
   desktopOnly?: boolean
 }
@@ -51,50 +49,40 @@ interface NavSection {
 }
 
 const navSections: NavSection[] = [
-  {key:'workspace',title:'Workspace',items:[
-    {to:'/',labelKey:'overview',label:'Conversa central',icon:MessageSquare,resource:null},
-    {to:'/agents',labelKey:'agents',label:'Squad de agentes',icon:Bot,resource:'agents'},
-    {to:'/approvals',labelKey:'kanban',label:'Aprovações',icon:Check,resource:'goals'},
-  ]},
-  {key:'work',title:'Trabalho',items:[
-    {to:'/missions',labelKey:'missions',label:'Projetos e missões',icon:Target,resource:'goals'},
-    {to:'/kanban',labelKey:'kanban',label:'Quadro de trabalho',icon:Columns3,resource:'tickets'},
-    {to:'/workspace',labelKey:'workspace',icon:FolderOpen,resource:'workspace'},
-  ]},
-  {key:'operations',title:'Operação',items:[
-    {to:'/overview',labelKey:'overview',label:'Painel operacional',icon:LayoutDashboard,resource:null},
-    {to:'/orquestracao',labelKey:'overview',label:'Jobs e bloqueios',icon:Workflow,resource:null},
-    {to:'/tasks',labelKey:'overview',label:'Tarefas',icon:Check,resource:null},
-    {to:'/activity',labelKey:'overview',label:'Atividade',icon:Clock,resource:'scheduler'},
-    {to:'/scheduler',labelKey:'overview',label:'Agenda',icon:Clock,resource:'scheduler'},
-    {to:'/routines',labelKey:'routines',icon:Clock,resource:'routines'},
-    {to:'/heartbeats',labelKey:'heartbeats',icon:Heart,resource:'heartbeats'},
-    {to:'/triggers',labelKey:'triggers',icon:Webhook,resource:'triggers'},
-    {to:'/media',labelKey:'overview',label:'Conteúdo e mídia',icon:FolderOpen,resource:'media_jobs'},
-  ]},
-  {key:'knowledge',title:'Memória e conhecimento',items:[
-    {to:'/memory',labelKey:'overview',label:'Memória e fontes',icon:Brain,resource:null},
-    {to:'/knowledge',labelKey:'overview',label:'Base de conhecimento',icon:Brain,resource:'knowledge'},
-    {to:'/skills',labelKey:'overview',label:'Skills',icon:Bot,resource:null},
-    {to:'/mempalace',labelKey:'overview',label:'Palácio de memória',icon:Brain,resource:null},
-  ]},
-  {key:'connections',title:'Conexões e ferramentas',items:[
-    {to:'/inteligencia',labelKey:'integrations',icon:Plug,resource:null},
-    {to:'/providers',labelKey:'overview',label:'Provedores',icon:Plug,resource:null},
-    {to:'/mcp-servers',labelKey:'overview',label:'Servidores MCP',icon:Plug,resource:null},
-    {to:'/plugins',labelKey:'overview',label:'Plugins',icon:Puzzle,resource:null},
-    {to:'/templates',labelKey:'overview',label:'Templates',icon:FolderOpen,resource:null},
-    {to:'/systems',labelKey:'overview',label:'Sistemas',icon:Settings2,resource:null},
-  ]},
-  {key:'administration',title:'Administração',items:[
-    {to:'/settings',labelKey:'overview',label:'Configurações',icon:Settings,resource:'config'},
-    {to:'/users',labelKey:'overview',label:'Usuários',icon:Building2,resource:'users'},
-    {to:'/roles',labelKey:'overview',label:'Papéis e permissões',icon:Settings2,resource:'users',action:'manage'},
-    {to:'/audit',labelKey:'overview',label:'Auditoria',icon:Check,resource:'audit'},
-    {to:'/backups',labelKey:'overview',label:'Backups',icon:FolderOpen,resource:'config'},
-    {to:'/shares',labelKey:'overview',label:'Compartilhamentos',icon:FolderOpen,resource:'workspace',action:'manage'},
-    {to:'/costs',labelKey:'overview',label:'Custos',icon:LayoutDashboard,resource:null},
-  ]},
+  {
+    key: 'cockpit',
+    title: 'Cockpit',
+    items: [
+      // Os 5 domínios viraram abas da única página /?tab=. 1 link no topo.
+      { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
+    ],
+  },
+   {
+    // Missões → Projetos → Metas → Tickets numa única árvore (W2, 2026-09-20 —
+    // a unificação dos zôms /projects e /goals). Ficam sem título, entre
+    // Cockpit e a seção Inteligência. Materiais vai no fim do bloco — abaixo do
+    // Kanban, logo acima do título Inteligência (decisão do dono, 20/09): é
+    // material de trabalho, não "cérebro".
+    key: 'projetos',
+    items: [
+      { to: '/missions', labelKey: 'missions', icon: Target, resource: 'goals' },
+      { to: '/kanban', labelKey: 'kanban', icon: Columns3, resource: 'tickets' },
+      { to: '/workspace', labelKey: 'workspace', icon: FolderOpen, resource: 'workspace' },
+    ],
+  },
+  {
+    key: 'inteligencia',
+    title: 'Inteligência',
+    items: [
+      // Tudo que dá cérebro à operação: agentes + o que acorda cada um +
+      // o hub de integrações (APIs).
+      { to: '/agents', labelKey: 'agents', icon: Bot, resource: 'agents' },
+      { to: '/heartbeats', labelKey: 'heartbeats', icon: Heart, resource: 'heartbeats' },
+      { to: '/routines', labelKey: 'routines', icon: Clock, resource: 'routines' },
+      { to: '/triggers', labelKey: 'triggers', icon: Webhook, resource: 'triggers' },
+      { to: '/inteligencia', labelKey: 'integrations', icon: Plug, resource: null },
+    ],
+  },
 ]
 
 const STORAGE_KEY = 'sidebar-collapsed-groups'
@@ -351,27 +339,25 @@ export default function Sidebar() {
       }
     >
       <item.icon size={18} aria-hidden="true" />
-      {item.label ? t(`shell.links.${item.to === '/' ? 'root' : item.to.slice(1).replaceAll('-', '_')}`, {defaultValue:item.label}) : t(`nav.${item.labelKey}`)}
+      {item.to === '/' ? 'OmniNexus Live' : t(`nav.${item.labelKey}`)}
     </NavLink>
   )
 
   const renderSection = (section: NavSection) => {
     const visibleItems = section.items.filter(
-      (item) => item.resource === null || hasPermission(item.resource, item.action || 'view')
+      (item) => item.resource === null || hasPermission(item.resource, 'view')
     )
     if (visibleItems.length === 0) return null
 
-    const key = `native-${section.key}`
-    const isCollapsed = collapsed[key] ?? !['workspace', 'work'].includes(section.key)
     return <section key={section.key} className="omn-nav-group">
-      <button className="omn-nav-group-toggle" aria-expanded={!isCollapsed} aria-controls={`nav-${section.key}`} onClick={() => setCollapsed(prev => { const next = {...prev, [key]: !isCollapsed}; saveCollapsedState(next); return next })}>{t(`shell.groups.${section.key}`, {defaultValue:section.title})}<ChevronDown size={14} aria-hidden="true" style={{transform:isCollapsed?'rotate(-90deg)':undefined}} /></button>
-      <div id={`nav-${section.key}`} hidden={isCollapsed}>{visibleItems.map(renderLink)}</div>
+      {section.title && <div className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-[color:var(--text-muted)] font-semibold">{t(`nav.groups.${section.key}`)}</div>}
+      <div className={`flex flex-col gap-0.5 ${section.title ? '' : 'mt-2'}`}>{visibleItems.map(renderLink)}</div>
     </section>
   }
 
   const sidebarContent = (
     <>
-      <div className="omn-brand"><span>OmniNexus <strong>Live</strong></span><small>{t('shell.tagline')}</small></div>
+      <div className="omn-brand"><img src="/branding/sistema-britto.png" alt="Sistema Britto" width="1112" height="366" /><small>OmniNexus Live</small></div>
       <div className="omn-upstream-logo px-5 py-6 flex items-center justify-between">
         <img
           src={activeCompany?.logo_url ?? '/EVO_NEXUS.webp'}

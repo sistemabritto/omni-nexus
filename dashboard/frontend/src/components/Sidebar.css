@@ -24,3 +24,7 @@
 @media(max-width:639px){.omn-responsive-toolbar{flex-wrap:wrap!important;gap:16px!important}.omn-responsive-toolbar>div{min-width:0;flex-wrap:wrap!important}.omn-responsive-toolbar>div:last-child{max-width:100%;gap:8px!important}.omn-responsive-toolbar .ml-auto{margin-left:0}.omn-responsive-toolbar select{max-width:100%}}
 
 @media(max-width:639px){.omn-shell main table{display:block;overflow-x:auto}}
+
+/* Restore the original compact navigation, with Sistema Britto leading the identity. */
+.omn-brand{padding:16px 20px 0;font-size:12px;letter-spacing:0}.omn-brand>img{display:block;width:168px;height:auto;max-width:100%}.omn-brand small{font-size:11px;margin-top:6px;color:var(--text-muted)}
+.omn-upstream-logo{padding-top:4px!important;padding-bottom:8px!important;margin-bottom:0}.omn-nav-group{margin-bottom:0}.omn-sidebar .omn-nav-link{margin-bottom:0;padding:8px 12px;min-height:44px}

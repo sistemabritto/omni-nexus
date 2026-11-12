@@ -32,6 +32,6 @@ export function createManagedContextTools(contextId:number) {
     } },
   }
 }
-export async function requestManagedSignedSession(contextId:number):Promise<{signedUrl:string}> {
+export async function requestManagedSignedSession(contextId:number):Promise<{signedUrl:string;voiceId?:string;voiceName?:string}> {
   return call(`/api/live/omni-context/${contextId}/signed-session`,{})
 }

@@ -77,7 +77,7 @@ def _next_ticket(conn) -> sqlite3.Row | None:
 def _heartbeat_id_for_agent(conn, agent: str) -> str | None:
     """Find a heartbeat to run for this agent (prefer the autopilot one)."""
     row = conn.execute(
-        "SELECT id FROM heartbeats WHERE agent = ? "
+        "SELECT id FROM heartbeats WHERE agent = ? AND enabled=1 "
         "ORDER BY CASE WHEN id LIKE 'autopilot-%' THEN 0 ELSE 1 END LIMIT 1",
         (agent,),
     ).fetchone()

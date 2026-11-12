@@ -26,7 +26,13 @@ class TelegramProviderBotMemoryTests(unittest.TestCase):
 
     def test_campaign_request_loads_openreply_skill(self) -> None:
         from unittest.mock import patch
-        with patch.object(bot, "fetch_url_context", return_value=""), patch.object(bot, "fetch_mempalace_context", return_value=""):
+        # The installed custom skill is a mounted private catalog, not versioned.
+        # Supply a deterministic fixture instead of depending on the developer's catalog.
+        root = Path(self._tmp.name) / "workspace"
+        skill = root / ".claude/skills/custom-int-openreply/SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("Criar ou duplicar uma campanha via SQL direto")
+        with patch.object(bot, "ROOT", root), patch.object(bot, "fetch_url_context", return_value=""), patch.object(bot, "fetch_mempalace_context", return_value=""):
             prompt = bot.build_prompt("123", "cria uma campanha com gatilho 08 pro proximo reel que eu vou postar")
         self.assertIn("Pedido de campanha OpenReply", prompt)
         self.assertIn("pendingNextReel=true", prompt)

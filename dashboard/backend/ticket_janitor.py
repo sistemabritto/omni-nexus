@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 JANITOR_INTERVAL_SECONDS = int(os.getenv("TICKET_JANITOR_INTERVAL", "300"))  # 5 min default
 
 # Approval lifecycle policy (goal-ticket-unification ADR §3i) — proposed
-# numbers, Felipe-confirmed as assumption: 8h auto-reject covers an overnight
+# numbers, Felipe-confirmed as assumption: 8h expiration covers an overnight
 # unattended run, two re-nudges at 2h/4h so an unanswered approval doesn't
 # silently sit until the deadline.
 APPROVAL_RENUDGE_WINDOWS_SECONDS = (2 * 3600, 4 * 3600)
@@ -91,15 +91,11 @@ def release_expired_locks(app=None) -> int:
 
 
 def sweep_pending_approvals(app=None) -> int:
-    """TTL / re-nudge / auto-reject sweep for pending_approvals (ADR §3i).
+    """TTL / re-nudge / expiration sweep for pending_approvals (ADR §3i).
 
-    Runs on the same 5-min cadence as the ticket-lock sweep so a pending
-    Telegram approval never blocks the pipeline indefinitely: two re-nudges
-    (2h, 4h) via a fresh send_approval_request, then auto-reject at 8h. On
-    auto-reject, publish parks unwind the ticket back to in_progress (nothing
-    was ever published — the approval never fired); decomposition parks mark
-    the sub-goal rejected (ticket creation for it is Step 7's job, so there's
-    nothing else to unwind here).
+    Runs on the same 5-min cadence as the ticket-lock sweep. Expiration is
+    absence of a human decision, never rejection. Keep publication blocked
+    behind its human gate; do not return it to the execution queue.
 
     `payload` is expected to be a JSON object with "title"/"body" strings
     (the same content the Step 7 caller passed to send_approval_request when
@@ -137,8 +133,8 @@ def sweep_pending_approvals(app=None) -> int:
                 if row.gate_type == "publish" and row.ticket_id:
                     db.session.execute(
                         db.text(
-                            "UPDATE tickets SET status='in_progress', requires_human_approval=0, "
-                            "blocked_reason=NULL, updated_at=:t WHERE id=:tid"
+                            "UPDATE tickets SET status='blocked', requires_human_approval=1, "
+                            "blocked_reason='approval_expired', updated_at=:t WHERE id=:tid"
                         ),
                         {"t": now, "tid": row.ticket_id},
                     )
@@ -149,7 +145,7 @@ def sweep_pending_approvals(app=None) -> int:
                         ),
                         {
                             "id": str(uuid.uuid4()), "tid": row.ticket_id,
-                            "body": "Aprovação expirou (8h sem resposta) — nada foi publicado.",
+                            "body": f"Aprovação #{row.id} expirou (8h sem resposta), sem decisão humana — nada foi publicado. Solicite nova aprovação antes de publicar.",
                             "t": now,
                         },
                     )
@@ -161,7 +157,7 @@ def sweep_pending_approvals(app=None) -> int:
                     )
                 elif row.gate_type == "decomposition" and row.goal_id:
                     db.session.execute(
-                        db.text("UPDATE goals SET decomposition_state='rejected', updated_at=:t WHERE id=:id"),
+                        db.text("UPDATE goals SET decomposition_state='expired', updated_at=:t WHERE id=:id"),
                         {"t": now, "id": row.goal_id},
                     )
                 db.session.commit()

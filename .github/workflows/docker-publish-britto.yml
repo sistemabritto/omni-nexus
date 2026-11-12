@@ -20,6 +20,10 @@ on:
     tags: ['v*', 'rc*']
   workflow_dispatch:
     inputs:
+      core_only:
+        description: Build only runtime and dashboard for Telegram and agent continuity fixes
+        type: boolean
+        default: false
       media_only:
         description: Build only dashboard and media worker for an isolated media hotfix
         type: boolean
@@ -37,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.media_only && '[{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"}]' || '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"},{"image":"omniroute","dockerfile":"scripts/Dockerfile.omniroute-runtime"}]') }}
+        include: ${{ fromJSON(inputs.core_only && '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"}]' || inputs.media_only && '[{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"}]' || '[{"image":"evo-nexus-runtime","dockerfile":"Dockerfile.swarm"},{"image":"evo-nexus-dashboard","dockerfile":"Dockerfile.swarm.dashboard"},{"image":"evo-nexus-media-worker","dockerfile":"Dockerfile.media-worker"},{"image":"omniroute","dockerfile":"scripts/Dockerfile.omniroute-runtime"}]') }}
 
     steps:
       - name: Checkout

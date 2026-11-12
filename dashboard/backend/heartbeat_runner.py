@@ -322,14 +322,17 @@ def step6_assemble_context(
 
 {decision_context['decision_prompt']}{inbox_summary}{approvals_summary}{trigger_summary}
 
+{decision_context.get("runtime_preflight", "")}
+
 ---
 
 ## Sua tarefa — responda em UMA única mensagem
 
-Decida o que fazer com o item de MAIOR prioridade da sua inbox acima, usando o que
-você já sabe sobre ele (título e descrição). NÃO narre ("vou fazer", "primeiro
-preciso ler"), NÃO peça para abrir arquivos — DECIDA AGORA e entregue o resultado
-na própria resposta.
+Trabalhe no item de MAIOR prioridade da inbox. Use ferramentas para ler os arquivos,
+comentários, skills e integrações necessários; título e descrição não substituem
+essas verificações. Entregue artefato ou evidência concreta, não apenas despacho
+ou plano alegado como execução. Escale somente bloqueios verificados ou decisões
+humanas necessárias. Ao terminar, devolva o resultado no JSON abaixo.
 
 - `work` — você consegue entregar/avançar agora: uma decisão, um plano objetivo,
   um texto pronto, uma resposta. Coloque o conteúdo/resultado concreto em `result`
@@ -351,6 +354,8 @@ na própria resposta.
 
 `result` deve dizer o RESULTADO entregue, não "analisei" — ex.: "Plano P0: 3 canais
 (WhatsApp, IG, e-mail), oferta X, 1 post/dia; sucesso = 20 leads", não "vou montar o plano".
+Em planos, pesquisa, código e tarefas internas sem publicação solicitada, defina
+`publish_intent=false` explicitamente. Ausência não equivale a autorização.
 Se `publish_intent=true`, `publish_content` é obrigatório e deve conter o texto
 final completo; nunca coloque somente um resumo em `result`. Para Instagram,
 `publish_media` deve conter ao menos uma URL HTTPS da mídia final.
@@ -1019,6 +1024,8 @@ def run_heartbeat(heartbeat_id: str, triggered_by: str = "manual", trigger_id: s
                     trigger_payload = {"goal_id": swept_goal_id, "sweep": True}
                     print(f"[heartbeat_runner] goal-planner sweep: picked orphaned goal #{swept_goal_id}", flush=True)
 
+                from runtime_preflight import runtime_preflight
+                decision_ctx["runtime_preflight"] = runtime_preflight(WORKSPACE, conn=conn)
                 full_prompt = step6_assemble_context(identity, decision_ctx, hb.get("goal_id"), trigger_payload)
 
                 # @mention wake → you were poked on a SPECIFIC ticket to give

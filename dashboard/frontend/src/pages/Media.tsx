@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { api } from '../lib/api'
 import MediaReleasePanel from '../components/MediaReleasePanel'
+import RecordingsQueue from '../components/RecordingsQueue'
 
 // "Mídias" — MediaJob pipeline management UI (social-media-production,
 // briefing Etapa 14). Priority: functionality + consistency with the
@@ -102,7 +103,7 @@ const emptyForm = {
   scheduled_at: '', timezone: 'America/Bahia', project_id: '',
 }
 
-export default function Media({ embedded = false }: { embedded?: boolean }) {
+function MediaJobs({ embedded = false }: { embedded?: boolean }) {
   const [jobs, setJobs] = useState<MediaJob[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -596,4 +597,13 @@ export default function Media({ embedded = false }: { embedded?: boolean }) {
       )}
     </div>
   )
+}
+
+
+export default function Media({ embedded = false }: { embedded?: boolean }) {
+  const [tab, setTab] = useState('recordings')
+  return <div className="space-y-4"><nav aria-label="Conteúdo" className="flex gap-2 border-b border-[#30363d] pb-3">
+    <button aria-pressed={tab === 'recordings'} className="min-h-11 rounded-lg border border-[#30363d] px-4 text-[#e6edf3] aria-pressed:bg-[#30363d]" onClick={() => setTab('recordings')}>Gravações</button>
+    <button aria-pressed={tab === 'productions'} className="min-h-11 rounded-lg border border-[#30363d] px-4 text-[#e6edf3] aria-pressed:bg-[#30363d]" onClick={() => setTab('productions')}>Produções</button>
+  </nav>{tab === 'recordings' ? <RecordingsQueue /> : <MediaJobs embedded={embedded} />}</div>
 }

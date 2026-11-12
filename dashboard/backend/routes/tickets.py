@@ -125,22 +125,26 @@ def _fire_mention_triggers(ticket_id: str, comment_id: str, mentions: list[str],
 
 @bp.route("/api/tickets")
 def list_tickets():
+    return _list_tickets(request.args)
+
+
+def _list_tickets(args):
     denied = _require("view")
     if denied:
         return denied
 
     # Filters
-    statuses = request.args.getlist("status")
-    assignees = request.args.getlist("assignee_agent")
-    priorities = request.args.getlist("priority")
-    project_id = request.args.get("project_id", type=int)
-    goal_id = request.args.get("goal_id", type=int)
-    company_id = request.args.get("company_id", type=int)
-    source_plugin = request.args.get("source_plugin")
-    q = request.args.get("q", "").strip()
-    display_mode = request.args.get("display_mode", "all")  # threads | issues | all
-    limit = min(int(request.args.get("limit", 50)), 500)
-    offset = int(request.args.get("offset", 0))
+    statuses = args.getlist("status")
+    assignees = args.getlist("assignee_agent")
+    priorities = args.getlist("priority")
+    project_id = args.get("project_id", type=int)
+    goal_id = args.get("goal_id", type=int)
+    company_id = args.get("company_id", type=int)
+    source_plugin = args.get("source_plugin")
+    q = args.get("q", "").strip()
+    display_mode = args.get("display_mode", "all")  # threads | issues | all
+    limit = min(int(args.get("limit", 50)), 500)
+    offset = int(args.get("offset", 0))
 
     query = Ticket.query
 
@@ -1122,3 +1126,12 @@ def unarchive_thread(ticket_id: str):
 
     audit(current_user, "manage", "tickets", f"unarchived thread {ticket_id}")
     return jsonify(ticket.to_dict())
+
+
+def read_company_ticket_page(company_id, *, statuses=(), limit=0):
+    """Reuse the list endpoint and its ACL with server-selected filters only."""
+    from werkzeug.datastructures import MultiDict
+    args = MultiDict([('company_id', str(company_id)), ('limit', str(limit)), ('offset', '0')])
+    for status in statuses:
+        args.add('status', status)
+    return _list_tickets(args)

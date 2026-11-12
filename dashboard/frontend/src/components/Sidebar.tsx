@@ -9,7 +9,7 @@ import CompanyListModal from './CompanyListModal'
 import NotificationBell from './NotificationBell'
 import './Sidebar.css'
 import {
-  LayoutDashboard, Radio, Bot, Clock,
+  Radio, Bot, Clock,
   LogOut, Menu, X,
   ChevronDown, Webhook, Heart, Target,
   Puzzle, Columns3,
@@ -46,7 +46,6 @@ const navSections: NavSection[] = [
     title: 'Cockpit',
     items: [
       // Os 5 domínios viraram abas da única página /?tab=. 1 link no topo.
-      { to: '/', labelKey: 'overview', icon: LayoutDashboard, resource: null },
       { to: '/live', labelKey: 'live', icon: Radio, resource: null },
     ],
   },
@@ -324,7 +323,7 @@ export default function Sidebar() {
       }
     >
       <item.icon size={18} aria-hidden="true" />
-      {item.to === '/' ? 'OmniNexus Live' : t(`nav.${item.labelKey}`)}
+      {item.to === '/live' ? 'OmniNexus Live' : t(`nav.${item.labelKey}`)}
     </NavLink>
   )
 

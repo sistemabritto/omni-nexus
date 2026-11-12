@@ -329,10 +329,11 @@ def test_patch_to_retryable_failure_releases_lock(admin_client):
     assert data["locked_at"] is None
     assert data["locked_by"] is None
 
-    # E o /run consegue reclamar de novo, exatamente o que estava quebrado.
+    # Lock is released, but the retry must wait for its persisted due date.
+    assert data["next_retry_at"] is not None
     resp2 = admin_client.post(f"/api/media/jobs/{job_id}/run")
-    assert resp2.status_code == 200
-    assert resp2.get_json()["status"] == "preparing"
+    assert resp2.status_code == 409
+    assert resp2.get_json()["error"] == "retry_not_due"
 
 
 def test_create_draft_failure_sets_retryable_and_preserves_uploaded_media_id(admin_client, monkeypatch):

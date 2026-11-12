@@ -1116,6 +1116,7 @@ class MediaJob(db.Model):
     postiz_media_name = db.Column(db.String(300), nullable=True)
     postiz_post_id = db.Column(db.String(100), nullable=True)
     attempt_count = db.Column(db.Integer, nullable=False, default=0)
+    next_retry_at = db.Column(db.String(30), nullable=True)
     last_error = db.Column(db.Text, nullable=True)
     reject_reason = db.Column(db.Text, nullable=True)
     locked_at = db.Column(db.String(30), nullable=True)
@@ -1170,6 +1171,7 @@ class MediaJob(db.Model):
             "postiz_media_name": self.postiz_media_name,
             "postiz_post_id": self.postiz_post_id,
             "attempt_count": self.attempt_count,
+            "next_retry_at": self.next_retry_at,
             "last_error": self.last_error,
             "reject_reason": self.reject_reason,
             "locked_at": self.locked_at,

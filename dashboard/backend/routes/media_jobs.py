@@ -26,6 +26,8 @@ from flask_login import current_user
 from models import db, GoalProject, MediaJob, has_permission, audit
 from media_state_machine import assert_transition, can_transition, InvalidTransition, allowed_targets
 from media_workspace import ensure_job_scaffold, new_job_id, media_workspace_root, PathSecurityError
+from media_retry import MAX_ATTEMPTS, failure_state
+from sqlalchemy import or_
 from postiz_client import PostizClient, PostizError, MEDIA_JOB_PLATFORMS, build_platform_settings
 
 bp = Blueprint("media_jobs", __name__)
@@ -123,6 +125,13 @@ def list_media_jobs():
     platform = request.args.get("platform")
     if platform:
         query = query.filter(MediaJob.platform == platform)
+    if request.args.get("eligible") == "true":
+        query = query.filter(
+            MediaJob.status.in_(("queued", "retryable_failure")),
+            MediaJob.locked_at.is_(None),
+            MediaJob.attempt_count < MAX_ATTEMPTS,
+            or_(MediaJob.next_retry_at.is_(None), MediaJob.next_retry_at <= _now()),
+        )
     limit = min(request.args.get("limit", default=200, type=int) or 200, 500)
     jobs = query.order_by(MediaJob.created_at.desc()).limit(limit).all()
     return jsonify([j.to_dict() for j in jobs])
@@ -258,22 +267,27 @@ def create_media_job():
         created_at=now,
         updated_at=now,
     )
-    db.session.add(job)
-    db.session.commit()
+    # Do not expose a queued row until its required input exists on disk.
+    # A read-only/full volume must return a controlled failure, never an orphan.
 
     # Scaffold the isolated workspace. Só job_type='social_clip' escreve o
     # manifesto que o OpenCode lê — corte_bruto não passa por composição.
-    base = ensure_job_scaffold(job_id)
-    job.workspace_path = str(base)
-    if job_type == "social_clip":
-        manifest = {
-            "job_id": job_id, "title": job.title, "brief": job.brief, "platform": job.platform,
-            "format": job.format, "width": job.width, "height": job.height, "fps": job.fps,
-            "duration_seconds": job.duration_seconds, "language": job.language, "caption": job.caption,
-            "platform_settings": platform_settings or {},
-            "project_id": job.project_id, "campaign_id": job.campaign_id,
-        }
-        (base / "input" / "job.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    try:
+        base = ensure_job_scaffold(job_id)
+        job.workspace_path = str(base)
+        if job_type == "social_clip":
+            manifest = {
+                "job_id": job_id, "title": job.title, "brief": job.brief, "platform": job.platform,
+                "format": job.format, "width": job.width, "height": job.height, "fps": job.fps,
+                "duration_seconds": job.duration_seconds, "language": job.language, "caption": job.caption,
+                "platform_settings": platform_settings or {},
+                "project_id": job.project_id, "campaign_id": job.campaign_id,
+            }
+            (base / "input" / "job.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    except OSError as exc:
+        db.session.rollback()
+        return jsonify({"error": "media_workspace_unavailable", "detail": str(exc)}), 503
+    db.session.add(job)
     db.session.commit()
 
     audit(current_user, "execute", "media_jobs", f"create media job {job_id} ({platform})")
@@ -301,6 +315,11 @@ def update_media_job(job_id):
                 "error": "invalid_transition", "detail": str(exc),
                 "allowed_from_current": allowed_targets(job.status),
             }), 409
+        if target_status == "retryable_failure":
+            target_status, job.next_retry_at = failure_state(
+                job.attempt_count, str(data.get("last_error") or ""))
+        else:
+            job.next_retry_at = None
         job.status = target_status
         if target_status in ("ready_for_review", "failed", "cancelled", "retryable_failure"):
             # Worker relinquishes the lock once its portion of the pipeline ends —
@@ -343,19 +362,28 @@ def run_media_job(job_id):
         _transition(job, "queued")
         job.attempt_count = 0
         job.last_error = None
+        job.next_retry_at = None
         db.session.commit()
 
     if job.status not in ("queued", "retryable_failure"):
         return _invalid_transition_response(job, "preparing")
 
     now = _now()
+    if job.attempt_count >= MAX_ATTEMPTS:
+        _transition(job, "failed")
+        job.locked_at = job.locked_by = job.next_retry_at = None
+        db.session.commit()
+        return jsonify({"error": "retry_limit_reached", "max_attempts": MAX_ATTEMPTS}), 409
+    if job.next_retry_at and job.next_retry_at > now:
+        return jsonify({"error": "retry_not_due", "next_retry_at": job.next_retry_at}), 409
     result = db.session.execute(
         db.text(
             "UPDATE media_jobs SET locked_at = :now, locked_by = :agent, "
-            "status = 'preparing', updated_at = :now, attempt_count = attempt_count + 1 "
-            "WHERE id = :id AND locked_at IS NULL AND status IN ('queued','retryable_failure')"
+            "status = 'preparing', updated_at = :now, next_retry_at = NULL, attempt_count = attempt_count + 1 "
+            "WHERE id = :id AND locked_at IS NULL AND status IN ('queued','retryable_failure') "
+            "AND attempt_count < :max_attempts AND (next_retry_at IS NULL OR next_retry_at <= :now)"
         ),
-        {"id": job_id, "agent": locked_by, "now": now},
+        {"id": job_id, "agent": locked_by, "now": now, "max_attempts": MAX_ATTEMPTS},
     )
     db.session.commit()
     if result.rowcount == 0:

@@ -30,6 +30,7 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent / "dashboard" / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
 from sdk_client import evo  # noqa: E402
+from media_retry import permanent_error
 from media_executor import run_opencode_media_job, MediaExecutionError  # noqa: E402
 from media_render import render_composition, run_doctor, RenderError  # noqa: E402
 from media_validation import validate_mp4, extract_metadata, ValidationError  # noqa: E402
@@ -61,7 +62,7 @@ def _patch(job_id: str, **fields) -> dict:
 
 
 def _fail_job(job_id: str, error: str, terminal: bool = False) -> None:
-    status = "failed" if terminal else "retryable_failure"
+    status = "failed" if terminal or permanent_error(error) else "retryable_failure"
     try:
         _patch(job_id, status=status, last_error=error[:4000])
     except Exception:
@@ -77,7 +78,7 @@ def _claim_next_job() -> dict | None:
     global _backoff_seconds
     for status in ("queued", "retryable_failure"):
         try:
-            jobs = evo.get("/api/media/jobs", params={"status": status, "limit": 5})
+            jobs = evo.get("/api/media/jobs", params={"status": status, "eligible": "true", "limit": 5})
         except requests.exceptions.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 429:
                 # Rate-limited pelo dashboard — backoff exponencial em vez de
@@ -695,7 +696,7 @@ def process_social_clip_job(job: dict) -> None:
     try:
         load_and_validate_manifest(base)
     except ManifestValidationError as exc:
-        _fail_job(job_id, f"Manifesto inválido: {exc}")
+        _fail_job(job_id, f"Manifesto inválido: {exc}", terminal=True)
         return
 
     # ── 3. Deterministic render — worker-driven, never the agent ───────

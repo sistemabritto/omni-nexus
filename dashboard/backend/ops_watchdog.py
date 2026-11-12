@@ -27,6 +27,7 @@ import sqlite3
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from media_retry import failure_state
 
 log = logging.getLogger(__name__)
 
@@ -187,21 +188,25 @@ def _reap_orphaned_media_jobs(conn: sqlite3.Connection) -> int:
     if MEDIA_REAP_HOURS <= 0:
         return 0
     cutoff = _iso(_now_utc() - timedelta(hours=MEDIA_REAP_HOURS))
-    cur = conn.execute(
-        """UPDATE media_jobs
-            SET status = 'retryable_failure',
-                last_error = 'auto-reap pelo watchdog (lock estagnado além do limite)',
-                locked_at = NULL, locked_by = NULL,
-                updated_at = ?
-          WHERE status IN ('preparing','generating','rendering','validating')
-            AND locked_at IS NOT NULL
-            AND (updated_at IS NULL OR updated_at < ?)""",
-        (_iso(), cutoff),
-    )
-    n = cur.rowcount
+    rows = conn.execute(
+        """SELECT id, attempt_count FROM media_jobs
+           WHERE status IN ('preparing','generating','rendering','validating')
+             AND locked_at IS NOT NULL AND (updated_at IS NULL OR updated_at < ?)""",
+        (cutoff,),
+    ).fetchall()
+    error = 'auto-reap pelo watchdog (lock estagnado além do limite)'
+    for row in rows:
+        status, retry_at = failure_state(row[1], error)
+        conn.execute(
+            "UPDATE media_jobs SET status=?, last_error=?, next_retry_at=?, "
+            "locked_at=NULL, locked_by=NULL, updated_at=? WHERE id=? "
+            "AND locked_at IS NOT NULL AND (updated_at IS NULL OR updated_at < ?)",
+            (status, error, retry_at, _iso(), row[0], cutoff),
+        )
+    n = len(rows)
     if n:
         conn.commit()
-        log.info("watchdog: reapou %d job(s) de mídia órfão(s) -> retryable_failure", n)
+        log.info("watchdog: reapou %d job(s) de mídia órfão(s) com retry limitado", n)
     return n
 
 

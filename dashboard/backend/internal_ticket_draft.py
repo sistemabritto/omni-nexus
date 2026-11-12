@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import uuid
 from datetime import datetime, timezone
@@ -16,6 +17,50 @@ PILOT_ID = 'dcf84bb2-062d-5484-b940-786eebcd1e5d'
 PILOT_AGENT = 'pixel-social-media'
 MARKER = '[reports-20261016-v1:EDIT-07]'
 MAX_DRAFT_BYTES = 64_000
+HYPOTHESIS_LABEL = 'RASCUNHO — EXEMPLO HIPOTÉTICO'
+CONTRACT_VERSION = 'internal-hypothetical-v2'
+SAFE_ERRORS = frozenset({
+    'restricted_provider_failed', 'restricted_invalid_draft',
+    'restricted_hypothesis_label_missing', 'restricted_completion_conflict',
+    'restricted_adapter_unsupported', 'restricted_managed_config_present',
+    'restricted_ancestor_config_present', 'restricted_explicit_provider_required',
+    'restricted_text_result_required',
+})
+
+
+def draft_diagnostics(value):
+    """Fixed enums, counts and booleans only; never text, excerpts or hashes.
+
+    Formatting detection is diagnostic, NOT normalization/acceptance. A heading,
+    quote, fence, JSON or reasoning preamble before the label remains rejected.
+    """
+    kind = next((name for cls, name in ((str, 'text'), (dict, 'object'),
+                (list, 'array'), (type(None), 'null')) if isinstance(value, cls)), 'other')
+    result = {'contract': CONTRACT_VERSION, 'output_type': kind}
+    if not isinstance(value, str):
+        return result
+    clean = value.lstrip()
+    line = clean.splitlines()[0] if clean else ''
+    structure = ('empty' if not line else 'fence' if line.startswith('```') else
+                 'heading' if line.startswith('#') else 'blockquote' if line.startswith('>') else
+                 'quote' if line.startswith(('"', "'")) else
+                 'json_like' if line.startswith(('{', '[')) else 'plain')
+    result.update(utf8_bytes=len(value.encode('utf-8')), line_count=len(value.splitlines()),
+                  leading_structure=structure, label_at_start=clean.startswith(HYPOTHESIS_LABEL),
+                  label_present=HYPOTHESIS_LABEL in value, first_line_exact=line == HYPOTHESIS_LABEL,
+                  has_utf8_bom=value.startswith('\ufeff'))
+    return result
+
+
+def numeric_usage(result):
+    """Missing/invalid usage stays unknown, never becomes a free-cost claim."""
+    result = result if isinstance(result, dict) else {}
+    usage = {}
+    for key in ('tokens_in', 'tokens_out', 'cost_usd', 'duration_ms'):
+        value = result.get(key)
+        usage[key] = value if (type(value) in (int, float) and 0 <= value <= 1e15
+                              and math.isfinite(value)) else None
+    return usage
 
 
 def is_restricted(ticket_id):
@@ -89,8 +134,12 @@ def run_draft(conn, ticket, agent, run_id, root, *, invoke=None):
         return {'status': 'fail', 'error': 'restricted_checkout_conflict', 'output': '', 'agent': agent}
     _activity(conn, PILOT_ID, 'checkout', {'run_id': run_id, 'tool_policy': 'no_tools'})
     conn.commit()
-    prompt = '''Escreva em português um RASCUNHO INTERNO HIPOTÉTICO para um artigo
-sobre medir resultado de chatbot. Comece com "RASCUNHO — EXEMPLO HIPOTÉTICO".
+    prompt = f'''Escreva em português um RASCUNHO INTERNO HIPOTÉTICO para um artigo
+sobre medir resultado de chatbot.
+A primeira linha deve ser exatamente: {HYPOTHESIS_LABEL}
+Escreva essa linha como texto simples, sem #, negrito, aspas, JSON, cerca de
+código ou preâmbulo antes dela. Depois de uma linha em branco, escreva o corpo
+em Markdown. O rótulo é obrigatório; não o substitua ou traduza.
 Use dados inteiramente fictícios e identifique-os como hipótese, nunca como caso
 real. Inclua período, população/denominadores, definição de resolução, retrabalho,
 custo e um exemplo de cálculo consistente, com limitações. Não alegue que 3
@@ -99,6 +148,8 @@ publicação, mensagens, geração de mídia ou arquivos. Não peça permissões
 credenciais. Retorne somente o texto Markdown do rascunho, sem ações ou JSON.'''
     result = {}
     artifact = None
+    diagnostics = {'contract': CONTRACT_VERSION, 'output_type': 'not_returned'}
+    stage = 'provider_call'
     try:
         if invoke is None:
             from provider_fallback import invoke_with_fallback
@@ -108,6 +159,9 @@ credenciais. Retorne somente o texto Markdown do rascunho, sem ações ou JSON.'
         result = invoke(prompt=prompt, max_turns=1, timeout_seconds=120,
                         per_attempt_timeout_cap=45, agent='', routing_key=agent,
                         tool_policy='no_tools')
+        diagnostics = draft_diagnostics(result.get('output'))
+        diagnostics['provider_status'] = (result.get('status') if result.get('status') in
+            ('success', 'fail', 'timeout', 'busy') else 'unknown')
         if result.get('status') != 'success':
             # Expose actionable adapter gates, never raw provider output/secrets.
             code = result.get('error')
@@ -115,13 +169,15 @@ credenciais. Retorne somente o texto Markdown do rascunho, sem ações ou JSON.'
                           'restricted_ancestor_config_present', 'restricted_explicit_provider_required',
                           'restricted_text_result_required'}
             raise RuntimeError(code if code in safe_codes else 'restricted_provider_failed')
+        stage = 'output_validation'
         text = result.get('output')
         if not isinstance(text, str) or not text.strip() or len(text.encode('utf-8')) > MAX_DRAFT_BYTES:
             raise ValueError('restricted_invalid_draft')
         # Explicit hypothesis is mandatory, even when the provider claims success.
-        if not text.lstrip().startswith('RASCUNHO — EXEMPLO HIPOTÉTICO'):
+        if not text.lstrip().startswith(HYPOTHESIS_LABEL):
             raise ValueError('restricted_hypothesis_label_missing')
         # Recheck while holding SQLite's writer transaction before creating file.
+        stage = 'completion_cas'
         conn.execute('BEGIN IMMEDIATE')
         row = conn.execute('SELECT * FROM tickets WHERE id=?', (PILOT_ID,)).fetchone()
         if (not row or row['status'] != 'open' or row['locked_by'] != agent
@@ -130,15 +186,18 @@ credenciais. Retorne somente o texto Markdown do rascunho, sem ações ou JSON.'
                 or row['assignee_agent'] != agent or row['updated_at'] != ticket['updated_at']
                 or row['description'] != ticket['description']):
             raise RuntimeError('restricted_completion_conflict')
+        stage = 'controlled_persistence'
         artifact = _save_draft(root, PILOT_ID, run_id, text)
         sha = hashlib.sha256(text.encode('utf-8')).hexdigest()
         conn.execute("UPDATE tickets SET status='review',blocked_reason=NULL,locked_at=NULL,locked_by=NULL,updated_at=? WHERE id=?", (_now(), PILOT_ID))
         _activity(conn, PILOT_ID, 'internal_draft_ready', {'run_id': run_id, 'artifact': artifact,
             'sha256': sha, 'bytes': len(text.encode('utf-8')), 'tool_policy': 'no_tools',
-            'human_publication_approval': False})
+            'human_publication_approval': False, 'diagnostics': diagnostics})
         conn.commit()
         return {**result, 'output': '', 'agent': agent, 'internal_draft': artifact, 'sha256': sha}
     except Exception as exc:
+        diagnostics['failure_stage'] = stage
+        reason = str(exc) if str(exc) in SAFE_ERRORS else 'restricted_execution_error'
         conn.rollback()
         # Never overwrite a human edit or another checkout on error.
         cur = conn.execute("""UPDATE tickets SET status='blocked',blocked_reason='internal_draft_failed',
@@ -147,7 +206,9 @@ credenciais. Retorne somente o texto Markdown do rascunho, sem ações ou JSON.'
             AND company_id=1 AND approval_id IS NULL AND requires_human_approval=0""",
             (_now(), PILOT_ID, agent, checkout_at, agent, ticket['updated_at'], ticket['description']))
         if cur.rowcount:
-            _activity(conn, PILOT_ID, 'internal_draft_failed', {'run_id': run_id, 'reason': str(exc),
-                'tool_policy': 'no_tools', 'orphan_artifact': artifact})
+            _activity(conn, PILOT_ID, 'internal_draft_failed', {'run_id': run_id, 'reason': reason,
+                'tool_policy': 'no_tools', 'orphan_artifact': artifact, 'diagnostics': diagnostics,
+                'usage': numeric_usage(result)})
         conn.commit()
-        return {'status': 'fail', 'error': str(exc), 'output': '', 'agent': agent}
+        return {'status': 'fail', 'error': reason, 'output': '', 'agent': agent,
+                'diagnostics': diagnostics, **numeric_usage(result)}

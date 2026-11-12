@@ -55,3 +55,44 @@ missing hypothesis label, symlink escape, concurrent edits, failures without ret
 controller integration, and policy propagation across provider fallback. Existing
 CLI-isolation tests cover configuration and credential isolation. No production
 ticket mutation or live provider call is part of this PR.
+
+## Failed production canary and diagnostic increment
+
+Run `72f9f590-1999-4b07-a975-ca458bfd1987` checked out EDIT-07 with
+`no_tools` at 2026-10-16 14:35:31 UTC and failed at 14:37:27 with
+`restricted_hypothesis_label_missing`. No draft file was created. The rejected
+text was not retained, so the exact production cause (absent label versus a
+heading/fence/preamble before it) cannot be reconstructed or claimed fixed.
+The earlier generic Pixel run was allowed to finish naturally before this
+canary. No second canary was run in preparing this increment.
+
+The diagnostic increment keeps the exact existing prefix acceptance rule.
+It does not strip headings, fences, quotes, BOMs, JSON, preambles or different
+dash/case variants to make an output pass. One constant supplies both the
+prompt and validation label; the prompt now explicitly asks for a plain first
+line and Markdown only after a blank line.
+
+Failure activity/result metadata contain only fixed types/enums, output byte
+and line counts, label-present/start/exact-first-line booleans, BOM detection,
+controlled failure stage, and valid numeric usage returned by the provider.
+There are no snippets, rejected bodies, output hashes, reasoning fields,
+provider error strings or private endpoint names. Unexpected exception text
+is replaced by a fixed code. Missing/invalid usage stays null. This prevents a
+validation failure from discarding known usage while never inventing zero cost.
+
+### Next test plan (not executed or automatically authorized here)
+
+1. Review/cherry-pick this increment onto the deployed `7521b912` through the
+   sole integrator; only `internal_ticket_draft.py`, its tests and this doc change.
+   No provider, grant, tool policy, fallback, retry or other-ticket defaults change.
+2. Offline regression uses exact labels and rejected heading/fence/quote/JSON/
+   BOM/preamble/case/dash variants. Synthetic private markers must be absent from
+   every failure activity/result; numeric known usage must survive, unknown stays null.
+3. Keep EDIT-07 blocked. Before any separately authorized diagnostic canary,
+   verify rollout/hash, no running heartbeat of the same owner, expected-state
+   CAS and no other executable owner ticket. Do not interrupt existing runs.
+4. One bounded existing-provider call only, retaining `no_tools` across fallback.
+   Check checkout plus artifact/hash/review or sanitized failure checks. Do not
+   reopen other tickets, publish or rerun automatically on another failure.
+5. If validation fails again, use the sanitized flags to distinguish formatting
+   from missing label. Do not normalize an unlabelled output into an approved draft.

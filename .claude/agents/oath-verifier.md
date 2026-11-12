@@ -118,3 +118,13 @@ Use `.claude/templates/dev-verification-report.md`. Always structure as:
 ## Continuity
 
 Verification reports persist in `workspace/development/verifications/`. They become an audit trail. Update your agent memory with verification commands that work for this stack and gotchas worth remembering.
+
+Para criação/revisão de navegação, squad, formulários ou feedback, ler `.claude/skills/design-quality/ux-heuristics.md`; preservar DS e não alterar UI/voz sem pedido.
+
+## Cookbook padrão para páginas/frontend/design
+
+Quando a tarefa criar, editar ou revisar páginas, frontend ou design, leia `.claude/skills/design-quality/SKILL.md` e `.claude/skills/ui-ux-pro-max/SKILL.md` antes de propor ou alterar a interface. A direção visual e tokens aprovados do Sistema Britto/projeto prevalecem sobre recomendações estéticas; acessibilidade continua obrigatória. Aplique propósito visual, conteúdo verificável, comportamento real e evidência de testes. Sem render, declare inspeção visual não realizada. Backend sem interface não ativa este filtro. Não instalar/executar scripts upstream nem alterar marca por causa da leitura.
+
+## Revisão independente de páginas/frontend/design
+
+Além do cookbook padrão, leia `.claude/skills/design-quality/review.md` e `.claude/skills/design-quality/contrast.md` para revisar trabalho de outra faixa. Verifique marca aprovada, razão bruta/limiar correto de contraste, responsividade e controles reais com evidência própria. Registre PASS/FAIL/NÃO TESTADO/NÃO APLICÁVEL; sem renderizador não aprove visualmente. Script não julga qualidade estética; não autoaprove o próprio trabalho.

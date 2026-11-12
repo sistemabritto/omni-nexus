@@ -603,7 +603,7 @@ def add_comment(ticket_id: str):
     if denied:
         return denied
 
-    _ = Ticket.query.get_or_404(ticket_id)
+    ticket = Ticket.query.get_or_404(ticket_id)
     data = request.get_json() or {}
     body = (data.get("body") or "").strip()
     if not body:
@@ -613,6 +613,7 @@ def add_comment(ticket_id: str):
     mentions = _parse_mentions(body)
     now = _now()
 
+    ticket.updated_at = now
     comment = TicketComment(
         id=str(uuid.uuid4()),
         ticket_id=ticket_id,

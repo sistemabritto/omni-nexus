@@ -1,0 +1,13 @@
+// Development-only synthetic fixture. Not imported by the application or production entry.
+import { useMemo, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import LiveContinuityPanel from '../LiveContinuityPanel'
+import type { ContinuityGateway, ContinuitySnapshot } from '../continuity-contract'
+const snapshot:ContinuitySnapshot={status:'available',logicalConversationId:'logical-fixture',summaryRevision:2,kind:'untrusted_reference_data',truncated:true,current:[{event_id:'event-fixture',revision:2,kind:'pending',text:'Pendência sintética para revisão.',source:'fixture-source',verified:false}]}
+function Fixture(){
+ const [mode,setMode]=useState('enabled'),[write,setWrite]=useState<'saved'|'saving'|'error'>('saved'),[active,setActive]=useState(false),[resumes,setResumes]=useState(0),[created,setCreated]=useState(0)
+ const gateway=useMemo<ContinuityGateway|undefined>(()=>mode==='unavailable'?undefined:{resume:async()=>snapshot,searchWork:async()=>({kind:'untrusted_reference_data',coverage:'tickets_and_matching_comments_only',limit:3,results:[{reference:'/api/tickets/ticket-fixture',title:'Trabalho fixture',status:'review',text:'Resultado sintético aguardando revisão.',updatedAt:'2026-01-01T10:00:00Z',revision:'fixture-revision',comments:[{reference:'/api/tickets/ticket-fixture/comments#comment-fixture',revision:'fixture-comment',authoredAt:'2026-01-01T10:00:00Z',text:'Comentário sintético com fonte.'}]}]})},[mode])
+ return <BrowserRouter><div style={{padding:16,maxWidth:800,margin:'auto',fontFamily:'system-ui'}}><h1>QA local · somente dados sintéticos</h1><label>Modo de teste<select aria-label="Modo de teste" value={mode} onChange={e=>setMode(e.target.value)}><option value="enabled">Adaptador fixture</option><option value="unavailable">Sem adaptador</option></select></label><label> Gravação<select aria-label="Gravação" value={write} onChange={e=>setWrite(e.target.value as typeof write)}><option value="saved">Confirmada</option><option value="saving">Pendente</option><option value="error">Erro</option></select></label><label><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/>Conexão ativa fixture</label><p>Retomadas fixture: {resumes} · Novas fixture: {created}</p><LiveContinuityPanel companyLabel="Empresa fixture" agentLabel="Agente fixture" agentRole="Função sintética de teste" gateway={gateway} connectionActive={active} writeStatus={write} onResume={async()=>{setResumes(v=>v+1)}} onCreateNew={async()=>{setCreated(v=>v+1);return {...snapshot,logicalConversationId:'new-fixture',current:[]}}}/></div></BrowserRouter>
+}
+createRoot(document.getElementById('root')!).render(<Fixture/>);

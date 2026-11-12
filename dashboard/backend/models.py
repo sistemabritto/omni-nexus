@@ -1184,6 +1184,33 @@ class MediaJob(db.Model):
         }
 
 
+class MediaRelease(db.Model):
+    """Versioned human approval and durable per-channel Postiz checkpoints.
+
+    Separate from worker-writable result_json. Existing installs get this
+    new table through the application's db.create_all(), no column rewrite.
+    """
+    __tablename__ = "media_releases"
+    job_id = db.Column(db.String(36), db.ForeignKey("media_jobs.id"), primary_key=True)
+    revision = db.Column(db.Integer, nullable=False, default=1)
+    snapshot_json = db.Column(db.Text, nullable=False)
+    digest = db.Column(db.String(64), nullable=False)
+    approved_digest = db.Column(db.String(64), nullable=True)
+    approved_by = db.Column(db.String(100), nullable=True)
+    approved_at = db.Column(db.String(30), nullable=True)
+    invalidated_reason = db.Column(db.Text, nullable=True)
+    progress_json = db.Column(db.Text, nullable=False, default="{}")
+    busy = db.Column(db.Boolean, nullable=False, default=False)
+
+    def to_dict(self):
+        return {"job_id": self.job_id, "revision": self.revision, "digest": self.digest,
+                "snapshot": json.loads(self.snapshot_json), "approved_by": self.approved_by,
+                "approved_at": self.approved_at,
+                "approval_valid": self.approved_digest == self.digest and not self.invalidated_reason,
+                "invalidated_reason": self.invalidated_reason, "busy": self.busy,
+                "progress": json.loads(self.progress_json)}
+
+
 class TicketComment(db.Model):
     __tablename__ = "ticket_comments"
 
@@ -1643,3 +1670,116 @@ class OrchestrationJob(db.Model):
             "started_at": self.started_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.started_at else None,
             "completed_at": self.completed_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if self.completed_at else None,
         }
+
+
+class LiveTaskBinding(db.Model):
+    """Ownership/idempotency for the existing orchestration queue, never legacy adoption."""
+    __tablename__ = 'live_task_bindings'
+    __table_args__ = (db.UniqueConstraint('user_id', 'company_id', 'request_id', name='uq_live_task_request'),)
+    job_id = db.Column(db.String(36), db.ForeignKey('orchestration_jobs.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    agent_name = db.Column(db.String(100), nullable=False)
+    logical_id = db.Column(db.String(128), nullable=False)
+    ticket_id = db.Column(db.String(36), nullable=False)
+    request_id = db.Column(db.String(128), nullable=False)
+    operation = db.Column(db.String(30), nullable=False)
+    input_revision = db.Column(db.String(64), nullable=False)
+    cancel_requested = db.Column(db.Boolean, nullable=False, default=False)
+    execution = db.Column(db.Text, nullable=True)
+
+
+# Gravações: new tables only; historical Reels, files and MediaJobs are retained.
+class RecordingAccess(db.Model):
+    __tablename__ = "recording_access"
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), primary_key=True)
+    level = db.Column(db.String(10), nullable=False)  # viewer | editor; admins have explicit global scope
+
+
+class Recording(db.Model):
+    __tablename__ = "recordings"
+    __table_args__ = (UniqueConstraint("company_id", "origin_type", "origin_id"),)
+    id = db.Column(db.String(36), primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    title = db.Column(db.String(300), nullable=False)
+    origin_type = db.Column(db.String(20), nullable=False)
+    origin_id = db.Column(db.String(200), nullable=False)
+    script_revision = db.Column(db.Integer, nullable=False, default=1)
+    batch = db.Column(db.Integer, nullable=False, default=1)
+    closed = db.Column(db.Boolean, nullable=False, default=False)
+    revision = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.String(30), nullable=False)
+
+
+class RecordingScript(db.Model):
+    __tablename__ = "recording_scripts"
+    __table_args__ = (UniqueConstraint("recording_id", "number"),)
+    id = db.Column(db.String(36), primary_key=True)
+    recording_id = db.Column(db.String(36), db.ForeignKey("recordings.id"), nullable=False)
+    number = db.Column(db.Integer, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    sha256 = db.Column(db.String(64), nullable=False)
+    references_json = db.Column(db.Text, nullable=False, default="[]")
+    created_at = db.Column(db.String(30), nullable=False)
+
+
+class RecordingUpload(db.Model):
+    __tablename__ = "recording_uploads"
+    __table_args__ = (UniqueConstraint("recording_id", "batch", "client_key"),
+                      UniqueConstraint("recording_id", "position"))
+    id = db.Column(db.String(36), primary_key=True)
+    recording_id = db.Column(db.String(36), db.ForeignKey("recordings.id"), nullable=False, index=True)
+    batch = db.Column(db.Integer, nullable=False)
+    client_key = db.Column(db.String(200), nullable=False)
+    position = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(250), nullable=False)
+    kind = db.Column(db.String(10), nullable=False)
+    mime = db.Column(db.String(100), nullable=False)
+    declared_size = db.Column(db.BigInteger, nullable=False)
+    received = db.Column(db.BigInteger, nullable=False, default=0)
+    expected_sha256 = db.Column(db.String(64), nullable=True)
+    sha256 = db.Column(db.String(64), nullable=True)
+    status = db.Column(db.String(15), nullable=False, default="receiving")
+    storage_path = db.Column(db.Text, nullable=False)
+    duplicate_of = db.Column(db.String(36), nullable=True)
+
+
+class RecordingChunk(db.Model):
+    __tablename__ = "recording_chunks"
+    upload_id = db.Column(db.String(36), db.ForeignKey("recording_uploads.id"), primary_key=True)
+    offset = db.Column(db.BigInteger, primary_key=True)
+    size = db.Column(db.Integer, nullable=False)
+    sha256 = db.Column(db.String(64), nullable=False)
+
+
+class RecordingVersion(db.Model):
+    __tablename__ = "recording_versions"
+    __table_args__ = (UniqueConstraint("recording_id", "number"),)
+    id = db.Column(db.String(36), primary_key=True)
+    recording_id = db.Column(db.String(36), db.ForeignKey("recordings.id"), nullable=False, index=True)
+    number = db.Column(db.Integer, nullable=False)
+    batch = db.Column(db.Integer, nullable=False)
+    script_revision = db.Column(db.Integer, nullable=False)
+    job_id = db.Column(db.String(36), db.ForeignKey("media_jobs.id"), nullable=False, unique=True)
+    snapshot_json = db.Column(db.Text, nullable=False)
+    qa_sha256 = db.Column(db.String(64), nullable=True)
+    qa_by = db.Column(db.String(100), nullable=True)
+    qa_at = db.Column(db.String(30), nullable=True)
+    created_at = db.Column(db.String(30), nullable=False)
+
+
+class RecordingFeedback(db.Model):
+    __tablename__ = "recording_feedback"
+    __table_args__ = (UniqueConstraint("version_id", "client_key"),)
+    id = db.Column(db.String(36), primary_key=True)
+    recording_id = db.Column(db.String(36), db.ForeignKey("recordings.id"), nullable=False)
+    version_id = db.Column(db.String(36), db.ForeignKey("recording_versions.id"), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    client_key = db.Column(db.String(200), nullable=False)
+    text = db.Column(db.Text, nullable=False, default="")
+    audio_path = db.Column(db.Text, nullable=True)
+    audio_mime = db.Column(db.String(100), nullable=True)
+    audio_sha256 = db.Column(db.String(64), nullable=True)
+    created_at = db.Column(db.String(30), nullable=False)

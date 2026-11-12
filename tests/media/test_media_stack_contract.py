@@ -26,6 +26,7 @@ def test_dashboard_and_worker_share_writable_media_workspace():
 def test_manifest_handoff_through_approval_and_schedule(admin_client, monkeypatch):
     """Simulate the agent/render and Postiz; exercise the real API/state machine."""
     import json
+    import hashlib
     from datetime import datetime, timedelta, timezone
     from unittest.mock import Mock
 
@@ -34,7 +35,7 @@ def test_manifest_handoff_through_approval_and_schedule(admin_client, monkeypatc
 
     postiz = Mock()
     postiz.upload_file.return_value = {"id": "media-1", "path": "https://media.invalid/final.mp4", "name": "final.mp4"}
-    postiz.select_integration.return_value = {"id": "test-only"}
+    postiz.list_integrations.return_value = [{"id":"test-only","identifier":"instagram"}]
     postiz.create_draft.return_value = [{"postId": "simulated-post"}]
     monkeypatch.setattr(routes.PostizClient, "from_env", lambda: postiz)
 
@@ -63,16 +64,27 @@ def test_manifest_handoff_through_approval_and_schedule(admin_client, monkeypatc
     render.write_bytes(b"simulated-render-not-real-video")
     # No real render/ffprobe is run: this test simulates the worker's result.
     for state in ("generating", "rendering", "validating", "ready_for_review"):
-        assert admin_client.patch(url, json={"status": state, "render_path": str(render)}).status_code == 200
+        assert admin_client.patch(url, json={"status": state, "render_path": str(render), "render_sha256": hashlib.sha256(render.read_bytes()).hexdigest()}).status_code == 200
     assert admin_client.post(url + "/create-draft").status_code == 409
     postiz.upload_file.assert_not_called()
+    # Legacy approval alone must not enable a draft or schedule after PR56.
     assert admin_client.post(url + "/approve").status_code == 200
-    assert admin_client.post(url + "/create-draft").status_code == 200
-    assert admin_client.post(url + "/create-draft").status_code == 200
+    assert admin_client.post(url + "/create-draft").get_json()["error"] == "bound_release_required"
+    assert admin_client.post(url + "/schedule").status_code == 409
+    postiz.upload_file.assert_not_called()
+    release = admin_client.put(url + "/release", json={"render_version":"simulated-v1","channels":[{
+        "platform":"instagram","integration_id":"test-only","content":"Copy explicitamente revisada",
+        "scheduled_at_utc":job["scheduled_at_utc"],
+    }]})
+    assert release.status_code == 200
+    assert admin_client.post(url + "/release/approve",json={"digest":release.get_json()["digest"]}).status_code == 200
+    postiz.list_posts.return_value = [{"id":"simulated-post","state":"QUEUE",
+        "content":"Copy explicitamente revisada","publishDate":job["scheduled_at_utc"],"integration":{"id":"test-only"}}]
+    distributed = admin_client.post(url + "/release/distribute")
+    assert distributed.status_code == 200
+    assert distributed.get_json()["progress"]["channels"]["test-only"]["state"] == "scheduled"
+    assert admin_client.post(url + "/release/distribute").status_code == 200
     postiz.upload_file.assert_called_once()
     postiz.create_draft.assert_called_once()
-    assert postiz.create_draft.call_args.kwargs["now_iso_utc"] == job["scheduled_at_utc"]
-    scheduled = admin_client.post(url + "/schedule")
-    assert scheduled.status_code == 200
-    assert scheduled.get_json()["status"] == "scheduled"
+    assert datetime.fromisoformat(postiz.create_draft.call_args.kwargs["now_iso_utc"].replace("Z","+00:00")) == datetime.fromisoformat(job["scheduled_at_utc"].replace("Z","+00:00"))
     postiz.change_status.assert_called_once_with("simulated-post", "schedule")

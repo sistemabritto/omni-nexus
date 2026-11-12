@@ -47,6 +47,24 @@ export function createManagedContextTools(contextId:number) {
       return binding
     },
     disconnect() { closed=true },
+    async runInternalTask(name:string,parameters:Record<string,unknown>,toolCallId:string) {
+      if(closed||!binding||!conversationId)throw Error('Conversa não vinculada.')
+      await binding
+      if(closed)throw Error('Conversa encerrada.')
+      if(!parameters||typeof parameters!=='object'||Array.isArray(parameters))throw Error('Parâmetros inválidos.')
+      const valid=(value:unknown)=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(value)
+      let suffix:string,body:Record<string,unknown>
+      if(name==='request_internal_task'){
+        if(Object.keys(parameters).sort().join(',')!=='operation,ticketId'||!valid(parameters.ticketId)||!['summarize_ticket','draft_ticket'].includes(String(parameters.operation))||!valid(toolCallId))throw Error('Pedido interno inválido.')
+        suffix='tasks';body={ticketId:parameters.ticketId,operation:parameters.operation,requestId:toolCallId}
+      }else if(name==='read_internal_task_status'||name==='cancel_internal_task'){
+        if(Object.keys(parameters).join(',')!=='jobId'||!valid(parameters.jobId))throw Error('Tarefa inválida.')
+        suffix=`tasks/${parameters.jobId}/${name==='cancel_internal_task'?'cancel':'status'}`;body={}
+      }else throw Error('Ferramenta indisponível.')
+      const result=await call(`/api/live/omni-context/${contextId}/${suffix}`,{conversationId,...body})
+      if(closed)throw Error('Conversa encerrada.')
+      return JSON.stringify(result)
+    },
     clientTools: { read_current_omni_session:async (parameters:Record<string,unknown> = {}) => {
       if (Object.keys(parameters).length) throw Error('Esta ferramenta não aceita parâmetros.')
       if (closed || !binding || !conversationId) throw Error('Conversa ainda não vinculada ao OmniNexus.')

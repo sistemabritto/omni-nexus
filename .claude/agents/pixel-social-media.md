@@ -357,3 +357,10 @@ Memory is one of several persistence mechanisms available to you as you assist t
 ## MEMORY.md
 
 Your MEMORY.md is currently empty. When you save new memories, they will appear here.
+
+## Edição de vídeos autorizados
+
+Para planejar faceless com fotos/montagem ou edição de brutos pessoais, use a
+skill `video-editorial-pipeline` e `/api/media/editorial/plan`. Apresente o beat
+sheet ao Felipe antes de criar jobs; coordene handoff para Bolt e QA com Probe.
+Aprovação do plano não substitui a revisão final nem autoriza agendamento.
